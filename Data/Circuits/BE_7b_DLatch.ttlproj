@@ -7,7 +7,9 @@
         "partKind": "chip",
         "partIdentifier": "02",
         "family": "LS",
-        "value": null
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_u2_and",
@@ -15,7 +17,9 @@
         "partKind": "chip",
         "partIdentifier": "08",
         "family": "LS",
-        "value": null
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_sw_d",
@@ -23,7 +27,9 @@
         "partKind": "passive",
         "partIdentifier": "switch",
         "family": null,
-        "value": null
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_sw_e",
@@ -31,7 +37,9 @@
         "partKind": "passive",
         "partIdentifier": "switch",
         "family": null,
-        "value": null
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_r1",
@@ -39,7 +47,9 @@
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
-        "value": "1k"
+        "value": "1k",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_r2",
@@ -47,7 +57,9 @@
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
-        "value": "1k"
+        "value": "1k",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_rq",
@@ -55,7 +67,9 @@
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
-        "value": "330"
+        "value": "330",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_rqbar",
@@ -63,7 +77,9 @@
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
-        "value": "330"
+        "value": "330",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_rd_ind",
@@ -71,7 +87,9 @@
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
-        "value": "330"
+        "value": "330",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_dq",
@@ -79,7 +97,9 @@
         "partKind": "passive",
         "partIdentifier": "led",
         "family": null,
-        "value": "Red"
+        "value": "Red",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_dqbar",
@@ -87,7 +107,9 @@
         "partKind": "passive",
         "partIdentifier": "led",
         "family": null,
-        "value": "Red"
+        "value": "Red",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_dd_ind",
@@ -95,7 +117,9 @@
         "partKind": "passive",
         "partIdentifier": "led",
         "family": null,
-        "value": "Yellow"
+        "value": "Yellow",
+        "program": null,
+        "propagationDelayNs": null
       }
     ],
     "units": [
@@ -767,10 +791,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 2.581715,
+    "zoom": 3.1017141,
     "pan": {
-      "x": 89,
-      "y": 55
+      "x": 27,
+      "y": 51
     }
   }
 }

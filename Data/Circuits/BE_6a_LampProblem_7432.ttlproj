@@ -7,7 +7,9 @@
         "partKind": "chip",
         "partIdentifier": "32",
         "family": "LS",
-        "value": null
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_sw1",
@@ -15,7 +17,9 @@
         "partKind": "passive",
         "partIdentifier": "button",
         "family": null,
-        "value": null
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_r1_pulldown",
@@ -23,7 +27,9 @@
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
-        "value": "1k"
+        "value": "1k",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_r2_limit",
@@ -31,7 +37,9 @@
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
-        "value": "330"
+        "value": "330",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_d1",
@@ -39,7 +47,9 @@
         "partKind": "passive",
         "partIdentifier": "led",
         "family": null,
-        "value": "Red"
+        "value": "Red",
+        "program": null,
+        "propagationDelayNs": null
       }
     ],
     "units": [
@@ -49,7 +59,7 @@
         "unitLetter": "",
         "position": {
           "x": 28,
-          "y": 18
+          "y": 12
         },
         "label": "",
         "rotation": 0,
@@ -72,7 +82,7 @@
         "deviceId": "dev_r1_pulldown",
         "unitLetter": "",
         "position": {
-          "x": 19,
+          "x": 15,
           "y": 26
         },
         "label": "1k",
@@ -85,7 +95,7 @@
         "unitLetter": "",
         "position": {
           "x": 44,
-          "y": 19
+          "y": 8
         },
         "label": "LAMP",
         "rotation": 0,
@@ -96,8 +106,8 @@
         "deviceId": "dev_r2_limit",
         "unitLetter": "",
         "position": {
-          "x": 52,
-          "y": 19
+          "x": 55,
+          "y": 8
         },
         "label": "330",
         "rotation": 0,
@@ -110,8 +120,8 @@
         "id": "item_vcc",
         "label": "VCC",
         "position": {
-          "x": 3,
-          "y": 10
+          "x": 2,
+          "y": 3
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -137,11 +147,13 @@
         "id": "c_vcc_to_sw1",
         "a": {
           "itemId": "item_vcc",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
         "b": {
           "itemId": "unit_sw1",
-          "pinNumber": 1
+          "pinNumber": 1,
+          "external": false
         },
         "color": "Red"
       },
@@ -149,23 +161,13 @@
         "id": "c_sw1_to_u1a_in",
         "a": {
           "itemId": "unit_sw1",
-          "pinNumber": 2
+          "pinNumber": 2,
+          "external": false
         },
         "b": {
           "itemId": "unit_u1a",
-          "pinNumber": 1
-        },
-        "color": null
-      },
-      {
-        "id": "c_sw1_to_r1",
-        "a": {
-          "itemId": "unit_sw1",
-          "pinNumber": 2
-        },
-        "b": {
-          "itemId": "unit_r1",
-          "pinNumber": 1
+          "pinNumber": 1,
+          "external": false
         },
         "color": null
       },
@@ -173,11 +175,13 @@
         "id": "c_r1_to_gnd",
         "a": {
           "itemId": "unit_r1",
-          "pinNumber": 2
+          "pinNumber": 2,
+          "external": false
         },
         "b": {
           "itemId": "item_gnd",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
         "color": "Blue"
       },
@@ -185,11 +189,13 @@
         "id": "c_u1a_out_to_feedback",
         "a": {
           "itemId": "unit_u1a",
-          "pinNumber": 3
+          "pinNumber": 3,
+          "external": false
         },
         "b": {
           "itemId": "unit_u1a",
-          "pinNumber": 2
+          "pinNumber": 2,
+          "external": false
         },
         "color": null
       },
@@ -197,11 +203,13 @@
         "id": "c_u1a_out_to_led_anode",
         "a": {
           "itemId": "unit_u1a",
-          "pinNumber": 3
+          "pinNumber": 3,
+          "external": false
         },
         "b": {
           "itemId": "unit_d1",
-          "pinNumber": 1
+          "pinNumber": 1,
+          "external": false
         },
         "color": null
       },
@@ -209,11 +217,13 @@
         "id": "c_led_cathode_to_r2",
         "a": {
           "itemId": "unit_d1",
-          "pinNumber": 2
+          "pinNumber": 2,
+          "external": false
         },
         "b": {
           "itemId": "unit_r2",
-          "pinNumber": 1
+          "pinNumber": 1,
+          "external": false
         },
         "color": null
       },
@@ -221,11 +231,13 @@
         "id": "c_r2_to_gnd",
         "a": {
           "itemId": "unit_r2",
-          "pinNumber": 2
+          "pinNumber": 2,
+          "external": false
         },
         "b": {
           "itemId": "item_gnd",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
         "color": "Blue"
       },
@@ -340,15 +352,29 @@
           "external": false
         },
         "color": "Blue"
+      },
+      {
+        "id": "e89336e318d64861bc3056505d8ef757",
+        "a": {
+          "itemId": "unit_r1",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "unit_sw1",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": null
       }
     ],
     "wires": []
   },
   "view": {
-    "zoom": 1.5,
+    "zoom": 4.271213,
     "pan": {
-      "x": 20,
-      "y": 20
+      "x": -36,
+      "y": 0
     }
   }
 }

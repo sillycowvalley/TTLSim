@@ -42,6 +42,15 @@ namespace TTLSim.UI.Routing;
 ///     + BendPenalty (if bending) + ForeignBendOnWirePenalty (if bending
 ///       AND the current cell has a foreign wire).
 ///
+/// Search state storage: the Dijkstra state space is (cell × direction),
+/// fully known up front from the grid bounds. Per-leg g-scores and
+/// predecessors live in flat int arrays indexed by an encoded state
+/// index (see SearchScratch), NOT in Dictionary&lt;State,...&gt;. Profiling
+/// showed the dictionary path (hashing + equality + probing on a record
+/// struct key) dominating routing time by a wide margin; the flat arrays
+/// reduce every lookup/update to a single array access. One scratch
+/// buffer is allocated per RouteAll and cleared (memset) between legs.
+///
 /// Post-route retry: after the single-pass route, the detector finds
 /// cross-net coincident corners (vertex-on-wire). For each such cell,
 /// the connection(s) whose vertex lies on the cell get re-routed once
@@ -79,6 +88,8 @@ public sealed class WireRouter : IConnectionRouter
 
         var bounds = ComputeGridBounds(schematic);
 
+        var scratch = new SearchScratch(bounds);
+
         var bodyBlocked = new bool[bounds.Width, bounds.Height];
         foreach (var item in schematic.Items)
             StampRect(bodyBlocked, bounds, item.RoutingBounds, true);
@@ -99,7 +110,7 @@ public sealed class WireRouter : IConnectionRouter
         // Net wins come from the cost-model and retry pass, not ordering.
         foreach (var group in groups.OrderBy(g => schematic.Connections.IndexOf(g[0])))
         {
-            RouteGroup(group, bounds, bodyBlocked,
+            RouteGroup(group, bounds, scratch, bodyBlocked,
                 foreignWirePenalty, ownNetPenalty, foreignWireDir,
                 polylines, junctionsSet,
                 hardBlockBendCells: null);
@@ -122,7 +133,7 @@ public sealed class WireRouter : IConnectionRouter
         // owns the vertex with that cell hard-blocked from being a bend.
         // Take the new route only if it doesn't introduce more collisions.
         TryFixCollisions(schematic, polylines,
-            bounds, bodyBlocked,
+            bounds, scratch, bodyBlocked,
             junctionsSet);
 
         return new RouteResult(polylines, junctionsSet.ToList());
@@ -137,7 +148,7 @@ public sealed class WireRouter : IConnectionRouter
     private static void TryFixCollisions(
         Schematic schematic,
         Dictionary<Connection, IReadOnlyList<Point>> polylines,
-        Rectangle bounds, bool[,] bodyBlocked,
+        Rectangle bounds, SearchScratch scratch, bool[,] bodyBlocked,
         HashSet<Point> junctionsSet)
     {
         // Net id per connection via the same union-find used at routing
@@ -179,7 +190,8 @@ public sealed class WireRouter : IConnectionRouter
                 retried.Add(conn);
 
                 var candidate = RetryRouteWithBendBlock(
-                    schematic, conn, cell, polylines, bounds, bodyBlocked, netIdOf);
+                    schematic, conn, cell, polylines, bounds, scratch,
+                    bodyBlocked, netIdOf);
 
                 if (candidate is null) continue;
 
@@ -214,7 +226,7 @@ public sealed class WireRouter : IConnectionRouter
         Schematic schematic,
         Connection conn, Point blockedBend,
         Dictionary<Connection, IReadOnlyList<Point>> polylines,
-        Rectangle bounds, bool[,] bodyBlocked,
+        Rectangle bounds, SearchScratch scratch, bool[,] bodyBlocked,
         Dictionary<Connection, int> netIdOf)
     {
         // Build cost grids reflecting every committed polyline EXCEPT
@@ -254,7 +266,7 @@ public sealed class WireRouter : IConnectionRouter
         CarveCorridor(blocked, bounds, conn.A);
         CarveCorridor(blocked, bounds, conn.B);
 
-        var path = Search(bounds, blocked,
+        var path = Search(bounds, scratch, blocked,
             foreignWirePenalty, ownNetPenalty, foreignWireDir,
             conn.A.WorldPosition, conn.B.WorldPosition,
             conn.A.Direction, conn.B.Direction,
@@ -319,7 +331,7 @@ public sealed class WireRouter : IConnectionRouter
     /// </summary>
     private static void RouteGroup(
         List<Connection> group, Rectangle bounds,
-        bool[,] bodyBlocked,
+        SearchScratch scratch, bool[,] bodyBlocked,
         int[,] foreignWirePenalty, int[,] ownNetPenalty,
         byte[,] foreignWireDir,
         Dictionary<Connection, IReadOnlyList<Point>> polylines,
@@ -351,14 +363,14 @@ public sealed class WireRouter : IConnectionRouter
             var subStar = remaining.Where(c => c.A == hub || c.B == hub).ToList();
             foreach (var c in subStar) remaining.Remove(c);
 
-            RouteStar(subStar, hub, bounds, bodyBlocked,
+            RouteStar(subStar, hub, bounds, scratch, bodyBlocked,
                 foreignWirePenalty, ownNetPenalty, foreignWireDir,
                 polylines, junctionsSet, hardBlockBendCells);
         }
 
         foreach (var c in remaining)
         {
-            var polyline = RouteOne(c, bounds, bodyBlocked,
+            var polyline = RouteOne(c, bounds, scratch, bodyBlocked,
                 foreignWirePenalty, ownNetPenalty, foreignWireDir,
                 hardBlockBendCells);
             polylines[c] = polyline;
@@ -447,7 +459,7 @@ public sealed class WireRouter : IConnectionRouter
 
     private static void RouteStar(
         List<Connection> group, Pin commonPin,
-        Rectangle bounds, bool[,] bodyBlocked,
+        Rectangle bounds, SearchScratch scratch, bool[,] bodyBlocked,
         int[,] foreignWirePenalty, int[,] ownNetPenalty,
         byte[,] foreignWireDir,
         Dictionary<Connection, IReadOnlyList<Point>> polylines,
@@ -457,7 +469,7 @@ public sealed class WireRouter : IConnectionRouter
         if (group.Count == 1)
         {
             var only = group[0];
-            var polyline = RouteOne(only, bounds, bodyBlocked,
+            var polyline = RouteOne(only, bounds, scratch, bodyBlocked,
                 foreignWirePenalty, ownNetPenalty, foreignWireDir,
                 hardBlockBendCells);
             polylines[only] = polyline;
@@ -478,7 +490,7 @@ public sealed class WireRouter : IConnectionRouter
 
         var trunkLeg = legs[0];
         var trunkPolyline = RouteTwoPin(
-            commonPin, trunkLeg.Leaf, bounds, bodyBlocked,
+            commonPin, trunkLeg.Leaf, bounds, scratch, bodyBlocked,
             foreignWirePenalty, ownNetPenalty, foreignWireDir,
             hardBlockBendCells);
         polylines[trunkLeg.Connection] = trunkPolyline;
@@ -491,14 +503,14 @@ public sealed class WireRouter : IConnectionRouter
         {
             var leg = legs[i];
             var branchPolyline = RouteToNet(
-                leg.Leaf, netCells, bounds, bodyBlocked,
+                leg.Leaf, netCells, bounds, scratch, bodyBlocked,
                 foreignWirePenalty, ownNetPenalty, foreignWireDir,
                 hardBlockBendCells);
 
             if (branchPolyline == null)
             {
                 branchPolyline = RouteTwoPin(
-                    leg.Leaf, commonPin, bounds, bodyBlocked,
+                    leg.Leaf, commonPin, bounds, scratch, bodyBlocked,
                     foreignWirePenalty, ownNetPenalty, foreignWireDir,
                     hardBlockBendCells);
             }
@@ -534,17 +546,17 @@ public sealed class WireRouter : IConnectionRouter
 
     private static IReadOnlyList<Point> RouteOne(
         Connection connection, Rectangle bounds,
-        bool[,] bodyBlocked,
+        SearchScratch scratch, bool[,] bodyBlocked,
         int[,] foreignWirePenalty, int[,] ownNetPenalty,
         byte[,] foreignWireDir,
         HashSet<Point>? hardBlockBendCells)
-        => RouteTwoPin(connection.A, connection.B, bounds, bodyBlocked,
+        => RouteTwoPin(connection.A, connection.B, bounds, scratch, bodyBlocked,
             foreignWirePenalty, ownNetPenalty, foreignWireDir,
             hardBlockBendCells);
 
     private static IReadOnlyList<Point> RouteTwoPin(
         Pin pinA, Pin pinB, Rectangle bounds,
-        bool[,] bodyBlocked,
+        SearchScratch scratch, bool[,] bodyBlocked,
         int[,] foreignWirePenalty, int[,] ownNetPenalty,
         byte[,] foreignWireDir,
         HashSet<Point>? hardBlockBendCells)
@@ -553,7 +565,7 @@ public sealed class WireRouter : IConnectionRouter
         CarveCorridor(blocked, bounds, pinA);
         CarveCorridor(blocked, bounds, pinB);
 
-        var path = Search(bounds, blocked,
+        var path = Search(bounds, scratch, blocked,
             foreignWirePenalty, ownNetPenalty, foreignWireDir,
             pinA.WorldPosition, pinB.WorldPosition,
             pinA.Direction, pinB.Direction,
@@ -567,7 +579,7 @@ public sealed class WireRouter : IConnectionRouter
 
     private static IReadOnlyList<Point>? RouteToNet(
         Pin leaf, HashSet<Point> netCells,
-        Rectangle bounds, bool[,] bodyBlocked,
+        Rectangle bounds, SearchScratch scratch, bool[,] bodyBlocked,
         int[,] foreignWirePenalty, int[,] ownNetPenalty,
         byte[,] foreignWireDir,
         HashSet<Point>? hardBlockBendCells)
@@ -578,7 +590,7 @@ public sealed class WireRouter : IConnectionRouter
         foreach (var cell in netCells)
             Clear(blocked, bounds, cell);
 
-        var path = SearchToAnyCell(bounds, blocked,
+        var path = SearchToAnyCell(bounds, scratch, blocked,
             foreignWirePenalty, ownNetPenalty, foreignWireDir,
             leaf.WorldPosition, leaf.Direction, netCells,
             hardBlockBendCells);
@@ -610,7 +622,7 @@ public sealed class WireRouter : IConnectionRouter
     }
 
     private static List<Point>? Search(
-        Rectangle bounds, bool[,] blocked,
+        Rectangle bounds, SearchScratch scratch, bool[,] blocked,
         int[,] foreignWirePenalty, int[,] ownNetPenalty,
         byte[,] foreignWireDir,
         Point start, Point end,
@@ -619,40 +631,59 @@ public sealed class WireRouter : IConnectionRouter
     {
         var requiredArrival = Opposite(endDir);
 
-        var startState = new State(start.X, start.Y, startDir);
-        var bestG = new Dictionary<State, int> { [startState] = 0 };
-        var predecessor = new Dictionary<State, State>();
-        var queue = new PriorityQueue<State, int>();
-        queue.Enqueue(startState, 0);
+        // Start is always inside bounds (ComputeGridBounds includes every
+        // connection endpoint), but guard anyway: callers treat null as
+        // "no route" and fall back to a straight line.
+        if (!TryIndex(bounds, start.X, start.Y, out int startIx, out int startIy))
+            return null;
 
-        State? goal = null;
+        scratch.Reset();
+        int width = bounds.Width;
+        var bestG = scratch.BestG;          // g + 1; 0 = unvisited
+        var predecessor = scratch.Predecessor;   // state index + 1; 0 = none
 
-        while (queue.TryDequeue(out var state, out int dequeuedG))
+        int startIdx = ((startIy * width) + startIx) * 4 + (int)startDir;
+        bestG[startIdx] = 1;   // g = 0
+
+        var queue = new PriorityQueue<int, int>();
+        queue.Enqueue(startIdx, 0);
+
+        int goal = -1;
+
+        while (queue.TryDequeue(out int stateIdx, out int dequeuedG))
         {
-            if (dequeuedG > bestG[state]) continue;
+            if (dequeuedG + 1 > bestG[stateIdx]) continue;   // stale entry
 
-            if (state.X == end.X && state.Y == end.Y && state.Dir == requiredArrival)
+            int dirInt = stateIdx & 3;
+            int cellIdx = stateIdx >> 2;
+            int cx = cellIdx % width;
+            int cy = cellIdx / width;
+            int worldX = cx + bounds.X;
+            int worldY = cy + bounds.Y;
+
+            if (worldX == end.X && worldY == end.Y && dirInt == (int)requiredArrival)
             {
-                goal = state;
+                goal = stateIdx;
                 break;
             }
 
             int g = dequeuedG;
+            byte hereMask = foreignWireDir[cx, cy];
             foreach (var dir in s_directions)
             {
                 var (dx, dy) = DirToDelta(dir);
-                int nx = state.X + dx;
-                int ny = state.Y + dy;
+                int nx = worldX + dx;
+                int ny = worldY + dy;
                 if (!TryIndex(bounds, nx, ny, out int ix, out int iy)) continue;
                 if (blocked[ix, iy]) continue;
 
-                bool bending = dir != state.Dir;
+                bool bending = (int)dir != dirInt;
 
                 // Hard-block bends at specified cells. Transit through
                 // the cell is still allowed — only bend-at-cell is
                 // forbidden. This matches the EDA003 mechanism.
                 if (bending && hardBlockBendCells is not null
-                    && hardBlockBendCells.Contains(new Point(state.X, state.Y)))
+                    && hardBlockBendCells.Contains(new Point(worldX, worldY)))
                 {
                     continue;
                 }
@@ -661,11 +692,8 @@ public sealed class WireRouter : IConnectionRouter
                 if (bending)
                 {
                     bendCost = BendPenalty;
-                    if (TryIndex(bounds, state.X, state.Y, out int six, out int siy)
-                        && foreignWireDir[six, siy] != 0)
-                    {
+                    if (hereMask != 0)
                         bendCost += ForeignBendOnWirePenalty;
-                    }
                 }
 
                 byte enteredMask = foreignWireDir[ix, iy];
@@ -682,57 +710,76 @@ public sealed class WireRouter : IConnectionRouter
                              + bendCost;
                 int ng = g + stepCost;
 
-                var next = new State(nx, ny, dir);
-                if (bestG.TryGetValue(next, out int existing) && ng >= existing) continue;
+                int nextIdx = ((iy * width) + ix) * 4 + (int)dir;
+                int existingPlus1 = bestG[nextIdx];
+                if (existingPlus1 != 0 && ng + 1 >= existingPlus1) continue;
 
-                bestG[next] = ng;
-                predecessor[next] = state;
-                queue.Enqueue(next, ng);
+                bestG[nextIdx] = ng + 1;
+                predecessor[nextIdx] = stateIdx + 1;
+                queue.Enqueue(nextIdx, ng);
             }
         }
 
-        return goal is { } end_ ? BacktraceCells(predecessor, start, startDir, end_) : null;
+        return goal >= 0
+            ? BacktraceCells(scratch, bounds, startIdx, goal)
+            : null;
     }
 
     private static List<Point>? SearchToAnyCell(
-        Rectangle bounds, bool[,] blocked,
+        Rectangle bounds, SearchScratch scratch, bool[,] blocked,
         int[,] foreignWirePenalty, int[,] ownNetPenalty,
         byte[,] foreignWireDir,
         Point start, PinDirection startDir, HashSet<Point> targetCells,
         HashSet<Point>? hardBlockBendCells)
     {
-        var startState = new State(start.X, start.Y, startDir);
-        var bestG = new Dictionary<State, int> { [startState] = 0 };
-        var predecessor = new Dictionary<State, State>();
-        var queue = new PriorityQueue<State, int>();
-        queue.Enqueue(startState, 0);
+        if (!TryIndex(bounds, start.X, start.Y, out int startIx, out int startIy))
+            return null;
 
-        State? goal = null;
+        scratch.Reset();
+        int width = bounds.Width;
+        var bestG = scratch.BestG;          // g + 1; 0 = unvisited
+        var predecessor = scratch.Predecessor;   // state index + 1; 0 = none
 
-        while (queue.TryDequeue(out var state, out int dequeuedG))
+        int startIdx = ((startIy * width) + startIx) * 4 + (int)startDir;
+        bestG[startIdx] = 1;   // g = 0
+
+        var queue = new PriorityQueue<int, int>();
+        queue.Enqueue(startIdx, 0);
+
+        int goal = -1;
+
+        while (queue.TryDequeue(out int stateIdx, out int dequeuedG))
         {
-            if (dequeuedG > bestG[state]) continue;
+            if (dequeuedG + 1 > bestG[stateIdx]) continue;   // stale entry
 
-            if (targetCells.Contains(new Point(state.X, state.Y))
-                && !(state.X == start.X && state.Y == start.Y && state.Dir == startDir))
+            int dirInt = stateIdx & 3;
+            int cellIdx = stateIdx >> 2;
+            int cx = cellIdx % width;
+            int cy = cellIdx / width;
+            int worldX = cx + bounds.X;
+            int worldY = cy + bounds.Y;
+
+            if (stateIdx != startIdx
+                && targetCells.Contains(new Point(worldX, worldY)))
             {
-                goal = state;
+                goal = stateIdx;
                 break;
             }
 
             int g = dequeuedG;
+            byte hereMask = foreignWireDir[cx, cy];
             foreach (var dir in s_directions)
             {
                 var (dx, dy) = DirToDelta(dir);
-                int nx = state.X + dx;
-                int ny = state.Y + dy;
+                int nx = worldX + dx;
+                int ny = worldY + dy;
                 if (!TryIndex(bounds, nx, ny, out int ix, out int iy)) continue;
                 if (blocked[ix, iy]) continue;
 
-                bool bending = dir != state.Dir;
+                bool bending = (int)dir != dirInt;
 
                 if (bending && hardBlockBendCells is not null
-                    && hardBlockBendCells.Contains(new Point(state.X, state.Y)))
+                    && hardBlockBendCells.Contains(new Point(worldX, worldY)))
                 {
                     continue;
                 }
@@ -741,11 +788,8 @@ public sealed class WireRouter : IConnectionRouter
                 if (bending)
                 {
                     bendCost = BendPenalty;
-                    if (TryIndex(bounds, state.X, state.Y, out int six, out int siy)
-                        && foreignWireDir[six, siy] != 0)
-                    {
+                    if (hereMask != 0)
                         bendCost += ForeignBendOnWirePenalty;
-                    }
                 }
 
                 byte enteredMask = foreignWireDir[ix, iy];
@@ -762,16 +806,19 @@ public sealed class WireRouter : IConnectionRouter
                              + bendCost;
                 int ng = g + stepCost;
 
-                var next = new State(nx, ny, dir);
-                if (bestG.TryGetValue(next, out int existing) && ng >= existing) continue;
+                int nextIdx = ((iy * width) + ix) * 4 + (int)dir;
+                int existingPlus1 = bestG[nextIdx];
+                if (existingPlus1 != 0 && ng + 1 >= existingPlus1) continue;
 
-                bestG[next] = ng;
-                predecessor[next] = state;
-                queue.Enqueue(next, ng);
+                bestG[nextIdx] = ng + 1;
+                predecessor[nextIdx] = stateIdx + 1;
+                queue.Enqueue(nextIdx, ng);
             }
         }
 
-        return goal is { } end_ ? BacktraceCells(predecessor, start, startDir, end_) : null;
+        return goal >= 0
+            ? BacktraceCells(scratch, bounds, startIdx, goal)
+            : null;
     }
 
     private static bool MovingParallelToForeignMask(byte mask, PinDirection dir)
@@ -784,16 +831,20 @@ public sealed class WireRouter : IConnectionRouter
     }
 
     private static List<Point>? BacktraceCells(
-        Dictionary<State, State> predecessor, Point start, PinDirection startDir, State end)
+        SearchScratch scratch, Rectangle bounds, int startIdx, int endIdx)
     {
+        int width = bounds.Width;
         var cells = new List<Point>();
-        var cur = end;
+        int cur = endIdx;
         while (true)
         {
-            cells.Add(new Point(cur.X, cur.Y));
-            if (cur.X == start.X && cur.Y == start.Y && cur.Dir == startDir) break;
-            if (!predecessor.TryGetValue(cur, out var prev)) return null;
-            cur = prev;
+            int cellIdx = cur >> 2;
+            cells.Add(new Point(cellIdx % width + bounds.X,
+                                cellIdx / width + bounds.Y));
+            if (cur == startIdx) break;
+            int prevPlus1 = scratch.Predecessor[cur];
+            if (prevPlus1 == 0) return null;
+            cur = prevPlus1 - 1;
         }
         cells.Reverse();
         return cells;
@@ -973,5 +1024,42 @@ public sealed class WireRouter : IConnectionRouter
         _ => (0, 0)
     };
 
-    private readonly record struct State(int X, int Y, PinDirection Dir);
+    /// <summary>
+    /// Flat-array storage for the per-leg Dijkstra search, replacing the
+    /// previous Dictionary&lt;State,int&gt; / Dictionary&lt;State,State&gt; pair.
+    /// The search state is (cell, direction); with the grid bounds known
+    /// up front, every state maps to a dense index:
+    ///
+    ///     index = ((iy * Width) + ix) * 4 + (int)dir
+    ///
+    /// where (ix, iy) are bounds-relative cell coordinates and dir is one
+    /// of the four PinDirection values (Left=0, Right=1, Up=2, Down=3).
+    /// Decode: dir = index &amp; 3, cell = index &gt;&gt; 2, ix = cell % Width,
+    /// iy = cell / Width.
+    ///
+    /// Both arrays use 0 as "empty" so Reset is a plain memset:
+    ///   - BestG stores g + 1 (0 = unvisited).
+    ///   - Predecessor stores the predecessor's state index + 1 (0 = none).
+    ///
+    /// One instance is allocated per RouteAll and shared by every leg's
+    /// search; Reset() runs at the top of each search.
+    /// </summary>
+    private sealed class SearchScratch
+    {
+        public readonly int[] BestG;
+        public readonly int[] Predecessor;
+
+        public SearchScratch(Rectangle bounds)
+        {
+            int states = bounds.Width * bounds.Height * 4;
+            BestG = new int[states];
+            Predecessor = new int[states];
+        }
+
+        public void Reset()
+        {
+            Array.Clear(BestG);
+            Array.Clear(Predecessor);
+        }
+    }
 }

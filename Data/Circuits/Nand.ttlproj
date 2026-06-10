@@ -7,7 +7,9 @@
         "partKind": "chip",
         "partIdentifier": "00",
         "family": "HC",
-        "value": null
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev-sw1",
@@ -15,7 +17,9 @@
         "partKind": "passive",
         "partIdentifier": "switch",
         "family": null,
-        "value": null
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev-sw2",
@@ -23,7 +27,9 @@
         "partKind": "passive",
         "partIdentifier": "switch",
         "family": null,
-        "value": null
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev-r1",
@@ -31,7 +37,9 @@
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
-        "value": "10k"
+        "value": "10k",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev-r2",
@@ -39,7 +47,9 @@
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
-        "value": "10k"
+        "value": "10k",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev-d1",
@@ -47,7 +57,9 @@
         "partKind": "passive",
         "partIdentifier": "led",
         "family": null,
-        "value": "Red"
+        "value": "Red",
+        "program": null,
+        "propagationDelayNs": null
       }
     ],
     "units": [
@@ -409,10 +421,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 4.901156,
+    "zoom": 5.0186667,
     "pan": {
-      "x": 157,
-      "y": -171
+      "x": 289,
+      "y": 69
     }
   }
 }

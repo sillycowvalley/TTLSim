@@ -8,7 +8,8 @@
         "partIdentifier": "173",
         "family": "LS",
         "value": null,
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_d1_led",
@@ -17,7 +18,8 @@
         "partIdentifier": "led",
         "family": null,
         "value": "Red",
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_d2_led",
@@ -26,7 +28,8 @@
         "partIdentifier": "led",
         "family": null,
         "value": "Yellow",
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_d3_led",
@@ -35,7 +38,8 @@
         "partIdentifier": "led",
         "family": null,
         "value": "Green",
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_d4_led",
@@ -44,7 +48,8 @@
         "partIdentifier": "led",
         "family": null,
         "value": "Blue",
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_r1_clim",
@@ -53,7 +58,8 @@
         "partIdentifier": "resistor",
         "family": null,
         "value": null,
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_r2_clim",
@@ -62,7 +68,8 @@
         "partIdentifier": "resistor",
         "family": null,
         "value": null,
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_r3_clim",
@@ -71,7 +78,8 @@
         "partIdentifier": "resistor",
         "family": null,
         "value": null,
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_r4_clim",
@@ -80,7 +88,8 @@
         "partIdentifier": "resistor",
         "family": null,
         "value": null,
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_s1_data",
@@ -89,7 +98,8 @@
         "partIdentifier": "switch",
         "family": null,
         "value": null,
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_s2_data",
@@ -98,7 +108,8 @@
         "partIdentifier": "switch",
         "family": null,
         "value": null,
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_s3_data",
@@ -107,7 +118,8 @@
         "partIdentifier": "switch",
         "family": null,
         "value": null,
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_s4_data",
@@ -116,7 +128,8 @@
         "partIdentifier": "switch",
         "family": null,
         "value": null,
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_r5_pdn",
@@ -125,7 +138,8 @@
         "partIdentifier": "resistor",
         "family": null,
         "value": null,
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_r6_pdn",
@@ -134,7 +148,8 @@
         "partIdentifier": "resistor",
         "family": null,
         "value": null,
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_r7_pdn",
@@ -143,7 +158,8 @@
         "partIdentifier": "resistor",
         "family": null,
         "value": null,
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_r8_pdn",
@@ -152,7 +168,8 @@
         "partIdentifier": "resistor",
         "family": null,
         "value": null,
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_b1_clk",
@@ -161,7 +178,8 @@
         "partIdentifier": "button",
         "family": null,
         "value": null,
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_b2_clr",
@@ -170,7 +188,8 @@
         "partIdentifier": "button",
         "family": null,
         "value": null,
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_r9_pdn",
@@ -179,7 +198,8 @@
         "partIdentifier": "resistor",
         "family": null,
         "value": null,
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_r10_pdn",
@@ -188,7 +208,8 @@
         "partIdentifier": "resistor",
         "family": null,
         "value": null,
-        "program": null
+        "program": null,
+        "propagationDelayNs": null
       }
     ],
     "units": [
@@ -1105,10 +1126,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 1.7848889,
+    "zoom": 2.2305186,
     "pan": {
-      "x": 400,
-      "y": 291
+      "x": 416,
+      "y": 130
     }
   }
 }

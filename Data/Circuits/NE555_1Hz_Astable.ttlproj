@@ -7,7 +7,9 @@
         "partKind": "chip",
         "partIdentifier": "NE555",
         "family": null,
-        "value": null
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "devR1",
@@ -15,7 +17,9 @@
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
-        "value": "7.2k"
+        "value": "7.2k",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "devR2",
@@ -23,7 +27,9 @@
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
-        "value": "720k"
+        "value": "720k",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "devC2",
@@ -31,7 +37,9 @@
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
-        "value": "10nF"
+        "value": "10nF",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "5ade231323ff4dec9420229692fc6640",
@@ -39,7 +47,9 @@
         "partKind": "passive",
         "partIdentifier": "led",
         "family": null,
-        "value": null
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "9d3ec700925a42628f2ffdebfea626f4",
@@ -47,7 +57,9 @@
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
-        "value": null
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "798b620920fd4a48adde34046acad588",
@@ -55,7 +67,9 @@
         "partKind": "passive",
         "partIdentifier": "polarized-capacitor",
         "family": null,
-        "value": null
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
       }
     ],
     "units": [
@@ -387,10 +401,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 2.8158998,
+    "zoom": 4.2016745,
     "pan": {
-      "x": -188,
-      "y": -396
+      "x": -603,
+      "y": -695
     }
   }
 }

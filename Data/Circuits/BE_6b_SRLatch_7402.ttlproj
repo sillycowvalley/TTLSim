@@ -7,7 +7,9 @@
         "partKind": "chip",
         "partIdentifier": "02",
         "family": "LS",
-        "value": null
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_sw1_set",
@@ -15,7 +17,9 @@
         "partKind": "passive",
         "partIdentifier": "button",
         "family": null,
-        "value": null
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_sw2_reset",
@@ -23,7 +27,9 @@
         "partKind": "passive",
         "partIdentifier": "button",
         "family": null,
-        "value": null
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_r1_pulldown_s",
@@ -31,7 +37,9 @@
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
-        "value": "1k"
+        "value": "1k",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_r2_pulldown_r",
@@ -39,7 +47,9 @@
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
-        "value": "1k"
+        "value": "1k",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_r3_q_limit",
@@ -47,7 +57,9 @@
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
-        "value": "330"
+        "value": "330",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_r4_qbar_limit",
@@ -55,7 +67,9 @@
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
-        "value": "330"
+        "value": "330",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_d1_q",
@@ -63,7 +77,9 @@
         "partKind": "passive",
         "partIdentifier": "led",
         "family": null,
-        "value": "Red"
+        "value": "Red",
+        "program": null,
+        "propagationDelayNs": null
       },
       {
         "id": "dev_d2_qbar",
@@ -71,7 +87,9 @@
         "partKind": "passive",
         "partIdentifier": "led",
         "family": null,
-        "value": "Red"
+        "value": "Red",
+        "program": null,
+        "propagationDelayNs": null
       }
     ],
     "units": [
@@ -525,10 +543,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 2.3232,
+    "zoom": 4.1061816,
     "pan": {
-      "x": -1,
-      "y": -80
+      "x": -29,
+      "y": -145
     }
   }
 }
