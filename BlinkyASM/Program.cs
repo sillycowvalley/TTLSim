@@ -15,6 +15,9 @@ namespace MiniBlinky.Assembler;
 /// One 8-bit instruction word per I-memory cell, 16 cells (addresses 0..15).
 ///
 /// Instruction word = (opcode &lt;&lt; 4) | literal, per Mini_Blinky_CPU.md.
+/// I/O forms per the master doc: IN is stack-form (port from TOS, literal
+/// don't-care, canonical 0x50); OUT is immediate-form (OUT #port). TST is the
+/// flags-only test that replaced the two-operand CMP.
 /// </summary>
 internal static class Program
 {
@@ -38,11 +41,11 @@ internal static class Program
     // ====================================================================
     // ENCODING TABLES
     //
-    // The top-level opcodes (above) are fixed by the design docs. The SYS and
-    // ALU sub-op NIBBLE values below are NOT pinned by Mini_Blinky_CPU.md or
-    // Mini_Blinky_Control_Signals.md -- the docs leave them to the decode GAL.
-    // These assignments follow the order the sub-ops are listed in those docs.
-    // If the GAL ends up using different nibbles, edit ONLY these two tables.
+    // The top-level opcodes (above) are fixed by Mini_Blinky_CPU.md. The SYS
+    // and ALU sub-op NIBBLE values below follow the master doc's "Proposed
+    // Full Byte Encoding" (sequential in doc order, nibbles 8..F free). That
+    // encoding is PROPOSED, not ratified -- if the GAL ends up using
+    // different nibbles, edit ONLY these two tables.
     // ====================================================================
 
     // SYS family: opcode 0, literal = sub-op nibble.
@@ -53,21 +56,23 @@ internal static class Program
         { "DROP", 4 }, { "SWAP", 5 }, { ">R", 6 }, { "R>", 7 },
     };
 
-    // ALU family: opcode 1, literal = op-select nibble.
+    // ALU family: opcode 1, literal = op-select nibble. TST (flags-only test
+    // of TOS) replaced the two-operand CMP.
     private static readonly Dictionary<string, int> AluSubOp =
         new(StringComparer.OrdinalIgnoreCase)
     {
         { "ADD", 0 }, { "ADC", 1 }, { "SUB", 2 }, { "XOR", 3 },
-        { "NOT", 4 }, { "CMP", 5 }, { "SHL", 6 }, { "SHR", 7 },
+        { "NOT", 4 }, { "TST", 5 }, { "SHL", 6 }, { "SHR", 7 },
     };
 
     // Mnemonics that take an address/immediate operand. BRA is the unconditional
-    // branch (opcode 7); BRANCH accepted as an alias.
+    // branch (opcode 7); BRANCH accepted as an alias. OUT is the immediate form
+    // (port = literal); IN is stack-form and is handled as operand-less below.
     private static readonly Dictionary<string, int> OperandOps =
         new(StringComparer.OrdinalIgnoreCase)
     {
         { "PUSH", OpPush }, { "LOAD", OpLoad }, { "STORE", OpStore },
-        { "IN", OpIn }, { "BRA", OpBranch }, { "BRANCH", OpBranch },
+        { "OUT", OpOut }, { "BRA", OpBranch }, { "BRANCH", OpBranch },
         { "BEQ", OpBeq }, { "BCS", OpBcs }, { "BMI", OpBmi }, { "CALL", OpCall },
     };
 
@@ -272,11 +277,13 @@ internal static class Program
                 code = (byte)((OpAlu << 4) | aluNibble);
                 text = m;
             }
-            else if (string.Equals(m, "OUT", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(m, "IN", StringComparison.OrdinalIgnoreCase))
             {
+                // Stack form: port comes from TOS; literal don't-care, encoded 0
+                // (0x50 is the canonical form per the master doc).
                 RequireNoOperand(line, errors);
-                code = (byte)(OpOut << 4);   // literal don't-care, encoded 0
-                text = "OUT";
+                code = (byte)(OpIn << 4);
+                text = "IN";
             }
             else if (OperandOps.TryGetValue(m, out int opcode))
             {
@@ -298,6 +305,13 @@ internal static class Program
                 }
                 code = (byte)((opcode << 4) | (literal & 0xF));
                 text = $"{m} {line.Operand}";
+            }
+            else if (string.Equals(m, "CMP", StringComparison.OrdinalIgnoreCase))
+            {
+                errors.Add($"Line {line.Number}: CMP was replaced by TST " +
+                    "(flags-only test of TOS; the two-operand compare was dropped).");
+                code = 0;
+                text = m;
             }
             else
             {
@@ -444,12 +458,12 @@ Syntax:
   MNEM operand  operand is a number or a label (0..15)
 
 Numbers: 12 (decimal), 0x0C / $0C (hex), 0b1100 / %1100 (binary).
-PUSH/LOAD/STORE/IN may write the operand as #5 or 5.
+PUSH/LOAD/STORE/OUT may write the operand as #5 or 5.
 
 Instructions:
   SYS:   NOP HALT RET DUP DROP SWAP >R R>
-  ALU:   ADD ADC SUB XOR NOT CMP SHL SHR
-  Other: PUSH #imm  LOAD addr  STORE addr  IN port  OUT
+  ALU:   ADD ADC SUB XOR NOT TST SHL SHR
+  Other: PUSH #imm  LOAD addr  STORE addr  OUT #port  IN
   Flow:  BRA addr  BEQ addr  BCS addr  BMI addr  CALL addr
   Macro: ROT  (expands to: >R SWAP R> SWAP)");
     }
