@@ -1,0 +1,88 @@
+Name      GAL4_FLOW ;
+PartNo    BLINKY-GAL-04 ;
+Date      2026-06-10 ;
+Revision  01 ;
+Designer  Michael ;
+Company   Blinky ;
+Assembly  Mini-Blinky ;
+Location  U_DEC4 ;
+Device    G16V8 ;
+
+// -----------------------------------------------------------------
+// GAL 4 of 4 -- control flow + I/O + ALU carry-in. The flag-reading
+// device, now on a 16V8 (no 20V8): 6 outputs against 12 inputs is
+// an EXACT 18-signal-pin fit. The two extra inputs land on OLMC
+// pins 12 and 13, which the 16V8 allows as inputs in simple mode
+// (pins 15/16 cannot be inputs, so the outputs sit on 14..19).
+//
+// Sub-op nibble encoding (RATIFIED, sequential) -- see GAL1_ALU.pld.
+// Sub-op terms carry !L3 so nibbles 8..F decode to idle.
+//
+// PCSEL code map (the '153 pair on NEXTPC; PCSEL1 = S1, PCSEL0 = S0,
+// shared by both packages -- wire the mux inputs to match):
+//   0 0 = PC + 1 (C0)    0 1 = IR literal (C1)    1 0 = RTOS (C2)
+// PCSEL0 is the same flag-gated LD_PC sum of products as NEXTPC4.pld,
+// now fitting the 16V8 because this device carries only 6 outputs.
+//
+// ALU_CN drives the '181 Cn pin directly (active-high data table:
+// Cn = H no inject, L = +1 inject):
+//   ADD -> H,  SUB -> L,  ADC -> the COMPLEMENT of the C flag.
+// Don't-care off the arithmetic ops (logic mode pins Cn+4 high and
+// FLAG_WE gates every latch), so no further qualification needed.
+//
+// IO_RD / IO_WR are active LOW. IO_WR is phase-gated by WRPH like
+// every write strobe in the machine; IO_RD is a level read and
+// needs no gate. IOADDR_SEL drives the '157 I/O address mux:
+//   0 = TOS (stack-form IN, the default), 1 = IR literal (OUT #port).
+// -----------------------------------------------------------------
+
+/* Inputs */
+PIN 1  = N ;        /* flag: top bit of last ALU result   */
+PIN 2  = OP0 ;
+PIN 3  = OP1 ;
+PIN 4  = OP2 ;
+PIN 5  = OP3 ;
+PIN 6  = L0 ;
+PIN 7  = L1 ;
+PIN 8  = L2 ;
+PIN 9  = L3 ;
+PIN 11 = Z ;        /* flag: last ALU result was zero     */
+PIN 12 = WRPH ;     /* write-phase window (high = writes may assert) */
+PIN 13 = C ;        /* flag: carry / shifted-out bit      */
+
+/* Outputs */
+PIN 19 = PCSEL0 ;
+PIN 18 = PCSEL1 ;
+PIN 17 = ALU_CN ;    /* '181 Cn pin: H = no carry in       */
+PIN 16 = IO_RD ;     /* active LOW: input-port read strobe  */
+PIN 15 = IO_WR ;     /* active LOW: output-port write strobe */
+PIN 14 = IOADDR_SEL ;
+
+/* NEXTPC <- IR literal: BRANCH and CALL unconditionally, the three
+   conditional branches gated by their flag. Identical structure to
+   the NEXTPC4.pld bring-up file. */
+PCSEL0 = (!OP3 & OP2 & OP1 & OP0)              /* BRANCH 0111  */
+       # (OP3 & !OP2 & OP1 & OP0)              /* CALL   1011  */
+       # (OP3 & !OP2 & !OP1 & !OP0 & Z)        /* BEQ 1000 & Z */
+       # (OP3 & !OP2 & !OP1 & OP0 & C)         /* BCS 1001 & C */
+       # (OP3 & !OP2 & OP1 & !OP0 & N) ;       /* BMI 1010 & N */
+
+/* NEXTPC <- RTOS: RET only (SYS nibble 0010). */
+PCSEL1 = !OP3 & !OP2 & !OP1 & !OP0 & !L3 & !L2 & L1 & !L0 ;
+
+/* '181 carry-in, active LOW assertion:
+     SUB (nib 010): force Cn = L (the +1 that turns A-B-1 into A-B)
+     ADC (nib 001): Cn = L exactly when the C flag is set
+   ADD and everything else leave Cn = H. */
+!ALU_CN = (!OP3 & !OP2 & !OP1 & OP0 & !L3 & !L2 & L1 & !L0)
+        # (!OP3 & !OP2 & !OP1 & OP0 & !L3 & !L2 & !L1 & L0 & C) ;
+
+/* Input-port read strobe: stack-form IN (port = TOS). */
+!IO_RD = !OP3 & OP2 & !OP1 & OP0 ;
+
+/* Output-port write strobe: OUT #port, inside the write window. */
+!IO_WR = !OP3 & OP2 & OP1 & !OP0 & WRPH ;
+
+/* I/O address mux: literal side only on OUT #port; the default 0
+   = TOS side covers IN (and is don't-care everywhere else). */
+IOADDR_SEL = !OP3 & OP2 & OP1 & !OP0 ;

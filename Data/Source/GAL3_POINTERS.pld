@@ -1,0 +1,95 @@
+Name      GAL3_POINTERS ;
+PartNo    BLINKY-GAL-03 ;
+Date      2026-06-10 ;
+Revision  01 ;
+Designer  Michael ;
+Company   Blinky ;
+Assembly  Mini-Blinky ;
+Location  U_DEC3 ;
+Device    G16V8 ;
+
+// -----------------------------------------------------------------
+// GAL 3 of 4 -- stack pointers + return data-in mux + clock gate.
+// Outputs: DSP_EN, DSP_UD, RSP_EN, RSP_UD, RDIN_SEL, CLK_RUN
+// (6/8 macrocells -- two spare, the headroom reserved for the
+// immediate-ALU family).
+//
+// Sub-op nibble encoding (RATIFIED, sequential) -- see GAL1_ALU.pld.
+// Every sub-op term carries !L3 so nibbles 8..F decode to idle.
+//
+// DSP_EN / RSP_EN are active LOW, asserted = the '169 counts this
+// cycle ('169 /ENP is active low). This polarity choice is what
+// makes the derived stack-RAM strobes free of inverters:
+//
+//   stack 2114 /CS = DSP_EN (or RSP_EN) wired DIRECTLY -- both
+//                    active low, asserted exactly on push/pop.
+//   stack 2114 /WE = NAND(DSP_UD, WRPH) -- low only while counting
+//                    UP (a push) inside the write-phase window.
+//                    That NAND is the one budgeted glue gate per
+//                    RAM (master doc, "Write timing").
+//
+// DSP_UD / RSP_UD: HIGH = count up ('169 U/D pin, provisional
+// polarity per the master doc). Don't-care while the enable is
+// deasserted -- the '169 ignores U/D when not counting.
+//
+// RDIN_SEL (return-stack data-in mux): 0 = TOS (>R), 1 = PC+1
+// (CALL). Don't-care except on those two writes.
+//
+// CLK_RUN: HIGH = clock runs. Goes low only on HALT (SYS nibble 1),
+// freezing the machine with the front panel settled. Reserved
+// nibble 9 (HALT + L3) does NOT halt -- the !L3 guard holds.
+// -----------------------------------------------------------------
+
+/* Inputs */
+PIN 2  = OP0 ;
+PIN 3  = OP1 ;
+PIN 4  = OP2 ;
+PIN 5  = OP3 ;
+PIN 6  = L0 ;
+PIN 7  = L1 ;
+PIN 8  = L2 ;
+PIN 9  = L3 ;
+
+/* Outputs */
+PIN 19 = DSP_EN ;    /* active LOW: data-stack '169 count enable    */
+PIN 18 = DSP_UD ;    /* HIGH = up (push), LOW = down (pop)          */
+PIN 17 = RSP_EN ;    /* active LOW: return-stack '169 count enable  */
+PIN 16 = RSP_UD ;    /* HIGH = up, LOW = down                       */
+PIN 15 = RDIN_SEL ;  /* return data-in: 0 = TOS (>R), 1 = PC+1      */
+PIN 14 = CLK_RUN ;   /* HIGH = run, LOW = stopped (HALT)            */
+
+/* Data-stack pointer moves on:
+     push: DUP(3), R>(7)  -> SYS & L1 & L0   (HALT=1 excluded by L1)
+           PUSH, LOAD     -> opcode 001x
+     pop:  DROP(4), >R(6) -> SYS & L2 & !L0  (SWAP=5, R>=7 excluded)
+           ADD..XOR       -> ALU & !L2       (the binary group)
+           STORE, OUT     -> opcode 4 or 6   (!OP0 excludes IN=5)
+   Holds on everything else: SWAP, NOP/HALT/RET, NOT/TST/SHL/SHR,
+   IN, all control flow, reserved opcodes and nibbles. */
+!DSP_EN = (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & L1 & L0)
+        # (!OP3 & !OP2 & OP1)
+        # (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & L2 & !L0)
+        # (!OP3 & !OP2 & !OP1 & OP0 & !L3 & !L2)
+        # (!OP3 & OP2 & !OP0) ;
+
+/* Up on the push set only; don't-care while DSP_EN is deasserted. */
+DSP_UD = (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & L1 & L0)
+       # (!OP3 & !OP2 & OP1) ;
+
+/* Return-stack pointer moves on:
+     up:   >R(6), CALL
+     down: RET(2), R>(7)
+   The L2&L1 cube covers >R(110) and R>(111) together. */
+!RSP_EN = (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & L2 & L1)
+        # (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & !L2 & L1 & !L0)
+        # (OP3 & !OP2 & OP1 & OP0) ;
+
+/* Up on >R and CALL; down on RET and R>. */
+RSP_UD = (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & L2 & L1 & !L0)
+       # (OP3 & !OP2 & OP1 & OP0) ;
+
+/* Return data-in: PC+1 only on CALL; default 0 = TOS covers >R. */
+RDIN_SEL = OP3 & !OP2 & OP1 & OP0 ;
+
+/* Clock gate: stop only on HALT (SYS nibble 0001). */
+!CLK_RUN = !OP3 & !OP2 & !OP1 & !OP0 & !L3 & !L2 & !L1 & L0 ;

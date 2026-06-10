@@ -133,15 +133,16 @@ internal static class Compiler
             if (!usedOlmc.Contains(olmc))
                 map.Ac1[TargetDevice.Ac1Size - 1 - olmc] = 1;
 
-        // User signature: first 8 chars of PartNo, MSB-first, into the Sig region
-        // (matches WinCUPL). A shorter PartNo leaves the remaining bytes 0.
-        int sigChars = Math.Min(8, doc.PartNo.Length);
-        for (int k = 0; k < sigChars; k++)
-        {
-            int ch = doc.PartNo[k] & 0xFF;
-            for (int b = 0; b < 8; b++)
-                map.Sig[k * 8 + b] = (byte)((ch >> (7 - b)) & 1);
-        }
+        // User signature: emitted ERASED (all 1s), deliberately diverging from
+        // WinCUPL, which writes the first 8 chars of PartNo here. Some device
+        // programmers (observed: Xgecu T48, APP 13.16, GAL16V8D) do not program
+        // the UES region from the fuse buffer but still verify it against the
+        // buffer; any 0 bit in the file's UES then aborts the burn at fuse 2056
+        // with "Verify Error". An all-1s UES matches the erased state, so it
+        // verifies whether the programmer skips the region or programs it.
+        // The UES is a purely cosmetic label; nothing functional reads it.
+        for (int i = 0; i < map.Sig.Length; i++)
+            map.Sig[i] = 1;
 
         return map;
     }

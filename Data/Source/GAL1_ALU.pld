@@ -1,0 +1,101 @@
+Name      GAL1_ALU ;
+PartNo    BLINKY-GAL-01 ;
+Date      2026-06-10 ;
+Revision  01 ;
+Designer  Michael ;
+Company   Blinky ;
+Assembly  Mini-Blinky ;
+Location  U_DEC1 ;
+Device    G16V8 ;
+
+// -----------------------------------------------------------------
+// GAL 1 of 4 -- ALU / shift select.
+// Outputs: ALU_S0..S3, ALU_M, C_SRC, TOS_M0, TOS_M1 (8/8 macrocells).
+//
+// Sub-op nibble encoding (RATIFIED, sequential):
+//   SYS: NOP=0 HALT=1 RET=2 DUP=3 DROP=4 SWAP=5 >R=6 R>=7
+//   ALU: ADD=0 ADC=1 SUB=2 XOR=3 NOT=4 TST=5 SHL=6 SHR=7
+// Nibbles 8..F are reserved: every sub-op term carries !L3, so they
+// decode to the idle vector.
+//
+// Field structure exploited by the equations:
+//   ALU !L2      = binary/pop ops (ADD ADC SUB XOR)
+//   ALU  L2&L1   = shifts (SHL SHR); L0 = direction
+//   '181 selects used are 1001/0110/0000/1111, so S3==S0 and S2==S1
+//   -- four output pins, but only two distinct functions.
+//
+// The '181 S lines and M are deliberately UNQUALIFIED by opcode: off
+// the ALU class the '181 output is never selected into the TOS and
+// the flags never latch (FLAG_WE on GAL 2 carries the guard), so the
+// select pins are don't-care and the equations stay tiny.
+//
+// TOS_M1/M0 drive the '194 mode pins S1/S0 (PROVISIONAL polarity,
+// per the master doc -- confirm against the datasheet / sim model):
+//   S1 S0 = 0 0  hold      0 1  shift right
+//           1 0  shift left  1 1  parallel load
+//
+// Inputs: opcode nibble OP0..OP3 (= D4..D7, OP0 LSB) and the
+// literal / sub-op nibble L0..L3 (= D0..D3, L0 LSB).
+// -----------------------------------------------------------------
+
+/* Inputs */
+PIN 2  = OP0 ;
+PIN 3  = OP1 ;
+PIN 4  = OP2 ;
+PIN 5  = OP3 ;
+PIN 6  = L0 ;
+PIN 7  = L1 ;
+PIN 8  = L2 ;
+PIN 9  = L3 ;
+
+/* Outputs */
+PIN 19 = ALU_S0 ;
+PIN 18 = ALU_S1 ;
+PIN 17 = ALU_S2 ;
+PIN 16 = ALU_S3 ;
+PIN 15 = ALU_M ;
+PIN 14 = C_SRC ;
+PIN 13 = TOS_M0 ;
+PIN 12 = TOS_M1 ;
+
+/* '181 select. S3==S0 high on ADD/ADC(1001) and TST(1111);
+   S2==S1 high on SUB/XOR(0110) and TST. SHL/SHR (nib 6,7) are
+   don't-care, which lets the L2&L0 cube cover TST cheaply. */
+ALU_S0 = (!L2 & !L1) # (L2 & L0) ;
+ALU_S1 = (!L2 &  L1) # (L2 & L0) ;
+ALU_S2 = (!L2 &  L1) # (L2 & L0) ;
+ALU_S3 = (!L2 & !L1) # (L2 & L0) ;
+
+/* '181 mode: HIGH = logic (XOR=3 NOT=4 TST=5), LOW = arith
+   (ADD=0 ADC=1 SUB=2). Shifts (6,7) don't care. */
+ALU_M  = L2 # (L1 & L0) ;
+
+/* C flag source mux: 1 = the bit shifted out of the '194 (SHL/SHR),
+   0 = '181 Cn+4. Only the shifts select the shifter. */
+C_SRC  = !OP3 & !OP2 & !OP1 & OP0 & !L3 & L2 & L1 ;
+
+/* '194 mode. The shared "parallel load" set (both bits high):
+     opcodes 2,3 (PUSH, LOAD)         -> term 1
+     opcodes 4,5 (STORE, IN)          -> term 2
+     opcode  6   (OUT)                -> term 3
+     SYS DROP/SWAP/>R/R> (nib 4..7)   -> term 4
+     ALU ADD..XOR (nib 0..3)          -> term 5
+     ALU nib 0 or 4 (covers NOT)      -> term 6  (union with 5 = 0..4)
+   then each output adds its own shift term (SHL on M1, SHR on M0).
+   Everything else -- NOP HALT RET DUP TST, branches, CALL, reserved
+   opcodes 12..15, reserved nibbles 8..F -- falls to 00 = hold. */
+TOS_M1 = (!OP3 & !OP2 &  OP1)
+       # (!OP3 &  OP2 & !OP1)
+       # (!OP3 &  OP2 &  OP1 & !OP0)
+       # (!OP3 & !OP2 & !OP1 & !OP0 & !L3 &  L2)
+       # (!OP3 & !OP2 & !OP1 &  OP0 & !L3 & !L2)
+       # (!OP3 & !OP2 & !OP1 &  OP0 & !L3 & !L1 & !L0)
+       # (!OP3 & !OP2 & !OP1 &  OP0 & !L3 &  L2 &  L1 & !L0) ;  /* SHL */
+
+TOS_M0 = (!OP3 & !OP2 &  OP1)
+       # (!OP3 &  OP2 & !OP1)
+       # (!OP3 &  OP2 &  OP1 & !OP0)
+       # (!OP3 & !OP2 & !OP1 & !OP0 & !L3 &  L2)
+       # (!OP3 & !OP2 & !OP1 &  OP0 & !L3 & !L2)
+       # (!OP3 & !OP2 & !OP1 &  OP0 & !L3 & !L1 & !L0)
+       # (!OP3 & !OP2 & !OP1 &  OP0 & !L3 &  L2 &  L1 &  L0) ;  /* SHR */

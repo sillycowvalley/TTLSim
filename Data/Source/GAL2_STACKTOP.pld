@@ -1,0 +1,99 @@
+Name      GAL2_STACKTOP ;
+PartNo    BLINKY-GAL-02 ;
+Date      2026-06-10 ;
+Revision  01 ;
+Designer  Michael ;
+Company   Blinky ;
+Assembly  Mini-Blinky ;
+Location  U_DEC2 ;
+Device    G16V8 ;
+
+// -----------------------------------------------------------------
+// GAL 2 of 4 -- stack-top sources + flags + D-memory RAM.
+// Outputs: TOS_SRC0..2, NOS_LD, NOS_SRC, FLAG_WE, DMEM_CS, DMEM_WE
+// (8/8 macrocells).
+//
+// Sub-op nibble encoding (RATIFIED, sequential) -- see GAL1_ALU.pld.
+// Every sub-op term carries !L3 so nibbles 8..F decode to idle.
+//
+// TOS_SRC mux code map (chosen here; wire the TOS source mux to
+// match). NOS = 000 is the default so the three NOS-loading ops
+// (DROP, SWAP, >R) and STORE/OUT need no product terms at all:
+//   000 NOS   001 ALU   010 LIT   011 DMEM   100 INP   101 RTOS
+//   (110, 111 unused)
+//
+// NOS_SRC: 0 = data-stack read (every pop), 1 = old TOS.
+// The SYS family lands NOS<-TOS exactly on the ODD nibbles where it
+// matters (DUP=3, SWAP=5, R>=7; HALT=1 is a don't-care because
+// NOS_LD is low), so one literal -- L0 -- decodes it.
+//
+// DMEM_CS / DMEM_WE are the decoded exception (no pointer to derive
+// from). Both active LOW for the 2114. DMEM_WE is qualified in-GAL
+// by WRPH, the board write-phase window: the strobe must deassert
+// before the IR changes on the cycle-ending edge (master doc,
+// "Write timing"). WRPH is the same clock-phase window used by the
+// external NAND gates that derive the two stack-RAM /WE strobes.
+// -----------------------------------------------------------------
+
+/* Inputs */
+PIN 1  = WRPH ;     /* write-phase window (high = writes may assert) */
+PIN 2  = OP0 ;
+PIN 3  = OP1 ;
+PIN 4  = OP2 ;
+PIN 5  = OP3 ;
+PIN 6  = L0 ;
+PIN 7  = L1 ;
+PIN 8  = L2 ;
+PIN 9  = L3 ;
+
+/* Outputs */
+PIN 19 = TOS_SRC0 ;
+PIN 18 = TOS_SRC1 ;
+PIN 17 = TOS_SRC2 ;
+PIN 16 = NOS_LD ;
+PIN 15 = NOS_SRC ;
+PIN 14 = FLAG_WE ;
+PIN 13 = DMEM_CS ;   /* active LOW: 2114 /CS */
+PIN 12 = DMEM_WE ;   /* active LOW: 2114 /WE, phase-gated */
+
+/* TOS_SRC0: ALU(001) on any ALU op -- TST/SHL/SHR hold or shift the
+   '194 so the source is don't-care, letting opcodes 1 and 3 merge
+   into one cube (!OP3 & !OP2 & OP0 = ALU # LOAD). DMEM(011) needs
+   bit0 via LOAD; RTOS(101) needs it via R>. */
+TOS_SRC0 = (!OP3 & !OP2 & OP0)
+         # (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & L2 & L1 & L0) ;   /* R> */
+
+/* TOS_SRC1: LIT(010) on PUSH, DMEM(011) on LOAD -- opcode 001x. */
+TOS_SRC1 = !OP3 & !OP2 & OP1 ;
+
+/* TOS_SRC2: INP(100) on IN, RTOS(101) on R>. */
+TOS_SRC2 = (!OP3 & OP2 & !OP1 & OP0)
+         # (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & L2 & L1 & L0) ;   /* R> */
+
+/* NOS latch enable. Loads on:
+     SYS DUP..R> (nib 3..7)  -> terms 1,2 (L2 cube + L1&L0 cube)
+     ALU ADD..XOR (nib 0..3) -> term 3   (the binary/pop group)
+     PUSH, LOAD (opcode 001x)-> term 4
+     STORE, OUT (4 and 6)    -> term 5   (!OP0 excludes IN=5)
+   Holds on NOP/HALT/RET, NOT/TST/SHL/SHR, IN, all control flow. */
+NOS_LD = (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & L2)
+       # (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & L1 & L0)
+       # (!OP3 & !OP2 & !OP1 &  OP0 & !L3 & !L2)
+       # (!OP3 & !OP2 &  OP1)
+       # (!OP3 &  OP2 & !OP0) ;
+
+/* NOS source: 1 = old TOS (SYS odd nibbles + PUSH/LOAD),
+   0 = data-stack read (every pop). Don't-care when NOS_LD = 0. */
+NOS_SRC = (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & L0)
+        # (!OP3 & !OP2 & OP1) ;
+
+/* Flags latch only on the ALU class. This is the guard that makes
+   reserved ALU nibbles 8..F truly inert. */
+FLAG_WE = !OP3 & !OP2 & !OP1 & OP0 & !L3 ;
+
+/* D-memory 2114: selected on LOAD and STORE only. */
+!DMEM_CS = (!OP3 & !OP2 & OP1 & OP0)            /* LOAD  */
+         # (!OP3 & OP2 & !OP1 & !OP0) ;          /* STORE */
+
+/* D-memory write strobe: STORE, inside the write-phase window. */
+!DMEM_WE = !OP3 & OP2 & !OP1 & !OP0 & WRPH ;
