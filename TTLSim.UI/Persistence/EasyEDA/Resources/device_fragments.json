@@ -1,0 +1,774 @@
+{
+  "devices": {
+    "856406c93c6149ea8e8e6d8b2f9ca939": {
+      "title": "LED",
+      "attributes": {
+        "Symbol": "b81cb2d96d1a4f56acc9ecf6c73ef881",
+        "Footprint": "4a99776da31e4715b4080fd142f55a57",
+        "3D Model": "ebee32c7611e4683ad93cab18ddbd1f8",
+        "3D Model Title": "LED-TH_BD5.8-P2.54-FD_GREEN",
+        "3D Model Transform": "212.992,227.928,0,0,0,0,-7.874,0,-196.85",
+        "Designator": "D?",
+        "Name": "LED",
+        "Supplier": "LCSC",
+        "Supplier Part": "C7433087",
+        "Manufacturer": "TONYU",
+        "Manufacturer Part": "DY-324SVRC/H25/P-A4(FH)",
+        "JLCPCB Part Class": "Extended Part",
+        "Add into BOM": "yes",
+        "Convert to PCB": "yes",
+        "Description": "5mm through-hole LED (red); per-instance Name ATTR overrides display label"
+      },
+      "description": "5mm through-hole LED (red); per-instance Name ATTR overrides display label",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "856406c93c6149ea8e8e6d8b2f9ca939|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "custom_tags": "[]"
+    },
+    "1e0a4fb10c0d469abe117d2e6303547a": {
+      "title": "Power-VCC",
+      "attributes": {
+        "Symbol": "ed6167b3a4844aec980dab702aa58d0c",
+        "Global Net Name": "VCC",
+        "Footprint": "",
+        "Description": "netlabel-vcc"
+      },
+      "description": "netlabel-vcc",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "7737efc32ff44ecb8cf68152f3fbd014|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1723254107",
+      "custom_tags": "[]"
+    },
+    "e81f0dd534964512910e0f8ea58466cc": {
+      "title": "Ground-GND",
+      "attributes": {
+        "Symbol": "38bf0daecbc14b51831e971507e9b906",
+        "Footprint": "",
+        "Description": "netlabel-gnd"
+      },
+      "description": "netlabel-gnd",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "2e4e71fea06848c9a86eef0ed6338204|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1649575370",
+      "custom_tags": "[]"
+    },
+    "c321050abd3a4cf59555c4cd1f2d358d": {
+      "title": "Header-Male-2.54_1x2P",
+      "attributes": {
+        "Convert to PCB": "yes",
+        "Add into BOM": "yes",
+        "Designator": "H?",
+        "Supplier Part": "C52016390",
+        "Supplier": "LCSC",
+        "Manufacturer": "hanxia",
+        "Manufacturer Part": "HX PH254-01-02-Z-L11.5 male header connector",
+        "Symbol": "a30e8e4b43f24cd2acafd4910c0b8235",
+        "Footprint": "d419dee46db64bc89e7c7d9c6bd005ef",
+        "3D Model": "b9a02bffb1e248eabf92e8e2aa859dc0",
+        "3D Model Title": "HDR2.54-M-LI-1X2P",
+        "3D Model Transform": "200,100,0,0,0,0,0,0,-118.11",
+        "Holes Structure": "1x2P",
+        "Pitch": "2.54mm",
+        "Mounting Type": "Straight",
+        "Number of Rows": "1",
+        "Number of Holes": "2P",
+        "JLCPCB Part Class": "Extended Part",
+        "Description": "1x2P 2.54mm straight male pin header (through-hole)"
+      },
+      "description": "1x2P 2.54mm straight male pin header (through-hole)",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "c321050abd3a4cf59555c4cd1f2d358d|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "custom_tags": "[\"Connectors\",\"Headers\"]"
+    },
+    "61d307bf2bdb4663b1f70c9c59055ecc": {
+      "title": "Header-Male-2.54_1x4P",
+      "attributes": {
+        "Convert to PCB": "yes",
+        "Add into BOM": "yes",
+        "Designator": "H?",
+        "Supplier Part": "C52016392",
+        "Supplier": "LCSC",
+        "Manufacturer": "hanxia",
+        "Manufacturer Part": "HX PH254-01-04-Z-L11.5 straight pin header",
+        "Symbol": "e4b5734c1a83476b8ba4c83689cfc5be",
+        "Footprint": "5709415b839a4c77b5e71aab5f9c71ae",
+        "3D Model": "8a04245d30e54eb999146b73785c6ab0",
+        "3D Model Title": "HDR-TH_4P-HX-PH254-01-04-Z-L11.5",
+        "3D Model Transform": "392.519,98.425,0,0,0,0,0,0,-118.11",
+        "Holes Structure": "1x4P",
+        "Pitch": "2.54mm",
+        "Mounting Type": "Straight",
+        "Number of Rows": "1",
+        "Number of Holes": "4P",
+        "JLCPCB Part Class": "Extended Part",
+        "Description": "1x4P 2.54mm straight male pin header (through-hole)"
+      },
+      "description": "1x4P 2.54mm straight male pin header (through-hole)",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "61d307bf2bdb4663b1f70c9c59055ecc|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "custom_tags": "[\"Connectors\",\"Headers\"]"
+    },
+    "e6b16eb806964a6db55aaa7e40dbfc67": {
+      "title": "Header-Male-2.54_1x6P",
+      "attributes": {
+        "Convert to PCB": "yes",
+        "Add into BOM": "yes",
+        "Designator": "H?",
+        "Supplier Part": "C52016393",
+        "Supplier": "LCSC",
+        "Manufacturer": "hanxia",
+        "Manufacturer Part": "HX PH254-01-06-Z-L11.5 through hole header",
+        "Symbol": "542a95afd23746f7b03754cab139a8c3",
+        "Footprint": "4dfdd5d709bb4d2a8a23feaa147af49e",
+        "3D Model": "6ebb80f5681945ec9fb368fbc217c3f7",
+        "3D Model Title": "HDR-TH_6P-P2.54-M-LI-1X6P",
+        "3D Model Transform": "590.1563,98.425,0,0,0,0,0,0,-118.11",
+        "Holes Structure": "1x6P",
+        "Pitch": "2.54mm",
+        "Mounting Type": "Straight",
+        "Number of Rows": "1",
+        "Number of Holes": "6P",
+        "JLCPCB Part Class": "Extended Part",
+        "Description": "1x6P 2.54mm straight male pin header (through-hole)"
+      },
+      "description": "1x6P 2.54mm straight male pin header (through-hole)",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "e6b16eb806964a6db55aaa7e40dbfc67|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "custom_tags": "[\"Connectors\",\"Headers\"]"
+    },
+    "93f69b3d536b4f728684324d9aa3050f": {
+      "title": "Header-Male-2.54_1x8P",
+      "attributes": {
+        "Convert to PCB": "yes",
+        "Add into BOM": "yes",
+        "Designator": "H?",
+        "Supplier Part": "C32713274",
+        "Supplier": "LCSC",
+        "Manufacturer": "hanxia",
+        "Manufacturer Part": "HX PZ2.54-1x8P ZZ",
+        "Symbol": "53476ce9627d47b5bce643baf49f8d80",
+        "Footprint": "610264fc014347b5a38553a4c4dd06cb",
+        "3D Model": "926dcf5c05be473f8295f20cc8ccf72f",
+        "3D Model Title": "HDR-TH_8P-P2.54-V-M",
+        "3D Model Transform": "807.87244,98.425,0,0,0,0,0,0,-118.11",
+        "Holes Structure": "1x8P",
+        "Pitch": "2.54mm",
+        "Mounting Type": "Straight",
+        "Number of Rows": "1",
+        "Number of Holes": "8P",
+        "JLCPCB Part Class": "Extended Part",
+        "Description": "1x8P 2.54mm straight male pin header (through-hole)"
+      },
+      "description": "1x8P 2.54mm straight male pin header (through-hole)",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "93f69b3d536b4f728684324d9aa3050f|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "custom_tags": "[\"Connectors\",\"Headers\"]"
+    },
+    "7f3a1e2c9b4d4e6a8f0c1d2e3f4a5b6c": {
+      "title": "Switch-via-Header-2P54",
+      "attributes": {
+        "Symbol": "f515f6654dec4a1394346860cb152b4c",
+        "Footprint": "2fa9edd918204c849d260ba835fd4d43",
+        "Designator": "S?",
+        "Name": "Switch",
+        "Add into BOM": "yes",
+        "Convert to PCB": "yes",
+        "Description": "SPST rocker switch wired off-board via a 2-pin 2.54mm male header"
+      },
+      "description": "SPST rocker switch wired off-board via a 2-pin 2.54mm male header",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "7f3a1e2c9b4d4e6a8f0c1d2e3f4a5b6c|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748313600",
+      "custom_tags": "[\"Switches\"]"
+    },
+    "8a4b2f3d0c5e5f7b9a1d2e3f4a5b6c7d": {
+      "title": "Button-via-Header-2P54",
+      "attributes": {
+        "Symbol": "06cf37fc06354cb7b5e003313b5ce108",
+        "Footprint": "2fa9edd918204c849d260ba835fd4d43",
+        "Designator": "B?",
+        "Name": "Button",
+        "Add into BOM": "yes",
+        "Convert to PCB": "yes",
+        "Description": "SPST momentary pushbutton wired off-board via a 2-pin 2.54mm male header"
+      },
+      "description": "SPST momentary pushbutton wired off-board via a 2-pin 2.54mm male header",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "8a4b2f3d0c5e5f7b9a1d2e3f4a5b6c7d|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748313600",
+      "custom_tags": "[\"Switches\",\"Tactile Switches\"]"
+    },
+    "6d850419aea044bb805429ccd89d98eb": {
+      "title": "Resistor",
+      "attributes": {
+        "LCSC Part Name": "1kΩ ±5%",
+        "Supplier Part": "C2894660",
+        "Manufacturer": "VO",
+        "Manufacturer Part": "CR1/4W-1K±5%-ST52",
+        "Supplier Footprint": "轴向引线",
+        "JLCPCB Part Class": "Extended Part",
+        "Datasheet": "https://datasheet.lcsc.com/datasheet/pdf/f7f033f43920630443647ff79c60c0bb.pdf?productCode=C2894660",
+        "Supplier": "LCSC",
+        "Add into BOM": "yes",
+        "Convert to PCB": "yes",
+        "Symbol": "2d1d4b07d6cd4afeaf2cd056f4440b61",
+        "Designator": "R?",
+        "Footprint": "72c61d64364a43e890807f3622aaf0ce",
+        "3D Model": "f91fbe0e2e6f409498f09f811e4616fe",
+        "3D Model Title": "RES-TH_BD2.7-L6.2-P10.20-D0.4",
+        "3D Model Transform": "417.322,106.221,0,0,0,0,0,0,-196.85",
+        "Type": "Carbon Film Resistor",
+        "Value": "1k",
+        "Tolerance": "±5%",
+        "Description": "Through-hole resistor -- value supplied per instance via Value ATTR override"
+      },
+      "description": "Through-hole resistor -- value supplied per instance via Value ATTR override",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "6d850419aea044bb805429ccd89d98eb|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1660759335",
+      "custom_tags": "[\"Resistors\"]"
+    },
+    "c1a2b3c4d5e6f70819a8b7c6d5e4f312": {
+      "title": "Capacitor",
+      "attributes": {
+        "LCSC Part Name": "100pF 50V ±10%",
+        "Supplier Part": "C249147",
+        "Manufacturer": "Walsin",
+        "Manufacturer Part": "N06B1B101KN0B0S0B0",
+        "Supplier Footprint": "轴向引线",
+        "JLCPCB Part Class": "Extended Part",
+        "Supplier": "LCSC",
+        "Add into BOM": "yes",
+        "Convert to PCB": "yes",
+        "Symbol": "0dbe2659d61a47bd9dc4e229a16eafdf",
+        "Designator": "C?",
+        "Footprint": "c8adb17cc38c429eb6470ae3c3c53c10",
+        "3D Model": "c7c082d623b445348079c63a4f33d608",
+        "3D Model Title": "CAP-TH_BD5.5-W2.5-P5.0",
+        "3D Model Transform": "230.016,106.096,0,0,0,0,-0.005,0,-137.795",
+        "Type": "Ceramic Disc Capacitor",
+        "Value": "100pF",
+        "Tolerance": "±10%",
+        "Description": "Non-polarised through-hole capacitor -- value supplied per instance via Value ATTR override"
+      },
+      "description": "Non-polarised through-hole capacitor -- value supplied per instance via Value ATTR override",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "c1a2b3c4d5e6f70819a8b7c6d5e4f312|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "custom_tags": "[\"Capacitors\"]"
+    },
+    "c2b1a09f8e7d6c5b4a3928171605040e": {
+      "title": "PolarizedCapacitor",
+      "attributes": {
+        "LCSC Part Name": "10µF 50V ±20%",
+        "Supplier Part": "C88726",
+        "Manufacturer": "Rubycon",
+        "Manufacturer Part": "50YXF10MEFC5X11",
+        "Supplier Footprint": "插件",
+        "JLCPCB Part Class": "Extended Part",
+        "Supplier": "LCSC",
+        "Add into BOM": "yes",
+        "Convert to PCB": "yes",
+        "Symbol": "9177ab84b26345e39a087faeba74d4d2",
+        "Designator": "C?",
+        "Footprint": "d1a1cd74402d4157adb43869f0cba48d",
+        "3D Model": "a6753ac7f17a4fce96dd233a0f76b154",
+        "3D Model Title": "CAP-TH_D5.0×H7.0×P2.0",
+        "3D Model Transform": "197.091,196.7911,0,0,0,0,0,0,-137.795",
+        "Type": "Aluminium Electrolytic Capacitor",
+        "Value": "10µF",
+        "Tolerance": "±20%",
+        "Description": "Polarised through-hole electrolytic capacitor -- value supplied per instance via Value ATTR override"
+      },
+      "description": "Polarised through-hole electrolytic capacitor -- value supplied per instance via Value ATTR override",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "c2b1a09f8e7d6c5b4a3928171605040e|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "custom_tags": "[\"Capacitors\",\"Aluminium Electrolytic\"]"
+    },
+    "02d66298da854e5d826c8864173f84aa": {
+      "title": "Diode",
+      "attributes": {
+        "LCSC Part Name": "肖特基二极管",
+        "Supplier Part": "C49318088",
+        "Manufacturer": "luJing",
+        "Manufacturer Part": "1N5819",
+        "Supplier Footprint": "DO-41",
+        "JLCPCB Part Class": "Extended Part",
+        "Datasheet": "https://item.szlcsc.com/datasheet/1N5819/51789330.html",
+        "Supplier": "LCSC",
+        "Add into BOM": "yes",
+        "Convert to PCB": "yes",
+        "Symbol": "0fff7573b4cb40f0b1ca3171fa47cdbb",
+        "Designator": "D?",
+        "Footprint": "b5bb679d28f74cf3aa33ec57a9f03b89",
+        "3D Model": "39d8e4572d564e62a86d2224fc908dd8",
+        "3D Model Title": "DO-41_D2.4-L4.7-P8.70",
+        "3D Model Transform": "374.015,94.428,0,0,0,0,0,0,-137.795",
+        "Voltage - Forward(Vf@If)": "600mV@1A",
+        "Voltage - DC Reverse(Vr)": "40V",
+        "Current - Rectified": "1A",
+        "Reverse Leakage Current (Ir)": "500uA",
+        "Operating Junction Temperature Range": "-55℃~+125℃",
+        "Non-Repetitive Peak Forward Surge Current": "25A",
+        "Name": "={Manufacturer Part}",
+        "Description": "Schottky diode -- per-instance Name ATTR overrides display label"
+      },
+      "description": "Schottky diode -- per-instance Name ATTR overrides display label",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "02d66298da854e5d826c8864173f84aa|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "custom_tags": "[\"Diodes\"]"
+    },
+    "cf60d3b4e80f4567ad60bdfda7d0b00e": {
+      "title": "NE555N_C398063",
+      "attributes": {
+        "LCSC Part Name": "时基集成芯片",
+        "Supplier Part": "C398063",
+        "Manufacturer": "HGSEMI(华冠)",
+        "Manufacturer Part": "NE555N",
+        "Supplier Footprint": "DIP-8",
+        "JLCPCB Part Class": "Extended Part",
+        "Datasheet": "https://item.szlcsc.com/datasheet/NE555N/379829.html",
+        "Supplier": "LCSC",
+        "Add into BOM": "yes",
+        "Convert to PCB": "yes",
+        "Symbol": "3d01f6582f3b40059b1d912cd60530a4",
+        "Designator": "U?",
+        "Footprint": "8b2a17fc29ee4e14bd39b38b48aed4a0",
+        "3D Model": "b7845fe8db4a445fa151f46caa1bdfdf",
+        "3D Model Title": "DIP-8_L9.8-W6.6-H3.5-LS7.62-P2.54",
+        "3D Model Transform": "385.826,311.8104,0,0,0,0,-1.693,0,-137.795",
+        "Timer Number": "-",
+        "Voltage - Supply": "4.5V~16V",
+        "Output Current": "-",
+        "Supply Current": "-",
+        "Operating Temperature": "-",
+        "Features": "复位功能；关断控制",
+        "Name": "={Manufacturer Part}",
+        "Description": "Timer Number:- Voltage - Supply:4.5V~16V Voltage - Supply:4.5V~16V Output Current:- Supply Current:- Operating Temperature:- Operating Temperature:- Features:复位功能；关断控制"
+      },
+      "description": "Timer Number:- Voltage - Supply:4.5V~16V Voltage - Supply:4.5V~16V Output Current:- Supply Current:- Operating Temperature:- Operating Temperature:- Features:复位功能；关断控制",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        "https://alimg.szlcsc.com/upload/public/product/middle/20240309/2E5A1DFCA291E60E471A9C05E5510AC9.jpg"
+      ],
+      "source": "d7575bd5d4944433868d8a5c28a252e8|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1660160097",
+      "custom_tags": "[]"
+    }
+  },
+  "symbols": {
+    "ed6167b3a4844aec980dab702aa58d0c": {
+      "title": "VCC",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "source": "b4fc5614febe4d0c966db51b22af788e|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1723254107",
+      "custom_tags": "[]",
+      "desc": "",
+      "type": 18
+    },
+    "38bf0daecbc14b51831e971507e9b906": {
+      "title": "GND",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "source": "1c18ed5a06f64a07bdb5b0cf525b3d9e|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1649575362",
+      "custom_tags": "[]",
+      "desc": "",
+      "type": 18
+    },
+    "f515f6654dec4a1394346860cb152b4c": {
+      "source": "ad637de858d5421183d194ff89d2b8ea|0819f05c4eef4c71ace90d822a990e87",
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Switches\"]",
+      "title": "SS11-RBDWQ-R20-R",
+      "version": "1660803045",
+      "type": 2
+    },
+    "06cf37fc06354cb7b5e003313b5ce108": {
+      "source": "c9f8142a78154d49a0ae7d3be886776a|0819f05c4eef4c71ace90d822a990e87",
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Switches\",\"Tactile Switches\"]",
+      "title": "SKPMAPE010",
+      "version": "1660803016",
+      "type": 2
+    },
+    "2d1d4b07d6cd4afeaf2cd056f4440b61": {
+      "source": "2d1d4b07d6cd4afeaf2cd056f4440b61|0819f05c4eef4c71ace90d822a990e87",
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Resistors\"]",
+      "title": "Resistor",
+      "version": "1660802535",
+      "type": 2
+    },
+    "0dbe2659d61a47bd9dc4e229a16eafdf": {
+      "source": "0dbe2659d61a47bd9dc4e229a16eafdf|0819f05c4eef4c71ace90d822a990e87",
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Capacitors\"]",
+      "title": "Capacitor",
+      "version": "1748390400",
+      "type": 2
+    },
+    "9177ab84b26345e39a087faeba74d4d2": {
+      "source": "9177ab84b26345e39a087faeba74d4d2|0819f05c4eef4c71ace90d822a990e87",
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Capacitors\",\"Aluminium Electrolytic\"]",
+      "title": "PolarizedCapacitor",
+      "version": "1748390400",
+      "type": 2
+    },
+    "a30e8e4b43f24cd2acafd4910c0b8235": {
+      "title": "Header-Male-2.54_1x2P",
+      "source": "a30e8e4b43f24cd2acafd4910c0b8235|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "desc": "2.54-1*2P male",
+      "type": 2,
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Connectors\"]"
+    },
+    "e4b5734c1a83476b8ba4c83689cfc5be": {
+      "title": "Header-Male-2.54_1x4P",
+      "source": "e4b5734c1a83476b8ba4c83689cfc5be|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "desc": "2.54-1*4P male",
+      "type": 2,
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Connectors\"]"
+    },
+    "542a95afd23746f7b03754cab139a8c3": {
+      "title": "Header-Male-2.54_1x6P",
+      "source": "542a95afd23746f7b03754cab139a8c3|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "desc": "2.54-1*6P male",
+      "type": 2,
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Connectors\"]"
+    },
+    "53476ce9627d47b5bce643baf49f8d80": {
+      "title": "Header-Male-2.54_1x8P",
+      "source": "53476ce9627d47b5bce643baf49f8d80|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "desc": "2.54-1*8P male",
+      "type": 2,
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Connectors\"]"
+    },
+    "b81cb2d96d1a4f56acc9ecf6c73ef881": {
+      "title": "LED",
+      "source": "b81cb2d96d1a4f56acc9ecf6c73ef881|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "desc": "",
+      "type": 2,
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[]"
+    },
+    "0fff7573b4cb40f0b1ca3171fa47cdbb": {
+      "title": "Diode",
+      "source": "0fff7573b4cb40f0b1ca3171fa47cdbb|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "desc": "",
+      "type": 2,
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Diodes\"]"
+    },
+    "3d01f6582f3b40059b1d912cd60530a4": {
+      "source": "122b010dc1f44ac39450a8360e1baf86|0819f05c4eef4c71ace90d822a990e87",
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[]",
+      "title": "NE555N",
+      "version": "1740987924",
+      "type": 2
+    }
+  },
+  "footprints": {
+    "2fa9edd918204c849d260ba835fd4d43": {
+      "title": "HDR-TH_2P-P2.54-V-M-1",
+      "source": "f8790065914e4d75b82d300fa5733686|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1660802238",
+      "type": 4,
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"HDR-TH\"]"
+    },
+    "72c61d64364a43e890807f3622aaf0ce": {
+      "title": "RES-TH_BD2.7-L6.2-P10.20-D0.4",
+      "source": "72c61d64364a43e890807f3622aaf0ce|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "type": 4,
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"RES-TH\"]"
+    },
+    "c8adb17cc38c429eb6470ae3c3c53c10": {
+      "title": "CAP-TH_L5.5-W2.5-P5.00-D1.0",
+      "source": "c8adb17cc38c429eb6470ae3c3c53c10|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "type": 4,
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"CAP-TH\"]"
+    },
+    "d1a1cd74402d4157adb43869f0cba48d": {
+      "title": "CAP-TH_BD5.0-P2.00-D0.8-FD",
+      "source": "d1a1cd74402d4157adb43869f0cba48d|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "type": 4,
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"CAP-TH\"]"
+    },
+    "d419dee46db64bc89e7c7d9c6bd005ef": {
+      "title": "HDR-TH_2P-P2.54-V-M",
+      "source": "d419dee46db64bc89e7c7d9c6bd005ef|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "type": 4,
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"HDR-TH\"]"
+    },
+    "5709415b839a4c77b5e71aab5f9c71ae": {
+      "title": "HDR-TH_4P-HX-PH254-01-04-Z-L11.5",
+      "source": "5709415b839a4c77b5e71aab5f9c71ae|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "type": 4,
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"HDR-TH\"]"
+    },
+    "4dfdd5d709bb4d2a8a23feaa147af49e": {
+      "title": "HDR-TH_6P-P2.54-V-M",
+      "source": "4dfdd5d709bb4d2a8a23feaa147af49e|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "type": 4,
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"HDR-TH\"]"
+    },
+    "610264fc014347b5a38553a4c4dd06cb": {
+      "title": "HDR-TH_8P-P2.54-V-M",
+      "source": "610264fc014347b5a38553a4c4dd06cb|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "type": 4,
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"HDR-TH\"]"
+    },
+    "4a99776da31e4715b4080fd142f55a57": {
+      "title": "LED-TH_BD5.8-P2.54-FD_GREEN",
+      "source": "4a99776da31e4715b4080fd142f55a57|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "type": 4,
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"LED-TH\"]"
+    },
+    "b5bb679d28f74cf3aa33ec57a9f03b89": {
+      "title": "DO-41_BD2.4-L4.7-P8.70-D0.8-RD",
+      "source": "b5bb679d28f74cf3aa33ec57a9f03b89|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "type": 4,
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"DO-41\"]"
+    },
+    "8b2a17fc29ee4e14bd39b38b48aed4a0": {
+      "title": "DIP-8_L9.8-W6.6-P2.54-LS7.6-BL",
+      "source": "a94f7ed47dea4b6da237fb7da462bc08|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1649816663",
+      "type": 4,
+      "desc": ";CDIP-8;PDIP-8;MiniDIP-8;DIP-8;-;PG-DIP-8;PDIP-8 GW;PDIP-8-300mil;DIP-7;PDIP8;CERDIP-8;MDIP-8",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"DIP-8\"]"
+    },
+    "f8db98e4ac5c41b3b7fa99d6d16d6531": {
+      "title": "PDIP-14_L19.3-W6.4-P2.54-LS7.9-BL-1",
+      "source": "21cec7a0e9e54b64a709225f1b7b068c|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1723083535",
+      "type": 4,
+      "desc": ";PDIP-14-300mil;PDIP-14;-;14-DIP;DIP-14",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"PDIP-14\"]"
+    },
+    "78717fccd6aa4a3b893611519dd3f0bc": {
+      "title": "DIP-16_L19.8-W6.5-P2.54-LS7.6-BL",
+      "source": "61a30c6fcfb44e23b2552fa03bb1327f|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1678969479",
+      "type": 4,
+      "desc": ";-;DIP-16;PDIP-16;PowerDIP-16;DIP-4;CDIP-16",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"DIP-16\"]"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+%SIGNAL
+PIN  19 =  LD_PC 
+PIN   2 =  OP0 
+PIN   3 =  OP1 
+PIN   4 =  OP2 
+PIN   5 =  OP3 
+%END
+
+%FIELD
+%END
+
+%EQUATION
+LD_PC =>
+    OP0 & OP1 & OP2 & !OP3
+
+%END

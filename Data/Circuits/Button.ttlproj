@@ -1,0 +1,162 @@
+{
+  "schematic": {
+    "devices": [
+      {
+        "id": "b565e3ded2a74b9ea9ff9ac22cef5192",
+        "designator": "SW1",
+        "partKind": "passive",
+        "partIdentifier": "button",
+        "family": null,
+        "value": null
+      },
+      {
+        "id": "0c13991eac8040b5b9e131bc77ab156e",
+        "designator": "D6",
+        "partKind": "passive",
+        "partIdentifier": "led",
+        "family": null,
+        "value": null
+      },
+      {
+        "id": "15ad407a94d146bc9d68cda709272dd7",
+        "designator": "R1",
+        "partKind": "passive",
+        "partIdentifier": "resistor",
+        "family": null,
+        "value": null
+      }
+    ],
+    "units": [
+      {
+        "id": "7a8ab1cdc718412cba89202a6824d378",
+        "deviceId": "b565e3ded2a74b9ea9ff9ac22cef5192",
+        "unitLetter": "",
+        "position": {
+          "x": 12,
+          "y": 13
+        },
+        "label": "",
+        "rotation": 90,
+        "switchClosed": null
+      },
+      {
+        "id": "1717bdc796da4f2ba31b53c2f491beb3",
+        "deviceId": "0c13991eac8040b5b9e131bc77ab156e",
+        "unitLetter": "",
+        "position": {
+          "x": 13,
+          "y": 24
+        },
+        "label": "",
+        "rotation": 90,
+        "switchClosed": null
+      },
+      {
+        "id": "4b855126e7aa469c8ab40ccd6db121ac",
+        "deviceId": "15ad407a94d146bc9d68cda709272dd7",
+        "unitLetter": "",
+        "position": {
+          "x": 12,
+          "y": 38
+        },
+        "label": "470",
+        "rotation": 90,
+        "switchClosed": null
+      }
+    ],
+    "items": [
+      {
+        "type": "vcc",
+        "id": "a5d92e9664584331ac9de901164a8a69",
+        "label": "VCC",
+        "position": {
+          "x": 13,
+          "y": -5
+        },
+        "rotation": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null
+      },
+      {
+        "type": "gnd",
+        "id": "d346d907a7044d71918a6f19d13c1b6d",
+        "label": "GND",
+        "position": {
+          "x": 13,
+          "y": 52
+        },
+        "rotation": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null
+      }
+    ],
+    "connections": [
+      {
+        "id": "353a9307f65e4d30bcf8715d83e8fbec",
+        "a": {
+          "itemId": "1717bdc796da4f2ba31b53c2f491beb3",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "7a8ab1cdc718412cba89202a6824d378",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "80f1ca7efc3e41af8c0a43023064c5dd",
+        "a": {
+          "itemId": "a5d92e9664584331ac9de901164a8a69",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "7a8ab1cdc718412cba89202a6824d378",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "572a5e7389b04261a4b510c431f303b9",
+        "a": {
+          "itemId": "1717bdc796da4f2ba31b53c2f491beb3",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "4b855126e7aa469c8ab40ccd6db121ac",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "647a4b8faba440158698925a75de37a4",
+        "a": {
+          "itemId": "4b855126e7aa469c8ab40ccd6db121ac",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "d346d907a7044d71918a6f19d13c1b6d",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": null
+      }
+    ],
+    "wires": []
+  },
+  "view": {
+    "zoom": 1.4794493,
+    "pan": {
+      "x": 364,
+      "y": 168
+    }
+  }
+}

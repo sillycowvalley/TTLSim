@@ -1,0 +1,409 @@
+{
+  "schematic": {
+    "devices": [
+      {
+        "id": "dev-u1",
+        "designator": "U1",
+        "partKind": "ic",
+        "partIdentifier": "04",
+        "family": "HC",
+        "value": null
+      },
+      {
+        "id": "dev-y1",
+        "designator": "Y1",
+        "partKind": "passive",
+        "partIdentifier": "crystal",
+        "family": null,
+        "value": "32.768 kHz"
+      },
+      {
+        "id": "dev-r4",
+        "designator": "R4",
+        "partKind": "passive",
+        "partIdentifier": "resistor",
+        "family": null,
+        "value": "10M"
+      },
+      {
+        "id": "dev-r5",
+        "designator": "R5",
+        "partKind": "passive",
+        "partIdentifier": "resistor",
+        "family": null,
+        "value": "470k"
+      },
+      {
+        "id": "dev-c4",
+        "designator": "C4",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": "22pF"
+      },
+      {
+        "id": "dev-c5",
+        "designator": "C5",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": "22pF"
+      }
+    ],
+    "units": [
+      {
+        "id": "u1a",
+        "deviceId": "dev-u1",
+        "unitLetter": "a",
+        "position": {
+          "x": 19,
+          "y": 10
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "u1b",
+        "deviceId": "dev-u1",
+        "unitLetter": "b",
+        "position": {
+          "x": 41,
+          "y": 42
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "u1c",
+        "deviceId": "dev-u1",
+        "unitLetter": "c",
+        "position": {
+          "x": 50,
+          "y": 42
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "u1d",
+        "deviceId": "dev-u1",
+        "unitLetter": "d",
+        "position": {
+          "x": 60,
+          "y": 41
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "u1e",
+        "deviceId": "dev-u1",
+        "unitLetter": "e",
+        "position": {
+          "x": 70,
+          "y": 42
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "u1f",
+        "deviceId": "dev-u1",
+        "unitLetter": "f",
+        "position": {
+          "x": 80,
+          "y": 40
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "y1",
+        "deviceId": "dev-y1",
+        "unitLetter": "",
+        "position": {
+          "x": 20,
+          "y": 23
+        },
+        "label": "32.768 kHz",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "r4",
+        "deviceId": "dev-r4",
+        "unitLetter": "",
+        "position": {
+          "x": 22,
+          "y": 29
+        },
+        "label": "10M",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "r5",
+        "deviceId": "dev-r5",
+        "unitLetter": "",
+        "position": {
+          "x": 33,
+          "y": 15
+        },
+        "label": "470k",
+        "rotation": 90,
+        "switchClosed": null
+      },
+      {
+        "id": "c5",
+        "deviceId": "dev-c5",
+        "unitLetter": "",
+        "position": {
+          "x": 14,
+          "y": 34
+        },
+        "label": "15pF",
+        "rotation": 90,
+        "switchClosed": null
+      },
+      {
+        "id": "c4",
+        "deviceId": "dev-c4",
+        "unitLetter": "",
+        "position": {
+          "x": 34,
+          "y": 34
+        },
+        "label": "15pF",
+        "rotation": 90,
+        "switchClosed": null
+      }
+    ],
+    "items": [
+      {
+        "type": "gnd",
+        "id": "gnd1",
+        "label": "GND",
+        "position": {
+          "x": 26,
+          "y": 45
+        },
+        "rotation": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null
+      }
+    ],
+    "connections": [
+      {
+        "id": "w-in-r4",
+        "a": {
+          "itemId": "u1a",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "r4",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Orange"
+      },
+      {
+        "id": "w-in-c5",
+        "a": {
+          "itemId": "u1a",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "c5",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Orange"
+      },
+      {
+        "id": "w-in-y1",
+        "a": {
+          "itemId": "u1a",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "y1",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Orange"
+      },
+      {
+        "id": "w-out-r4",
+        "a": {
+          "itemId": "u1a",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "r4",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Green"
+      },
+      {
+        "id": "w-out-r5",
+        "a": {
+          "itemId": "u1a",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "r5",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Green"
+      },
+      {
+        "id": "w-r5-y1",
+        "a": {
+          "itemId": "r5",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "y1",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Tan"
+      },
+      {
+        "id": "w-r5-c4",
+        "a": {
+          "itemId": "r5",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "c4",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Tan"
+      },
+      {
+        "id": "w-c5-gnd",
+        "a": {
+          "itemId": "c5",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd1",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "w-u1b-in",
+        "a": {
+          "itemId": "u1b",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd1",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "w-u1c-in",
+        "a": {
+          "itemId": "u1c",
+          "pinNumber": 5,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd1",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "w-u1d-in",
+        "a": {
+          "itemId": "u1d",
+          "pinNumber": 9,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd1",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "w-u1e-in",
+        "a": {
+          "itemId": "u1e",
+          "pinNumber": 11,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd1",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "w-u1f-in",
+        "a": {
+          "itemId": "u1f",
+          "pinNumber": 13,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd1",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "b0e812e79f19401ba759d2644fe5a176",
+        "a": {
+          "itemId": "c4",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd1",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      }
+    ],
+    "wires": []
+  },
+  "view": {
+    "zoom": 3.4695904,
+    "pan": {
+      "x": -50,
+      "y": -71
+    }
+  }
+}

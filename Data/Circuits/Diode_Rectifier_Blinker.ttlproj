@@ -1,0 +1,291 @@
+{
+  "schematic": {
+    "devices": [
+      {
+        "id": "dev_d1",
+        "designator": "D1",
+        "partKind": "passive",
+        "partIdentifier": "diode",
+        "family": null,
+        "value": "1N5819"
+      },
+      {
+        "id": "dev_d2",
+        "designator": "D2",
+        "partKind": "passive",
+        "partIdentifier": "diode",
+        "family": null,
+        "value": "1N5819"
+      },
+      {
+        "id": "dev_led1",
+        "designator": "D3",
+        "partKind": "passive",
+        "partIdentifier": "led",
+        "family": null,
+        "value": "Red"
+      },
+      {
+        "id": "dev_led2",
+        "designator": "D4",
+        "partKind": "passive",
+        "partIdentifier": "led",
+        "family": null,
+        "value": "Green"
+      },
+      {
+        "id": "dev_r1",
+        "designator": "R1",
+        "partKind": "passive",
+        "partIdentifier": "resistor",
+        "family": null,
+        "value": "330"
+      },
+      {
+        "id": "dev_r2",
+        "designator": "R2",
+        "partKind": "passive",
+        "partIdentifier": "resistor",
+        "family": null,
+        "value": "330"
+      }
+    ],
+    "units": [
+      {
+        "id": "u_d1",
+        "deviceId": "dev_d1",
+        "unitLetter": "",
+        "position": {
+          "x": 33,
+          "y": 43
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "u_d2",
+        "deviceId": "dev_d2",
+        "unitLetter": "",
+        "position": {
+          "x": 35,
+          "y": 11
+        },
+        "label": "",
+        "rotation": 180,
+        "switchClosed": null
+      },
+      {
+        "id": "u_led1",
+        "deviceId": "dev_led1",
+        "unitLetter": "",
+        "position": {
+          "x": 48,
+          "y": 43
+        },
+        "label": "HIGH",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "u_led2",
+        "deviceId": "dev_led2",
+        "unitLetter": "",
+        "position": {
+          "x": 49,
+          "y": 11
+        },
+        "label": "LOW",
+        "rotation": 180,
+        "switchClosed": null
+      },
+      {
+        "id": "u_r1",
+        "deviceId": "dev_r1",
+        "unitLetter": "",
+        "position": {
+          "x": 58,
+          "y": 43
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "u_r2",
+        "deviceId": "dev_r2",
+        "unitLetter": "",
+        "position": {
+          "x": 65,
+          "y": 11
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      }
+    ],
+    "items": [
+      {
+        "type": "clock",
+        "id": "clk1",
+        "label": "1 Hz",
+        "position": {
+          "x": 5,
+          "y": 30
+        },
+        "rotation": 0,
+        "frequencyHz": 1,
+        "dutyCycle": 0.5,
+        "startHigh": false
+      },
+      {
+        "type": "gnd",
+        "id": "gnd1",
+        "label": "GND",
+        "position": {
+          "x": 73,
+          "y": 55
+        },
+        "rotation": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null
+      },
+      {
+        "type": "vcc",
+        "id": "ff57b09b47c84b78965af226189ff68f",
+        "label": "5V",
+        "position": {
+          "x": 72,
+          "y": 8
+        },
+        "rotation": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null
+      }
+    ],
+    "connections": [
+      {
+        "id": "c_clk_d1",
+        "a": {
+          "itemId": "clk1",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "u_d1",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "c_d1_led1",
+        "a": {
+          "itemId": "u_d1",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "u_led1",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Orange"
+      },
+      {
+        "id": "c_led1_r1",
+        "a": {
+          "itemId": "u_led1",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "u_r1",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Brown"
+      },
+      {
+        "id": "c_r1_gnd",
+        "a": {
+          "itemId": "u_r1",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd1",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "515968d29e974a76b8cfce39a1124304",
+        "a": {
+          "itemId": "clk1",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "u_d2",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "da619d0072bb4e5394f270de9b6e7bde",
+        "a": {
+          "itemId": "u_d2",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "u_led2",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "a761c6cb2d0b466bab3b8f38c0a0b4cc",
+        "a": {
+          "itemId": "u_led2",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "u_r2",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "6046d34d23f644a388437c334b599ec4",
+        "a": {
+          "itemId": "u_r2",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "ff57b09b47c84b78965af226189ff68f",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": null
+      }
+    ],
+    "wires": []
+  },
+  "view": {
+    "zoom": 1.6,
+    "pan": {
+      "x": 0,
+      "y": 0
+    }
+  }
+}

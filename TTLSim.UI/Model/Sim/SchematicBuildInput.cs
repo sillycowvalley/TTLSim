@@ -1,0 +1,171 @@
+﻿using TTLSim.Core;
+using TTLSim.UI.Components;
+
+namespace TTLSim.UI.Model.Sim;
+
+/// <summary>
+/// Adapter that exposes a Schematic to the simulator's SchematicBuilder.
+/// Translates UI model types (Schematic / Device / Unit / Connection /
+/// VccSymbol / GndSymbol / ClockSource) into the abstract Build* records
+/// the Core builder expects.
+/// </summary>
+public sealed class SchematicBuildInput : IBuildInput
+{
+    private readonly Schematic schematic;
+
+    public SchematicBuildInput(Schematic schematic)
+    {
+        this.schematic = schematic;
+    }
+
+    public IEnumerable<BuildDevice> Devices
+    {
+        get
+        {
+            foreach (Device dev in schematic.Devices)
+            {
+                int? powerPin;
+                int? groundPin;
+                UnitSpec[] specs;
+
+                // Two part-definition flavours: gate-style (IcPartDefinition,
+                // multiple UnitSpec) and box-style (ChipPartDefinition, pins as
+                // a flat list belonging to a single ChipUnit).
+                switch (dev.Definition)
+                {
+                    case IcPartDefinition ic:
+                        powerPin = ic.PowerPin;
+                        groundPin = ic.GroundPin;
+                        specs = ic.Units;
+                        break;
+                    case HeaderPartDefinition:
+                        powerPin = null;
+                        groundPin = null;
+                        specs = Array.Empty<UnitSpec>();
+                        break;
+                    case ChipPartDefinition cp:
+                        powerPin = cp.PowerPin;
+                        groundPin = cp.GroundPin;
+                        specs = Array.Empty<UnitSpec>();
+                        break;
+                    default:
+                        powerPin = null;
+                        groundPin = null;
+                        specs = Array.Empty<UnitSpec>();
+                        break;
+                }
+
+                List<BuildUnit> units = new();
+                foreach (Unit u in dev.Units)
+                {
+                    int[] inputs;
+                    int? output;
+                    IReadOnlyList<int>? outputPins = null;
+
+                    UnitSpec? spec = null;
+                    foreach (UnitSpec s in specs)
+                        if (s.Letter == u.UnitLetter) { spec = s; break; }
+
+                    if (spec is not null)
+                    {
+                        // Gate-style unit: UnitSpec declares inputs and a single output.
+                        inputs = spec.InputPins ?? Array.Empty<int>();
+                        output = (spec.OutputPin) == 0 ? null : spec.OutputPin;
+                    }
+                    else if (dev.Definition is ChipPartDefinition cp)
+                    {
+                        // ChipUnit (box-shaped IC): use ChipPin.Role to separate
+                        // inputs from outputs for diagnostics. Both lists feed into
+                        // the net map so the chip model can drive its outputs.
+                        var roles = cp.Pins.ToDictionary(p => p.Number, p => p.Role);
+                        var inputList = new List<int>();
+                        var outputList = new List<int>();
+                        foreach (Pin p in u.Pins)
+                        {
+                            if (p.Number == cp.PowerPin || p.Number == cp.GroundPin)
+                                continue;
+                            if (roles.TryGetValue(p.Number, out var role) &&
+                                role == ChipPinRole.Output)
+                                outputList.Add(p.Number);
+                            else
+                                inputList.Add(p.Number);
+                        }
+                        inputs = inputList.ToArray();
+                        output = null;
+                        outputPins = outputList.Count > 0 ? outputList : null;
+                    }
+                    else if (dev.Definition is HeaderPartDefinition)
+                    {
+                        inputs = Array.Empty<int>();
+                        output = null;
+                    }
+                    else
+                    {
+                        // Fallback (passives, displays, etc.): all pins as inputs.
+                        inputs = u.Pins.Select(p => p.Number).ToArray();
+                        output = null;
+                    }
+
+                    units.Add(new BuildUnit(u.Id, u.UnitLetter, inputs, output,
+                        OutputPinNumbers: outputPins,
+                        SwitchClosed: u is SwitchUnit sw && sw.IsClosed));
+                }
+
+                yield return new BuildDevice(
+                    DeviceId: dev.Id,
+                    Designator: dev.Designator,
+                    PartIdentifier: dev.Definition.Identifier,
+                    Family: dev.Family?.ToString(),
+                    PowerPinNumber: powerPin,
+                    GroundPinNumber: groundPin,
+                    Units: units,
+                    Program: dev.Program,
+                    PropagationDelayNs: dev.PropagationDelayNs);
+            }
+        }
+    }
+
+    public IEnumerable<BuildItem> Items
+    {
+        get
+        {
+            foreach (SchematicItem item in schematic.Items)
+            {
+                BuildItemKind? kind = item switch
+                {
+                    VccSymbol => BuildItemKind.Vcc,
+                    GndSymbol => BuildItemKind.Gnd,
+                    ClockSource => BuildItemKind.ClockSource,
+                    _ => null
+                };
+                if (kind is null) continue;
+
+                List<int> pins = new();
+                foreach (Pin p in item.Pins)
+                    pins.Add(p.Number);
+
+                long? period = item is ClockSource cs
+                    ? (long)(1e12 / cs.FrequencyHz)     // hertz to picoseconds
+                    : null;
+
+                yield return new BuildItem(item.Id, kind.Value, pins, period);
+            }
+        }
+    }
+
+    public IEnumerable<(PinRef A, PinRef B)> Connections
+    {
+        get
+        {
+            foreach (Connection c in schematic.Connections)
+            {
+                if (c.A.Owner is null || c.B.Owner is null)
+                    continue;
+
+                yield return (
+                    new PinRef(c.A.Owner.Id, c.A.Number),
+                    new PinRef(c.B.Owner.Id, c.B.Number));
+            }
+        }
+    }
+}

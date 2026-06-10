@@ -1,0 +1,354 @@
+{
+  "schematic": {
+    "devices": [
+      {
+        "id": "dev_u1_7432",
+        "designator": "U1",
+        "partKind": "chip",
+        "partIdentifier": "32",
+        "family": "LS",
+        "value": null
+      },
+      {
+        "id": "dev_sw1",
+        "designator": "SW1",
+        "partKind": "passive",
+        "partIdentifier": "button",
+        "family": null,
+        "value": null
+      },
+      {
+        "id": "dev_r1_pulldown",
+        "designator": "R1",
+        "partKind": "passive",
+        "partIdentifier": "resistor",
+        "family": null,
+        "value": "1k"
+      },
+      {
+        "id": "dev_r2_limit",
+        "designator": "R2",
+        "partKind": "passive",
+        "partIdentifier": "resistor",
+        "family": null,
+        "value": "330"
+      },
+      {
+        "id": "dev_d1",
+        "designator": "D1",
+        "partKind": "passive",
+        "partIdentifier": "led",
+        "family": null,
+        "value": "Red"
+      }
+    ],
+    "units": [
+      {
+        "id": "unit_u1a",
+        "deviceId": "dev_u1_7432",
+        "unitLetter": "",
+        "position": {
+          "x": 28,
+          "y": 18
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "unit_sw1",
+        "deviceId": "dev_sw1",
+        "unitLetter": "",
+        "position": {
+          "x": 7,
+          "y": 18
+        },
+        "label": "PRESS",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "unit_r1",
+        "deviceId": "dev_r1_pulldown",
+        "unitLetter": "",
+        "position": {
+          "x": 19,
+          "y": 26
+        },
+        "label": "1k",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "unit_d1",
+        "deviceId": "dev_d1",
+        "unitLetter": "",
+        "position": {
+          "x": 44,
+          "y": 19
+        },
+        "label": "LAMP",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "unit_r2",
+        "deviceId": "dev_r2_limit",
+        "unitLetter": "",
+        "position": {
+          "x": 52,
+          "y": 19
+        },
+        "label": "330",
+        "rotation": 0,
+        "switchClosed": null
+      }
+    ],
+    "items": [
+      {
+        "type": "vcc",
+        "id": "item_vcc",
+        "label": "VCC",
+        "position": {
+          "x": 3,
+          "y": 10
+        },
+        "rotation": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null
+      },
+      {
+        "type": "gnd",
+        "id": "item_gnd",
+        "label": "GND",
+        "position": {
+          "x": 60,
+          "y": 30
+        },
+        "rotation": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null
+      }
+    ],
+    "connections": [
+      {
+        "id": "c_vcc_to_sw1",
+        "a": {
+          "itemId": "item_vcc",
+          "pinNumber": 0
+        },
+        "b": {
+          "itemId": "unit_sw1",
+          "pinNumber": 1
+        },
+        "color": "Red"
+      },
+      {
+        "id": "c_sw1_to_u1a_in",
+        "a": {
+          "itemId": "unit_sw1",
+          "pinNumber": 2
+        },
+        "b": {
+          "itemId": "unit_u1a",
+          "pinNumber": 1
+        },
+        "color": null
+      },
+      {
+        "id": "c_sw1_to_r1",
+        "a": {
+          "itemId": "unit_sw1",
+          "pinNumber": 2
+        },
+        "b": {
+          "itemId": "unit_r1",
+          "pinNumber": 1
+        },
+        "color": null
+      },
+      {
+        "id": "c_r1_to_gnd",
+        "a": {
+          "itemId": "unit_r1",
+          "pinNumber": 2
+        },
+        "b": {
+          "itemId": "item_gnd",
+          "pinNumber": 0
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "c_u1a_out_to_feedback",
+        "a": {
+          "itemId": "unit_u1a",
+          "pinNumber": 3
+        },
+        "b": {
+          "itemId": "unit_u1a",
+          "pinNumber": 2
+        },
+        "color": null
+      },
+      {
+        "id": "c_u1a_out_to_led_anode",
+        "a": {
+          "itemId": "unit_u1a",
+          "pinNumber": 3
+        },
+        "b": {
+          "itemId": "unit_d1",
+          "pinNumber": 1
+        },
+        "color": null
+      },
+      {
+        "id": "c_led_cathode_to_r2",
+        "a": {
+          "itemId": "unit_d1",
+          "pinNumber": 2
+        },
+        "b": {
+          "itemId": "unit_r2",
+          "pinNumber": 1
+        },
+        "color": null
+      },
+      {
+        "id": "c_r2_to_gnd",
+        "a": {
+          "itemId": "unit_r2",
+          "pinNumber": 2
+        },
+        "b": {
+          "itemId": "item_gnd",
+          "pinNumber": 0
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "c_dev_u1_7432_vcc",
+        "a": {
+          "itemId": "unit_u1a",
+          "pinNumber": 14,
+          "external": false
+        },
+        "b": {
+          "itemId": "item_vcc",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "c_dev_u1_7432_gnd",
+        "a": {
+          "itemId": "unit_u1a",
+          "pinNumber": 7,
+          "external": false
+        },
+        "b": {
+          "itemId": "item_gnd",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "c_dev_u1_7432_tie4",
+        "a": {
+          "itemId": "unit_u1a",
+          "pinNumber": 4,
+          "external": false
+        },
+        "b": {
+          "itemId": "item_gnd",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "c_dev_u1_7432_tie5",
+        "a": {
+          "itemId": "unit_u1a",
+          "pinNumber": 5,
+          "external": false
+        },
+        "b": {
+          "itemId": "item_gnd",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "c_dev_u1_7432_tie9",
+        "a": {
+          "itemId": "unit_u1a",
+          "pinNumber": 9,
+          "external": false
+        },
+        "b": {
+          "itemId": "item_gnd",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "c_dev_u1_7432_tie10",
+        "a": {
+          "itemId": "unit_u1a",
+          "pinNumber": 10,
+          "external": false
+        },
+        "b": {
+          "itemId": "item_gnd",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "c_dev_u1_7432_tie12",
+        "a": {
+          "itemId": "unit_u1a",
+          "pinNumber": 12,
+          "external": false
+        },
+        "b": {
+          "itemId": "item_gnd",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "c_dev_u1_7432_tie13",
+        "a": {
+          "itemId": "unit_u1a",
+          "pinNumber": 13,
+          "external": false
+        },
+        "b": {
+          "itemId": "item_gnd",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      }
+    ],
+    "wires": []
+  },
+  "view": {
+    "zoom": 1.5,
+    "pan": {
+      "x": 20,
+      "y": 20
+    }
+  }
+}

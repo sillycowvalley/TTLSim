@@ -1,0 +1,46 @@
+Name      NEXTPC4 ;
+PartNo    BLINKY-DEC-04 ;
+Date      2026-06-09 ;
+Revision  01 ;
+Designer  Michael ;
+Company   Blinky ;
+Assembly  Mini-Blinky ;
+Location  U_DEC4 ;
+Device    G20V8A;
+
+// -----------------------------------------------------------------
+// GAL4-style NEXTPC select on the 20V8 - the flag-reading device.
+//
+// LD_PC = 1 loads PC from the operand (branch/call target); = 0 means
+// PC+1. This is the combinational, flag-gated sum of products that
+// motivates the 20V8: it needs N, Z, C as extra inputs alongside the
+// opcode nibble.
+//
+// Inputs:
+//   OP0..OP3 = opcode nibble (D4..D7)
+//   N, Z, C  = ALU flags (latched in an external flag register)
+//
+// Opcodes (OP3 OP2 OP1 OP0):
+//   BRANCH 0111   BEQ 1000   BCS 1001   BMI 1010   CALL 1011
+// -----------------------------------------------------------------
+
+/* Inputs - opcode nibble */
+PIN 2 = OP0 ;
+PIN 3 = OP1 ;
+PIN 4 = OP2 ;
+PIN 5 = OP3 ;
+
+/* Inputs - flags */
+PIN 6 = N ;
+PIN 7 = Z ;
+PIN 8 = C ;
+
+/* Output - NEXTPC mux select */
+PIN 22 = LD_PC ;
+
+/* Unconditional + flag-gated loads */
+LD_PC = (OP0 & OP1 & OP2 & !OP3)            /* BRANCH 0111 */
+      # (!OP0 & !OP1 & !OP2 & OP3 & Z)      /* BEQ 1000 & Z */
+      # (OP0 & !OP1 & !OP2 & OP3 & C)       /* BCS 1001 & C */
+      # (!OP0 & OP1 & !OP2 & OP3 & N)       /* BMI 1010 & N */
+      # (OP0 & OP1 & !OP2 & OP3) ;          /* CALL 1011 */

@@ -1,0 +1,396 @@
+{
+  "schematic": {
+    "devices": [
+      {
+        "id": "dev555",
+        "designator": "U1",
+        "partKind": "chip",
+        "partIdentifier": "NE555",
+        "family": null,
+        "value": null
+      },
+      {
+        "id": "devR1",
+        "designator": "R1",
+        "partKind": "passive",
+        "partIdentifier": "resistor",
+        "family": null,
+        "value": "7.2k"
+      },
+      {
+        "id": "devR2",
+        "designator": "R2",
+        "partKind": "passive",
+        "partIdentifier": "resistor",
+        "family": null,
+        "value": "720k"
+      },
+      {
+        "id": "devC2",
+        "designator": "C2",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": "10nF"
+      },
+      {
+        "id": "5ade231323ff4dec9420229692fc6640",
+        "designator": "D1",
+        "partKind": "passive",
+        "partIdentifier": "led",
+        "family": null,
+        "value": null
+      },
+      {
+        "id": "9d3ec700925a42628f2ffdebfea626f4",
+        "designator": "R3",
+        "partKind": "passive",
+        "partIdentifier": "resistor",
+        "family": null,
+        "value": null
+      },
+      {
+        "id": "798b620920fd4a48adde34046acad588",
+        "designator": "C3",
+        "partKind": "passive",
+        "partIdentifier": "polarized-capacitor",
+        "family": null,
+        "value": null
+      }
+    ],
+    "units": [
+      {
+        "id": "u555",
+        "deviceId": "dev555",
+        "unitLetter": "",
+        "position": {
+          "x": 55,
+          "y": 44
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "uR1",
+        "deviceId": "devR1",
+        "unitLetter": "",
+        "position": {
+          "x": 71,
+          "y": 44
+        },
+        "label": "7.2k\u03A9",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "uR2",
+        "deviceId": "devR2",
+        "unitLetter": "",
+        "position": {
+          "x": 83,
+          "y": 46
+        },
+        "label": "720k\u03A9 ",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "uC2",
+        "deviceId": "devC2",
+        "unitLetter": "",
+        "position": {
+          "x": 69,
+          "y": 58
+        },
+        "label": "10nF",
+        "rotation": 90,
+        "switchClosed": null
+      },
+      {
+        "id": "f28a911f13ca4e91b8c58299784da333",
+        "deviceId": "5ade231323ff4dec9420229692fc6640",
+        "unitLetter": "",
+        "position": {
+          "x": 38,
+          "y": 52
+        },
+        "label": "",
+        "rotation": 90,
+        "switchClosed": null
+      },
+      {
+        "id": "b0426d2c1a2146fdac08a75df47782cd",
+        "deviceId": "9d3ec700925a42628f2ffdebfea626f4",
+        "unitLetter": "",
+        "position": {
+          "x": 37,
+          "y": 60
+        },
+        "label": "470",
+        "rotation": 90,
+        "switchClosed": null
+      },
+      {
+        "id": "1a9c536958da4675b6d6edc6bb117176",
+        "deviceId": "798b620920fd4a48adde34046acad588",
+        "unitLetter": "",
+        "position": {
+          "x": 54,
+          "y": 58
+        },
+        "label": "10uF",
+        "rotation": 90,
+        "switchClosed": null
+      }
+    ],
+    "items": [
+      {
+        "type": "vcc",
+        "id": "itemVcc1",
+        "label": "5V",
+        "position": {
+          "x": 32,
+          "y": 34
+        },
+        "rotation": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null
+      },
+      {
+        "type": "gnd",
+        "id": "itemGndPin1",
+        "label": "GND",
+        "position": {
+          "x": 32,
+          "y": 73
+        },
+        "rotation": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null
+      }
+    ],
+    "connections": [
+      {
+        "id": "w_vcc_pin8",
+        "a": {
+          "itemId": "itemVcc1",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "u555",
+          "pinNumber": 8,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "w_pin8_r1a",
+        "a": {
+          "itemId": "u555",
+          "pinNumber": 8,
+          "external": false
+        },
+        "b": {
+          "itemId": "uR1",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "w_r1b_disch",
+        "a": {
+          "itemId": "uR1",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "u555",
+          "pinNumber": 7,
+          "external": false
+        },
+        "color": "Orange"
+      },
+      {
+        "id": "w_disch_r2a",
+        "a": {
+          "itemId": "u555",
+          "pinNumber": 7,
+          "external": false
+        },
+        "b": {
+          "itemId": "uR2",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Orange"
+      },
+      {
+        "id": "w_r2b_thres",
+        "a": {
+          "itemId": "uR2",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "u555",
+          "pinNumber": 6,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "w_thres_trig",
+        "a": {
+          "itemId": "u555",
+          "pinNumber": 6,
+          "external": false
+        },
+        "b": {
+          "itemId": "u555",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "w_ctrl_c2a",
+        "a": {
+          "itemId": "u555",
+          "pinNumber": 5,
+          "external": false
+        },
+        "b": {
+          "itemId": "uC2",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Green"
+      },
+      {
+        "id": "w_pin1_gnd",
+        "a": {
+          "itemId": "u555",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "itemGndPin1",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "1abf90e75c2049a889a0453e88669bb9",
+        "a": {
+          "itemId": "itemGndPin1",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "uC2",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "7e5e923cd34b471893f3875d392d2389",
+        "a": {
+          "itemId": "u555",
+          "pinNumber": 4,
+          "external": false
+        },
+        "b": {
+          "itemId": "itemVcc1",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "8b8a961859d84a6ba6a5318f813d1999",
+        "a": {
+          "itemId": "u555",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "f28a911f13ca4e91b8c58299784da333",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Grey"
+      },
+      {
+        "id": "fb07834894394f509a013e52ccf37f29",
+        "a": {
+          "itemId": "f28a911f13ca4e91b8c58299784da333",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "b0426d2c1a2146fdac08a75df47782cd",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Grey"
+      },
+      {
+        "id": "963f11a9cc7f4c78bd841945508d8a80",
+        "a": {
+          "itemId": "b0426d2c1a2146fdac08a75df47782cd",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "itemGndPin1",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "79f858992f7c49b48ff37e0303291ee1",
+        "a": {
+          "itemId": "1a9c536958da4675b6d6edc6bb117176",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "u555",
+          "pinNumber": 6,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "86736e51fdad4c9fb25dbe390fcfefa9",
+        "a": {
+          "itemId": "1a9c536958da4675b6d6edc6bb117176",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "itemGndPin1",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      }
+    ],
+    "wires": []
+  },
+  "view": {
+    "zoom": 2.8158998,
+    "pan": {
+      "x": -188,
+      "y": -396
+    }
+  }
+}

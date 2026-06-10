@@ -1,0 +1,478 @@
+{
+  "schematic": {
+    "devices": [
+      {
+        "id": "959112a1b6fa41b08165939fa013b8dc",
+        "designator": "C1",
+        "partKind": "passive",
+        "partIdentifier": "polarized-capacitor",
+        "family": null,
+        "value": null
+      },
+      {
+        "id": "4f23b76abbf641c5a6420106290c13d1",
+        "designator": "C2",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": null
+      },
+      {
+        "id": "22c25764c82a449f876e93fb902cf5e6",
+        "designator": "C3",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": null
+      },
+      {
+        "id": "d135d4bf57694d41b296f23bf7b08089",
+        "designator": "C4",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": null
+      },
+      {
+        "id": "117198c5d59e4ba588e3276772fbe018",
+        "designator": "C5",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": null
+      },
+      {
+        "id": "ddcf8581dcd54576985ad2b09d90fb22",
+        "designator": "C6",
+        "partKind": "passive",
+        "partIdentifier": "polarized-capacitor",
+        "family": null,
+        "value": null
+      },
+      {
+        "id": "1600e67a66a54303a8c4db50eb581c90",
+        "designator": "C7",
+        "partKind": "passive",
+        "partIdentifier": "polarized-capacitor",
+        "family": null,
+        "value": null
+      },
+      {
+        "id": "41af1d3623d3450e8c97f213283d919b",
+        "designator": "C8",
+        "partKind": "passive",
+        "partIdentifier": "polarized-capacitor",
+        "family": null,
+        "value": null
+      },
+      {
+        "id": "15dc8864062a4da9ab443eb84b1db8a1",
+        "designator": "J1",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-2",
+        "family": null,
+        "value": null
+      }
+    ],
+    "units": [
+      {
+        "id": "a0eb8cbce1d141a09aea3bfd8a339bbd",
+        "deviceId": "959112a1b6fa41b08165939fa013b8dc",
+        "unitLetter": "",
+        "position": {
+          "x": 10,
+          "y": 19
+        },
+        "label": "10uF",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "0cb75902d0984bdea299e0750f419dce",
+        "deviceId": "4f23b76abbf641c5a6420106290c13d1",
+        "unitLetter": "",
+        "position": {
+          "x": 10,
+          "y": 9
+        },
+        "label": "100",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "449d65868a6e4a67bf5fbd787107b51e",
+        "deviceId": "22c25764c82a449f876e93fb902cf5e6",
+        "unitLetter": "",
+        "position": {
+          "x": 20,
+          "y": 6
+        },
+        "label": "100",
+        "rotation": 90,
+        "switchClosed": null
+      },
+      {
+        "id": "2e507cdfbc7b4459be57bc06c59894b1",
+        "deviceId": "d135d4bf57694d41b296f23bf7b08089",
+        "unitLetter": "",
+        "position": {
+          "x": 30,
+          "y": 9
+        },
+        "label": "100",
+        "rotation": 180,
+        "switchClosed": null
+      },
+      {
+        "id": "497dd0ffe9a94694b46ad9a3cbf4fd10",
+        "deviceId": "117198c5d59e4ba588e3276772fbe018",
+        "unitLetter": "",
+        "position": {
+          "x": 40,
+          "y": 9
+        },
+        "label": "100",
+        "rotation": 270,
+        "switchClosed": null
+      },
+      {
+        "id": "5f5346ce33264994b86ea041f535134b",
+        "deviceId": "ddcf8581dcd54576985ad2b09d90fb22",
+        "unitLetter": "",
+        "position": {
+          "x": 20,
+          "y": 19
+        },
+        "label": "10uF",
+        "rotation": 90,
+        "switchClosed": null
+      },
+      {
+        "id": "f32b4417caeb4939aa2be623e96b2481",
+        "deviceId": "1600e67a66a54303a8c4db50eb581c90",
+        "unitLetter": "",
+        "position": {
+          "x": 30,
+          "y": 19
+        },
+        "label": "10uF",
+        "rotation": 180,
+        "switchClosed": null
+      },
+      {
+        "id": "746fb644ec8f47e4b427683ab68f459e",
+        "deviceId": "41af1d3623d3450e8c97f213283d919b",
+        "unitLetter": "",
+        "position": {
+          "x": 40,
+          "y": 19
+        },
+        "label": "10uF",
+        "rotation": 270,
+        "switchClosed": null
+      },
+      {
+        "id": "a8a15ddb8bf04152a0b26c6626e4a795",
+        "deviceId": "15dc8864062a4da9ab443eb84b1db8a1",
+        "unitLetter": "",
+        "position": {
+          "x": -3,
+          "y": 26
+        },
+        "label": "",
+        "rotation": 180,
+        "switchClosed": null
+      }
+    ],
+    "items": [
+      {
+        "type": "gnd",
+        "id": "2a5c492020ae4f1881db86e958990b57",
+        "label": "",
+        "position": {
+          "x": 3,
+          "y": 34
+        },
+        "rotation": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null
+      },
+      {
+        "type": "vcc",
+        "id": "6a1ed87b9d744b02810c2154858cc5ca",
+        "label": "VCC",
+        "position": {
+          "x": 2,
+          "y": -2
+        },
+        "rotation": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null
+      }
+    ],
+    "connections": [
+      {
+        "id": "0c9b77fc812b4da78db3ad6646145ab6",
+        "a": {
+          "itemId": "a0eb8cbce1d141a09aea3bfd8a339bbd",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "2a5c492020ae4f1881db86e958990b57",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "db90b10b42094fb5bfa4bc80c2f9dc59",
+        "a": {
+          "itemId": "5f5346ce33264994b86ea041f535134b",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "2a5c492020ae4f1881db86e958990b57",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "32b7eb339db94dce9ae68104e6db4f7a",
+        "a": {
+          "itemId": "f32b4417caeb4939aa2be623e96b2481",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "2a5c492020ae4f1881db86e958990b57",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "12f15ce213dc4c65974da33be9df578a",
+        "a": {
+          "itemId": "746fb644ec8f47e4b427683ab68f459e",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "2a5c492020ae4f1881db86e958990b57",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "b79d3e1b56b14f74b2f71afe2aed9f0f",
+        "a": {
+          "itemId": "6a1ed87b9d744b02810c2154858cc5ca",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "a0eb8cbce1d141a09aea3bfd8a339bbd",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "8f08108ab3094dddb2d69e6bf9671726",
+        "a": {
+          "itemId": "6a1ed87b9d744b02810c2154858cc5ca",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "5f5346ce33264994b86ea041f535134b",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "ea13bc63852e46f697202fce1caa7141",
+        "a": {
+          "itemId": "6a1ed87b9d744b02810c2154858cc5ca",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "f32b4417caeb4939aa2be623e96b2481",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "9426b04e452e4748a7dd0a695fe3184d",
+        "a": {
+          "itemId": "6a1ed87b9d744b02810c2154858cc5ca",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "746fb644ec8f47e4b427683ab68f459e",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "ee95e62914cc4b11a19522ed58b72cb1",
+        "a": {
+          "itemId": "2a5c492020ae4f1881db86e958990b57",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "a8a15ddb8bf04152a0b26c6626e4a795",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "aff7b4f41cb24093bc43c32b2c264947",
+        "a": {
+          "itemId": "6a1ed87b9d744b02810c2154858cc5ca",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "a8a15ddb8bf04152a0b26c6626e4a795",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "205ca0f620e94f718d9e62350bc39ff2",
+        "a": {
+          "itemId": "6a1ed87b9d744b02810c2154858cc5ca",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "0cb75902d0984bdea299e0750f419dce",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "e7885f3c0a2f4a4b81858787f8e64daa",
+        "a": {
+          "itemId": "6a1ed87b9d744b02810c2154858cc5ca",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "449d65868a6e4a67bf5fbd787107b51e",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "7538bc43a3eb479fa20b752a2a0d4773",
+        "a": {
+          "itemId": "6a1ed87b9d744b02810c2154858cc5ca",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "2e507cdfbc7b4459be57bc06c59894b1",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "d63cf8cf42534ac8a31ba427b5ac3d4a",
+        "a": {
+          "itemId": "6a1ed87b9d744b02810c2154858cc5ca",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "497dd0ffe9a94694b46ad9a3cbf4fd10",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "820a0a65a88e4a7298fd36573d2e3d41",
+        "a": {
+          "itemId": "2a5c492020ae4f1881db86e958990b57",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "0cb75902d0984bdea299e0750f419dce",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "c18e6fb1862040f28d388497997f1cb6",
+        "a": {
+          "itemId": "2a5c492020ae4f1881db86e958990b57",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "449d65868a6e4a67bf5fbd787107b51e",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "c0431510c03b4f139e9ae194cca8ad6f",
+        "a": {
+          "itemId": "2a5c492020ae4f1881db86e958990b57",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "2e507cdfbc7b4459be57bc06c59894b1",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "8be2e79bc7b54396920312d9024fe29c",
+        "a": {
+          "itemId": "2a5c492020ae4f1881db86e958990b57",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "497dd0ffe9a94694b46ad9a3cbf4fd10",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Blue"
+      }
+    ],
+    "wires": []
+  },
+  "view": {
+    "zoom": 4.4783998,
+    "pan": {
+      "x": 163,
+      "y": 63
+    }
+  }
+}

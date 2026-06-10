@@ -1,0 +1,1637 @@
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Security.Cryptography;
+using System.Text;
+using TTLSim.UI.Components;
+using TTLSim.UI.Model;
+
+namespace TTLSim.UI.Persistence.EasyEDA;
+
+/// <summary>
+/// One entry in the EasyEDA catalogue: a TTLSim part type → a triple of
+/// (symbol, footprint, device) UUIDs plus the embedded-resource filenames.
+///
+/// Pin geometry is described in EasyEDA's local coordinate frame: each pin
+/// number known to TTLSim maps to an (x, y) offset from the EasyEDA
+/// COMPONENT placement point. The exporter uses this to position the
+/// EasyEDA component so its pins line up with TTLSim's pin world positions.
+///
+/// For parts where one EasyEDA library entry covers many TTLSim instances
+/// (LED, VCC, GND), the static fragments in device_fragments.json suffice.
+/// For parts where each TTLSim value maps to a distinct EasyEDA library
+/// part (resistors with 71 values), the per-value device and symbol
+/// fragments are synthesised at lookup time via <see cref="InlineDeviceJson"/>
+/// and <see cref="InlineSymbolJson"/>, plus a template .esym instantiated
+/// at zip-build time via <see cref="SymbolTemplateTokens"/>.
+/// </summary>
+/// <summary>
+/// Per-rotation EasyEDA-pixel offset of a single label kind (Designator,
+/// Name, or Value) from the COMPONENT anchor. Y is in EasyEDA Y-up space
+/// (positive = visually above on screen).
+/// </summary>
+public readonly record struct LabelOffset(int X, int Y);
+
+/// <summary>
+/// All three label offsets for a single rotation, plus the rotation of
+/// the label TEXT itself. TextRotationDeg is the EasyEDA text-rotation
+/// applied to the Designator and Name ATTRs at this placement rotation
+/// (0 = horizontal; 90 = reading bottom-to-top). Vertical-body chips
+/// (DIP at R90/R270) set this to 90 so the labels sit beside the body
+/// and read along it; every other part leaves it 0 (default), preserving
+/// the existing horizontal-label behaviour.
+/// </summary>
+public readonly record struct LabelOffsetSet(
+    LabelOffset Designator,
+    LabelOffset Name,
+    LabelOffset Value,
+    int TextRotationDeg = 0);
+
+/// <summary>
+/// Per-part, per-rotation label placement. Each catalogue entry derives
+/// these by hand-tuning the labels in EasyEDA and reading the offsets
+/// back from the saved .epro. Parts with different body shapes (resistor
+/// vs LED vs capacitor) need different tables because the labels are
+/// positioned relative to the body, not to the anchor.
+/// </summary>
+public sealed record LabelOffsetsByRotation(
+    LabelOffsetSet Rot0,
+    LabelOffsetSet Rot90,
+    LabelOffsetSet Rot180,
+    LabelOffsetSet Rot270);
+
+public sealed record CataloguePart(
+    string DeviceUuid,
+    string SymbolUuid,
+    string SymbolResourceName,
+    string? FootprintUuid,
+    string? FootprintResourceName,
+    string PartTitle,
+    System.Collections.Generic.Dictionary<int, Point> PinLocalPositions,
+    bool EmitValueLabel = false,
+    bool IsNetFlag = false,
+    string? NetName = null,
+    bool EmitNameOverride = false,
+    string? InlineDeviceJson = null,
+    string? InlineSymbolJson = null,
+    System.Collections.Generic.IReadOnlyDictionary<string, string>? SymbolTemplateTokens = null,
+    LabelOffsetsByRotation? LabelOffsets = null,
+    // When true, the part's pin world positions already use the
+    // EasyEDA rotation sense (R90/R270 swapped relative to TTL Sim's
+    // default) -- so the exporter should NOT apply its
+    // `(360 - r) % 360` rotation-sense shim. Used by header units,
+    // which carry SwapR90R270 = true on their Pins so the canvas
+    // visually matches EasyEDA.
+    bool MatchesEasyEdaRotationSense = false,
+    // Extra rotation (0/90/180/270 degrees) added on top of the
+    // rotation-sense shim. Set to 180 when a part's PinLocalPositions
+    // are X-mirrored relative to the .esym's native pin numbering --
+    // the mirror is equivalent to a 180° rotation for a 2-pin part
+    // symmetric about Y, so without compensation the rendered symbol
+    // flips relative to the wire endpoints. Currently only DiodePart
+    // needs this.
+    int EasyEdaRotationOffsetDeg = 0,
+    // When true (combined with EmitNameOverride = true), the visible
+    // Name ATTR is written with the designator's font style (size 8)
+    // instead of the smaller Value style (size 6). Used by headers so
+    // their Name reads at the same size as the designator alongside it,
+    // matching the hand-edited reference. The LED uses the default
+    // (false) so its Name stays size 6 below the designator.
+
+    bool NameLabelUsesDesignatorStyle = false,
+    // When EmitValueLabel is true, ValueOverride decides what text the
+    // sheet writer writes into the COMPONENT's Value ATTR:
+    //   - null  -> emit "value=null" so EasyEDA falls back to the
+    //              device template's Value field. Original behaviour
+    //              from when each resistor value had its own device.
+    //   - non-null -> emit "value=<ValueOverride>" so the placed
+    //              instance carries its own display text. Used by the
+    //              Frankenstein resistor (one device, many instances
+    //              showing different resistances).
+    // Has no effect when EmitValueLabel is false.
+    string? ValueOverride = null,
+    // When true, the Name ATTR on the placed COMPONENT is emitted as
+    // value=null, valVisible=1, default style -- telling EasyEDA to
+    // render the device template's templated Name (e.g. the device's
+    // "={Manufacturer Part}") at this position. Used by DIP ICs, where
+    // the displayed part name ("NE555N") lives in the device template
+    // rather than being a user-typed label or a per-instance override.
+    // Distinct from EmitNameOverride (which writes the user's Label as
+    // the value) and from the resistor's blanked "" Name ATTR. Has no
+    // effect when EmitNameOverride is also set.
+    bool EmitTemplatedName = false);
+
+/// <summary>
+/// Maps TTLSim parts to EasyEDA library entries. LED, VCC, GND, Switch, Button,
+/// and Resistor are shipped as single library entries (one .esym, one .efoo each).
+/// The Resistor is a Frankenstein part: one shared library device whose Value ATTR
+/// is overridden per instance to display the user's typed resistance text. Anything
+/// else throws NotImplementedException naming the missing part.
+/// </summary>
+public static class EasyEDACatalogue
+{
+    // ---------------------------------------------------- UUIDs (verbatim from sample)
+
+    // LED (5mm through-hole, red). Symbol, footprint and 3D model
+    // sourced from the May 2026 Models.epro -- TONYU DY-324SVRC. The
+    // 3D Model is referenced by UUID in the device entry and resolved
+    // by EasyEDA's cloud library at render time, so no embedded binary
+    // asset is needed.
+    private const string LedDeviceUuid = "856406c93c6149ea8e8e6d8b2f9ca939";
+    private const string LedSymbolUuid = "b81cb2d96d1a4f56acc9ecf6c73ef881";
+    private const string LedFootprintUuid = "4a99776da31e4715b4080fd142f55a57";
+    private const string Led3dModelUuid = "ebee32c7611e4683ad93cab18ddbd1f8";
+
+    // Power-VCC -- Net Flag symbol, no footprint
+    private const string VccDeviceUuid = "1e0a4fb10c0d469abe117d2e6303547a";
+    private const string VccSymbolUuid = "ed6167b3a4844aec980dab702aa58d0c";
+
+    // Ground-GND -- Net Flag symbol, no footprint
+    private const string GndDeviceUuid = "e81f0dd534964512910e0f8ea58466cc";
+    private const string GndSymbolUuid = "38bf0daecbc14b51831e971507e9b906";
+
+    // 2.54 mm 1xN MALE pin headers -- swapped from female sockets to
+    // male pin headers (May 2026), now sourced from the HX PH254 series
+    // in Models.epro. The HDR-TH_NP-P2.54-V-M footprints come paired
+    // with matching cloud-library 3D models so the EasyEDA Pro 3D
+    // viewer shows actual pin headers rather than empty pads.
+    //
+    // Device UUIDs are preserved from the female-header era so existing
+    // saved .ttlproj files still resolve to the same library entry on
+    // open -- but every other field (symbol UUID, footprint UUID, the
+    // .esym + .efoo resources, MPN, LCSC code, 3D model) is replaced.
+    //
+    // Note: this is DIFFERENT from Hdr2MaleFootprintUuid below, which
+    // is the BOOMELE male 2P footprint that the Switch and Button
+    // Frankenstein parts use for their off-board pluggable wiring.
+    // Switch/Button were unaffected by the female->male header swap.
+    private const string Header2DeviceUuid = "c321050abd3a4cf59555c4cd1f2d358d";
+    private const string Header2SymbolUuid = "a30e8e4b43f24cd2acafd4910c0b8235";
+    private const string Header2FootprintUuid = "d419dee46db64bc89e7c7d9c6bd005ef";
+    private const string Header23dModelUuid = "b9a02bffb1e248eabf92e8e2aa859dc0";
+
+    private const string Header4DeviceUuid = "61d307bf2bdb4663b1f70c9c59055ecc";
+    private const string Header4SymbolUuid = "e4b5734c1a83476b8ba4c83689cfc5be";
+    private const string Header4FootprintUuid = "5709415b839a4c77b5e71aab5f9c71ae";
+    private const string Header43dModelUuid = "8a04245d30e54eb999146b73785c6ab0";
+
+    private const string Header6DeviceUuid = "e6b16eb806964a6db55aaa7e40dbfc67";
+    private const string Header6SymbolUuid = "542a95afd23746f7b03754cab139a8c3";
+    private const string Header6FootprintUuid = "4dfdd5d709bb4d2a8a23feaa147af49e";
+    private const string Header63dModelUuid = "6ebb80f5681945ec9fb368fbc217c3f7";
+
+    private const string Header8DeviceUuid = "93f69b3d536b4f728684324d9aa3050f";
+    private const string Header8SymbolUuid = "53476ce9627d47b5bce643baf49f8d80";
+    private const string Header8FootprintUuid = "610264fc014347b5a38553a4c4dd06cb";
+    private const string Header83dModelUuid = "926dcf5c05be473f8295f20cc8ccf72f";
+
+    // Resistor shared resources. All resistor instances point at a single
+    // EasyEDA library device, regardless of resistance value. The displayed
+    // value text ("470Ω", "2.2kΩ", ...) comes from each placed COMPONENT's
+    // Value ATTR override -- see EasyEdaSheetWriter.EmitComponent and
+    // BuildResistorPart below.
+    //
+    // The placeholder LCSC part data on the device entry (CR1/4W-1K, VO) is
+    // intentional: EasyEDA's PCB router refuses to route components that
+    // don't carry an LCSC stock number, so a generic 1kΩ part is baked in.
+    // The BOM lists every resistor as that 1kΩ -- which is wrong, but we
+    // don't use the BOM for production, so it doesn't matter. Anyone who
+    // DOES want a real BOM needs to manually substitute the right values
+    // in EasyEDA after import.
+    //
+    // Footprint and 3D model came from the May 2026 Res.epro -- footprint
+    // is RES-TH_BD2.7-L6.2-P10.20-D0.4 (2.7mm body, 10.2mm pitch); the 3D
+    // model is referenced by UUID and resolved by EasyEDA's cloud library
+    // at render time, so no embedded binary asset is needed.
+    internal const string ResistorFootprintUuid = "72c61d64364a43e890807f3622aaf0ce";
+    private const string Resistor3dModelUuid = "f91fbe0e2e6f409498f09f811e4616fe";
+    private const string ResistorDeviceUuid = "6d850419aea044bb805429ccd89d98eb";
+    private const string ResistorSymbolUuid = "2d1d4b07d6cd4afeaf2cd056f4440b61";
+
+    // Switch / Pushbutton -- "Frankenstein" parts that combine a real
+    // schematic symbol (SS11-RBDWQ-R20-R rocker / SKPMAPE010 tactile) with
+    // a 2-pin 2.54mm male through-hole header footprint so the physical
+    // build is a pluggable connector rather than the actual switch part.
+    // The symbol UUIDs are taken verbatim from the EasyEDA library entries
+    // (extracted from the May 2026 Button_and_Switch.epro upload). The
+    // shared footprint UUID is the H1 header from the same .epro
+    // (HDR-TH_2P-P2.54-V-M-1, male, vertical). Device UUIDs are freshly
+    // minted -- the symbol+footprint combination is unique to TTL Sim and
+    // shouldn't collide with the original EasyEDA library devices.
+    private const string SwitchDeviceUuid = "7f3a1e2c9b4d4e6a8f0c1d2e3f4a5b6c";
+    private const string SwitchSymbolUuid = "f515f6654dec4a1394346860cb152b4c";
+
+    private const string ButtonDeviceUuid = "8a4b2f3d0c5e5f7b9a1d2e3f4a5b6c7d";
+    private const string ButtonSymbolUuid = "06cf37fc06354cb7b5e003313b5ce108";
+
+    // Shared between Switch and Button -- the H1 male 2.54 mm 1x2P
+    // through-hole header. This is a DIFFERENT part from the female
+    // Header2FootprintUuid above (the female is what TTL Sim's "Pin
+    // Header 2" component already uses for output headers).
+    private const string Hdr2MaleFootprintUuid = "2fa9edd918204c849d260ba835fd4d43";
+
+    // Capacitors -- Frankenstein parts, same pattern as resistors. One
+    // device per dielectric (non-polarised film/ceramic vs polarised
+    // electrolytic). The displayed capacitance flows through the per-
+    // instance Value ATTR override; the device entry carries placeholder
+    // LCSC data so the PCB router has something to route, AND a 3D model
+    // reference so the EasyEDA Pro 3D viewer renders proper cap bodies.
+    //
+    // Symbol templates extracted from the May 2026 Capacitor_templates.epro:
+    //   - MPP103J41LC407LC (10nF film cap)             -> capacitor.esym
+    //   - ERJ1VM221F12OT   (220µF radial electrolytic) -> polarized-capacitor.esym
+    //
+    // Footprints (and matching 3D models) extracted verbatim from the
+    // May 2026 Caps.epro -- these are SMALLER than the original templates'
+    // footprints, sized to match real hobbyist parts (5mm-body radial
+    // electrolytic; 5.5mm ceramic disc with 5mm pitch). The 3D model is
+    // referenced by UUID in the device entry; EasyEDA's cloud library
+    // resolves the actual 3D geometry at render time, so we don't need
+    // to embed any new binary assets:
+    //   - CAP-TH_BD5.0-P2.00-D0.8-FD -> polarized-capacitor.efoo
+    //       + 3D model a6753ac7... (CAP-TH_D5.0xH7.0xP2.0)
+    //   - CAP-TH_L5.5-W2.5-P5.00-D1.0 -> capacitor-film.efoo
+    //       + 3D model c7c082d6... (CAP-TH_BD5.5-W2.5-P5.0)
+    //
+    // Device and symbol UUIDs are freshly minted; footprint and 3D model
+    // UUIDs are the EasyEDA library's originals from the source .epros.
+    private const string CapacitorDeviceUuid = "c1a2b3c4d5e6f70819a8b7c6d5e4f312";
+    private const string CapacitorSymbolUuid = "0dbe2659d61a47bd9dc4e229a16eafdf";
+    private const string CapacitorFootprintUuid = "c8adb17cc38c429eb6470ae3c3c53c10";
+    private const string Capacitor3dModelUuid = "c7c082d623b445348079c63a4f33d608";
+
+    private const string PolarizedCapacitorDeviceUuid = "c2b1a09f8e7d6c5b4a3928171605040e";
+    private const string PolarizedCapacitorSymbolUuid = "9177ab84b26345e39a087faeba74d4d2";
+    private const string PolarizedCapacitorFootprintUuid = "d1a1cd74402d4157adb43869f0cba48d";
+    private const string PolarizedCapacitor3dModelUuid = "a6753ac7f17a4fce96dd233a0f76b154";
+
+    // Diode (1N5819 Schottky, DO-41 axial through-hole). Symbol, footprint,
+    // and 3D model sourced from the May 2026 Diode.epro (luJing variant,
+    // LCSC C49318088). Default user-facing label is "1N5819" via
+    // DiodeUnit.DefaultPartNumber; any other Schottky/silicon diode in a
+    // DO-41 body fits this footprint so the user can override the label
+    // ("1N4148", "1N4007", etc.) and the placeholder MPN goes along for
+    // the ride.
+    //
+    // Pin convention mismatch: TTL Sim's DiodeUnit has pin 1 = anode
+    // (left, "A") and pin 2 = cathode (right, "K"). The EDA symbol has
+    // it REVERSED: NUMBER="1" is the cathode on the left side and
+    // NUMBER="2" is the anode on the right. The swap is handled in
+    // DiodePart's PinLocalPositions (below), not by editing the .esym.
+    private const string DiodeDeviceUuid = "02d66298da854e5d826c8864173f84aa";
+    private const string DiodeSymbolUuid = "0fff7573b4cb40f0b1ca3171fa47cdbb";
+    private const string DiodeFootprintUuid = "b5bb679d28f74cf3aa33ec57a9f03b89";
+    private const string Diode3dModelUuid = "39d8e4572d564e62a86d2224fc908dd8";
+
+    // ---------------------------------------------------- DIP-8 ICs
+    //
+    // DIP-8 chips export as a single-PART symbol drawn as the DIP box,
+    // matching what ChipUnit draws on the canvas. One shared footprint
+    // (dip-8.efoo, the DIP-8_L9.8-W6.6-P2.54 body) is reused by every
+    // DIP-8 chip. One shared symbol template (dip-8.esym) is reused too:
+    // pin coordinates, body rectangle, the pin-1 indicator dot, and the
+    // 1..8 pin NUMBERs are all fixed by the package, so only the pin
+    // NAMEs, the part title, and the displayed symbol name change per
+    // chip. Those flow in via SymbolTemplateTokens (see BuildDip8Part).
+    //
+    // UUIDs are lifted verbatim from each chip's real EasyEDA library
+    // entry (same approach as LED / VCC / GND / headers): the footprint
+    // UUID is the shared DIP-8 body; the symbol and device UUIDs are the
+    // chip-specific library entries, so EasyEDA's "Associate footprint
+    // automatically" succeeds via the Supplier / Supplier Part /
+    // Manufacturer Part fields carried in device_fragments.json.
+    //
+    // The footprint UUID is shared across all DIP-8 chips.
+    internal const string Dip8FootprintUuid = "8b2a17fc29ee4e14bd39b38b48aed4a0";
+
+    // One row per supported DIP-8 chip, keyed by ChipPartDefinition.PartNumber.
+    // To add a new DIP-8 chip:
+    //   1. Add a row here with the chip's library Device + Symbol UUIDs.
+    //   2. Add the matching device + symbol fragments to
+    //      device_fragments.json (lifted from a reference .epro export
+    //      of that chip), bound to those UUIDs and to Dip8FootprintUuid.
+    // The pin NAMEs come from the ChipPartDefinition itself, so they
+    // don't need to be repeated here.
+    private sealed record Dip8Chip(
+        string PartNumber,   // matches ChipPartDefinition.PartNumber, e.g. "NE555"
+        string SymbolName,   // displayed name -- the device's Manufacturer Part, e.g. "NE555N"
+        string DeviceUuid,
+        string SymbolUuid);
+
+    private static readonly Dictionary<string, Dip8Chip> Dip8Chips = new()
+    {
+        ["NE555"] = new Dip8Chip(
+            PartNumber: "NE555",
+            SymbolName: "NE555N",
+            DeviceUuid: "cf60d3b4e80f4567ad60bdfda7d0b00e",
+            SymbolUuid: "3d01f6582f3b40059b1d912cd60530a4"),
+    };
+
+    // ---------------------------------------------------- DIP-14 ICs
+    //
+    // DIP-14 single-unit chips (NE556, 7474, 74107, 74393 -- the box-drawn
+    // ChipPartDefinitions, NOT the gate IcPartDefinitions) export as a
+    // single-PART symbol drawn as the DIP box, matching ChipUnit.
+    //
+    // Unlike DIP-8, we do NOT carry per-chip EasyEDA library entries. The
+    // doc (EasyEDA_Export.md §2) notes the LCSC / Manufacturer / datasheet
+    // fields are decorative, and §5 establishes the template approach: one
+    // shared .esym cloned per chip, with the per-chip text substituted in.
+    // So every DIP-14 chip is synthesised from a single shared template:
+    //
+    //   - One shared footprint (dip-14.efoo, the PDIP-14 body, verbatim
+    //     from the 74HC393 reference). Looked up from device_fragments.json
+    //     by Dip14FootprintUuid -- shared across all DIP-14 chips.
+    //   - One shared .esym template (dip-14.esym), cloned per chip type:
+    //     pin coordinates, body rectangle, pin-1 dot, and the 1..14 pin
+    //     NUMBERs are fixed by the package; only the pin NAMEs, part title,
+    //     and displayed symbol name vary, via SymbolTemplateTokens.
+    //   - Per-chip-type device + symbol entries synthesised INLINE (the
+    //     resistor InlineDeviceJson / InlineSymbolJson mechanism), with
+    //     DETERMINISTIC UUIDs derived from the chip's full part number so
+    //     re-exporting the same schematic is byte-stable (doc §7).
+    //
+    // Why per-chip-type symbol UUIDs (not one shared symbol): the exporter
+    // and manifest dedup by SymbolUuid, and the pin NAMEs are baked into
+    // each clone -- so two different chips must have different symbol UUIDs
+    // or only the first chip's drawing would be emitted. The footprint is
+    // genuinely identical so it IS shared; the device must bind to its own
+    // symbol, so it's per-chip-type too. Both UUIDs are derived, not
+    // hand-supplied: no per-chip library data is needed.
+    //
+    // The displayed chip name comes from each synthesised device's
+    // Name = "={Manufacturer Part}" template, where Manufacturer Part is
+    // set to the chip's FullPartNumber ("74HC393", "74HC74", "NE556", ...).
+    // EmitTemplatedName on the CataloguePart makes the sheet emit the
+    // template-fallback Name ATTR, exactly as DIP-8 does.
+    internal const string Dip14FootprintUuid = "f8db98e4ac5c41b3b7fa99d6d16d6531";
+
+    // The 74HC393 reference device entry -- used as the ATTRIBUTE TEMPLATE
+    // for every synthesised DIP-14 device. The decorative fields (LCSC,
+    // manufacturer, datasheet, 3D model) are carried verbatim from the
+    // reference so the PCB router and 3D viewer have something to chew on;
+    // only Manufacturer Part, Name, Symbol, Designator, and Footprint are
+    // overwritten per chip. The 3D Model UUID is the PDIP-14 model from the
+    // reference, shared across all DIP-14 chips (same body).
+    private const string Dip14ReferenceSupplierPart = "C5329";
+    private const string Dip14ReferenceManufacturer = "TI";
+    private const string Dip14Reference3dModelUuid = "5399e5dcffba4e4c87798df762be2192";
+    private const string Dip14Reference3dModelTransform =
+        "751.967,309.842,0,0,0,0,0,0,-118.11";
+
+    // ---------------------------------------------------- DIP-16 ICs
+    //
+    // Identical scheme to DIP-14 (see above): single-PART box symbol, one
+    // shared footprint (dip-16.efoo, the DIP-16 body, verbatim from the
+    // 74HC163 reference), one shared .esym template (dip-16.esym) cloned
+    // per chip via SymbolTemplateTokens, and per-chip-type device + symbol
+    // entries synthesised inline with deterministic UUIDs. No per-chip
+    // EasyEDA library data is needed; pin names come from each chip's
+    // ChipPartDefinition. Covers the box-drawn 16-pin ChipPartDefinitions
+    // (390, 173, 175, 161, 163, 193, 595, 138, 139, 151, 153, 157, 257,
+    // 47, 48, etc.) -- NOT the gate IcPartDefinitions.
+    //
+    // The .esym is drawn at 20px pin pitch (matching ChipUnit's PinPitch)
+    // so the router's pins line up exactly and no diagonal wires appear --
+    // the same pitch fix applied to DIP-8/DIP-14.
+    internal const string Dip16FootprintUuid = "78717fccd6aa4a3b893611519dd3f0bc";
+
+    // 74HC163 reference device attributes, used as the shared template for
+    // every synthesised DIP-16 device (decorative per EasyEDA_Export.md §2).
+    // The 3D Model is the DIP-16 model, shared across all DIP-16 chips.
+    private const string Dip16ReferenceSupplierPart = "C2893";
+    private const string Dip16ReferenceManufacturer = "TI";
+    private const string Dip16Reference3dModelUuid = "c24a9876abec4714888ca3e3d8d19859";
+    private const string Dip16Reference3dModelTitle =
+        "DIP-16_L20.0-W6.4-H3.5-LS7.62-P2.54";
+    private const string Dip16Reference3dModelTransform =
+        "787.4,311.8104,0,0,0,0,-0.003,0.001,-118.11";
+
+    // ---------------------------------------------------- pre-built entries
+
+    private static readonly CataloguePart LedPart = new(
+        DeviceUuid: LedDeviceUuid,
+        SymbolUuid: LedSymbolUuid,
+        SymbolResourceName: "led.esym",
+        FootprintUuid: LedFootprintUuid,
+        FootprintResourceName: "led.efoo",
+        PartTitle: "LED.1",
+        PinLocalPositions: new()
+        {
+            // Mirrored led.esym: NUMBER=1 (anode, NAME="A") at left (-20, 0);
+            // NUMBER=2 (cathode, NAME="K") at right (+20, 0). Matches TTLSim's
+            // pin convention (1=anode-left, 2=cathode-right), so no swap.
+            [1] = new Point(-20, 0),
+            [2] = new Point(+20, 0),
+        },
+        EmitNameOverride: true,
+        // Hand-tuned in EasyEDA, read back from
+        // LEDs_positions_tweaked_in_EDA.epro. Value entries unused (LED
+        // doesn't emit Value); zero them.
+        LabelOffsets: new LabelOffsetsByRotation(
+            Rot0: new LabelOffsetSet(new(-10, +20), new(-10, +10), default),
+            Rot90: new LabelOffsetSet(new(-20, +5), new(-20, -5), default),
+            Rot180: new LabelOffsetSet(new(-20, +20), new(-20, +10), default),
+            Rot270: new LabelOffsetSet(new(-25, -5), new(-25, -15), default)));
+
+    // VCC: single pin at the origin.
+    private static readonly CataloguePart VccPart = new(
+        DeviceUuid: VccDeviceUuid,
+        SymbolUuid: VccSymbolUuid,
+        SymbolResourceName: "vcc.esym",
+        FootprintUuid: null,
+        FootprintResourceName: null,
+        PartTitle: "Power-VCC.1",
+        PinLocalPositions: new() { [0] = new Point(0, 0) },
+        IsNetFlag: true,
+        NetName: "VCC");
+
+    // GND: single pin at the origin.
+    private static readonly CataloguePart GndPart = new(
+        DeviceUuid: GndDeviceUuid,
+        SymbolUuid: GndSymbolUuid,
+        SymbolResourceName: "gnd.esym",
+        FootprintUuid: null,
+        FootprintResourceName: null,
+        PartTitle: "Ground-GND.1",
+        PinLocalPositions: new() { [0] = new Point(0, 0) },
+        IsNetFlag: true,
+        NetName: "GND");
+
+    // ---------------------------------------------------- pin headers
+    //
+    // 2.54 mm pitch, 1xN female headers, vertical. Pin local positions
+    // match the .esym files verbatim: pins on the LEFT edge of the
+    // symbol (x = -15 for 2/8-pin, x = -20 for 4/6-pin), with pin 1 at
+    // the top and pins descending in Y by 10 EasyEDA units (= 1
+    // TTL Sim grid cell). The PartTitle suffix ".1" names the first
+    // (and only) PART in each .esym.
+    //
+    // MatchesEasyEdaRotationSense: true -- header pins use SwapR90R270
+    // in their Pin objects so TTL Sim's canvas already shows them with
+    // EasyEDA's rotation sense. The exporter's default (360 - r) % 360
+    // shim is designed to undo the *other* parts' opposite-sense
+    // rotation; applying it to headers would re-invert and ship a
+    // wrong-rotation .epro.
+    //
+    // LabelOffsets were measured from a hand-placed reference
+    // (Headers.epro upload, May 2026): each entry is the offset of the
+    // Designator ATTR's world position from the COMPONENT's world
+    // position, per rotation. EasyEDA writes these as absolute
+    // post-rotation offsets, so they're consumed by EmitComponent
+    // without further rotation. Name and Value offsets are unused by
+    // headers (no Value, Name is the bookkeeping ATTR blanked to "").
+
+    private static readonly Dictionary<int, Point> Header2PinLocals = new()
+    {
+        // Male HX PH254-01-02: pins at (-20, +5) and (-20, -5).
+        [1] = new Point(-20, +5),
+        [2] = new Point(-20, -5),
+    };
+
+    private static readonly Dictionary<int, Point> Header4PinLocals = new()
+    {
+        [1] = new Point(-20, +15),
+        [2] = new Point(-20, +5),
+        [3] = new Point(-20, -5),
+        [4] = new Point(-20, -15),
+    };
+
+    private static readonly Dictionary<int, Point> Header6PinLocals = new()
+    {
+        [1] = new Point(-20, +25),
+        [2] = new Point(-20, +15),
+        [3] = new Point(-20, +5),
+        [4] = new Point(-20, -5),
+        [5] = new Point(-20, -15),
+        [6] = new Point(-20, -25),
+    };
+
+    private static readonly Dictionary<int, Point> Header8PinLocals = new()
+    {
+        // Male HX PZ2.54-1x8P ZZ: pins at (-20, ±35), (-20, ±25), (-20, ±15), (-20, ±5).
+        [1] = new Point(-20, +35),
+        [2] = new Point(-20, +25),
+        [3] = new Point(-20, +15),
+        [4] = new Point(-20, +5),
+        [5] = new Point(-20, -5),
+        [6] = new Point(-20, -15),
+        [7] = new Point(-20, -25),
+        [8] = new Point(-20, -35),
+    };
+
+    private static readonly CataloguePart Header2Part = new(
+        DeviceUuid: Header2DeviceUuid,
+        SymbolUuid: Header2SymbolUuid,
+        SymbolResourceName: "hdr-out-2.esym",
+        FootprintUuid: Header2FootprintUuid,
+        FootprintResourceName: "hdr-out-2.efoo",
+        PartTitle: "Header-Male-2.54_1x2.1",
+        PinLocalPositions: Header2PinLocals,
+        // Name offset = Designator offset + (+10, 0) -- name sits one
+        // EasyEDA cell to the right of the designator, same Y, matching
+        // the hand-edited reference (Headers_fixed_in_EDA.epro, May 2026).
+        LabelOffsets: new LabelOffsetsByRotation(
+            Rot0: new LabelOffsetSet(new(-5, +15), new(+5, +15), default),
+            Rot90: new LabelOffsetSet(new(+20, +5), new(+30, +5), default),
+            Rot180: new LabelOffsetSet(new(-15, +15), new(-5, +15), default),
+            Rot270: new LabelOffsetSet(new(+20, -5), new(+30, -5), default)),
+        EmitNameOverride: true,
+        NameLabelUsesDesignatorStyle: true,
+        MatchesEasyEdaRotationSense: true);
+
+    private static readonly CataloguePart Header4Part = new(
+        DeviceUuid: Header4DeviceUuid,
+        SymbolUuid: Header4SymbolUuid,
+        SymbolResourceName: "hdr-out-4.esym",
+        FootprintUuid: Header4FootprintUuid,
+        FootprintResourceName: "hdr-out-4.efoo",
+        PartTitle: "Header-Male-2.54_1x4.1",
+        PinLocalPositions: Header4PinLocals,
+        LabelOffsets: new LabelOffsetsByRotation(
+            Rot0: new LabelOffsetSet(new(-10, +25), new(0, +25), default),
+            Rot90: new LabelOffsetSet(new(+30, 0), new(+40, 0), default),
+            Rot180: new LabelOffsetSet(new(-10, +25), new(0, +25), default),
+            Rot270: new LabelOffsetSet(new(+30, 0), new(+40, 0), default)),
+        EmitNameOverride: true,
+        NameLabelUsesDesignatorStyle: true,
+        MatchesEasyEdaRotationSense: true);
+
+    private static readonly CataloguePart Header6Part = new(
+        DeviceUuid: Header6DeviceUuid,
+        SymbolUuid: Header6SymbolUuid,
+        SymbolResourceName: "hdr-out-6.esym",
+        FootprintUuid: Header6FootprintUuid,
+        FootprintResourceName: "hdr-out-6.efoo",
+        PartTitle: "Header-Male-2.54_1x6.1",
+        PinLocalPositions: Header6PinLocals,
+        LabelOffsets: new LabelOffsetsByRotation(
+            Rot0: new LabelOffsetSet(new(-10, +35), new(0, +35), default),
+            Rot90: new LabelOffsetSet(new(+40, 0), new(+50, 0), default),
+            Rot180: new LabelOffsetSet(new(-10, +35), new(0, +35), default),
+            Rot270: new LabelOffsetSet(new(+40, 0), new(+50, 0), default)),
+        EmitNameOverride: true,
+        NameLabelUsesDesignatorStyle: true,
+        MatchesEasyEdaRotationSense: true);
+
+    private static readonly CataloguePart Header8Part = new(
+        DeviceUuid: Header8DeviceUuid,
+        SymbolUuid: Header8SymbolUuid,
+        SymbolResourceName: "hdr-out-8.esym",
+        FootprintUuid: Header8FootprintUuid,
+        FootprintResourceName: "hdr-out-8.efoo",
+        PartTitle: "Header-Male-2.54_1x8.1",
+        PinLocalPositions: Header8PinLocals,
+        LabelOffsets: new LabelOffsetsByRotation(
+            Rot0: new LabelOffsetSet(new(-5, +45), new(+5, +45), default),
+            Rot90: new LabelOffsetSet(new(+50, +5), new(+60, +5), default),
+            Rot180: new LabelOffsetSet(new(-15, +45), new(-5, +45), default),
+            Rot270: new LabelOffsetSet(new(+50, -5), new(+60, -5), default)),
+        EmitNameOverride: true,
+        NameLabelUsesDesignatorStyle: true,
+        MatchesEasyEdaRotationSense: true);
+
+    // ---------------------------------------------------- switch / pushbutton
+    //
+    // SS11-RBDWQ-R20-R rocker switch and SKPMAPE010 tactile pushbutton:
+    // schematic symbol taken verbatim from the EasyEDA library, but with
+    // the H1 male 2.54mm 1x2P through-hole header footprint substituted
+    // for the part's "real" footprint (the rocker's panel-mount and the
+    // tactile's SMD pads). Rationale: TTL Sim treats switches and buttons
+    // as off-board human-input devices that connect to the PCB via a
+    // 2-pin header; the schematic still reads as a switch/button so the
+    // intent is clear in the captured drawing.
+    //
+    // Pin local positions come from the .esym files verbatim. The switch
+    // symbol's pin endpoints are at (-30, 0) and (+30, 0); the button's
+    // are at (-30, -10) and (+30, -10) -- the button's body sits 10 EDA
+    // units below its origin, so the pins do too. TTL Sim's canvas places
+    // both units with pins at canvas-local Y=1, so the pin world position
+    // the exporter calls with is the same in both cases -- the negative Y
+    // in the button's local just means the exporter will anchor the
+    // COMPONENT 10 units above where the pin actually lands, and the
+    // symbol drawing inside that anchor renders downward to meet it.
+    //
+    // PinDirection is Left/Right on the units (like resistor/LED), so
+    // MatchesEasyEdaRotationSense stays at its default false -- the
+    // exporter's standard (360 - r) % 360 rotation shim applies.
+
+    private static readonly CataloguePart SwitchPart = new(
+        DeviceUuid: SwitchDeviceUuid,
+        SymbolUuid: SwitchSymbolUuid,
+        SymbolResourceName: "switch.esym",
+        FootprintUuid: Hdr2MaleFootprintUuid,
+        FootprintResourceName: "hdr-th-2-male.efoo",
+        PartTitle: "SS11-RBDWQ-R20-R.1",
+        PinLocalPositions: new()
+        {
+            // switch.esym pin endpoints: PIN e3 (NUMBER=1) at (-30, 0),
+            // PIN e7 (NUMBER=2) at (+30, 0). TTL Sim's SwitchUnit pin 1
+            // is on the left, pin 2 on the right, matching.
+            [1] = new Point(-30, 0),
+            [2] = new Point(+30, 0),
+        },
+        EmitNameOverride: true,
+        // Initial offsets only -- expected to be hand-tuned in EasyEDA
+        // after the first export, same workflow as resistors and LEDs.
+        // Body BBOX is roughly (-13.5 .. +13.5, -3.5 .. +9.5).
+        LabelOffsets: new LabelOffsetsByRotation(
+            Rot0: new LabelOffsetSet(new(-10, +20), new(-10, +10), default),
+            Rot90: new LabelOffsetSet(new(-25, +5), new(-25, -5), default),
+            Rot180: new LabelOffsetSet(new(-10, +20), new(-10, +10), default),
+            Rot270: new LabelOffsetSet(new(-25, -5), new(-25, -15), default)));
+
+    private static readonly CataloguePart ButtonPart = new(
+        DeviceUuid: ButtonDeviceUuid,
+        SymbolUuid: ButtonSymbolUuid,
+        SymbolResourceName: "button.esym",
+        FootprintUuid: Hdr2MaleFootprintUuid,
+        FootprintResourceName: "hdr-th-2-male.efoo",
+        PartTitle: "SKPMAPE010.1",
+        PinLocalPositions: new()
+        {
+            // button.esym pin endpoints: PIN e3 (NUMBER=1) at (-30, -10),
+            // PIN e7 (NUMBER=2) at (+30, -10). TTL Sim's ButtonUnit pin 1
+            // is on the left, pin 2 on the right, matching. The Y=-10
+            // anchors the COMPONENT above the pin row so the symbol body
+            // (which extends downward from its origin) renders on the
+            // expected canvas cells.
+            [1] = new Point(-30, -10),
+            [2] = new Point(+30, -10),
+        },
+        EmitNameOverride: true,
+        // Initial offsets only -- expected to be hand-tuned in EasyEDA
+        // after the first export. Body BBOX is roughly (-20.5 .. +20.5,
+        // -12.5 .. +10.5) so labels need wider clearance than the switch.
+        LabelOffsets: new LabelOffsetsByRotation(
+            Rot0: new LabelOffsetSet(new(-10, +20), new(-10, +10), default),
+            Rot90: new LabelOffsetSet(new(-30, +5), new(-30, -5), default),
+            Rot180: new LabelOffsetSet(new(-10, +20), new(-10, +10), default),
+            Rot270: new LabelOffsetSet(new(-30, -5), new(-30, -15), default)));
+
+    private static readonly CataloguePart DiodePart = new(
+        DeviceUuid: DiodeDeviceUuid,
+        SymbolUuid: DiodeSymbolUuid,
+        SymbolResourceName: "diode.esym",
+        FootprintUuid: DiodeFootprintUuid,
+        FootprintResourceName: "diode.efoo",
+        PartTitle: "Diode.1",
+        PinLocalPositions: new()
+        {
+            // PIN-CONVENTION SWAP. TTL Sim's DiodeUnit puts pin 1 (anode,
+            // "A") on the LEFT and pin 2 (cathode, "K") on the RIGHT.
+            // diode.esym has it REVERSED: NUMBER="1" is the cathode at
+            // X=-20 and NUMBER="2" is the anode at X=+20 (per the source
+            // .epro's 1N5819 symbol). So the mapping swaps:
+            //   TTL Sim pin 1 (anode) -> EDA right pin  (+20, 0)
+            //   TTL Sim pin 2 (cathode) -> EDA left pin (-20, 0)
+            // The sheet writer drives wire endpoints from these positions,
+            // so the swap puts the visible anode/cathode in the right
+            // places in the exported schematic without needing to edit
+            // the symbol file.
+            [1] = new Point(+20, 0),
+            [2] = new Point(-20, 0),
+        },
+        EmitNameOverride: true,
+        EasyEdaRotationOffsetDeg: 180,
+        // Initial offsets only -- expected to be hand-tuned in EasyEDA
+        // after first export. The diode symbol's BBOX is roughly
+        // (-10.5 .. +10.5, -7.5 .. +7.5) and includes the cathode bar
+        // glyph at the left (the small notch around X=-5..-7, Y=±7).
+        LabelOffsets: new LabelOffsetsByRotation(
+            Rot0: new LabelOffsetSet(new(-10, +20), new(-10, +10), default),
+            Rot90: new LabelOffsetSet(new(-20, +5), new(-20, -5), default),
+            Rot180: new LabelOffsetSet(new(-10, +20), new(-10, +10), default),
+            Rot270: new LabelOffsetSet(new(-20, -5), new(-20, -15), default)));
+
+
+    // ---------------------------------------------------- public API
+
+    public static CataloguePart LookupForDevice(Device device)
+    {
+        // Match against the canonical singletons in PassivePartDefinition.
+        // Record value-equality means this works whether the device's
+        // Definition is the singleton directly or a deserialised copy with
+        // matching field values; ReferenceEquals would be safe too since
+        // SchematicDtoMapper resolves into the singletons, but the value-
+        // equality form is robust to future construction paths. The key
+        // benefit over the previous `p.Identifier == "resistor"` form: if
+        // the singleton is renamed (or removed), this becomes a compile
+        // error rather than a runtime NotImplementedException.
+        return device.Definition switch
+        {
+            PassivePartDefinition p when p == PassivePartDefinition.Resistor
+                => BuildResistorPart(device),
+            PassivePartDefinition p when p == PassivePartDefinition.Capacitor
+                => BuildCapacitorPart(device),
+            PassivePartDefinition p when p == PassivePartDefinition.PolarizedCapacitor
+                => BuildPolarizedCapacitorPart(device),
+            PassivePartDefinition p when p == PassivePartDefinition.Led => LedPart,
+            PassivePartDefinition p when p == PassivePartDefinition.Switch => SwitchPart,
+            PassivePartDefinition p when p == PassivePartDefinition.Button => ButtonPart,
+            PassivePartDefinition p when p == PassivePartDefinition.Diode => DiodePart,
+
+            HeaderPartDefinition h => h.PinCount switch
+            {
+                2 => Header2Part,
+                4 => Header4Part,
+                6 => Header6Part,
+                8 => Header8Part,
+                _ => throw new NotImplementedException(
+                    $"EasyEDA export: no catalogue entry for {h.PinCount}-pin header. " +
+                    "Supported pin counts are 2, 4, 6, 8."),
+            },
+
+            ChipPartDefinition cp when cp.PinCount == 8 => BuildDip8Part(cp),
+
+            ChipPartDefinition cp when cp.PinCount == 14 => BuildDip14Part(device, cp),
+
+            ChipPartDefinition cp when cp.PinCount == 16 => BuildDip16Part(device, cp),
+
+            _ => throw new NotImplementedException(
+                $"EasyEDA export: no catalogue entry for device {device.Designator} " +
+                $"({device.Definition.Identifier}). Add a CataloguePart entry and " +
+                "embedded .esym/.efoo resources before exporting this part.")
+        };
+    }
+
+    public static CataloguePart LookupForStandaloneItem(SchematicItem item)
+    {
+        return item switch
+        {
+            VccSymbol => VccPart,
+            GndSymbol => GndPart,
+            _ => throw new NotImplementedException(
+                $"EasyEDA export: no catalogue entry for item of type " +
+                $"{item.GetType().Name}. Add a CataloguePart entry and " +
+                "embedded resource before exporting this item.")
+        };
+    }
+
+    // ---------------------------------------------------- resistor synthesis
+    //
+    // The resistor catalogue is Frankenstein: every resistor instance
+    // points at one shared EasyEDA library device, and the displayed
+    // resistance text comes from a per-instance Value ATTR override
+    // emitted by EasyEdaSheetWriter (see CataloguePart.ValueOverride).
+    //
+    // The placeholder LCSC part data (CR1/4W-1K, C2894660, VO) lets
+    // EasyEDA Pro's PCB router accept the part, and pairs with a 3D
+    // model so the 3D viewer shows a real axial resistor body. The BOM
+    // then lists every resistor as that 1kΩ -- wrong, but harmless
+    // because we don't use the BOM for production. Anyone who needs an
+    // accurate BOM has to substitute the right MPNs in EasyEDA after
+    // import.
+
+    private static CataloguePart BuildResistorPart(Device device)
+    {
+        // Find the resistor's unit (resistors are 1-unit devices) and read
+        // its Label to get the value text the user typed.
+        string label = "";
+        foreach (var u in device.Units)
+        {
+            label = u.Label ?? "";
+            break;
+        }
+
+        string displayValue;
+        try
+        {
+            displayValue = ResistorValueParser.FormatForDisplay(label);
+        }
+        catch (FormatException ex)
+        {
+            throw new NotImplementedException(
+                $"EasyEDA export: resistor {device.Designator} has an unparseable " +
+                $"value '{label}'. {ex.Message} " +
+                "Supported value forms: 100, 100R, 220Ω, 2k2, 2K2, 1.5K, 1M, 1M5.");
+        }
+
+        // Symbol template tokens: substitute the generic "Resistor" identifier
+        // where the .esym template has @@PART_ID@@ and @@SYMBOL_NAME@@. The
+        // displayed resistance is NOT baked into the symbol -- it flows
+        // through the per-instance Value ATTR on the COMPONENT instead.
+        var symbolTokens = new Dictionary<string, string>
+        {
+            ["@@PART_ID@@"] = "Resistor.1",
+            ["@@SYMBOL_NAME@@"] = "Resistor",
+        };
+
+        return new CataloguePart(
+            DeviceUuid: ResistorDeviceUuid,
+            SymbolUuid: ResistorSymbolUuid,
+            SymbolResourceName: "resistor.esym",
+            FootprintUuid: ResistorFootprintUuid,
+            FootprintResourceName: "resistor.efoo",
+            PartTitle: "Resistor.1",
+            PinLocalPositions: new()
+            {
+                // resistor.esym pins rescaled to ±30 (60px span) to match
+                // ChipUnit/ResistorUnit's TTLSim pin span (Size.Width 6 ×
+                // 10px). Previously ±20, which mismatched TTLSim's 60px and
+                // produced diagonal wires at the far pin (same pitch bug as
+                // the DIPs). NUMBER=1 at left, =2 at right; no swap.
+                [1] = new Point(-30, 0),
+                [2] = new Point(+30, 0),
+            },
+            EmitValueLabel: true,
+            ValueOverride: displayValue,
+            InlineDeviceJson: BuildResistorDeviceFragment(),
+            InlineSymbolJson: BuildResistorSymbolFragment(),
+            SymbolTemplateTokens: symbolTokens,
+            // Hand-tuned in EasyEDA, read back from Adjusted_in_EDA.epro.
+            // Resistor body is symmetric end-to-end so 0 == 180 and 90 == 270.
+            // Name slot is the bookkeeping ATTR (empty string for resistor);
+            // its offset is purely where the invisible "Name" record lives.
+            LabelOffsets: new LabelOffsetsByRotation(
+                Rot0: new LabelOffsetSet(new(-10, +10), new(-15, -20), new(-10, +5)),
+                Rot90: new LabelOffsetSet(new(-20, 0), new(-15, -20), new(-20, -5)),
+                Rot180: new LabelOffsetSet(new(-10, +10), new(-15, -20), new(-10, +5)),
+                Rot270: new LabelOffsetSet(new(-20, 0), new(-15, -20), new(-20, -5))));
+    }
+
+    private static string BuildResistorDeviceFragment()
+    {
+        // Single shared device entry: same fields a per-value VO device
+        // would have, with the LCSC stock data of the 1kΩ CR1/4W as a
+        // generic placeholder so EasyEDA Pro's PCB router accepts the
+        // part. The displayed value comes from each COMPONENT's per-
+        // instance Value ATTR override, NOT from this template's Value
+        // field -- though the Value here ("1k") matches the placeholder
+        // MPN so any tool that reads the template directly sees a
+        // consistent fallback.
+        //
+        // The 3D Model attributes reference an EasyEDA cloud-library 3D
+        // asset by UUID -- the geometry isn't embedded in our export,
+        // EasyEDA resolves it at render time. The Transform string is
+        // copied verbatim from the source .epro and aligns the 3D body
+        // with the footprint's pad pattern.
+        var attrs = new System.Text.Json.Nodes.JsonObject
+        {
+            ["LCSC Part Name"] = "1kΩ ±5%",
+            ["Supplier Part"] = "C2894660",
+            ["Manufacturer"] = "VO",
+            ["Manufacturer Part"] = "CR1/4W-1K±5%-ST52",
+            ["Supplier Footprint"] = "\u8f74\u5411\u5f15\u7ebf",
+            ["JLCPCB Part Class"] = "Extended Part",
+            ["Datasheet"] = "https://datasheet.lcsc.com/datasheet/pdf/f7f033f43920630443647ff79c60c0bb.pdf?productCode=C2894660",
+            ["Supplier"] = "LCSC",
+            ["Add into BOM"] = "yes",
+            ["Convert to PCB"] = "yes",
+            ["Symbol"] = ResistorSymbolUuid,
+            ["Designator"] = "R?",
+            ["Footprint"] = ResistorFootprintUuid,
+            ["3D Model"] = Resistor3dModelUuid,
+            ["3D Model Title"] = "RES-TH_BD2.7-L6.2-P10.20-D0.4",
+            ["3D Model Transform"] = "417.322,106.221,0,0,0,0,0,0,-196.85",
+            ["Type"] = "Carbon Film Resistor",
+            ["Value"] = "1k",
+            ["Tolerance"] = "\u00b15%",
+            ["Description"] = "Through-hole resistor -- value supplied per instance via Value ATTR override",
+        };
+
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["title"] = "Resistor",
+            ["attributes"] = attrs,
+            ["description"] = "Through-hole resistor -- value supplied per instance via Value ATTR override",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["images"] = new System.Text.Json.Nodes.JsonArray(""),
+            ["source"] = "6d850419aea044bb805429ccd89d98eb|0819f05c4eef4c71ace90d822a990e87",
+            ["version"] = "1660759335",
+            ["custom_tags"] = "[\"Resistors\"]",
+        };
+
+        return fragment.ToJsonString();
+    }
+
+    private static string BuildResistorSymbolFragment()
+    {
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["source"] = "2d1d4b07d6cd4afeaf2cd056f4440b61|0819f05c4eef4c71ace90d822a990e87",
+            ["desc"] = "",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["custom_tags"] = "[\"Resistors\"]",
+            ["title"] = "Resistor",
+            ["version"] = "1660802535",
+            ["type"] = 2,
+        };
+        return fragment.ToJsonString();
+    }
+
+    // ---------------------------------------------------- DIP-8 synthesis
+    //
+    // A DIP-8 chip exports as a single-PART symbol matching the DIP box.
+    // The device and symbol metadata live in device_fragments.json
+    // (looked up by UUID at manifest-build time, like LED / VCC / GND),
+    // so BuildDip8Part doesn't synthesise InlineDeviceJson /
+    // InlineSymbolJson -- it only supplies the per-chip symbol template
+    // tokens and the pin-local positions.
+    //
+    // Pin local positions mirror dip-8.esym exactly: pins 1..4 run down
+    // the left edge at x=-50, y = +15, +5, -5, -15; pins 5..8 run UP the
+    // right edge at x=+50, y = -15, -5, +5, +15 (the DIP mirror). These
+    // are the PIN-record tip coordinates from the reference symbol, in
+    // EasyEDA pixels. ChipUnit lays its canvas pins out the same way
+    // (pin 1 top-left, descending; second half bottom-right, ascending),
+    // so no per-pin remapping is needed -- pin number N in TTL Sim maps
+    // to pin number N in the symbol.
+    // 20px pin pitch (2 grid cells), matching ChipUnit's PinPitch so the
+    // router's TTLSim pin positions line up exactly with the EasyEDA pins
+    // after scaling -- no snap offset, no diagonal wires. The dip-8.esym
+    // resource was rescaled to match (pins at y = ±30, ±10; body half 40).
+    private static readonly Dictionary<int, Point> Dip8PinLocals = new()
+    {
+        [1] = new Point(-50, 30),
+        [2] = new Point(-50, 10),
+        [3] = new Point(-50, -10),
+        [4] = new Point(-50, -30),
+        [5] = new Point(50, -30),
+        [6] = new Point(50, -10),
+        [7] = new Point(50, 10),
+        [8] = new Point(50, 30),
+    };
+
+    private static CataloguePart BuildDip8Part(ChipPartDefinition cp)
+    {
+        if (!Dip8Chips.TryGetValue(cp.PartNumber, out var chip))
+            throw new NotImplementedException(
+                $"EasyEDA export: DIP-8 chip '{cp.PartNumber}' is not yet bound to " +
+                "an EasyEDA library entry. Add a row to Dip8Chips in EasyEDACatalogue " +
+                "(with the chip's library Device + Symbol UUIDs) and the matching " +
+                "device + symbol fragments to device_fragments.json.");
+
+        // Build a pin-number -> name map from the chip definition, then
+        // turn each into a @@PIN_n_NAME@@ template token. Active-low names
+        // (leading '/' in TTL Sim, e.g. "/TRIG") convert to EasyEDA's
+        // overbar convention: a leading '#' (e.g. "#TRIG"), which EasyEDA
+        // renders with a bar over the following text.
+        var tokens = new Dictionary<string, string>
+        {
+            ["@@PART_TITLE@@"] = chip.SymbolName + ".1",
+            ["@@SYMBOL_NAME@@"] = chip.SymbolName,
+        };
+        foreach (var pin in cp.Pins)
+            tokens[$"@@PIN_{pin.Number}_NAME@@"] = ToEasyEdaPinName(pin.Name);
+
+        // Every DIP-8 pin must have a name token, or the template ships a
+        // literal "@@PIN_n_NAME@@" string into the .esym. Guard against a
+        // chip definition that doesn't enumerate all 8 pins.
+        for (int n = 1; n <= 8; n++)
+            if (!tokens.ContainsKey($"@@PIN_{n}_NAME@@"))
+                throw new NotImplementedException(
+                    $"EasyEDA export: DIP-8 chip '{cp.PartNumber}' is missing a " +
+                    $"definition for pin {n}. All 8 pins must be enumerated in its " +
+                    "ChipPartDefinition before it can be exported.");
+
+        return new CataloguePart(
+            DeviceUuid: chip.DeviceUuid,
+            SymbolUuid: chip.SymbolUuid,
+            SymbolResourceName: "dip-8.esym",
+            FootprintUuid: Dip8FootprintUuid,
+            FootprintResourceName: "dip-8.efoo",
+            PartTitle: chip.SymbolName + ".1",
+            PinLocalPositions: Dip8PinLocals,
+            SymbolTemplateTokens: tokens,
+            EmitTemplatedName: true,
+            // Label offsets hand-tuned in EasyEDA and read back from
+            // DIP-8_labels.epro (EasyEDA_Export.md §0), then rescaled for
+            // the 20px-pitch body. The chip name sits adjacent to the
+            // designator:
+            //   R0/R180  (horizontal body, half-height 40): labels ABOVE
+            //     the body, text horizontal -- designator at y=+50, name
+            //     +20 to its right: "U1 74HC393".
+            //   R90/R270 (vertical body, rotated span x[-40,40] y[-50,50]):
+            //     labels to the LEFT of the body, TEXT ROTATED 90 so it
+            //     reads bottom-to-top alongside the body -- designator at
+            //     x=-50, name +18 along the body. TextRotationDeg=90.
+            // The body is symmetric, so each rotation pair shares one value.
+            LabelOffsets: new LabelOffsetsByRotation(
+                Rot0: new LabelOffsetSet(new(-40, +50), new(-20, +50), default),
+                Rot90: new LabelOffsetSet(new(-50, -20), new(-50, -2), default, TextRotationDeg: 90),
+                Rot180: new LabelOffsetSet(new(-40, +50), new(-20, +50), default),
+                Rot270: new LabelOffsetSet(new(-50, -20), new(-50, -2), default, TextRotationDeg: 90)));
+    }
+
+    /// <summary>
+    /// Convert a TTL Sim pin name to EasyEDA's pin-name convention. TTL Sim
+    /// marks an active-low pin with a leading '/' (e.g. "/TRIG", "/RESET");
+    /// EasyEDA uses a leading '#' to render an overbar over the following
+    /// text. Names without a leading '/' pass through unchanged.
+    /// </summary>
+    private static string ToEasyEdaPinName(string name) =>
+        !string.IsNullOrEmpty(name) && name[0] == '/'
+            ? "#" + name.Substring(1)
+            : name;
+
+    // ---------------------------------------------------- DIP-14 synthesis
+    //
+    // 20px pin pitch (2 grid cells), matching ChipUnit's PinPitch so the
+    // router's TTLSim pin positions line up exactly with the EasyEDA pins
+    // after scaling -- no snap offset, no diagonal wires. The dip-14.esym
+    // resource was rescaled to match: pins 1..7 DOWN the left edge at
+    // x=-50, y = +60,+40,+20,0,-20,-40,-60; pins 8..14 UP the right edge
+    // at x=+50, y = -60,-40,-20,0,+20,+40,+60 (the DIP mirror); body half
+    // height 72. ChipUnit lays its canvas pins out the same way, so pin
+    // number N in TTL Sim maps to pin number N in the symbol.
+    private static readonly Dictionary<int, Point> Dip14PinLocals = new()
+    {
+        [1] = new Point(-50, 60),
+        [2] = new Point(-50, 40),
+        [3] = new Point(-50, 20),
+        [4] = new Point(-50, 0),
+        [5] = new Point(-50, -20),
+        [6] = new Point(-50, -40),
+        [7] = new Point(-50, -60),
+        [8] = new Point(50, -60),
+        [9] = new Point(50, -40),
+        [10] = new Point(50, -20),
+        [11] = new Point(50, 0),
+        [12] = new Point(50, 20),
+        [13] = new Point(50, 40),
+        [14] = new Point(50, 60),
+    };
+
+    private static CataloguePart BuildDip14Part(Device device, ChipPartDefinition cp)
+    {
+        // Displayed chip name -- "74HC393", "74HC74", "NE556", etc.
+        string chipName = device.FullPartNumber;
+
+        // Deterministic per-chip-type UUIDs so re-exports are byte-stable
+        // (doc §7). Keyed on the full part name (e.g. "74HC393"), which
+        // uniquely identifies the chip type; two placements of the same
+        // chip get the same UUIDs and dedup to one symbol/device in the zip.
+        string symbolUuid = DeterministicUuid("dip14-symbol:" + chipName);
+        string deviceUuid = DeterministicUuid("dip14-device:" + chipName);
+
+        // Symbol template tokens: part title, displayed symbol name, and
+        // the 14 pin names. Active-low '/' -> '#' (EasyEDA overbar).
+        var tokens = new Dictionary<string, string>
+        {
+            ["@@PART_TITLE@@"] = chipName + ".1",
+            ["@@SYMBOL_NAME@@"] = chipName,
+        };
+        foreach (var pin in cp.Pins)
+            tokens[$"@@PIN_{pin.Number}_NAME@@"] = ToEasyEdaPinName(pin.Name);
+
+        // All 14 pins must be enumerated, or the template ships a literal
+        // "@@PIN_n_NAME@@" string into the .esym.
+        for (int n = 1; n <= 14; n++)
+            if (!tokens.ContainsKey($"@@PIN_{n}_NAME@@"))
+                throw new NotImplementedException(
+                    $"EasyEDA export: DIP-14 chip '{chipName}' is missing a " +
+                    $"definition for pin {n}. All 14 pins must be enumerated in " +
+                    "its ChipPartDefinition before it can be exported.");
+
+        return new CataloguePart(
+            DeviceUuid: deviceUuid,
+            SymbolUuid: symbolUuid,
+            SymbolResourceName: "dip-14.esym",
+            FootprintUuid: Dip14FootprintUuid,
+            FootprintResourceName: "dip-14.efoo",
+            PartTitle: chipName + ".1",
+            PinLocalPositions: Dip14PinLocals,
+            SymbolTemplateTokens: tokens,
+            InlineDeviceJson: BuildDip14DeviceFragment(chipName, symbolUuid),
+            InlineSymbolJson: BuildDip14SymbolFragment(chipName),
+            EmitTemplatedName: true,
+            // Label offsets in the same style as DIP-8, rescaled for the
+            // taller PDIP-14 body:
+            //   R0/R180  (horizontal body, half-height 72): labels ABOVE
+            //     the body, text horizontal -- designator at y=+80, name
+            //     +20 to its right: "U1 74HC393".
+            //   R90/R270 (vertical body, rotated span x[-72,72] y[-50,50]):
+            //     labels to the LEFT of the body, TEXT ROTATED 90 so it
+            //     reads bottom-to-top alongside the body -- designator at
+            //     x=-82, name +18 along the body. TextRotationDeg=90.
+            // The body is symmetric, so each rotation pair shares one value.
+            // Hand-tune in EasyEDA after first export if wanted (§0).
+            LabelOffsets: new LabelOffsetsByRotation(
+                Rot0: new LabelOffsetSet(new(-40, +80), new(-20, +80), default),
+                Rot90: new LabelOffsetSet(new(-82, -20), new(-82, -2), default, TextRotationDeg: 90),
+                Rot180: new LabelOffsetSet(new(-40, +80), new(-20, +80), default),
+                Rot270: new LabelOffsetSet(new(-82, -20), new(-82, -2), default, TextRotationDeg: 90)));
+    }
+
+    /// <summary>
+    /// Synthesise a DIP-14 device fragment for project.json. Uses the
+    /// 74HC393 reference's decorative attributes (LCSC stock, 3D model,
+    /// etc.) as a shared template -- those fields are decorative per
+    /// EasyEDA_Export.md §2 -- and overwrites the chip-specific fields:
+    /// Manufacturer Part (drives the displayed Name via "={Manufacturer
+    /// Part}"), Symbol, Designator, Footprint.
+    /// </summary>
+    private static string BuildDip14DeviceFragment(string chipName, string symbolUuid)
+    {
+        var attrs = new System.Text.Json.Nodes.JsonObject
+        {
+            ["Supplier Part"] = Dip14ReferenceSupplierPart,
+            ["Manufacturer"] = Dip14ReferenceManufacturer,
+            ["Manufacturer Part"] = chipName,
+            ["Supplier Footprint"] = "DIP-14",
+            ["JLCPCB Part Class"] = "Extended Part",
+            ["Supplier"] = "LCSC",
+            ["Add into BOM"] = "yes",
+            ["Convert to PCB"] = "yes",
+            ["Symbol"] = symbolUuid,
+            ["Designator"] = "U?",
+            ["Footprint"] = Dip14FootprintUuid,
+            ["3D Model"] = Dip14Reference3dModelUuid,
+            ["3D Model Title"] = "PDIP-14_L19.3-W6.4-P2.54-LS7.9-BL-1",
+            ["3D Model Transform"] = Dip14Reference3dModelTransform,
+            ["Name"] = "={Manufacturer Part}",
+            ["Description"] = "DIP-14 logic IC",
+        };
+
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["title"] = chipName,
+            ["attributes"] = attrs,
+            ["description"] = "DIP-14 logic IC",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["images"] = new System.Text.Json.Nodes.JsonArray(""),
+            ["source"] = "67204415f0444fada7b9208ff9e12036|0819f05c4eef4c71ace90d822a990e87",
+            ["version"] = "1660159279",
+            ["custom_tags"] = "[\"Logic\"]",
+        };
+
+        return fragment.ToJsonString();
+    }
+
+    /// <summary>
+    /// Synthesise a DIP-14 symbol fragment for project.json. type:2 (NORMAL
+    /// schematic symbol). The title matches the chip name so the symbols
+    /// map reads sensibly; the .esym drawing itself is the cloned template.
+    /// </summary>
+    private static string BuildDip14SymbolFragment(string chipName)
+    {
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["source"] = "1754d3aadc5c46de9f9881bdf1de48cf|0819f05c4eef4c71ace90d822a990e87",
+            ["desc"] = "",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["custom_tags"] = "[\"Logic\"]",
+            ["title"] = chipName,
+            ["version"] = "1681885513",
+            ["type"] = 2,
+        };
+        return fragment.ToJsonString();
+    }
+
+    // ---------------------------------------------------- DIP-16 synthesis
+    //
+    // 20px pin pitch, matching ChipUnit's PinPitch (same pitch fix as
+    // DIP-8/DIP-14). dip-16.esym: pins 1..8 DOWN the left edge at x=-50,
+    // y = +70,+50,+30,+10,-10,-30,-50,-70; pins 9..16 UP the right edge at
+    // x=+50, y = -70,-50,-30,-10,+10,+30,+50,+70 (the DIP mirror); body
+    // half height 82. Pin number N in TTL Sim maps to pin number N here.
+    private static readonly Dictionary<int, Point> Dip16PinLocals = new()
+    {
+        [1] = new Point(-50, 70),
+        [2] = new Point(-50, 50),
+        [3] = new Point(-50, 30),
+        [4] = new Point(-50, 10),
+        [5] = new Point(-50, -10),
+        [6] = new Point(-50, -30),
+        [7] = new Point(-50, -50),
+        [8] = new Point(-50, -70),
+        [9] = new Point(50, -70),
+        [10] = new Point(50, -50),
+        [11] = new Point(50, -30),
+        [12] = new Point(50, -10),
+        [13] = new Point(50, 10),
+        [14] = new Point(50, 30),
+        [15] = new Point(50, 50),
+        [16] = new Point(50, 70),
+    };
+
+    private static CataloguePart BuildDip16Part(Device device, ChipPartDefinition cp)
+    {
+        // Displayed chip name -- "74HC163", "74HC595", "74HC138", etc.
+        string chipName = device.FullPartNumber;
+
+        // Deterministic per-chip-type UUIDs so re-exports are byte-stable
+        // (doc §7), keyed on the full part name. Namespaced "dip16-" so they
+        // never collide with the DIP-14 derivations.
+        string symbolUuid = DeterministicUuid("dip16-symbol:" + chipName);
+        string deviceUuid = DeterministicUuid("dip16-device:" + chipName);
+
+        // Symbol template tokens: part title, displayed symbol name, and
+        // the 16 pin names. Active-low '/' -> '#' (EasyEDA overbar).
+        var tokens = new Dictionary<string, string>
+        {
+            ["@@PART_TITLE@@"] = chipName + ".1",
+            ["@@SYMBOL_NAME@@"] = chipName,
+        };
+        foreach (var pin in cp.Pins)
+            tokens[$"@@PIN_{pin.Number}_NAME@@"] = ToEasyEdaPinName(pin.Name);
+
+        // All 16 pins must be enumerated, or the template ships a literal
+        // "@@PIN_n_NAME@@" string into the .esym.
+        for (int n = 1; n <= 16; n++)
+            if (!tokens.ContainsKey($"@@PIN_{n}_NAME@@"))
+                throw new NotImplementedException(
+                    $"EasyEDA export: DIP-16 chip '{chipName}' is missing a " +
+                    $"definition for pin {n}. All 16 pins must be enumerated in " +
+                    "its ChipPartDefinition before it can be exported.");
+
+        return new CataloguePart(
+            DeviceUuid: deviceUuid,
+            SymbolUuid: symbolUuid,
+            SymbolResourceName: "dip-16.esym",
+            FootprintUuid: Dip16FootprintUuid,
+            FootprintResourceName: "dip-16.efoo",
+            PartTitle: chipName + ".1",
+            PinLocalPositions: Dip16PinLocals,
+            SymbolTemplateTokens: tokens,
+            InlineDeviceJson: BuildDip16DeviceFragment(chipName, symbolUuid),
+            InlineSymbolJson: BuildDip16SymbolFragment(chipName),
+            EmitTemplatedName: true,
+            // Same label layout as DIP-14, raised to clear the taller DIP-16
+            // body (half-height 82, body top at +82; designator at +90).
+            //   R0/R180:  labels ABOVE the body, text horizontal.
+            //   R90/R270: labels to the LEFT (rotated span x[-82,82]
+            //     y[-50,50]), TEXT ROTATED 90 reading along the body.
+            // The body is symmetric, so each rotation pair shares one value.
+            LabelOffsets: new LabelOffsetsByRotation(
+                Rot0: new LabelOffsetSet(new(-40, +90), new(-20, +90), default),
+                Rot90: new LabelOffsetSet(new(-92, -20), new(-92, -2), default, TextRotationDeg: 90),
+                Rot180: new LabelOffsetSet(new(-40, +90), new(-20, +90), default),
+                Rot270: new LabelOffsetSet(new(-92, -20), new(-92, -2), default, TextRotationDeg: 90)));
+    }
+
+    /// <summary>
+    /// Synthesise a DIP-16 device fragment for project.json. Same shape as
+    /// the DIP-14 version, using the 74HC163 reference's decorative
+    /// attributes (shared template, per §2) and overwriting the chip-
+    /// specific fields. The 3D Model is the shared DIP-16 model.
+    /// </summary>
+    private static string BuildDip16DeviceFragment(string chipName, string symbolUuid)
+    {
+        var attrs = new System.Text.Json.Nodes.JsonObject
+        {
+            ["Supplier Part"] = Dip16ReferenceSupplierPart,
+            ["Manufacturer"] = Dip16ReferenceManufacturer,
+            ["Manufacturer Part"] = chipName,
+            ["Supplier Footprint"] = "DIP-16",
+            ["JLCPCB Part Class"] = "Extended Part",
+            ["Supplier"] = "LCSC",
+            ["Add into BOM"] = "yes",
+            ["Convert to PCB"] = "yes",
+            ["Symbol"] = symbolUuid,
+            ["Designator"] = "U?",
+            ["Footprint"] = Dip16FootprintUuid,
+            ["3D Model"] = Dip16Reference3dModelUuid,
+            ["3D Model Title"] = Dip16Reference3dModelTitle,
+            ["3D Model Transform"] = Dip16Reference3dModelTransform,
+            ["Name"] = "={Manufacturer Part}",
+            ["Description"] = "DIP-16 logic IC",
+        };
+
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["title"] = chipName,
+            ["attributes"] = attrs,
+            ["description"] = "DIP-16 logic IC",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["images"] = new System.Text.Json.Nodes.JsonArray(""),
+            ["source"] = "67204415f0444fada7b9208ff9e12036|0819f05c4eef4c71ace90d822a990e87",
+            ["version"] = "1660159279",
+            ["custom_tags"] = "[\"Logic\"]",
+        };
+
+        return fragment.ToJsonString();
+    }
+
+    /// <summary>
+    /// Synthesise a DIP-16 symbol fragment for project.json (type:2).
+    /// </summary>
+    private static string BuildDip16SymbolFragment(string chipName)
+    {
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["source"] = "1754d3aadc5c46de9f9881bdf1de48cf|0819f05c4eef4c71ace90d822a990e87",
+            ["desc"] = "",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["custom_tags"] = "[\"Logic\"]",
+            ["title"] = chipName,
+            ["version"] = "1681885513",
+            ["type"] = 2,
+        };
+        return fragment.ToJsonString();
+    }
+    private static string DeterministicUuid(string seed)
+    {
+        byte[] hash = System.Security.Cryptography.SHA1.HashData(
+            System.Text.Encoding.UTF8.GetBytes(seed));
+        var sb = new System.Text.StringBuilder(32);
+        for (int i = 0; i < 16; i++) sb.Append(hash[i].ToString("x2"));
+        return sb.ToString();
+    }
+
+    // ---------------------------------------------------- capacitor synthesis
+    //
+    // Both kinds of capacitor follow the resistor Frankenstein pattern:
+    // one library device per dielectric, value text overridden per
+    // instance via the COMPONENT's Value ATTR. The two kinds differ
+    // only in their .esym / .efoo resources and UUIDs -- the synthesis
+    // logic, label offsets, and pin positions are identical because
+    // the source symbols share the same body geometry (BBOX height,
+    // pin spacing ±15 EDA units).
+    //
+    // Placeholder LCSC data: the non-polarised template carries the
+    // 10nF film cap MPN, and the polarised template carries the 220µF
+    // electrolytic MPN. Same reason as resistors -- EasyEDA's PCB
+    // router refuses to route parts with blank stock numbers, and we
+    // don't use the BOM for production so the placeholder is harmless.
+
+    private static CataloguePart BuildCapacitorPart(Device device)
+    {
+        string label = "";
+        foreach (var u in device.Units)
+        {
+            label = u.Label ?? "";
+            break;
+        }
+
+        string displayValue;
+        try
+        {
+            displayValue = CapacitorValueParser.FormatForDisplay(label);
+        }
+        catch (FormatException ex)
+        {
+            throw new NotImplementedException(
+                $"EasyEDA export: capacitor {device.Designator} has an unparseable " +
+                $"value '{label}'. {ex.Message} " +
+                "Supported value forms: 100 (=100pF), 100p, 10n, 1u, 4u7, 4.7u, 1m.");
+        }
+
+        var symbolTokens = new Dictionary<string, string>
+        {
+            ["@@PART_ID@@"] = "Capacitor.1",
+            ["@@SYMBOL_NAME@@"] = "Capacitor",
+        };
+
+        return new CataloguePart(
+            DeviceUuid: CapacitorDeviceUuid,
+            SymbolUuid: CapacitorSymbolUuid,
+            SymbolResourceName: "capacitor.esym",
+            FootprintUuid: CapacitorFootprintUuid,
+            FootprintResourceName: "capacitor-film.efoo",
+            PartTitle: "Capacitor.1",
+            PinLocalPositions: new()
+            {
+                // capacitor.esym pins rescaled to ±20 (40px span) to match
+                // CapacitorUnit's TTLSim pin span (Size.Width 4 × 10px).
+                // Previously ±15, mismatching TTLSim's 40px and producing
+                // diagonal wires (same pitch bug as the DIPs). NUMBER=1 at
+                // left, =2 at right.
+                [1] = new Point(-20, 0),
+                [2] = new Point(+20, 0),
+            },
+            EmitValueLabel: true,
+            ValueOverride: displayValue,
+            InlineDeviceJson: BuildCapacitorDeviceFragment(),
+            InlineSymbolJson: BuildCapacitorSymbolFragment(),
+            SymbolTemplateTokens: symbolTokens,
+            // Initial guess based on resistor offsets, adjusted for the
+            // narrower body (BBOX X = ±5.5 vs resistor's ±10) and taller
+            // body (BBOX Y = ±8.5 vs resistor's ±4). Expect hand-tuning
+            // in EasyEDA per the §0 procedure once a real export round-trips.
+            LabelOffsets: new LabelOffsetsByRotation(
+                Rot0: new LabelOffsetSet(new(-10, +15), new(-15, -25), new(-10, +10)),
+                Rot90: new LabelOffsetSet(new(-25, 0), new(-15, -25), new(-25, -5)),
+                Rot180: new LabelOffsetSet(new(-10, +15), new(-15, -25), new(-10, +10)),
+                Rot270: new LabelOffsetSet(new(-25, 0), new(-15, -25), new(-25, -5))));
+    }
+
+    private static CataloguePart BuildPolarizedCapacitorPart(Device device)
+    {
+        string label = "";
+        foreach (var u in device.Units)
+        {
+            label = u.Label ?? "";
+            break;
+        }
+
+        string displayValue;
+        try
+        {
+            displayValue = CapacitorValueParser.FormatForDisplay(label);
+        }
+        catch (FormatException ex)
+        {
+            throw new NotImplementedException(
+                $"EasyEDA export: polarised capacitor {device.Designator} has an unparseable " +
+                $"value '{label}'. {ex.Message} " +
+                "Supported value forms: 100 (=100pF), 100p, 10n, 1u, 4u7, 4.7u, 1m.");
+        }
+
+        var symbolTokens = new Dictionary<string, string>
+        {
+            ["@@PART_ID@@"] = "PolarizedCapacitor.1",
+            ["@@SYMBOL_NAME@@"] = "PolarizedCapacitor",
+        };
+
+        return new CataloguePart(
+            DeviceUuid: PolarizedCapacitorDeviceUuid,
+            SymbolUuid: PolarizedCapacitorSymbolUuid,
+            SymbolResourceName: "polarized-capacitor.esym",
+            FootprintUuid: PolarizedCapacitorFootprintUuid,
+            FootprintResourceName: "polarized-capacitor.efoo",
+            PartTitle: "PolarizedCapacitor.1",
+            PinLocalPositions: new()
+            {
+                // polarized-capacitor.esym pins rescaled to ±20 (40px span)
+                // to match PolarizedCapacitorUnit's TTLSim pin span
+                // (Size.Width 4 × 10px). Previously ±15, mismatching
+                // TTLSim's 40px and producing diagonal wires (same pitch
+                // bug as the DIPs). NUMBER=1 (the "+" pin) on the left
+                // matches TTL Sim's pin 1; no swap.
+                [1] = new Point(-20, 0),
+                [2] = new Point(+20, 0),
+            },
+            EmitValueLabel: true,
+            ValueOverride: displayValue,
+            InlineDeviceJson: BuildPolarizedCapacitorDeviceFragment(),
+            InlineSymbolJson: BuildPolarizedCapacitorSymbolFragment(),
+            SymbolTemplateTokens: symbolTokens,
+            // Polarised body is slightly wider on the LEFT to accommodate
+            // the "+" glyph (BBOX X from -10.5 to +5.5), so the R0/R180
+            // offsets sit a little further left than the non-polarised case.
+            LabelOffsets: new LabelOffsetsByRotation(
+                Rot0: new LabelOffsetSet(new(-15, +15), new(-15, -25), new(-15, +10)),
+                Rot90: new LabelOffsetSet(new(-25, 0), new(-15, -25), new(-25, -5)),
+                Rot180: new LabelOffsetSet(new(-15, +15), new(-15, -25), new(-15, +10)),
+                Rot270: new LabelOffsetSet(new(-25, 0), new(-15, -25), new(-25, -5))));
+    }
+
+    private static string BuildCapacitorDeviceFragment()
+    {
+        // Placeholder LCSC data: a 100pF ceramic disc matching the new
+        // smaller footprint. The displayed value is overridden per
+        // instance via Value ATTR; this template Value is the fallback if
+        // any tool reads the device entry directly.
+        //
+        // The 3D Model attributes reference an EasyEDA cloud-library 3D
+        // asset by UUID -- the geometry isn't embedded in our export,
+        // EasyEDA resolves it at render time. The Transform string is
+        // copied verbatim from the source .epro and aligns the 3D body
+        // with the footprint's pad pattern.
+        var attrs = new System.Text.Json.Nodes.JsonObject
+        {
+            ["LCSC Part Name"] = "100pF 50V \u00b110%",
+            ["Supplier Part"] = "C249147",
+            ["Manufacturer"] = "Walsin",
+            ["Manufacturer Part"] = "N06B1B101KN0B0S0B0",
+            ["Supplier Footprint"] = "\u8f74\u5411\u5f15\u7ebf",
+            ["JLCPCB Part Class"] = "Extended Part",
+            ["Supplier"] = "LCSC",
+            ["Add into BOM"] = "yes",
+            ["Convert to PCB"] = "yes",
+            ["Symbol"] = CapacitorSymbolUuid,
+            ["Designator"] = "C?",
+            ["Footprint"] = CapacitorFootprintUuid,
+            ["3D Model"] = Capacitor3dModelUuid,
+            ["3D Model Title"] = "CAP-TH_BD5.5-W2.5-P5.0",
+            ["3D Model Transform"] = "230.016,106.096,0,0,0,0,-0.005,0,-137.795",
+            ["Type"] = "Ceramic Disc Capacitor",
+            ["Value"] = "100pF",
+            ["Tolerance"] = "\u00b110%",
+            ["Description"] = "Non-polarised through-hole capacitor -- value supplied per instance via Value ATTR override",
+        };
+
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["title"] = "Capacitor",
+            ["attributes"] = attrs,
+            ["description"] = "Non-polarised through-hole capacitor -- value supplied per instance via Value ATTR override",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["images"] = new System.Text.Json.Nodes.JsonArray(""),
+            ["source"] = CapacitorDeviceUuid + "|0819f05c4eef4c71ace90d822a990e87",
+            ["version"] = "1748390400",
+            ["custom_tags"] = "[\"Capacitors\"]",
+        };
+        return fragment.ToJsonString();
+    }
+
+    private static string BuildCapacitorSymbolFragment()
+    {
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["source"] = CapacitorSymbolUuid + "|0819f05c4eef4c71ace90d822a990e87",
+            ["desc"] = "",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["custom_tags"] = "[\"Capacitors\"]",
+            ["title"] = "Capacitor",
+            ["version"] = "1748390400",
+            ["type"] = 2,
+        };
+        return fragment.ToJsonString();
+    }
+
+    private static string BuildPolarizedCapacitorDeviceFragment()
+    {
+        // Placeholder LCSC data: a 10µF 50V radial electrolytic matching
+        // the new smaller footprint. Same Value-ATTR-override pattern as
+        // the non-polarised capacitor.
+        //
+        // The 3D Model attributes reference an EasyEDA cloud-library 3D
+        // asset by UUID -- the geometry isn't embedded in our export,
+        // EasyEDA resolves it at render time. The Transform string is
+        // copied verbatim from the source .epro and aligns the 3D body
+        // (D5mm x H7mm radial can) with the footprint's pad pattern.
+        var attrs = new System.Text.Json.Nodes.JsonObject
+        {
+            ["LCSC Part Name"] = "10\u00b5F 50V \u00b120%",
+            ["Supplier Part"] = "C88726",
+            ["Manufacturer"] = "Rubycon",
+            ["Manufacturer Part"] = "50YXF10MEFC5X11",
+            ["Supplier Footprint"] = "\u63d2\u4ef6",
+            ["JLCPCB Part Class"] = "Extended Part",
+            ["Supplier"] = "LCSC",
+            ["Add into BOM"] = "yes",
+            ["Convert to PCB"] = "yes",
+            ["Symbol"] = PolarizedCapacitorSymbolUuid,
+            ["Designator"] = "C?",
+            ["Footprint"] = PolarizedCapacitorFootprintUuid,
+            ["3D Model"] = PolarizedCapacitor3dModelUuid,
+            ["3D Model Title"] = "CAP-TH_D5.0\u00d7H7.0\u00d7P2.0",
+            ["3D Model Transform"] = "197.091,196.7911,0,0,0,0,0,0,-137.795",
+            ["Type"] = "Aluminium Electrolytic Capacitor",
+            ["Value"] = "10\u00b5F",
+            ["Tolerance"] = "\u00b120%",
+            ["Description"] = "Polarised through-hole electrolytic capacitor -- value supplied per instance via Value ATTR override",
+        };
+
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["title"] = "PolarizedCapacitor",
+            ["attributes"] = attrs,
+            ["description"] = "Polarised through-hole electrolytic capacitor -- value supplied per instance via Value ATTR override",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["images"] = new System.Text.Json.Nodes.JsonArray(""),
+            ["source"] = PolarizedCapacitorDeviceUuid + "|0819f05c4eef4c71ace90d822a990e87",
+            ["version"] = "1748390400",
+            ["custom_tags"] = "[\"Capacitors\",\"Aluminium Electrolytic\"]",
+        };
+        return fragment.ToJsonString();
+    }
+
+    private static string BuildPolarizedCapacitorSymbolFragment()
+    {
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["source"] = PolarizedCapacitorSymbolUuid + "|0819f05c4eef4c71ace90d822a990e87",
+            ["desc"] = "",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["custom_tags"] = "[\"Capacitors\",\"Aluminium Electrolytic\"]",
+            ["title"] = "PolarizedCapacitor",
+            ["version"] = "1748390400",
+            ["type"] = 2,
+        };
+        return fragment.ToJsonString();
+    }
+}

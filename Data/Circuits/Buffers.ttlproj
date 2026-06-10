@@ -1,0 +1,81 @@
+{
+  "schematic": {
+    "devices": [
+      {
+        "id": "82affe83d4bb4868835fec3311943333",
+        "designator": "U1",
+        "partKind": "chip",
+        "partIdentifier": "244",
+        "family": "HC",
+        "value": null,
+        "program": null
+      },
+      {
+        "id": "6d5e896d30694e05a2dc81ec38897c64",
+        "designator": "U2",
+        "partKind": "chip",
+        "partIdentifier": "245",
+        "family": "HC",
+        "value": null,
+        "program": null
+      },
+      {
+        "id": "e60c920f1c7548a6b6881636ff4a4368",
+        "designator": "U3",
+        "partKind": "chip",
+        "partIdentifier": "541",
+        "family": "HC",
+        "value": null,
+        "program": null
+      }
+    ],
+    "units": [
+      {
+        "id": "243973981780411e9ba37246d0e5f7fe",
+        "deviceId": "82affe83d4bb4868835fec3311943333",
+        "unitLetter": "",
+        "position": {
+          "x": 15,
+          "y": 9
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "b857e5b79ab94beb866ffb99eb084ecf",
+        "deviceId": "6d5e896d30694e05a2dc81ec38897c64",
+        "unitLetter": "",
+        "position": {
+          "x": 29,
+          "y": 9
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "c5d38aa6c77645dfb120af88b56ab66c",
+        "deviceId": "e60c920f1c7548a6b6881636ff4a4368",
+        "unitLetter": "",
+        "position": {
+          "x": 43,
+          "y": 9
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      }
+    ],
+    "items": [],
+    "connections": [],
+    "wires": []
+  },
+  "view": {
+    "zoom": 6.5136,
+    "pan": {
+      "x": -428,
+      "y": -152
+    }
+  }
+}

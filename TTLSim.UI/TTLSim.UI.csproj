@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>TTLSim.UI</RootNamespace>
+    <AssemblyName>TTLSim</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog" Version="4.3.1" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TTLSim.Chips\TTLSim.Chips.csproj" />
+    <ProjectReference Include="..\TTLSim.Core\TTLSim.Core.csproj" />
+  </ItemGroup>
+
+   <ItemGroup>
+   <EmbeddedResource Include="Persistence\EasyEDA\Resources\*.esym" />
+   <EmbeddedResource Include="Persistence\EasyEDA\Resources\*.efoo" />
+   <EmbeddedResource Include="Persistence\EasyEDA\Resources\*.json" />
+ </ItemGroup>
+
+</Project>
