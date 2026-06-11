@@ -10,8 +10,9 @@ overboard was ARM's signature feature — the barrel shifter as a free modifier 
 data-processing instruction. v2 abandons Thumb fidelity entirely. ARM remains the
 *motivation*; the encoding is designed clean-sheet around the actual hardware:
 
-- a 74181 ALU (4 slices + '182 lookahead) whose 16 logic / 16 arithmetic rows are the
-  native operation menu,
+- a 74181 ALU (4 slices, with lookahead carry provided by a GAL16V8 standing in for
+  the unobtainable 74182 — see "Carry architecture" below) whose 16 logic / 16
+  arithmetic rows are the native operation menu,
 - a barrel shifter wired permanently **in series on the B operand path**, in front of
   the '181, on every instruction,
 - a 16-bit word and 3-bit register fields.
@@ -50,7 +51,7 @@ toolchain.
                      |          +-------+--------+ → last-bit-out → C-source mux
                      |                  |
               +------+------------------+------+
-              |     74181 ×4  +  74182         |  ← S3–S0, M, Cn from op decode
+              |  74181 ×4 + GAL-182 lookahead  |  ← S3–S0, M, Cn from op decode
               +------------------+-------------+ → Cn+4 → C-source mux
                                  |               → sign bits → V logic
                           write-back (WE from op decode)
@@ -58,6 +59,45 @@ toolchain.
 
 A = Rd (destructive accumulator side). B = shifter output. One write port, one result
 path, no output mux — the shifter's output *is* what the '181 sees.
+
+## Carry architecture — the GAL-182
+
+The 16-bit carry chain uses full lookahead across the four '181 slices, but **not with
+a 74182**: the HC182 is out of production and LS/S parts are NOS-lottery sourcing. The
+lookahead generator is instead a **GAL16V8** (`GAL182.pld`, ATF16V8B in active
+production — the same part family as the decode GALs, compiled by the same BlinkyJED
+toolchain). It is a functional drop-in, likely faster than the original (ATF16V8
+tpd 7.5–25 ns vs the HC182's slower spec).
+
+Polarity facts, anchored in the simulator's `Hc181` model (the behavioural ground
+truth the cascade must satisfy):
+
+- The '181's X pin is /P and Y is /G, both **active-low** (ADD: P asserted when
+  A+B ≥ 15, G when A+B ≥ 16; SUB: A ≤ B and A < B respectively).
+- The '181's Cn input injects +1 when **LOW**, while Cn+4 is active-**high** — the
+  polarity opposition that forces an inverter between ripple-cascaded '181s.
+- The GAL therefore asserts its three carry outputs **LOW**, so CNX/CNY/CNZ wire
+  directly to slices 1–3's Cn pins with no inverters — the exact service the real
+  '182 performed. The external carry source (the Cn mux: H / L / /C) drives slice 0's
+  Cn and the GAL's CN input in parallel.
+- Group /G and /P outputs are provided for a hypothetical further lookahead level,
+  faithful to the original (including the '182's quirk that group-G excludes P0).
+
+Product-term budget: 2 / 3 / 4 / 4 / 4 across the five outputs — the widest equation
+(Cn+z) uses four of the 16V8's per-output terms. Nine inputs (4× /P, 4× /G, Cn) with
+pin 1 carrying the ninth, legitimate for a purely combinational design.
+
+**Verification:** TTLSim has no '182 simulation (part drawing only), so the GAL is
+proven by a **ripple-vs-GAL diff testbench**: two four-slice '181 cascades, one
+ripple-carried through '04 inverters (arithmetic ground truth), one carried by the
+GAL via JEDEC import, swept over ADD (S=1001) and SUB (S=0110) with both carry-in
+states, diffing all sixteen F bits and the final carry. Every part involved is
+already simulated. The SUB rows are the ones to watch — P/G there encode comparisons,
+not sums.
+
+**Fallback:** if the GAL ever misbehaves, the ripple cascade (three '04 sections)
+is a zero-exotic-parts substitute; the cost is ripple delay in series with the
+barrel shifter on the critical path, so re-total the cycle budget before choosing it.
 
 ## Format map — 2-bit top-level class
 
@@ -294,7 +334,9 @@ keep deferred; the slot waits either way.
 ## Decode architecture
 
 Mirrors Blinky's: instruction bits in, control vector out, GALs (ATF22V10 class for
-the wide op4 expansion) compiled by BlinkyJED. The op4 → tuple mapping is the table
+the wide op4 expansion) compiled by BlinkyJED. The GAL family thus numbers three:
+the op4 decode, the condition evaluator, and the GAL-182 carry lookahead — all one
+toolchain, all reprogrammable. The op4 → tuple mapping is the table
 above, column-for-column: SHTYPE(2), S3–S0, M, Cn-select(2), WE, FLAG mask(3:
 NZ / C-source / V). The class field gates WE and flag latching exactly as Blinky's
 FLAG_WE guard does, letting the S/M lines stay unqualified. The condition evaluator

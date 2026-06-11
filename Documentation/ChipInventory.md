@@ -50,6 +50,7 @@ the part name says otherwise; deliberate LS/HCT purchases get their own rows.
 | 74573     | Octal Transparent Latch (flow-through)    | 8       |            | 8     |
 | 74574     | Octal D Flip-Flop (flow-through)          | 8       |            | 8     |
 | 74595     | 8-Bit Shift Register with Output Latch    | 4       |            | 4     |
+| 74670     | 4×4 Register File (tri-state)             | 0       | 32         | 32    |
 | 74688     | 8-Bit Identity Comparator                 | 3       |            | 3     |
 
 ## Notes
