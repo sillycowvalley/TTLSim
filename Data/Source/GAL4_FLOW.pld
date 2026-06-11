@@ -1,7 +1,7 @@
 Name      GAL4_FLOW ;
 PartNo    BLINKY-GAL-04 ;
-Date      2026-06-10 ;
-Revision  01 ;
+Date      2026-06-11 ;
+Revision  02 ;
 Designer  Michael ;
 Company   Blinky ;
 Assembly  Mini-Blinky ;
@@ -10,10 +10,18 @@ Device    G16V8 ;
 
 // -----------------------------------------------------------------
 // GAL 4 of 4 -- control flow + I/O + ALU carry-in. The flag-reading
-// device, now on a 16V8 (no 20V8): 6 outputs against 12 inputs is
-// an EXACT 18-signal-pin fit. The two extra inputs land on OLMC
-// pins 12 and 13, which the 16V8 allows as inputs in simple mode
-// (pins 15/16 cannot be inputs, so the outputs sit on 14..19).
+// device, on a 16V8 (no 20V8): 6 outputs against 12 inputs is an
+// EXACT 18-signal-pin fit. The two extra inputs land on OLMC pins
+// 12 and 13, which the 16V8 allows as inputs in simple mode (pins
+// 15/16 cannot be inputs, so the outputs sit on 14..19).
+//
+// REVISION 02: pinout harmonized across the four decode GALs --
+// equations unchanged from revision 01. WRPH moves to pin 1 (the
+// same pin GAL 2 uses), and the flags take 11/12/13 in flag order:
+//   pin 1  = WRPH   on every device that uses it (GAL 2, GAL 4)
+//   pins 2..9 = IR  on all four devices (OP0..3, L0..3)
+//   pin 11 = N,  pin 12 = Z,  pin 13 = C   (this device only;
+//   12/13 are outputs on GAL 1/2 and spares on GAL 3)
 //
 // Sub-op nibble encoding (RATIFIED, sequential) -- see GAL1_ALU.pld.
 // Sub-op terms carry !L3 so nibbles 8..F decode to idle.
@@ -21,8 +29,6 @@ Device    G16V8 ;
 // PCSEL code map (the '153 pair on NEXTPC; PCSEL1 = S1, PCSEL0 = S0,
 // shared by both packages -- wire the mux inputs to match):
 //   0 0 = PC + 1 (C0)    0 1 = IR literal (C1)    1 0 = RTOS (C2)
-// PCSEL0 is the same flag-gated LD_PC sum of products as NEXTPC4.pld,
-// now fitting the 16V8 because this device carries only 6 outputs.
 //
 // ALU_CN drives the '181 Cn pin directly (active-high data table:
 // Cn = H no inject, L = +1 inject):
@@ -37,7 +43,7 @@ Device    G16V8 ;
 // -----------------------------------------------------------------
 
 /* Inputs */
-PIN 1  = N ;        /* flag: top bit of last ALU result   */
+PIN 1  = WRPH ;     /* write-phase window (high = writes may assert) */
 PIN 2  = OP0 ;
 PIN 3  = OP1 ;
 PIN 4  = OP2 ;
@@ -46,8 +52,8 @@ PIN 6  = L0 ;
 PIN 7  = L1 ;
 PIN 8  = L2 ;
 PIN 9  = L3 ;
-PIN 11 = Z ;        /* flag: last ALU result was zero     */
-PIN 12 = WRPH ;     /* write-phase window (high = writes may assert) */
+PIN 11 = N ;        /* flag: top bit of last ALU result   */
+PIN 12 = Z ;        /* flag: last ALU result was zero     */
 PIN 13 = C ;        /* flag: carry / shifted-out bit      */
 
 /* Outputs */
@@ -59,8 +65,7 @@ PIN 15 = IO_WR ;     /* active LOW: output-port write strobe */
 PIN 14 = IOADDR_SEL ;
 
 /* NEXTPC <- IR literal: BRANCH and CALL unconditionally, the three
-   conditional branches gated by their flag. Identical structure to
-   the NEXTPC4.pld bring-up file. */
+   conditional branches gated by their flag. */
 PCSEL0 = (!OP3 & OP2 & OP1 & OP0)              /* BRANCH 0111  */
        # (OP3 & !OP2 & OP1 & OP0)              /* CALL   1011  */
        # (OP3 & !OP2 & !OP1 & !OP0 & Z)        /* BEQ 1000 & Z */
