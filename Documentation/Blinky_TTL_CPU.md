@@ -123,8 +123,14 @@ Both DSP and RSP are free-running modulo-N counters with no overflow or underflo
 
 Specification:
 
-- Both SPs are '169 (4-bit synchronous up/down) counters, cascaded ×2 for 8 bits.
-- The `/CLR` pin of each SP counter ties to the same system reset net as the PC's `/CLR` — power-on state is SP=0 for both stacks. Free, since the reset wire is already routed for the PC.
+- Both SPs are '191 (4-bit synchronous up/down) counters, cascaded ×2 for 8 bits. (The
+  '169 originally specified is unobtainable in HC; the in-stock '191 replaces it. The
+  direction sense inverts — '169 U//D high = up, '191 D//U LOW = up — absorbed in the
+  decode equations.)
+- Reset-to-zero uses the '191's asynchronous `/LOAD` with its parallel data inputs tied low,
+  driven by the same active-low system reset net as the PC's `/CLR` — power-on state is SP=0
+  for both stacks, still one shared reset wire. (The '191 has no clear pin; load-of-zero is
+  its reset idiom.)
 - No comparator, no range-check logic, no "stack full" or "stack empty" signal feeding the control unit.
 - SP outputs go directly to the stack memory address pins.
 - On overflow or underflow, the SP wraps silently (255 → 0 and vice versa).
@@ -150,7 +156,7 @@ What this forecloses:
 
 Every instruction changes the data stack pointer by exactly **+1, 0, or −1**. No instruction shifts the stack by two in a single cycle. This is a deliberate constraint that simplifies the hardware substantially:
 
-- DSP is a single up/down counter (two cascaded '169s), with one direction-control signal from the decoder.
+- DSP is a single up/down counter (two cascaded '191s), with one direction-control signal from the decoder.
 - Stack memory is single-port SRAM — one read *or* one write per cycle, never both.
 - TOS and NOS each move by at most one position per cycle, so their input muxes stay small.
 
@@ -278,11 +284,11 @@ Core CPU and memory subsystem:
 
 | Block | Chips |
 |---|---|
-| ALU (2× '181 cascaded for 8 bits, plus a '04 inverter on the Cn+4 → Cn ripple wire — see Flags note) | 2–3 |
+| ALU (2× '181 cascaded for 8 bits — HC primary, LS backup behind an HCT fence; plus an inverter on the Cn+4 → Cn ripple wire: '04, or HCT04 in the LS build — see Flags note and Sourcing notes) | 2–3 |
 | TOS + NOS latches ('374) | 2 |
 | Data stack memory (256-deep SRAM) | 1 |
-| Data stack pointer ('169 up/down counter, cascaded ×2 for 8 bits) | 2 |
-| Return stack memory + pointer (1× SRAM + 2× '169) | 3 |
+| Data stack pointer ('191 up/down counter, cascaded ×2 for 8 bits) | 2 |
+| Return stack memory + pointer (1× SRAM + 2× '191) | 3 |
 | PC ('161) | 1 |
 | Instruction register (2× '374) | 2 |
 | Decode / control ('138s, '139s, glue) | 3–4 |
@@ -306,6 +312,14 @@ Optional I/O peripherals (typical v1 build):
 The peripherals dominate the chip count once the matrix is in play, but they dominate the experience too — 64 direct-mapped LEDs is the centerpiece demo. A minimal build without the matrix (just switches + status LEDs) is ~2 peripheral chips.
 
 Single perfboard, weekend or two of wiring, front panel that fits on a single piece of aluminum.
+
+### Sourcing notes (June 2026)
+
+Stock and orders are tracked in `ChipInventory.md` (all-HC baseline, counts verified 11 June 2026; "in transit" there means ordered and is counted as available here).
+
+- **'169 → '191.** The 74HC169 is unobtainable; both stack pointers are 74HC191s (20 in transit). Same role — synchronous up/down counting with hold — with three wiring-level differences: the direction sense inverts ('169 U//D high = up; '191 D//U LOW = up — flip the decode equation), the count enable is the single active-low /CTEN, and load is asynchronous (which is what makes the /LOAD-low reset idiom above work).
+- **'181 family.** Primary ALU part is the 74HC181 (10 in transit). The 74LS181s (8 in transit) are backup only: LS outputs (VOH ≥ 2.7 V) cannot reliably drive plain-HC inputs (VIH ≈ 3.5 V at 5 V), so an LS-181 build must place HCT parts at **every** '181 output boundary — the ripple inverter (HCT04), any latch fed by the /F outputs (HCT374), any '181-driven bus (HCT245), and the flag taps (spare HCT04 sections). HCT04 / HCT245 / HCT374 are stocked for exactly this. The all-HC build needs no fence anywhere.
+- **'374.** The HC374 is unobtainable; new stock is HCT374 (16 in transit) — a drop-in for every '374 slot here (HCT inputs accept HC levels and its outputs drive HC).
 
 ## Stack Depth
 
@@ -370,7 +384,7 @@ An Uno has only ~18 usable pins, which is not enough for the parallel data paths
 - **Barrel shifter or single-bit shifts?** Single-bit is cheaper (one '194 or similar). Barrel shifter is ARM-flavored but costs real chips. Single-bit shifts are fine for blinky.
 - **Flags.** Three flags: N (negative, bit 7 of result), Z (zero, all bits of result are zero), C (carry-out of bit 7). All three are written by every ALU op and only by ALU ops — stack, memory, I/O, and control instructions leave the flags alone, so a `CMP` or arithmetic op can be separated from its consuming branch by any number of non-ALU instructions. Cost: ~1.5 packages (one '74 dual D flip-flop holds two flags, half of a second holds the third) plus three front-panel LEDs. The Z flag rides for free on the '181's A=B output (wire-ANDed across the two cascaded ALU chips); N is bit 7 of the result; C is the Cn+4 output of the high '181 latched directly (active-HIGH when carry occurred, matching the BCS-when-carry-set semantics).
 
-**Cn/Cn+4 polarity gotcha for the ripple wire.** In the active-high-operand convention this design uses, the '181's Cn *input* takes HIGH to mean "no carry-in" and LOW to mean "+1 carry-in" — the opposite polarity from the Cn+4 *output*, which is HIGH when carry occurred. Direct-wiring Cn+4 of the low '181 to Cn of the high '181 therefore inverts the carry meaning during ripple. A single '04 inverter slot on the cascade wire fixes it. (For subtract, the '181 internally complements B; the same inverter still gives the correct ripple — the *flag* polarity is what differs between add and subtract conventions, but the C flag is read off the high '181's Cn+4 directly, so software just learns that "carry set after SUB = no borrow", same as the 6502.)
+**Cn/Cn+4 polarity gotcha for the ripple wire.** In the active-high-operand convention this design uses, the '181's Cn *input* takes HIGH to mean "no carry-in" and LOW to mean "+1 carry-in" — the opposite polarity from the Cn+4 *output*, which is HIGH when carry occurred. Direct-wiring Cn+4 of the low '181 to Cn of the high '181 therefore inverts the carry meaning during ripple. A single inverter slot on the cascade wire fixes it — '04 in the all-HC build, **HCT04 when the LS-181 backup is fitted**, since the inverter's input hangs directly on an LS output. In the LS build the flag taps (Cn+4, A=B, result bit 7) are likewise LS-driven nodes and need HCT receivers per the fence rule in Sourcing notes. (For subtract, the '181 internally complements B; the same inverter still gives the correct ripple — the *flag* polarity is what differs between add and subtract conventions, but the C flag is read off the high '181's Cn+4 directly, so software just learns that "carry set after SUB = no borrow", same as the 6502.)
 - **Conditional execution granularity?** Six flag-based conditional branches (BEQ, BNE, BCC, BCS, BMI, BPL) plus unconditional BRANCH, in 6502 style. Comparisons are done by CMP (subtract, set flags, discard result) or TST (AND TOS with itself, set flags, leave stack unchanged), or fall out as side effects of plain arithmetic. The branch-decode logic is a single 8-way mux (six conditions plus always plus the unconditional case) — call it one '151 or '153.
 - **Program loading.** During development, an Arduino Mega serves as both boot loader and debug controller — see the Development Rig section above. For a stand-alone deployment, two 8-bit EEPROMs in parallel (low byte + high byte of the 16-bit I-bus) replace the Mega + SRAM, with programs burned off-board and chips swapped via sockets.
 

@@ -322,7 +322,7 @@ that executes the instruction. State changes happen on the rising edge that ends
 All address/operand paths come from the instruction currently in the IR.
 
 The '181 select codes follow the simulator's `Hc181.cs` (datasheet "Active-HIGH operands"
-function table). The '194/'169/2114 control polarities are datasheet-derived — those parts
+function table). The '194/'191/2114 control polarities are datasheet-derived — those parts
 are not yet modelled in the sim, so treat their exact pin senses as provisional until the
 models land.
 
@@ -346,9 +346,9 @@ models land.
 | Signal | Values | Meaning |
 |---|---|---|
 | `PCSEL` | +1 / LIT / RTOS | NEXTPC mux: PC+1, IR literal (branch/call target), or RTOS (return). Conditional forms select LIT only if the flag is set, else +1. |
-| `DSP` | 0 / +1 / −1 | data-stack pointer '169: count enable + up/down |
+| `DSP` | 0 / +1 / −1 | data-stack pointer '191: count enable (/CTEN) + direction (D//U) |
 | `DSTK` | – / wr / rd | data-stack 2114 access (write = push spills old NOS, read = pop fills NOS). **Derived from DSP, not decoded** — see below. |
-| `RSP` | 0 / +1 / −1 | return-stack pointer '169 |
+| `RSP` | 0 / +1 / −1 | return-stack pointer '191 |
 | `RSTK` | – / wr(PC+1) / wr(TOS) | return-stack 2114. /CS, /WE derived from RSP; only the data-in select (PC+1 for CALL, TOS for >R) is decoded. Read implicit when RTOS consumed. |
 | `DMEM` | – / rd@LIT / wr@LIT | data memory 2114, address = IR literal (**decoded** — no pointer to derive from) |
 | `IO` | – / RD@TOS / WR@LIT | I/O strobe + address-source mux: IN reads port = TOS (stack form), OUT #port writes port = literal |
@@ -432,16 +432,19 @@ The data- and return-stack 2114s need no dedicated /CS or /WE control lines. Eac
 pure function of its pointer's action, which the GAL already emits:
 
 - **/CS** = the pointer is counting (asserted on any push or pop, deasserted on hold — the
-  '169 count-enable).
-- **/WE** = the pointer is counting up (write on push, read on pop — the '169 up/down line).
+  '191 count-enable /CTEN, itself active-low).
+- **/WE** = the pointer is counting up (write on push, read on pop — the '191 direction line
+  D//U, which is LOW for up).
 
 A held pointer leaves /CS deasserted, so the 2114's bidirectional I/O is high-Z off the
 shared bus on every idle cycle — the same isolation an explicit decode would give, at zero
-macrocells. Aligning the '169 enable/direction polarity to the 2114's active-low /CS, /WE is
-one inverter each at most.
+macrocells. The '191's senses land directly on the 2114's: /CTEN is active-low like /CS, and
+D//U is LOW on a push exactly when the active-low /WE must assert — the alignment inverters
+the '169 would have required drop out (exact pin senses remain provisional until the '191 is
+modelled).
 
 **Write timing.** The 2114 is async and captures on /WE rising, so the write strobe must
-deassert before the '169 advances the address on the cycle-ending edge. Qualify the derived
+deassert before the '191 advances the address on the cycle-ending edge. Qualify the derived
 /WE with the clock phase (one AND/NAND slot per stack RAM) so the write pulse lives inside
 the address-stable window and commits ahead of the count. This is independent of the strobe's
 source — a decoded /WE would need it too. A series buffer/inverter does **not** solve this:
@@ -486,7 +489,7 @@ Fetch spine on the left (NEXTPC → PC → I-MEM → IR); the IR splits into the
 decode GALs) and the 4-bit literal (to TOS, D-mem and the I/O address mux). Execute cluster:
 TOS ('194) and NOS feed the '181; the result returns to TOS, flags latch to the '74 pair and
 feed back into `PCSEL` / `ALU_Cn`. The two single-port stacks sit on the bottom row with
-their '169 pointers; RTOS feeds both the NEXTPC mux (RET) and TOS (R>).
+their '191 pointers; RTOS feeds both the NEXTPC mux (RET) and TOS (R>).
 
 ```
                  +-------------+      +-----------+      +-------------------+
@@ -525,12 +528,12 @@ their '169 pointers; RTOS feeds both the NEXTPC mux (RET) and TOS (R>).
    |      +----+-----------+                                         |
    |           |                                                     |
    |   +-------+--------+   +--------------+   +-----------------+   |
-   |   | Data-stack RAM |   | DSP '169 ±1  |   | D-MEM 2114      |<--+ addr = LIT
+   |   | Data-stack RAM |   | DSP '191 ±1  |   | D-MEM 2114      |<--+ addr = LIT
    |   | 2114, 16-deep  |<--| (/CS,/WE     |   | (CS/WE decoded) |   |
    |   +----------------+   |  derived)    |   +-----------------+   |
    |                        +--------------+                         |
    |   +----------------+   +--------------+   +-----------------+   |
-   +---| Ret-stack RAM  |<--| RSP '169 ±1  |   | I/O addr mux    |<--+ LIT (OUT)
+   +---| Ret-stack RAM  |<--| RSP '191 ±1  |   | I/O addr mux    |<--+ LIT (OUT)
  RTOS  | 2114, 16-deep  |   | (/CS,/WE     |   | '157            |<--- TOS (IN)
        +----------------+   |  derived)    |   +--------+--------+
         data-in: PC+1/TOS   +--------------+            |
@@ -712,14 +715,15 @@ shifted out of the '194 — old top on SHL, old bottom on SHR). A one-bit mux th
 (return). Conditional branches make it a function of opcode and the selected flag — the only
 place a flag feeds control.
 
-**DSP** — Data-stack pointer '169: count enable + up/down. 0 hold, +1 push, −1 pop. Every
+**DSP** — Data-stack pointer '191: count enable (/CTEN) + direction (D//U, LOW = up). 0 hold,
++1 push, −1 pop. Every
 instruction moves it by exactly +1/0/−1 — single up/down counter, single-port RAM.
 
 **DSTK** — Data-stack 2114: – idle, wr (push spills old NOS), rd (pop fills NOS). **Not an
-independent control** — /CS = the DSP count-enable, /WE = the DSP up/down line (phase-gated
+independent control** — /CS = the DSP count-enable, /WE = the DSP direction line (phase-gated
 for writes). A held DSP deasserts /CS, so an idle RAM is fully high-Z.
 
-**RSP** — Return-stack pointer '169: 0 / +1 / −1. +1 on CALL and >R, −1 on RET and R>.
+**RSP** — Return-stack pointer '191: 0 / +1 / −1. +1 on CALL and >R, −1 on RET and R>.
 
 **RSTK** — Return-stack 2114: – idle, wr(PC+1) on CALL, wr(TOS) on >R. /CS, /WE derived from
 RSP exactly as DSTK is from DSP; only the data-in select (`RDIN_SEL`: PC+1 vs TOS) is a
@@ -824,8 +828,8 @@ The shared macro on both machines, with the stack shown bottom→top:
 |---|---|---|
 | I-memory | 16 instr × 8-bit | one 8-bit chip (only 4 address lines used); Harvard, parallel with data access |
 | D-memory | 16 cells × 4-bit | 2114; address = IR literal; /CS and /WE decoded from LOAD/STORE |
-| Data stack | 16 deep × W | 2114, single-port; free-running modulo-16 '169 pointer (no overflow detect); /CS, /WE derived from the pointer |
-| Return stack | 16 deep × W | 2114, single-port; holds a PC; '169 pointer; separate from data stack; /CS, /WE derived from the pointer |
+| Data stack | 16 deep × W | 2114, single-port; free-running modulo-16 '191 pointer (no overflow detect); /CS, /WE derived from the pointer |
+| Return stack | 16 deep × W | 2114, single-port; holds a PC; '191 pointer; separate from data stack; /CS, /WE derived from the pointer |
 | I/O | W-bit ports | separate I/O space (Z80-style); IN port = TOS (stack form), OUT #port port = literal |
 
 Stack pointers are free-running mod-16 counters — wraparound is a visible front-panel
@@ -849,29 +853,45 @@ for teaching the architecture.
 
 ## Core chip complement (W = 4)
 
-On-hand counts are from `ChipInventory.md` (LS column unless noted); that inventory's
-"Required" figures target the full 8-bit build, so they are not repeated here.
+On-hand counts are from `ChipInventory.md` (all-HC baseline, counts verified 11 June 2026).
+"In transit" quantities from that inventory are ordered and counted as available here.
 
 | Block | Part | Qty | On-hand / sourcing |
 |---|---|---|---|
-| ALU | 74181 (LS) | 1 | 0 — source (LS-only part; no HC variant) |
-| TOS shift register | 74194 | 1 | 0 — source |
-| NOS latch | 74374 (or '273) | 1 | '374: ~3 LS + 4 HC on hand |
-| Data-stack pointer | 74169 | 1 | 0 — source |
-| Return-stack pointer | 74169 | 1 | 0 — source |
+| ALU | 74181 | 1 | 10 HC in transit (8 LS as backup — LS build needs the HCT fence; see Sourcing notes) |
+| TOS shift register | 74194 | 1 | 10 in transit |
+| NOS latch | 74374 (or '273) | 1 | 4 HC on hand; 16 HCT374 in transit (HC374 unobtainable; HCT is a drop-in) |
+| Data-stack pointer | 74191 | 1 | 20 in transit — replaces the unobtainable HC169 (see Sourcing notes) |
+| Return-stack pointer | 74191 | 1 | (same stock as DSP) |
 | Data / return / D-memory | 2114 SRAM | 3 | not in 74-series inventory — source / confirm |
-| Program counter | 74161 | 1 | 0 — source |
-| Instruction register | 74374 (8-bit) | 1 | '374 on hand (see above) |
-| Address-source mux | 74157 | 1 | 0 LS — source (2 already earmarked for full build) |
+| Program counter | 74161 | 1 | 8 on hand |
+| Instruction register | 74374 (8-bit) | 1 | '374 stock as above |
+| Address-source mux | 74157 | 1 | 8 on hand, 20 in transit |
 | I-memory | 8-bit EEPROM (e.g. 28C16) | 1 | TTLSim supports 28C-series; source / confirm |
-| Flags N/Z/C | 7474 | 2 | 14 HC on hand |
+| Flags N/Z/C | 7474 | 2 | 8 on hand |
 | Decode / control | GAL16V8 × 4 | 4 | 16V8 confirmed in stock; ATF16V8B as active-production alt; **no 20V8 needed** |
 | Stack-strobe glue | '04 / '00 (inverter + phase gate) | ~1 | derives stack /CS, /WE from the pointers; folds into existing glue |
-| Clock / reset / step | 7414 + glue | ~2 | '14: ~14 HC on hand |
+| Clock / reset / step | 7414 + glue | ~2 | '14: 12 HC on hand |
 
 **Core total: ~17–19 ICs.** (The earlier ~14–16 sketch assumed 1–2 decode GALs; the detailed
 control-signal partition lands at four 16V8s, adding ~2–3.) Front-panel LED drivers/latches
 are additional to this core list.
+
+**Sourcing notes (June 2026 inventory):**
+
+- **'169 → '191.** The 74HC169 is unobtainable; both stack pointers are 74HC191s. Same role
+  (synchronous up/down count with hold), three wiring-level differences: the direction sense
+  inverts ('169 U//D high = up; '191 D//U LOW = up — the GAL direction equations flip), the
+  enable is the single active-low /CTEN, and load is asynchronous — /LOAD with the data
+  inputs tied low doubles as the reset-to-zero, sharing the PC's reset net (the '191 has no
+  clear pin). The inverted senses land on the 2114 strobes directly — see "Stack-RAM strobes
+  are derived".
+- **'181 family.** Primary part is the 74HC181; the 74LS181 backups may only be used with
+  HCT receivers at every '181 output boundary (LS VOH ≥ 2.7 V cannot reliably drive plain-HC
+  VIH ≈ 3.5 V) — HCT04 / HCT245 / HCT374 are stocked as the fence parts. The all-HC build
+  needs no fence.
+- **'374.** The HC374 is unobtainable; new stock is HCT374, a drop-in for every '374 slot
+  here.
 
 ## Open decisions / notes
 
@@ -896,7 +916,7 @@ are additional to this core list.
   If the full Blinky later adds rotate-through-carry, the mini gains matching ops at the cost
   of one GAL change plus a serial-fill mux (0 vs old C) feeding the '194.
 - **Stack write timing is pinned:** the derived /WE is qualified by the clock phase so the
-  write commits before the '169 advances the address. Stack read addressing (pre- vs
+  write commits before the '191 advances the address. Stack read addressing (pre- vs
   post-increment) remains a board-level wiring choice.
 - **Sub-op nibble codes (§2) are proposed, not ratified** — pin them before generating GAL
   fuse maps or finalising the assembler.
@@ -905,6 +925,11 @@ are additional to this core list.
 
 # Revision History
 
+**June 2026 update:** stack-pointer part is now the 74HC191 (HC169 unobtainable): direction
+equations inverted, /CTEN enable, asynchronous /LOAD-low as reset. '181 sourcing updated (HC
+primary; LS backup behind an HCT fence). Chip-complement counts refreshed against the all-HC
+`ChipInventory.md` of 11 June 2026.
+
 **This revision (master document)** consolidates the two previous `.md` docs and the interim
 PDF into one file, and **ratifies** the PDF's refinements as the current design:
 
@@ -912,7 +937,7 @@ PDF into one file, and **ratifies** the PDF's refinements as the current design:
 - I/O forms swapped: `OUT` is now immediate (`OUT #port`, pops), `IN` is now stack-form
   (port from TOS, ΔDSP = 0). Stack-form OUT and stack-form STORE are dropped on both
   machines.
-- Stack-RAM /CS, /WE are **derived from the '169 pointer lines** (count-enable and up/down),
+- Stack-RAM /CS, /WE are **derived from the '191 pointer lines** (count-enable and up/down),
   not decoded — control vector 28 decoded lines + 4 derived strobes.
 - GAL partition is **four 16V8s — no 20V8** (supersedes the earlier 3× 16V8 + 1× 20V8
   partition; the flag-reading device now fits a 16V8 at 6 outputs / 11 inputs).
@@ -921,6 +946,6 @@ PDF into one file, and **ratifies** the PDF's refinements as the current design:
 - Proposed full byte encoding added (sub-op nibbles still open).
 
 **Sources:** previous `Mini_Blinky_CPU.md`, `Mini_Blinky_Control_Signals.md`, `Hc181.cs`,
-`ChipInventory.md`. '194 / '169 / 2114 control polarities are datasheet-derived and
+`ChipInventory.md`. '194 / '191 / 2114 control polarities are datasheet-derived and
 provisional until those parts are modelled in the simulator; '181 codes and the function
 table follow the sim's `Hc181` active-HIGH implementation.
