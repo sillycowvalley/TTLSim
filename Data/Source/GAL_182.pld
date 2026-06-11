@@ -1,0 +1,99 @@
+Name      GAL182 ;
+PartNo    THUMBY-GAL-182 ;
+Date      2026-06-11 ;
+Revision  01 ;
+Designer  Michael ;
+Company   Blinky ;
+Assembly  Thumby ;
+Location  U_CLA ;
+Device    G16V8 ;
+
+// -----------------------------------------------------------------
+// 74182 carry-lookahead generator, reimplemented in a GAL16V8.
+// The HC182 is out of production and the LS/S parts are NOS-lottery;
+// this is a drop-in functional replacement for cascading four '181
+// slices into a 16-bit ALU with full lookahead carry.
+//
+// POLARITY GROUND TRUTH (from the TTLSim Hc181 model, which is the
+// behaviour the cascade must satisfy):
+//   '181 X pin = /P  (propagate, ACTIVE LOW: LOW when A+B >= 15 on ADD)
+//   '181 Y pin = /G  (generate,  ACTIVE LOW: LOW when A+B >= 16 on ADD)
+//   '181 Cn input:   LOW injects +1 (carry asserted LOW); Cn=H means
+//                    "no carry in". Cn+4 is the opposite polarity
+//                    (active HIGH) -- the documented reason cascaded
+//                    '181s need an inverter when ripple-carried.
+// This GAL therefore asserts every carry output LOW, so CNX/CNY/CNZ
+// wire DIRECTLY to the Cn pins of slices 1..3 with no inverters --
+// exactly the service the real '182 performed.
+//
+// Naming: pin variables are voltage-true. G0..G3 are the /G pins
+// (LOW = generate asserted), P0..P3 the /P pins, CN the carry-in
+// (LOW = carry). External carry-in (e.g. the ALU_Cn source mux:
+// H / L / flag-C) drives slice 0's Cn and this CN pin in parallel.
+//
+// Lookahead, in asserted (active-high concept) terms:
+//   carry into slice 1: c1 = g0 + p0.c0
+//   carry into slice 2: c2 = g1 + p1.g0 + p1.p0.c0
+//   carry into slice 3: c3 = g2 + p2.g1 + p2.p1.g0 + p2.p1.p0.c0
+//   group /G asserted:  g  = g3 + p3.g2 + p3.p2.g1 + p3.p2.p1.g0
+//   group /P asserted:  p  = p3.p2.p1.p0
+// Each equation below is the COMPLEMENT (output HIGH = not asserted),
+// De Morganed into SOP because the carry pins are asserted LOW.
+// Worst output is 4 product terms -- comfortably inside the 16V8
+// per-output budget.
+//
+// Verification plan (no Hc182 simulation exists in TTLSim -- only the
+// part drawing): build two 16-bit cascades of four simulated '181s,
+// one ripple-carried through '04 inverters (Cn+4 -> inverter -> next
+// Cn), one carried by this GAL via File > Import JEDEC. Sweep operands
+// on ADD (S=1001, M=L) and SUB (S=0110, M=L) with both CN states and
+// diff all sixteen F outputs and the final carry. The ripple cascade
+// is the arithmetic ground truth.
+// -----------------------------------------------------------------
+
+/* Inputs */
+PIN 1  = CN ;     /* carry in, LOW = carry (matches '181 Cn)        */
+PIN 2  = G0 ;     /* slice 0 /G  ('181 Y pin)                       */
+PIN 3  = P0 ;     /* slice 0 /P  ('181 X pin)                       */
+PIN 4  = G1 ;     /* slice 1 /G                                     */
+PIN 5  = P1 ;     /* slice 1 /P                                     */
+PIN 6  = G2 ;     /* slice 2 /G                                     */
+PIN 7  = P2 ;     /* slice 2 /P                                     */
+PIN 8  = G3 ;     /* slice 3 /G                                     */
+PIN 9  = P3 ;     /* slice 3 /P                                     */
+
+/* Outputs */
+PIN 19 = CNX ;    /* carry into slice 1, LOW = carry -> '181 Cn     */
+PIN 18 = CNY ;    /* carry into slice 2, LOW = carry -> '181 Cn     */
+PIN 17 = CNZ ;    /* carry into slice 3, LOW = carry -> '181 Cn     */
+PIN 16 = GGRP ;   /* group /G, LOW = asserted (next lookahead level)*/
+PIN 15 = PGRP ;   /* group /P, LOW = asserted (next lookahead level)*/
+
+/* Carry into slice 1. LOW when g0 + p0.c0; written as the HIGH
+   (no-carry) condition: !g0 AND !(p0.c0) = G0 & (P0 # CN). */
+CNX  = (G0 & P0)
+     # (G0 & CN) ;
+
+/* Carry into slice 2: g1 + p1.g0 + p1.p0.c0, complemented. */
+CNY  = (G1 & P1)
+     # (G1 & G0 & P0)
+     # (G1 & G0 & CN) ;
+
+/* Carry into slice 3: g2 + p2.g1 + p2.p1.g0 + p2.p1.p0.c0,
+   complemented. Four terms -- the widest equation in the part. */
+CNZ  = (G2 & P2)
+     # (G2 & G1 & P1)
+     # (G2 & G1 & G0 & P0)
+     # (G2 & G1 & G0 & CN) ;
+
+/* Group generate, complemented: !(g3 + p3.g2 + p3.p2.g1 +
+   p3.p2.p1.g0). Note no P0 anywhere -- faithful to the original
+   '182, whose group-G likewise excludes slice 0's propagate. */
+GGRP = (G3 & P3)
+     # (G3 & G2 & P2)
+     # (G3 & G2 & G1 & P1)
+     # (G3 & G2 & G1 & G0) ;
+
+/* Group propagate, complemented: !(p3.p2.p1.p0) -- HIGH when any
+   slice fails to propagate. */
+PGRP = P0 # P1 # P2 # P3 ;
