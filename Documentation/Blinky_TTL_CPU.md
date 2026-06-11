@@ -78,17 +78,17 @@ Cost: one extra EEPROM chip on the I-memory side. Worth it.
 
 | Family | Examples | Notes |
 |---|---|---|
-| ALU | ADD, ADC, SUB, SBC, AND, OR, XOR, NOT, SHL, SHR, NEG, CMP, TST | TOS,NOS → TOS. **ALU ops set N, Z, C flags as a side effect.** ADC/SBC read C for multi-byte arithmetic. CMP/TST set flags without writing TOS (see below). |
-| Stack | DUP, DROP, SWAP, OVER, NIP, TUCK, ROT | Data stack manipulation. Does not affect flags. |
+| ALU | ADD, ADC, SUB, SBC, AND, OR, XOR, NOT, SHL, SHR, NEG, TST | TOS,NOS → TOS. **ALU ops set N, Z, C flags as a side effect.** ADC/SBC read C for multi-byte arithmetic. TST sets flags without writing TOS — it replaces the old two-operand CMP (see below). |
+| Stack | DUP, DROP, SWAP, OVER, NIP, TUCK | Data stack manipulation. Does not affect flags. ROT is a macro (`>R SWAP R> SWAP`), never an opcode — not single-cycle on a single-port stack. |
 | Return stack | >R, R>, R@ | Move between stacks. Does not affect flags. |
-| Memory (stack form) | FETCH, STORE | Address from TOS (Forth-style). Does not affect flags. |
+| Memory (stack form) | FETCH | Address from TOS (Forth-style), `( addr -- value )`, ΔDSP = 0. Does not affect flags. Stack-form STORE is dropped — see below. |
 | Memory (immediate form) | LOAD #addr, STORE #addr | Address from instruction's low byte. Does not affect flags. |
-| I/O (stack form) | IN, OUT | Port number from TOS. Does not affect flags. |
+| I/O (stack form) | IN | Port number from TOS, `( port -- value )`, ΔDSP = 0. Does not affect flags. Stack-form OUT is dropped — see below. |
 | I/O (immediate form) | IN #port, OUT #port | Port number from instruction's low byte. Does not affect flags. |
 | Control | RET, NOP, HALT | Operand-less. Does not affect flags. |
 | Immediate | PUSH #imm, BRANCH addr, CALL addr, BEQ addr, BNE addr, BCC addr, BCS addr, BMI addr, BPL addr | Use the immediate field. Conditional branches test the N/Z/C flags set by the most recent ALU op. |
 
-Both stack and immediate forms are supported for memory and I/O. The stack form is required when the address or port number is computed at run time (e.g., looping over the 8×8 matrix rows); the immediate form is denser for fixed accesses (one instruction instead of `PUSH #addr` + access). Cost is one extra opcode per variant — negligible given the encoding budget.
+Reads keep both forms: stack-form `FETCH` and `IN` take a run-time-computed address/port from TOS (genuinely ΔDSP = 0 — the value read replaces the address), and the immediate forms are denser for fixed accesses (one instruction instead of `PUSH #addr` + access). **Writes are immediate-form only** (`STORE #addr`, `OUT #port`): a clean stack-form write `( data addr -- )` is a forbidden −2 on the single-port stack, and the old −1 compromise left a dangling operand on every write — dropped on both machines (see "Why writes are immediate-form only" below). Run-time-computed write targets are unrolled to fixed addresses/ports, or the targets are mapped to fixed ports.
 
 Most opcodes are operand-less (one cycle, no immediate). Branches, calls, pushes of arbitrary constants, and immediate-form memory/I/O accesses use the immediate field — still one cycle, because the 16-bit instruction already contains everything needed.
 
@@ -106,7 +106,7 @@ Not registers in the traditional sense — these are the architecturally visible
 |---|---|---|
 | PC | 8 bits | Program counter (I-memory address) |
 | IR | 16 bits | Instruction register (current instruction) |
-| TOS | 8 bits | Top of data stack (in a '374 latch) |
+| TOS | 8 bits | Top of data stack (2× '194 shift register: parallel-loads on writes, shifts on SHL/SHR) |
 | NOS | 8 bits | Next on data stack (in a '374 latch) |
 | DSP | 8 bits | Data stack pointer |
 | RTOS | 8 bits | Top of return stack |
@@ -164,22 +164,17 @@ By instruction class:
 
 | ΔDSP | Instructions |
 |---|---|
-| +1 | `PUSH #imm`, `DUP`, `OVER`, `FETCH`, `LOAD #addr`, `IN #port`, `R>` |
-| 0 | `NOT`, `NEG`, `SHL`, `SHR`, `TST`, `SWAP`, `ROT`, `NOP`, branches, stack-form `IN` |
-| −1 | `ADD`, `ADC`, `SUB`, `SBC`, `AND`, `OR`, `XOR`, `CMP`, `DROP`, `NIP`, `>R`, `OUT #port`, `STORE #addr`, stack-form `STORE`, stack-form `OUT` |
+| +1 | `PUSH #imm`, `DUP`, `OVER`, `LOAD #addr`, `IN #port`, `R>` |
+| 0 | `NOT`, `NEG`, `SHL`, `SHR`, `TST`, `SWAP`, `NOP`, branches, stack-form `IN`, stack-form `FETCH` |
+| −1 | `ADD`, `ADC`, `SUB`, `SBC`, `AND`, `OR`, `XOR`, `DROP`, `NIP`, `>R`, `OUT #port`, `STORE #addr` |
 
-#### How stack-form STORE and OUT stay at −1
+#### Why writes are immediate-form only
 
 Conventional Forth `STORE` is `( data addr -- )`, consuming both. That's a −2 instruction, which would require either dual-port stack memory or a banking scheme, plus DSP-by-2 logic.
 
-Instead, stack-form `STORE` and `OUT` consume **only the address/port** (TOS) and write **NOS** to the target, leaving NOS in place:
+The earlier compromise kept stack-form writes at −1 by consuming only the address and writing NOS — but that left a dangling operand `( data addr -- data )` on every write, costing a `DROP` in the common case. Ratified resolution (shared with the mini): **stack-form `STORE` and `OUT` are dropped.** Writes take their address/port from the instruction literal (`STORE #addr`, `OUT #port`) and pop only the data from TOS — naturally −1, no residue.
 
-- `STORE` (stack form): `( data addr -- data )`. Writes NOS to D-memory at TOS, pops TOS.
-- `OUT` (stack form): `( data port -- data )`. Writes NOS to the I/O port at TOS, pops TOS.
-
-Code that wants the value gone follows with `DROP`. Code that wants to reuse the value (e.g., for a comparison or a subsequent store to an adjacent address) doesn't. This idiom matches how RTX2000 and similar stack machines handle the same problem, and adds maybe a dozen extra `DROP`s across an entire blinky-sized program — negligible.
-
-The immediate forms (`STORE #addr`, `OUT #port`) take their address/port from the IR rather than the stack, so they're naturally −1 — they consume only the data from TOS.
+Stack-form reads survive (`FETCH`, `IN`) because replacing the address on TOS with the value read is genuinely ΔDSP = 0 — no residue to manage. A run-time-computed *write* target is no longer single-instruction: unroll to fixed `STORE #addr` / `OUT #port`s, or map the targets to fixed ports.
 
 #### TOS / NOS update rules
 
@@ -192,7 +187,8 @@ With ΔDSP ∈ {+1, 0, −1}, each instruction picks one input for TOS and one f
 | `SWAP` (0) | old NOS | old TOS | idle |
 | Binary ALU (−1) | ALU result of old TOS, old NOS | stack[DSP−1] read | idle (read only) |
 | `DROP` (−1) | old NOS | stack[DSP−1] read | idle (read only) |
-| Stack-form `STORE`/`OUT` (−1) | old NOS | stack[DSP−1] read | D-memory or I/O write of old NOS |
+| `STORE #addr` / `OUT #port` (−1) | old NOS | stack[DSP−1] read | D-memory or I/O write of old TOS |
+| Stack-form `FETCH` / `IN` (0) | value read (addr/port was old TOS) | unchanged | D-memory or I/O read; stack idle |
 
 Every row uses at most one stack memory access (read *or* write), and TOS/NOS each have a 4-to-1 mux on their input, no more. That's the whole stack data path.
 
@@ -208,14 +204,14 @@ Z80-style separate I/O address space, 8 bits wide, accessed via dedicated `IN` /
 
 ### Instruction variants
 
-Both stack-operand and immediate forms are supported, mirroring the memory access pattern:
+Reads come in both forms; writes are immediate-form only, mirroring the memory access pattern:
 
 | Form | Encoding | Port number from | Use case |
 |---|---|---|---|
-| `IN` / `OUT` | `I=0` operand-less | TOS | Computed port numbers (e.g., looping over matrix rows) |
-| `IN #port` / `OUT #port` | `I=1` with immediate | Instruction's low byte | Fixed ports (status LEDs, switches) |
+| `IN` (stack form) | `I=0` operand-less | TOS | Computed input ports; `( port -- value )`, ΔDSP = 0 |
+| `IN #port` / `OUT #port` | `I=1` with immediate | Instruction's low byte | Fixed ports (status LEDs, switches, matrix rows). No stack-form `OUT` — see "Why writes are immediate-form only" |
 
-Stack form: `IN` replaces the port number on TOS with the input byte read from that port (net ΔDSP = 0). `OUT` writes NOS to the port whose number is on TOS, then pops TOS, leaving the data value on the stack (net ΔDSP = −1; follow with `DROP` if the value isn't wanted). See "Stack Modification Per Cycle" above for why `OUT` is shaped this way.
+Stack form: `IN` replaces the port number on TOS with the input byte read from that port (net ΔDSP = 0) — the path for run-time-computed *input* ports, and the instruction that drives the I/O address mux from TOS. Computed *output* ports are no longer single-instruction: unroll to fixed `OUT #port`s, or map the targets to fixed ports.
 
 Immediate form: port number is the low byte of the instruction. `OUT #port` pops data from TOS and writes to the named port; `IN #port` reads from the named port and pushes onto the stack. Single cycle each.
 
@@ -223,7 +219,7 @@ Immediate form: port number is the low byte of the instruction. `OUT #port` pops
 
 The I/O decoder receives its 8-bit port number through a 2:1 mux:
 
-- Mux input A: TOS (for stack-form `IN`/`OUT`).
+- Mux input A: TOS (for stack-form `IN`).
 - Mux input B: IR low byte (for immediate-form `IN #port`/`OUT #port`).
 - Mux select: controlled by the instruction decoder (the `I` bit plus opcode pattern).
 
@@ -233,20 +229,24 @@ One '157 (8-bit 2:1 mux, two packages) handles this. Same pattern can be reused 
 
 Wire 8× '374 latches at ports 0x00–0x07, each driving one row of the matrix. Writing to port N sets the pattern for row N.
 
-This mapping plays beautifully with the stack-form `OUT`:
+The row ports are fixed, so the immediate-form `OUT #port` fits naturally. Writing one value to all eight rows uses the DUP idiom (`OUT #port` pops its data):
 
 ```
 \ Clear the matrix (all rows to 0)
-0                  \ value to write, stays on stack across iterations
-8 0 DO             \ loop counter 0..7
-  I OUT            \ write value (NOS) to port I (TOS); pops port, keeps value
-LOOP
-DROP               \ discard the value we kept around
+PUSH #0
+DUP  OUT #0
+DUP  OUT #1
+DUP  OUT #2
+DUP  OUT #3
+DUP  OUT #4
+DUP  OUT #5
+DUP  OUT #6
+OUT #7             \ last write consumes the value
 ```
 
-Because stack-form `OUT` preserves the data value, the same byte gets written to all 8 ports without re-pushing it each iteration.
+Unrolled rather than looped — the ports are known at assembly time, which is exactly the case the immediate form is for.
 
-Or for a Game of Life update, compute the next-generation byte for each row on the stack and `OUT` it to the appropriate port. The matrix is direct-mapped — no scanning multiplexer, no refresh logic, every LED reflects a real bit at all times. 64 LEDs, 8 latch chips, total honesty.
+Or for a Game of Life update, compute the next-generation byte for each row on the stack and `OUT #row` it to its fixed port. The matrix is direct-mapped — no scanning multiplexer, no refresh logic, every LED reflects a real bit at all times. 64 LEDs, 8 latch chips, total honesty.
 
 For fixed ports like a status LED byte or input switches, the immediate form is denser:
 
@@ -285,20 +285,20 @@ Core CPU and memory subsystem:
 | Block | Chips |
 |---|---|
 | ALU (2× '181 cascaded for 8 bits — HC primary, LS backup behind an HCT fence; plus an inverter on the Cn+4 → Cn ripple wire: '04, or HCT04 in the LS build — see Flags note and Sourcing notes) | 2–3 |
-| TOS + NOS latches ('374) | 2 |
+| TOS (2× '194 shift register) + NOS latch ('374) | 3 |
 | Data stack memory (256-deep SRAM) | 1 |
 | Data stack pointer ('191 up/down counter, cascaded ×2 for 8 bits) | 2 |
 | Return stack memory + pointer (1× SRAM + 2× '191) | 3 |
 | PC ('161) | 1 |
 | Instruction register (2× '374) | 2 |
-| Decode / control ('138s, '139s, glue) | 3–4 |
+| Decode / control (GAL16V8/22V10 class — the mini's ratified GAL scheme scaled to the wider opcode) | 4–5 |
 | Bus drivers ('245s) | 2 |
 | Address-source mux ('157, selects TOS vs. IR-low-byte for memory/IO address) | 2 |
 | I-memory (2× 8-bit SRAM in parallel — loaded by Mega at boot; or 2× 8-bit EEPROM for stand-alone) | 2 |
 | D-memory (1× SRAM) | 1 |
 | I/O address decoder ('138s) | 2 |
 | Clock / reset / single-step | 2–3 |
-| **Core total** | **~27–32** |
+| **Core total** | **~29–34** |
 
 Optional I/O peripherals (typical v1 build):
 
@@ -381,13 +381,13 @@ An Uno has only ~18 usable pins, which is not enough for the parallel data paths
 
 ## Open Decisions
 
-- **Barrel shifter or single-bit shifts?** Single-bit is cheaper (one '194 or similar). Barrel shifter is ARM-flavored but costs real chips. Single-bit shifts are fine for blinky.
-- **Flags.** Three flags: N (negative, bit 7 of result), Z (zero, all bits of result are zero), C (carry-out of bit 7). All three are written by every ALU op and only by ALU ops — stack, memory, I/O, and control instructions leave the flags alone, so a `CMP` or arithmetic op can be separated from its consuming branch by any number of non-ALU instructions. Cost: ~1.5 packages (one '74 dual D flip-flop holds two flags, half of a second holds the third) plus three front-panel LEDs. The Z flag rides for free on the '181's A=B output (wire-ANDed across the two cascaded ALU chips); N is bit 7 of the result; C is the Cn+4 output of the high '181 latched directly (active-HIGH when carry occurred, matching the BCS-when-carry-set semantics).
+- **Shifts — resolved: single-bit on the '194 TOS.** The TOS register *is* a '194 bidirectional shift register (2× at W = 8): SHL/SHR are TOS shift modes, costing zero extra chips, with C sourced from the bit shifted out rather than the carry chain. Rotates (ROL/ROR) are intentionally absent on both machines — the shift unit is logical single-bit. (If rotate-through-carry is ever added, it lands on both machines together: one GAL change plus a serial-fill mux feeding the '194.)
+- **Flags.** Three flags: N (negative, bit 7 of result), Z (zero, all bits of result are zero), C (carry-out of bit 7). All three are written by every ALU op and only by ALU ops — stack, memory, I/O, and control instructions leave the flags alone, so a `TST` or arithmetic op can be separated from its consuming branch by any number of non-ALU instructions. Cost: ~1.5 packages (one '74 dual D flip-flop holds two flags, half of a second holds the third) plus three front-panel LEDs. The Z flag rides for free on the '181's A=B output (wire-ANDed across the two cascaded ALU chips); N is bit 7 of the result; C is the Cn+4 output of the high '181 latched directly (active-HIGH when carry occurred, matching the BCS-when-carry-set semantics).
 
 **Cn/Cn+4 polarity gotcha for the ripple wire.** In the active-high-operand convention this design uses, the '181's Cn *input* takes HIGH to mean "no carry-in" and LOW to mean "+1 carry-in" — the opposite polarity from the Cn+4 *output*, which is HIGH when carry occurred. Direct-wiring Cn+4 of the low '181 to Cn of the high '181 therefore inverts the carry meaning during ripple. A single inverter slot on the cascade wire fixes it — '04 in the all-HC build, **HCT04 when the LS-181 backup is fitted**, since the inverter's input hangs directly on an LS output. In the LS build the flag taps (Cn+4, A=B, result bit 7) are likewise LS-driven nodes and need HCT receivers per the fence rule in Sourcing notes. (For subtract, the '181 internally complements B; the same inverter still gives the correct ripple — the *flag* polarity is what differs between add and subtract conventions, but the C flag is read off the high '181's Cn+4 directly, so software just learns that "carry set after SUB = no borrow", same as the 6502.)
-- **Conditional execution granularity?** Six flag-based conditional branches (BEQ, BNE, BCC, BCS, BMI, BPL) plus unconditional BRANCH, in 6502 style. Comparisons are done by CMP (subtract, set flags, discard result) or TST (AND TOS with itself, set flags, leave stack unchanged), or fall out as side effects of plain arithmetic. The branch-decode logic is a single 8-way mux (six conditions plus always plus the unconditional case) — call it one '151 or '153.
+- **Conditional execution granularity?** Six flag-based conditional branches (BEQ, BNE, BCC, BCS, BMI, BPL) plus unconditional BRANCH, in 6502 style. Comparisons are done by TST ('181 F = A, flags only, write suppressed — replaces the old two-operand CMP, whose clean `( a b -- )` form is a forbidden −2) or fall out as side effects of plain arithmetic (SUB sets the flags of TOS − NOS). The branch-decode logic is a single 8-way mux (six conditions plus always plus the unconditional case) — one '151 or '153, or folded into the flag-reading decode GAL.
 - **Program loading.** During development, an Arduino Mega serves as both boot loader and debug controller — see the Development Rig section above. For a stand-alone deployment, two 8-bit EEPROMs in parallel (low byte + high byte of the 16-bit I-bus) replace the Mega + SRAM, with programs burned off-board and chips swapped via sockets.
 
 ## Summary
 
-8-bit data, 8-bit address (everywhere — D-memory, I-memory, I/O), 16-bit fixed instructions, Harvard memory, dual stacks, single-cycle execution. Stack machine semantics keep the control logic small and the front panel meaningful. About 30 TTL chips for the core datapath, control, and memory, plus ~10 more for an 8×8 LED matrix and other peripherals. A genuine CPU with genuine character — and a front panel that actually shows you what's happening.
+8-bit data, 8-bit address (everywhere — D-memory, I-memory, I/O), 16-bit fixed instructions, Harvard memory, dual stacks, single-cycle execution. Stack machine semantics keep the control logic small and the front panel meaningful. Just over 30 TTL chips for the core datapath, control, and memory, plus ~10 more for an 8×8 LED matrix and other peripherals. A genuine CPU with genuine character — and a front panel that actually shows you what's happening.
