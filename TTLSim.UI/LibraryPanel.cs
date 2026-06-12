@@ -43,7 +43,7 @@ public sealed class LibraryPanel : UserControl
     private static readonly HashSet<string> SimulatedChipIdentifiers = new(StringComparer.Ordinal)
     {
         "00", "02", "04", "08", "10", "14", "20", "30", "32", "86",
-        "47", "74", "153", "157", "161", "163", "173", "181", "244", "245", "283", "390", "393", "541",
+        "47", "74", "153", "157", "161", "163", "173", "181", "244", "245", "273", "283", "390", "393", "541", "688",
         "7seg-ca",
         "28C256", "28C128", "28C64", "28C16", "62256", "6116", "2114",
         "GAL16V8", "GAL20V8"
@@ -227,6 +227,7 @@ public sealed class LibraryPanel : UserControl
         AddBoxPart(alu, ChipPartDefinition.Ic74181, "4-bit ALU");
         AddBoxPart(alu, ChipPartDefinition.Ic74182, "Carry Lookahead Generator");
         AddBoxPart(alu, ChipPartDefinition.Ic74283, "4-bit Binary Adder, fast carry");
+        AddBoxPart(alu, ChipPartDefinition.Ic74688, "8-bit Identity Comparator");
         alu.Expand();
     }
 

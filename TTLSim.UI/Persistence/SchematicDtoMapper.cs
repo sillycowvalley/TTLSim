@@ -108,6 +108,7 @@ public static class SchematicDtoMapper
             [ChipPartDefinition.Ic74181.PartNumber] = ChipPartDefinition.Ic74181,
             [ChipPartDefinition.Ic74182.PartNumber] = ChipPartDefinition.Ic74182,
             [ChipPartDefinition.Ic74283.PartNumber] = ChipPartDefinition.Ic74283,
+            [ChipPartDefinition.Ic74688.PartNumber] = ChipPartDefinition.Ic74688,
 
             // Display drivers
             [ChipPartDefinition.Ic7447.PartNumber] = ChipPartDefinition.Ic7447,

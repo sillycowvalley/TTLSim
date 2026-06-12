@@ -207,6 +207,33 @@ public sealed record ChipPartDefinition(
             new("GND",     7),              new("/TRIG2",   8),
         });
 
+    /// <summary>74HC688 8-bit identity comparator, 20-pin DIP. Compares two
+    /// 8-bit words P and Q; the single active-LOW output /P=Q (pin 19)
+    /// asserts when all eight bit pairs match AND the active-LOW enable /G
+    /// (pin 1) is LOW. Identity only -- no magnitude outputs (that's the
+    /// '682/'685 family). P and Q pins interleave down the package
+    /// (P0/Q0 = 2/3, P1/Q1 = 4/5, ...). Classic address-decode and
+    /// front-panel-breakpoint part: P from a counter/bus, Q from DIP
+    /// switches, output into the run/halt logic.</summary>
+    public static readonly ChipPartDefinition Ic74688 = new(
+        PartNumber: "688", PinCount: 20, PowerPin: 20, GroundPin: 10,
+        BodyWidth: 8,
+        Pins: new ChipPin[]
+        {
+            new("/G",   1),              new("VCC",  20),
+            new("P0",   2),              new("/P=Q", 19, Out),
+            new("Q0",   3),              new("P7",   18),
+            new("P1",   4),              new("Q7",   17),
+            new("Q1",   5),              new("P6",   16),
+            new("P2",   6),              new("Q6",   15),
+            new("Q2",   7),              new("P5",   14),
+            new("P3",   8),              new("Q5",   13),
+            new("Q3",   9),              new("P4",   12),
+            new("GND", 10),              new("Q4",   11),
+        },
+        IsSeries74: true
+        );
+
     /// <summary>74HC74 dual positive-edge-triggered D flip-flop with
     /// asynchronous preset and clear, 14-pin DIP. PRE and CLR are
     /// active-low. The two halves are labelled A and B; once a dedicated

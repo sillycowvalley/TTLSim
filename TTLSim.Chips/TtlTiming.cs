@@ -88,12 +88,15 @@ public static class TtlTiming
         ["LS:245"] = new(12_000),  ["HC:245"] = new(30_000),  // octal transceiver
         ["LS:541"] = new(18_000),  ["HC:541"] = new(30_000),  // octal buffer
         ["LS:47"]  = new(100_000), ["HC:47"]  = new(100_000), // BCD→7-seg decoder (slow)
+        ["LS:688"] = new(25_000),  ["HC:688"] = new(45_000),  // 8-bit identity comparator
+
 
         // ---- clocked (tCO = clock → Q, max) -----------------------------
         ["LS:74"]  = new(40_000),  ["HC:74"]  = new(44_000),  // dual D flip-flop
         ["LS:161"] = new(27_000),  ["HC:161"] = new(44_000),  // sync counter
         ["LS:163"] = new(27_000),  ["HC:163"] = new(44_000),  // sync counter
         ["LS:173"] = new(27_000),  ["HC:173"] = new(44_000),  // quad D register (3-state)
+        ["LS:273"] = new(30_000),  ["HC:273"] = new(44_000),  // octal D flip-flop, async clear
         ["LS:390"] = new(35_000),  ["HC:390"] = new(44_000),  // dual decade counter
         ["LS:393"] = new(35_000),  ["HC:393"] = new(44_000),  // dual binary counter
     };

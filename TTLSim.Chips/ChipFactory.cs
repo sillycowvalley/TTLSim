@@ -10,6 +10,7 @@ using TTLSim.Chips.Passives;
 using TTLSim.Chips.Pld;
 using TTLSim.Chips.Registers;
 using TTLSim.Chips.Sources;
+using TTLSim.Chips.Comparators;
 using TTLSim.Core;
 
 using Microsoft.Extensions.Logging;
@@ -263,7 +264,7 @@ public sealed class ChipFactory : IChipFactory
         }
     }
 
-    
+
 
     private IChip? CreateForUnit(BuildDevice device, BuildUnit unit, IReadOnlyDictionary<int, Net> pinToNet)
     {
@@ -279,8 +280,10 @@ public sealed class ChipFactory : IChipFactory
             "181" => TryCreateHc181(device, pinToNet),
             "244" => TryCreateHc244(device, pinToNet),
             "245" => TryCreateHc245(device, pinToNet),
+            "273" => TryCreateHc273(device, pinToNet),
             "283" => TryCreateHc283(device, pinToNet),
             "541" => TryCreateHc541(device, pinToNet),
+            "688" => TryCreateHc688(device, pinToNet),
             "GAL16V8" or "GAL20V8" => TryCreateGal(device, pinToNet),
             "7seg-ca" => TryCreateSevenSegCa(pinToNet),
             _ => null
@@ -520,6 +523,37 @@ public sealed class ChipFactory : IChipFactory
             delayPs: TtlTiming.ResolvePs(device));
     }
 
+    private IChip? TryCreateHc273(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        // /CLR (pin 1) and CLK (pin 11) are required -- a floating clock or
+        // reset on a register is a real fault. The eight D inputs and eight
+        // Q outputs are OPTIONAL: a partially-used '273 (e.g. four of eight
+        // flip-flops, as in the Mini Blinky synchronizer) leaves the spare
+        // pins open. An unconnected D gets a local stand-in net that reads
+        // as Low; an unconnected Q gets a stand-in that drives nothing.
+        // Floating-input diagnostics (TTL011) still flag genuinely unwired
+        // pins at design time.
+        if (!pinToNet.TryGetValue(1, out Net? clrN) || clrN is null) return null;
+        if (!pinToNet.TryGetValue(11, out Net? clkN) || clkN is null) return null;
+
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);
+
+        return new Hc273(
+            clrN: clrN, clkN: clkN,
+            d0: Opt(3, "d0-nc"), d1: Opt(4, "d1-nc"),
+            d2: Opt(7, "d2-nc"), d3: Opt(8, "d3-nc"),
+            d4: Opt(13, "d4-nc"), d5: Opt(14, "d5-nc"),
+            d6: Opt(17, "d6-nc"), d7: Opt(18, "d7-nc"),
+            q0: Opt(2, "q0-nc"), q1: Opt(5, "q1-nc"),
+            q2: Opt(6, "q2-nc"), q3: Opt(9, "q3-nc"),
+            q4: Opt(12, "q4-nc"), q5: Opt(15, "q5-nc"),
+            q6: Opt(16, "q6-nc"), q7: Opt(19, "q7-nc"),
+            label: "273", logger: logger,
+            delayPs: TtlTiming.ResolvePs(device));
+    }
+
     private IChip? TryCreateHc283(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
     {
         // C4 (pin 9) is the carry-out cascade pin and is OPTIONAL -- the
@@ -542,6 +576,38 @@ public sealed class ChipFactory : IChipFactory
             s1: Get(4), s2: Get(1), s3: Get(13), s4: Get(10),
             c4: c4Net,
             label: "283", logger: logger,
+            delayPs: TtlTiming.ResolvePs(device));
+    }
+
+    private IChip? TryCreateHc688(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        // /G (pin 1) and the /P=Q output (pin 19) are required -- the chip
+        // is inert without them. The sixteen P/Q data pins are OPTIONAL: an
+        // unconnected pin gets a local stand-in net that reads as Low, so a
+        // narrower-than-8-bit comparison (e.g. a 4-bit PC against four DIP
+        // switches with the upper bit pairs left open) sees 0 == 0 on the
+        // unused bits and still matches -- same precedent as the parallel
+        // memories. Floating-input diagnostics (TTL011) still flag genuinely
+        // unwired pins at design time.
+        if (!pinToNet.TryGetValue(1, out Net? gN) || gN is null) return null;
+        if (!pinToNet.TryGetValue(19, out Net? outN) || outN is null) return null;
+
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);
+
+        return new Hc688(
+            gN: gN,
+            p0: Opt(2, "p0-nc"), p1: Opt(4, "p1-nc"),
+            p2: Opt(6, "p2-nc"), p3: Opt(8, "p3-nc"),
+            p4: Opt(12, "p4-nc"), p5: Opt(14, "p5-nc"),
+            p6: Opt(16, "p6-nc"), p7: Opt(18, "p7-nc"),
+            q0: Opt(3, "q0-nc"), q1: Opt(5, "q1-nc"),
+            q2: Opt(7, "q2-nc"), q3: Opt(9, "q3-nc"),
+            q4: Opt(11, "q4-nc"), q5: Opt(13, "q5-nc"),
+            q6: Opt(15, "q6-nc"), q7: Opt(17, "q7-nc"),
+            pEqQN: outN,
+            label: "688", logger: logger,
             delayPs: TtlTiming.ResolvePs(device));
     }
 
@@ -577,7 +643,7 @@ public sealed class ChipFactory : IChipFactory
     {
         // Box-chip ICs (per-unit dispatch in CreateForUnit).
         "47" or "74" or "153" or "157" or "161" or "163" or "173" or "181"
-            or "283" or "244" or "245" or "541" or "7seg-ca"
+            or "244" or "245" or "273" or "283" or "541" or "688" or "7seg-ca"
             => true,
         // GAL/PLD: combinational fuse-map evaluation; fuse map in device.Program.
         "GAL16V8" or "GAL20V8"
