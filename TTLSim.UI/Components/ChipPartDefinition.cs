@@ -180,15 +180,15 @@ public sealed record ChipPartDefinition(
     /// (RESET, TRIG) use a leading '/' which the renderer converts to a
     /// bar over the leading letters.</summary>
     public static readonly ChipPartDefinition IcNe555 = new(
-        PartNumber: "NE555", PinCount: 8, PowerPin: 8, GroundPin: 1,
-        BodyWidth: 8,
-        Pins: new ChipPin[]
-        {
-            new("GND",   1),              new("VCC",   8),
-            new("/TRIG", 2),              new("DISCH", 7),
-            new("OUT",   3, Out),         new("THRES", 6),
-            new("/RESET",4),              new("CTRL",  5),
-        });
+    PartNumber: "NE555", PinCount: 8, PowerPin: 8, GroundPin: 1,
+    BodyWidth: 8,
+    Pins: new ChipPin[]
+    {
+        new("GND",    1),              new("VCC",   8),
+        new("/TRIG",  2),              new("DISCH", 7, Out),
+        new("OUT",    3, Out),         new("THRES", 6),
+        new("/RESET", 4),              new("CTRL",  5, Out),
+    });
 
     /// <summary>NE556 dual precision timer, 14-pin DIP. Two independent 555
     /// timers sharing VCC and GND. Pin pairs: 1/13 DISCH, 2/12 THRES,
@@ -198,13 +198,13 @@ public sealed record ChipPartDefinition(
         BodyWidth: 8,
         Pins: new ChipPin[]
         {
-            new("DISCH1",  1),              new("VCC",     14),
-            new("THRES1",  2),              new("DISCH2",  13),
-            new("CTRL1",   3),              new("THRES2",  12),
-            new("/RESET1", 4),              new("CTRL2",   11),
-            new("OUT1",    5, Out),         new("/RESET2", 10),
-            new("/TRIG1",  6),              new("OUT2",     9, Out),
-            new("GND",     7),              new("/TRIG2",   8),
+        new("DISCH1",  1, Out),         new("VCC",     14),
+        new("THRES1",  2),              new("DISCH2",  13, Out),
+        new("CTRL1",   3, Out),         new("THRES2",  12),
+        new("/RESET1", 4),              new("CTRL2",   11, Out),
+        new("OUT1",    5, Out),         new("/RESET2", 10),
+        new("/TRIG1",  6),              new("OUT2",     9, Out),
+        new("GND",     7),              new("/TRIG2",   8),
         });
 
     /// <summary>74HC688 8-bit identity comparator, 20-pin DIP. Compares two
