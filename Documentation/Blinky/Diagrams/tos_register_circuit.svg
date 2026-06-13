@@ -1,0 +1,244 @@
+<svg viewBox="0 0 1040 920" xmlns="http://www.w3.org/2000/svg" font-family="'Anthropic Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      .title { font-size:20px; font-weight:700; fill:#1e293b; }
+      .subtitle { font-size:12px; font-weight:400; fill:#64748b; }
+      .chip { fill:#eef2f7; stroke:#334155; stroke-width:1.5; }
+      .chip-hi { fill:#e1f5ee; stroke:#0f6e56; stroke-width:2; }
+      .chip-mux { fill:#eae8fb; stroke:#3c3489; stroke-width:1.8; }
+      .blk { fill:#f5f5f4; stroke:#57534e; stroke-width:1.4; stroke-dasharray:5 3; }
+      .cname { font-size:14px; font-weight:700; fill:#0f172a; text-anchor:middle; }
+      .csub { font-size:10.5px; font-weight:400; fill:#64748b; text-anchor:middle; }
+      .pinlbl { font-size:10.5px; fill:#334155; }
+      .pinnum { font-size:8.5px; font-style:italic; fill:#94a3b8; }
+      .net { stroke:#475569; stroke-width:1.4; fill:none; }
+      .netbus { stroke:#475569; stroke-width:3; fill:none; }
+      .ctl { stroke:#b45309; stroke-width:1.4; fill:none; }
+      .pwr { stroke:#94a3b8; stroke-width:1.2; fill:none; }
+      .stub { stroke:#64748b; stroke-width:1.1; }
+      .netlbl { font-size:10px; fill:#334155; }
+      .ctllbl { font-size:10px; fill:#b45309; font-weight:600; }
+      .pwrlbl { font-size:9.5px; fill:#94a3b8; }
+      .note { font-size:10.5px; fill:#475569; }
+      .noteh { font-size:11px; fill:#1e293b; font-weight:700; }
+      .tbl { font-size:10px; fill:#334155; }
+      .tblh { font-size:10px; fill:#0f172a; font-weight:700; }
+    </style>
+  </defs>
+
+  <text x="36" y="40" class="title">Mini Blinky — TOS Register Circuit (W = 4)</text>
+  <text x="36" y="60" class="subtitle">Top-of-stack '194 universal shift register + '153 serial-fill mux · core path at pin level, periphery as control-annotated blocks</text>
+
+  <!-- ===================== TOS SOURCE MUX ===================== -->
+  <rect x="120" y="190" width="180" height="180" rx="6" class="blk"/>
+  <text x="210" y="218" class="cname">TOS source mux</text>
+  <text x="210" y="234" class="csub">sel = TOS_SRC0..2</text>
+  <!-- left inputs -->
+  <g class="stub">
+    <line x1="102" y1="258" x2="120" y2="258"/>
+    <line x1="102" y1="282" x2="120" y2="282"/>
+    <line x1="102" y1="306" x2="120" y2="306"/>
+    <line x1="102" y1="330" x2="120" y2="330"/>
+    <line x1="102" y1="354" x2="120" y2="354"/>
+  </g>
+  <text x="98" y="261" text-anchor="end" class="pinlbl">ALU result</text>
+  <text x="98" y="285" text-anchor="end" class="pinlbl">LIT (IR lit)</text>
+  <text x="98" y="309" text-anchor="end" class="pinlbl">D-mem read</text>
+  <text x="98" y="333" text-anchor="end" class="pinlbl">IN port</text>
+  <text x="98" y="357" text-anchor="end" class="pinlbl">RTOS</text>
+  <text x="304" y="261" class="csub" text-anchor="start" font-size="9">·001</text>
+  <text x="304" y="285" class="csub" text-anchor="start" font-size="9">·010</text>
+  <text x="304" y="309" class="csub" text-anchor="start" font-size="9">·011</text>
+  <text x="304" y="333" class="csub" text-anchor="start" font-size="9">·100</text>
+  <text x="304" y="357" class="csub" text-anchor="start" font-size="9">·101</text>
+
+  <!-- NOS feeds source mux from below -->
+  <line x1="210" y1="410" x2="210" y2="370" class="net" marker-end="url(#arr)"/>
+  <text x="216" y="392" class="netlbl">NOS (SWAP)</text>
+
+  <!-- source mux output bus to '194 A..D -->
+  <line x1="300" y1="280" x2="420" y2="280" class="netbus" marker-end="url(#arr)"/>
+  <text x="334" y="272" class="netlbl">P0–P3 (4)</text>
+
+  <!-- TOS_SRC control in -->
+  <line x1="160" y1="430" x2="160" y2="370" class="ctl" marker-end="url(#arr)"/>
+  <text x="120" y="448" class="ctllbl">TOS_SRC0–2  (GAL2)</text>
+
+  <!-- ===================== NOS '374 LATCH ===================== -->
+  <rect x="120" y="490" width="180" height="92" rx="6" class="blk"/>
+  <text x="210" y="520" class="cname">NOS — '374 latch</text>
+  <text x="210" y="536" class="csub">4 of 8 bits used</text>
+  <text x="210" y="552" class="csub">in: NOS_SRC (1=old TOS, 0=stack rd)</text>
+  <text x="210" y="568" class="csub">load en: NOS_LD</text>
+  <!-- NOS output up to source mux already drawn; also to ALU B -->
+  <line x1="300" y1="536" x2="372" y2="536" class="net" marker-end="url(#arr)"/>
+  <text x="306" y="528" class="netlbl">→ ALU B</text>
+  <!-- control into 374 -->
+  <line x1="150" y1="630" x2="150" y2="582" class="ctl" marker-end="url(#arr)"/>
+  <text x="118" y="648" class="ctllbl">NOS_LD / NOS_SRC  (GAL2)</text>
+
+  <!-- ===================== '194 TOS ===================== -->
+  <rect x="420" y="160" width="200" height="330" rx="6" class="chip-hi"/>
+  <text x="520" y="305" class="cname" fill="#0f6e56">TOS</text>
+  <text x="520" y="324" class="csub" fill="#0f6e56">74x194</text>
+  <text x="520" y="340" class="csub" fill="#0f6e56">universal shift reg</text>
+
+  <!-- left input pins -->
+  <g class="stub">
+    <line x1="402" y1="210" x2="420" y2="210"/>
+    <line x1="402" y1="245" x2="420" y2="245"/>
+    <line x1="402" y1="280" x2="420" y2="280"/>
+    <line x1="402" y1="315" x2="420" y2="315"/>
+    <line x1="402" y1="380" x2="420" y2="380"/>
+    <line x1="402" y1="435" x2="420" y2="435"/>
+  </g>
+  <text x="426" y="206" class="pinlbl">A&#8201;(P0)</text><text x="402" y="222" text-anchor="end" class="pinnum">3</text>
+  <text x="426" y="241" class="pinlbl">B&#8201;(P1)</text><text x="402" y="257" text-anchor="end" class="pinnum">4</text>
+  <text x="426" y="276" class="pinlbl">C&#8201;(P2)</text><text x="402" y="292" text-anchor="end" class="pinnum">5</text>
+  <text x="426" y="311" class="pinlbl">D&#8201;(P3)</text><text x="402" y="327" text-anchor="end" class="pinnum">6</text>
+  <text x="426" y="376" class="pinlbl">DSR</text><text x="402" y="392" text-anchor="end" class="pinnum">2</text>
+  <text x="426" y="431" class="pinlbl">DSL</text><text x="402" y="447" text-anchor="end" class="pinnum">7</text>
+  <text x="398" y="374" text-anchor="end" class="netlbl">FILL_R</text>
+  <text x="398" y="429" text-anchor="end" class="netlbl">FILL_L</text>
+
+  <!-- top pins: /CLR, CLK, S1, S0 -->
+  <g class="stub">
+    <line x1="455" y1="142" x2="455" y2="160"/>
+    <line x1="505" y1="142" x2="505" y2="160"/>
+    <line x1="560" y1="142" x2="560" y2="160"/>
+    <line x1="600" y1="142" x2="600" y2="160"/>
+  </g>
+  <text x="455" y="138" text-anchor="middle" class="pinlbl">/CLR</text><text x="455" y="174" text-anchor="middle" class="pinnum">1</text>
+  <text x="505" y="138" text-anchor="middle" class="pinlbl">CLK</text><text x="505" y="174" text-anchor="middle" class="pinnum">11</text>
+  <text x="560" y="138" text-anchor="middle" class="pinlbl">S1</text><text x="560" y="174" text-anchor="middle" class="pinnum">10</text>
+  <text x="600" y="138" text-anchor="middle" class="pinlbl">S0</text><text x="600" y="174" text-anchor="middle" class="pinnum">9</text>
+
+  <!-- control wires to top pins -->
+  <line x1="455" y1="96" x2="455" y2="142" class="ctl" marker-end="url(#arr)"/>
+  <text x="455" y="90" text-anchor="middle" class="ctllbl">/RESET</text>
+  <line x1="505" y1="96" x2="505" y2="142" class="net" marker-end="url(#arr)"/>
+  <text x="505" y="90" text-anchor="middle" class="netlbl">CLK</text>
+  <line x1="580" y1="96" x2="580" y2="142" class="ctl"/>
+  <line x1="560" y1="142" x2="560" y2="118"/><line x1="560" y1="118" x2="580" y2="118" class="ctl"/>
+  <line x1="600" y1="142" x2="600" y2="118"/><line x1="600" y1="118" x2="580" y2="118" class="ctl"/>
+  <text x="580" y="90" text-anchor="middle" class="ctllbl">TOS_M1/M0 (GAL1)</text>
+
+  <!-- right output pins Q0..Q3 -->
+  <g class="stub">
+    <line x1="620" y1="210" x2="638" y2="210"/>
+    <line x1="620" y1="255" x2="638" y2="255"/>
+    <line x1="620" y1="300" x2="638" y2="300"/>
+    <line x1="620" y1="345" x2="638" y2="345"/>
+  </g>
+  <text x="614" y="206" text-anchor="end" class="pinlbl">Q0 (QA, bit0)</text><text x="638" y="222" class="pinnum">15</text>
+  <text x="614" y="251" text-anchor="end" class="pinlbl">Q1 (QB, bit1)</text><text x="638" y="267" class="pinnum">14</text>
+  <text x="614" y="296" text-anchor="end" class="pinlbl">Q2 (QC, bit2)</text><text x="638" y="312" class="pinnum">13</text>
+  <text x="614" y="341" text-anchor="end" class="pinlbl">Q3 (QD, bit3)</text><text x="638" y="357" class="pinnum">12</text>
+
+  <!-- TOS output bus -->
+  <line x1="638" y1="255" x2="720" y2="255" class="netbus" marker-end="url(#arr)"/>
+  <line x1="638" y1="210" x2="700" y2="210" class="net"/><line x1="700" y1="210" x2="700" y2="250" class="net"/>
+  <line x1="638" y1="300" x2="700" y2="300" class="net"/><line x1="700" y1="300" x2="700" y2="260" class="net"/>
+  <line x1="638" y1="345" x2="690" y2="345" class="net"/><line x1="690" y1="345" x2="690" y2="262" class="net"/><line x1="690" y1="262" x2="700" y2="262" class="net"/>
+  <text x="726" y="251" class="netlbl">TOS bus (4)</text>
+  <text x="726" y="266" class="csub" text-anchor="start">→ ALU A · addr mux · panel LEDs</text>
+
+  <!-- bit-order note -->
+  <text x="520" y="476" text-anchor="middle" class="csub" fill="#0f6e56">QA = bit0 (bottom) … QD = bit3 (top)</text>
+
+  <!-- VCC/GND for 194 -->
+  <text x="424" y="500" class="pwrlbl">VCC 16 · GND 8</text>
+
+  <!-- ===================== '153 FILL MUX ===================== -->
+  <rect x="440" y="560" width="160" height="200" rx="6" class="chip-mux"/>
+  <text x="520" y="652" class="cname" fill="#3c3489">FILL MUX</text>
+  <text x="520" y="670" class="csub" fill="#3c3489">74x153 dual 4:1</text>
+
+  <!-- left pins 1..8 -->
+  <g class="stub">
+    <line x1="422" y1="578" x2="440" y2="578"/>
+    <line x1="422" y1="601" x2="440" y2="601"/>
+    <line x1="422" y1="624" x2="440" y2="624"/>
+    <line x1="422" y1="647" x2="440" y2="647"/>
+    <line x1="422" y1="670" x2="440" y2="670"/>
+    <line x1="422" y1="693" x2="440" y2="693"/>
+    <line x1="422" y1="716" x2="440" y2="716"/>
+    <line x1="422" y1="739" x2="440" y2="739"/>
+  </g>
+  <text x="444" y="574" class="pinlbl">/1E</text><text x="418" y="582" text-anchor="end" class="netlbl">GND</text>
+  <text x="444" y="597" class="pinlbl">S1</text><text x="418" y="605" text-anchor="end" class="ctllbl">IR L3</text>
+  <text x="444" y="620" class="pinlbl">1I3</text><text x="418" y="628" text-anchor="end" class="netlbl">QA</text>
+  <text x="444" y="643" class="pinlbl">1I2</text><text x="418" y="651" text-anchor="end" class="netlbl">QD</text>
+  <text x="444" y="666" class="pinlbl">1I1</text><text x="418" y="674" text-anchor="end" class="netlbl">GND</text>
+  <text x="444" y="689" class="pinlbl">1I0</text><text x="418" y="697" text-anchor="end" class="netlbl">GND</text>
+  <text x="444" y="712" class="pinlbl">1Y</text><text x="418" y="720" text-anchor="end" class="netlbl">→ FILL_R</text>
+  <text x="444" y="735" class="pinlbl">GND</text><text x="418" y="743" text-anchor="end" class="netlbl">GND</text>
+  <g class="pinnum"><text x="436" y="588" text-anchor="end">1</text><text x="436" y="611" text-anchor="end">2</text><text x="436" y="634" text-anchor="end">3</text><text x="436" y="657" text-anchor="end">4</text><text x="436" y="680" text-anchor="end">5</text><text x="436" y="703" text-anchor="end">6</text><text x="436" y="726" text-anchor="end">7</text><text x="436" y="749" text-anchor="end">8</text></g>
+
+  <!-- right pins 16..9 -->
+  <g class="stub">
+    <line x1="600" y1="578" x2="618" y2="578"/>
+    <line x1="600" y1="601" x2="618" y2="601"/>
+    <line x1="600" y1="624" x2="618" y2="624"/>
+    <line x1="600" y1="647" x2="618" y2="647"/>
+    <line x1="600" y1="670" x2="618" y2="670"/>
+    <line x1="600" y1="693" x2="618" y2="693"/>
+    <line x1="600" y1="716" x2="618" y2="716"/>
+    <line x1="600" y1="739" x2="618" y2="739"/>
+  </g>
+  <text x="596" y="574" text-anchor="end" class="pinlbl">VCC</text><text x="622" y="582" class="netlbl">VCC</text>
+  <text x="596" y="597" text-anchor="end" class="pinlbl">/2E</text><text x="622" y="605" class="netlbl">GND</text>
+  <text x="596" y="620" text-anchor="end" class="pinlbl">S0</text><text x="622" y="628" class="ctllbl">IR L2</text>
+  <text x="596" y="643" text-anchor="end" class="pinlbl">2I3</text><text x="622" y="651" class="netlbl">QD</text>
+  <text x="596" y="666" text-anchor="end" class="pinlbl">2I2</text><text x="622" y="674" class="netlbl">GND</text>
+  <text x="596" y="689" text-anchor="end" class="pinlbl">2I1</text><text x="622" y="697" class="netlbl">GND</text>
+  <text x="596" y="712" text-anchor="end" class="pinlbl">2I0</text><text x="622" y="720" class="netlbl">GND</text>
+  <text x="596" y="735" text-anchor="end" class="pinlbl">2Y</text><text x="622" y="743" class="netlbl">→ FILL_L</text>
+  <g class="pinnum"><text x="604" y="588">16</text><text x="604" y="611">15</text><text x="604" y="634">14</text><text x="604" y="657">13</text><text x="604" y="680">12</text><text x="604" y="703">11</text><text x="604" y="726">10</text><text x="604" y="749">9</text></g>
+
+  <!-- ===================== C-SOURCE PATH ===================== -->
+  <rect x="730" y="430" width="250" height="150" rx="6" class="blk"/>
+  <text x="855" y="458" class="cname">C-flag source</text>
+  <text x="855" y="475" class="csub">shift-out bit (dir-keyed) vs '181 Cn+4</text>
+  <g class="stub">
+    <line x1="712" y1="498" x2="730" y2="498"/>
+    <line x1="712" y1="522" x2="730" y2="522"/>
+    <line x1="712" y1="546" x2="730" y2="546"/>
+  </g>
+  <text x="708" y="501" text-anchor="end" class="netlbl">Q3 (top, L/ROL out)</text>
+  <text x="708" y="525" text-anchor="end" class="netlbl">Q0 (bottom, R out)</text>
+  <text x="708" y="549" text-anchor="end" class="netlbl">'181 Cn+4</text>
+  <line x1="780" y1="620" x2="780" y2="580" class="ctl" marker-end="url(#arr)"/>
+  <text x="752" y="638" class="ctllbl">C_SRC (GAL1)</text>
+  <line x1="980" y1="505" x2="1020" y2="505" class="net" marker-end="url(#arr)"/>
+  <text x="855" y="566" text-anchor="middle" class="csub">→ C flag flip-flop (latch en = C_WE, GAL3)</text>
+
+  <!-- ===================== TABLES ===================== -->
+  <!-- 194 mode table -->
+  <rect x="730" y="120" width="250" height="92" rx="5" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="742" y="138" class="tblh">'194 mode  (S1 S0 = TOS_M1 TOS_M0)</text>
+  <text x="742" y="156" class="tbl">0 0  hold        0 1  shift right</text>
+  <text x="742" y="172" class="tbl">1 0  shift left   1 1  parallel load</text>
+  <text x="742" y="194" class="csub" text-anchor="start">polarity provisional — per GAL1_ALU.pld</text>
+
+  <!-- fill mux table -->
+  <rect x="660" y="640" width="320" height="118" rx="5" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="672" y="658" class="tblh">Fill-mux select  (S1=IR L3, S0=IR L2)</text>
+  <text x="672" y="676" class="tbl">01  SHL/SHR → 0 (zero fill)</text>
+  <text x="672" y="692" class="tbl">10  ASR     → DSR=QD (sign)</text>
+  <text x="672" y="708" class="tbl">11  ROL     → DSL=QD ; ROR → DSR=QA (wrap)</text>
+  <text x="672" y="730" class="csub" text-anchor="start">FILL_R = '153 1Y → '194 DSR (pin 2)</text>
+  <text x="672" y="746" class="csub" text-anchor="start">FILL_L = '153 2Y → '194 DSL (pin 7)</text>
+
+  <!-- ===================== NOTES ===================== -->
+  <line x1="36" y1="788" x2="1004" y2="788" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="36" y="808" class="noteh">Notes</text>
+  <text x="36" y="826" class="note">• Core shift path ('194 + '153) shown at pin level; source mux, NOS '374 and C-source are functional blocks with control nets named.</text>
+  <text x="36" y="842" class="note">• '194 not yet modelled in TTLSim — pin numbers are standard 74x194 datasheet numbering; verify on add.</text>
+  <text x="36" y="858" class="note">• '153 input wiring per Blinky_ALU_Rev2 §4 (W=8 Q7/Q0 → mini QD/QA). Both /1E, /2E tied LOW (always enabled).</text>
+  <text x="36" y="874" class="note">• Verified TOS_SRC codes (GAL2): ALU 001, LIT 010, D-mem 011, IN 100, RTOS 101. NOS (SWAP) source code not annotated — unconfirmed.</text>
+  <text x="36" y="890" class="note">• Control: TOS_M1/M0, C_SRC ← GAL1 · TOS_SRC0–2, NOS_LD, NOS_SRC ← GAL2 · C_WE ← GAL3 · '153 selects = raw IR L3/L2.</text>
+</svg>

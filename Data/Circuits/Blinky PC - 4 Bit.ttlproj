@@ -258,7 +258,7 @@
         "partIdentifier": "GAL16V8",
         "family": null,
         "value": null,
-        "program": "\u0002\r\nUsed Program:   BlinkyJED\r\nName:           LDPC_WE\r\nDevice:         GAL16V8\r\n\r\n*QP20 \r\n*QF2194 \r\n*G0 \r\n*F0 \r\n*L00000 01110111011110111111111111111111\r\n*L00032 01110111101101111111111111111111\r\n*L00256 10111011011110111111111111111111\r\n*L02048 10000000010000100100110001001001\r\n*L02080 01001110010010110101100100101101\r\n*L02112 01000100001111111111111111111111\r\n*L02144 11111111111111111111111111111111\r\n*L02176 111111111111111110\r\n*C180C\r\n*\u00035531\n",
+        "program": "\u0002\r\nUsed Program:   BlinkyJED\r\nName:           GAL4_FLOW\r\nDevice:         GAL16V8\r\n\r\n*QP20 \r\n*QF2194 \r\n*G0 \r\n*F0 \r\n*L00000 01110111011110111111111111111111\r\n*L00032 01110111101101111111111111111111\r\n*L00064 10111011101101111111111111011111\r\n*L00096 01111011101101111111110111111111\r\n*L00128 10110111101101111111111111111101\r\n*L00256 10111011101110111011011110111011\r\n*L00512 01111011101110111011011110111011\r\n*L00544 01111011101110110111100110111011\r\n*L00768 01111011011110111111111111111111\r\n*L01024 10010111011110111111111111111111\r\n*L01280 10110111011110111111111111111111\r\n*L02048 11000100111111111111111111111111\r\n*L02080 11111111111111111111111111111111\r\n*L02112 11111111000000111111111111111111\r\n*L02144 11111111111111111111111111111111\r\n*L02176 111111111111111110\r\n*C38E3\r\n*\u000393F4\n",
         "propagationDelayNs": 15
       },
       {
@@ -731,7 +731,7 @@
           "x": 112,
           "y": -66
         },
-        "label": "PC Decode",
+        "label": "Flow",
         "rotation": 0,
         "switchClosed": null
       },
@@ -1286,20 +1286,6 @@
         "color": "Blue"
       },
       {
-        "id": "c36",
-        "a": {
-          "itemId": "gnd1",
-          "pinNumber": 0,
-          "external": false
-        },
-        "b": {
-          "itemId": "uU5",
-          "pinNumber": 2,
-          "external": false
-        },
-        "color": "Blue"
-      },
-      {
         "id": "c37",
         "a": {
           "itemId": "gnd1",
@@ -1323,20 +1309,6 @@
         "b": {
           "itemId": "uU5",
           "pinNumber": 15,
-          "external": false
-        },
-        "color": "Blue"
-      },
-      {
-        "id": "c40",
-        "a": {
-          "itemId": "gnd1",
-          "pinNumber": 0,
-          "external": false
-        },
-        "b": {
-          "itemId": "uU6",
-          "pinNumber": 2,
           "external": false
         },
         "color": "Blue"
@@ -3902,15 +3874,43 @@
           "external": false
         },
         "color": "Red"
+      },
+      {
+        "id": "b6a5fc44bc7648a49fa6323bb3f4b6f5",
+        "a": {
+          "itemId": "b7cbbf35ea1744df88154947e5df1c0c",
+          "pinNumber": 18,
+          "external": false
+        },
+        "b": {
+          "itemId": "uU5",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "7623bb5c5bfa4ac294e36971b2a9a2f4",
+        "a": {
+          "itemId": "uU5",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "uU6",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Yellow"
       }
     ],
     "wires": []
   },
   "view": {
-    "zoom": 0.7984839,
+    "zoom": 0.74350613,
     "pan": {
-      "x": 659,
-      "y": 517
+      "x": 507,
+      "y": 483
     }
   }
 }

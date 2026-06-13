@@ -1,0 +1,200 @@
+<svg viewBox="0 0 1060 880" xmlns="http://www.w3.org/2000/svg" font-family="'Anthropic Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      .title { font-size:20px; font-weight:700; fill:#1e293b; }
+      .subtitle { font-size:12px; font-weight:400; fill:#64748b; }
+      .chip-cnt { fill:#eef2f7; stroke:#334155; stroke-width:1.8; }
+      .chip-mem { fill:#fdeede; stroke:#b45309; stroke-width:2; }
+      .blk { fill:#f5f5f4; stroke:#57534e; stroke-width:1.4; stroke-dasharray:5 3; }
+      .cname { font-size:14px; font-weight:700; fill:#0f172a; text-anchor:middle; }
+      .csub { font-size:10.5px; font-weight:400; fill:#64748b; text-anchor:middle; }
+      .pinlbl { font-size:10.5px; fill:#334155; }
+      .pinnum { font-size:8.5px; font-style:italic; fill:#94a3b8; }
+      .net { stroke:#475569; stroke-width:1.4; fill:none; }
+      .netbus { stroke:#475569; stroke-width:3; fill:none; }
+      .ctl { stroke:#1d4ed8; stroke-width:1.4; fill:none; }
+      .stub { stroke:#64748b; stroke-width:1.1; }
+      .netlbl { font-size:10px; fill:#334155; }
+      .ctllbl { font-size:10px; fill:#1d4ed8; font-weight:600; }
+      .pwrlbl { font-size:9.5px; fill:#94a3b8; }
+      .note { font-size:10.5px; fill:#475569; }
+      .noteh { font-size:11px; fill:#1e293b; font-weight:700; }
+      .tbl { font-size:10px; fill:#334155; }
+      .tblh { font-size:10px; fill:#0f172a; font-weight:700; }
+    </style>
+  </defs>
+
+  <text x="36" y="40" class="title">Mini Blinky — Return-Stack Circuitry (W = 4)</text>
+  <text x="36" y="60" class="subtitle">RSP '191 pointer · 2114 SRAM (16 deep) · RTOS = SRAM read at the RSP-addressed cell · RET-data-in mux · derived /CS, /WE strobes</text>
+
+  <!-- GAL3 control tag -->
+  <rect x="36" y="92" width="210" height="46" rx="5" fill="#eef4ff" stroke="#1d4ed8" stroke-width="1"/>
+  <text x="141" y="111" class="tblh" text-anchor="middle" fill="#1d4ed8">GAL3_POINTERS  (16V8)</text>
+  <text x="141" y="127" class="tbl" text-anchor="middle" fill="#1d4ed8">RSP_EN p17 · RSP_UD p16 · RDIN_SEL p15</text>
+
+  <!-- ===================== RSP '191 ===================== -->
+  <rect x="80" y="180" width="150" height="252" rx="6" class="chip-cnt"/>
+  <text x="155" y="300" class="cname">RSP</text>
+  <text x="155" y="318" class="csub">74x191</text>
+  <text x="155" y="334" class="csub">up/down counter</text>
+
+  <!-- left pins 1..8 -->
+  <g class="stub">
+    <line x1="62" y1="202" x2="80" y2="202"/><line x1="62" y1="231" x2="80" y2="231"/>
+    <line x1="62" y1="260" x2="80" y2="260"/><line x1="62" y1="289" x2="80" y2="289"/>
+    <line x1="62" y1="318" x2="80" y2="318"/><line x1="62" y1="347" x2="80" y2="347"/>
+    <line x1="62" y1="376" x2="80" y2="376"/><line x1="62" y1="405" x2="80" y2="405"/>
+  </g>
+  <text x="84" y="198" class="pinlbl">D1(B)</text><text x="58" y="206" text-anchor="end" class="netlbl">GND</text>
+  <text x="84" y="227" class="pinlbl">Q1(QB)</text><text x="58" y="235" text-anchor="end" class="netlbl">R_ADDR1</text>
+  <text x="84" y="256" class="pinlbl">Q0(QA)</text><text x="58" y="264" text-anchor="end" class="netlbl">R_ADDR0</text>
+  <text x="84" y="285" class="pinlbl">/CTEN</text><text x="58" y="293" text-anchor="end" class="ctllbl">RSP_EN</text>
+  <text x="84" y="314" class="pinlbl">D//U</text><text x="58" y="322" text-anchor="end" class="ctllbl">RSP_UD</text>
+  <text x="84" y="343" class="pinlbl">Q2(QC)</text><text x="58" y="351" text-anchor="end" class="netlbl">R_ADDR2</text>
+  <text x="84" y="372" class="pinlbl">Q3(QD)</text><text x="58" y="380" text-anchor="end" class="netlbl">R_ADDR3</text>
+  <text x="84" y="401" class="pinlbl">GND</text><text x="58" y="409" text-anchor="end" class="netlbl">GND</text>
+  <g class="pinnum"><text x="76" y="212" text-anchor="end">1</text><text x="76" y="241" text-anchor="end">2</text><text x="76" y="270" text-anchor="end">3</text><text x="76" y="299" text-anchor="end">4</text><text x="76" y="328" text-anchor="end">5</text><text x="76" y="357" text-anchor="end">6</text><text x="76" y="386" text-anchor="end">7</text><text x="76" y="415" text-anchor="end">8</text></g>
+
+  <!-- right pins 16..9 -->
+  <g class="stub">
+    <line x1="230" y1="202" x2="248" y2="202"/><line x1="230" y1="231" x2="248" y2="231"/>
+    <line x1="230" y1="260" x2="248" y2="260"/><line x1="230" y1="289" x2="248" y2="289"/>
+    <line x1="230" y1="318" x2="248" y2="318"/><line x1="230" y1="347" x2="248" y2="347"/>
+    <line x1="230" y1="376" x2="248" y2="376"/><line x1="230" y1="405" x2="248" y2="405"/>
+  </g>
+  <text x="226" y="198" text-anchor="end" class="pinlbl">VCC</text><text x="252" y="206" class="netlbl">VCC</text>
+  <text x="226" y="227" text-anchor="end" class="pinlbl">D0(A)</text><text x="252" y="235" class="netlbl">GND</text>
+  <text x="226" y="256" text-anchor="end" class="pinlbl">CLK</text><text x="252" y="264" class="netlbl">CLK</text>
+  <text x="226" y="285" text-anchor="end" class="pinlbl">/RCO</text><text x="252" y="293" class="netlbl">NC</text>
+  <text x="226" y="314" text-anchor="end" class="pinlbl">MAX/MIN</text><text x="252" y="322" class="netlbl">NC</text>
+  <text x="226" y="343" text-anchor="end" class="pinlbl">/LOAD</text><text x="252" y="351" class="ctllbl">/RESET</text>
+  <text x="226" y="372" text-anchor="end" class="pinlbl">D2(C)</text><text x="252" y="380" class="netlbl">GND</text>
+  <text x="226" y="401" text-anchor="end" class="pinlbl">D3(D)</text><text x="252" y="409" class="netlbl">GND</text>
+  <g class="pinnum"><text x="234" y="212">16</text><text x="234" y="241">15</text><text x="234" y="270">14</text><text x="234" y="299">13</text><text x="234" y="328">12</text><text x="234" y="357">11</text><text x="234" y="386">10</text><text x="234" y="415">9</text></g>
+
+  <text x="155" y="356" class="csub">P-inputs = 0 → /LOAD resets RSP=0</text>
+  <text x="155" y="452" class="csub" text-anchor="middle">Q0–Q3 → RSP LEDs (4) &amp; R_ADDR0–3</text>
+
+  <!-- ===================== 2114 SRAM ===================== -->
+  <rect x="430" y="150" width="170" height="300" rx="6" class="chip-mem"/>
+  <text x="515" y="292" class="cname" fill="#b45309">Return Stack</text>
+  <text x="515" y="310" class="csub" fill="#b45309">2114 · 1K×4 SRAM</text>
+  <text x="515" y="326" class="csub" fill="#b45309">async, no /OE</text>
+
+  <!-- left pins 1..9 -->
+  <g class="stub">
+    <line x1="412" y1="172" x2="430" y2="172"/><line x1="412" y1="202" x2="430" y2="202"/>
+    <line x1="412" y1="232" x2="430" y2="232"/><line x1="412" y1="262" x2="430" y2="262"/>
+    <line x1="412" y1="292" x2="430" y2="292"/><line x1="412" y1="322" x2="430" y2="322"/>
+    <line x1="412" y1="352" x2="430" y2="352"/><line x1="412" y1="382" x2="430" y2="382"/>
+    <line x1="412" y1="412" x2="430" y2="412"/>
+  </g>
+  <text x="434" y="168" class="pinlbl">A6</text><text x="408" y="176" text-anchor="end" class="netlbl">GND</text>
+  <text x="434" y="198" class="pinlbl">A5</text><text x="408" y="206" text-anchor="end" class="netlbl">GND</text>
+  <text x="434" y="228" class="pinlbl">A4</text><text x="408" y="236" text-anchor="end" class="netlbl">GND</text>
+  <text x="434" y="258" class="pinlbl">A3</text><text x="408" y="266" text-anchor="end" class="netlbl">R_ADDR3</text>
+  <text x="434" y="288" class="pinlbl">A0</text><text x="408" y="296" text-anchor="end" class="netlbl">R_ADDR0</text>
+  <text x="434" y="318" class="pinlbl">A1</text><text x="408" y="326" text-anchor="end" class="netlbl">R_ADDR1</text>
+  <text x="434" y="348" class="pinlbl">A2</text><text x="408" y="356" text-anchor="end" class="netlbl">R_ADDR2</text>
+  <text x="434" y="378" class="pinlbl">/CS</text><text x="408" y="386" text-anchor="end" class="ctllbl">RSP_EN</text>
+  <text x="434" y="408" class="pinlbl">GND</text><text x="408" y="416" text-anchor="end" class="netlbl">GND</text>
+  <g class="pinnum"><text x="426" y="182" text-anchor="end">1</text><text x="426" y="212" text-anchor="end">2</text><text x="426" y="242" text-anchor="end">3</text><text x="426" y="272" text-anchor="end">4</text><text x="426" y="302" text-anchor="end">5</text><text x="426" y="332" text-anchor="end">6</text><text x="426" y="362" text-anchor="end">7</text><text x="426" y="392" text-anchor="end">8</text><text x="426" y="422" text-anchor="end">9</text></g>
+
+  <!-- right pins 18..10 -->
+  <g class="stub">
+    <line x1="600" y1="172" x2="618" y2="172"/><line x1="600" y1="202" x2="618" y2="202"/>
+    <line x1="600" y1="232" x2="618" y2="232"/><line x1="600" y1="262" x2="618" y2="262"/>
+    <line x1="600" y1="292" x2="660" y2="292"/><line x1="600" y1="322" x2="660" y2="322"/>
+    <line x1="600" y1="352" x2="660" y2="352"/><line x1="600" y1="382" x2="660" y2="382"/>
+    <line x1="600" y1="412" x2="618" y2="412"/>
+  </g>
+  <text x="596" y="168" text-anchor="end" class="pinlbl">VCC</text><text x="622" y="176" class="netlbl">VCC</text>
+  <text x="596" y="198" text-anchor="end" class="pinlbl">A7</text><text x="622" y="206" class="netlbl">GND</text>
+  <text x="596" y="228" text-anchor="end" class="pinlbl">A8</text><text x="622" y="236" class="netlbl">GND</text>
+  <text x="596" y="258" text-anchor="end" class="pinlbl">A9</text><text x="622" y="266" class="netlbl">GND</text>
+  <text x="596" y="288" text-anchor="end" class="pinlbl">I/O1</text>
+  <text x="596" y="318" text-anchor="end" class="pinlbl">I/O2</text>
+  <text x="596" y="348" text-anchor="end" class="pinlbl">I/O3</text>
+  <text x="596" y="378" text-anchor="end" class="pinlbl">I/O4</text>
+  <text x="596" y="408" text-anchor="end" class="pinlbl">/WE</text><text x="622" y="416" class="ctllbl">R_WE</text>
+  <g class="pinnum"><text x="604" y="182">18</text><text x="604" y="212">17</text><text x="604" y="242">16</text><text x="604" y="272">15</text><text x="604" y="302">14</text><text x="604" y="332">13</text><text x="604" y="362">12</text><text x="604" y="392">11</text><text x="604" y="422">10</text></g>
+
+  <!-- ===================== RTOS / data I/O bus ===================== -->
+  <line x1="660" y1="292" x2="660" y2="382" class="netbus"/>
+  <line x1="660" y1="337" x2="708" y2="337" class="netbus" marker-end="url(#arr)"/>
+  <text x="664" y="286" class="netlbl">RTOS bus (4) — I/O1..4</text>
+  <text x="664" y="400" class="netlbl" fill="#b45309">↔ R_DIN (mux drives on write)</text>
+
+  <!-- readers -->
+  <line x1="708" y1="337" x2="730" y2="200" class="net"/>
+  <rect x="730" y="172" width="290" height="60" rx="6" class="blk"/>
+  <text x="875" y="196" class="cname">NEXTPC mux (PCSEL)</text>
+  <text x="875" y="214" class="csub">+1 / LIT / RTOS → PC · RET selects RTOS</text>
+
+  <line x1="708" y1="337" x2="730" y2="290" class="net" marker-end="url(#arr)"/>
+  <rect x="730" y="262" width="290" height="56" rx="6" class="blk"/>
+  <text x="875" y="284" class="cname">→ TOS source mux</text>
+  <text x="875" y="302" class="csub">R&gt;: TOS_SRC = 101 (RTOS → TOS)</text>
+
+  <line x1="708" y1="337" x2="730" y2="372" class="net" marker-end="url(#arr)"/>
+  <rect x="730" y="346" width="290" height="50" rx="6" fill="#fff7ed" stroke="#fb923c" stroke-width="1.2"/>
+  <text x="875" y="376" class="cname" fill="#b45309">RTOS front-panel LEDs (4)</text>
+
+  <!-- ===================== RET DATA-IN MUX ===================== -->
+  <rect x="80" y="500" width="220" height="120" rx="6" class="blk"/>
+  <text x="190" y="528" class="cname">RET data-in mux</text>
+  <text x="190" y="545" class="csub">4-bit 2:1 (one '157)</text>
+  <g class="stub">
+    <line x1="62" y1="566" x2="80" y2="566"/>
+    <line x1="62" y1="596" x2="80" y2="596"/>
+  </g>
+  <text x="58" y="569" text-anchor="end" class="pinlbl">PC+1 (CALL)</text>
+  <text x="58" y="599" text-anchor="end" class="pinlbl">TOS (&gt;R)</text>
+  <text x="302" y="569" class="csub" text-anchor="start" font-size="9">·sel 1</text>
+  <text x="302" y="599" class="csub" text-anchor="start" font-size="9">·sel 0</text>
+  <line x1="190" y1="660" x2="190" y2="620" class="ctl" marker-end="url(#arr)"/>
+  <text x="190" y="676" text-anchor="middle" class="ctllbl">RDIN_SEL (GAL3 p15)</text>
+  <line x1="300" y1="566" x2="352" y2="566" class="net" marker-end="url(#arr)"/>
+  <text x="306" y="558" class="netlbl" fill="#b45309">R_DIN</text>
+
+  <!-- ===================== /WE NAND ===================== -->
+  <path d="M430 540 L462 540 A26 26 0 0 1 462 592 L430 592 Z" fill="#eef2f7" stroke="#334155" stroke-width="1.6"/>
+  <circle cx="494" cy="566" r="5" fill="#eef2f7" stroke="#334155" stroke-width="1.6"/>
+  <text x="456" y="570" text-anchor="middle" class="csub" font-size="9">&amp;</text>
+  <g class="stub">
+    <line x1="408" y1="552" x2="430" y2="552"/>
+    <line x1="408" y1="580" x2="430" y2="580"/>
+  </g>
+  <text x="404" y="555" text-anchor="end" class="ctllbl">RSP_UD</text>
+  <text x="404" y="583" text-anchor="end" class="ctllbl">WRPH</text>
+  <line x1="499" y1="566" x2="540" y2="566" class="net" marker-end="url(#arr)"/>
+  <text x="504" y="558" class="netlbl">R_WE</text>
+  <text x="466" y="618" text-anchor="middle" class="csub">'00 — the one glue gate per RAM</text>
+
+  <!-- ===================== TABLES ===================== -->
+  <rect x="730" y="430" width="290" height="106" rx="5" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="742" y="448" class="tblh">RSP '191 motion  (RSP_EN asserts, /CTEN low)</text>
+  <text x="742" y="466" class="tbl">&gt;R   +1 (up)        CALL  +1 (up)</text>
+  <text x="742" y="482" class="tbl">RET  −1 (down)      R&gt;    −1 (down)</text>
+  <text x="742" y="498" class="tbl">everything else  →  hold (RSP_EN deasserted)</text>
+  <text x="742" y="520" class="csub" text-anchor="start">RSP_UD HIGH = up · RDIN_SEL: 1=PC+1, 0=TOS</text>
+
+  <rect x="730" y="548" width="290" height="100" rx="5" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="742" y="566" class="tblh">Strobe derivation (per GAL3 header)</text>
+  <text x="742" y="584" class="tbl">/CS = RSP_EN  (wired direct, both active-LOW)</text>
+  <text x="742" y="600" class="tbl">/WE = NAND(RSP_UD, WRPH)  — low only on a</text>
+  <text x="742" y="616" class="tbl">       push inside the write-phase window</text>
+  <text x="742" y="636" class="csub" text-anchor="start">read: /WE high on RET/R> → 2114 drives RTOS bus</text>
+
+  <!-- ===================== NOTES ===================== -->
+  <line x1="36" y1="700" x2="1024" y2="700" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="36" y="720" class="noteh">Notes</text>
+  <text x="36" y="738" class="note">• W = 4: there is no discrete RTOS latch in the core chip complement — RTOS is the 2114 read output at the RSP-addressed cell (read implicit on RET / R&gt;).</text>
+  <text x="36" y="754" class="note">• 2114 pinout per TTLSim Ic2114 (no /OE; drives when /CS low &amp; /WE high). 16-deep stack uses A0–A3 only; A4–A9 tied low.</text>
+  <text x="36" y="770" class="note">• '191 not modelled in sim — pin numbers are standard 74x191 datasheet numbering. RSP_UD→D//U polarity provisional: the '169→'191 direction inversion is absorbed per the master doc / GAL3 comment.</text>
+  <text x="36" y="786" class="note">• RET data-in mux = 4-bit 2:1 (one '157's worth, not separately enumerated in the W=4 list); it must be disabled on reads so the 2114 owns the bus.</text>
+  <text x="36" y="802" class="note">• Control: RSP_EN p17 (active-LOW → /CTEN &amp; /CS), RSP_UD p16, RDIN_SEL p15 ← GAL3_POINTERS.pld. CLK_RUN / DSP_* share GAL3 but are off-diagram.</text>
+</svg>
