@@ -1,7 +1,7 @@
 Name      GAL3_POINTERS ;
 PartNo    BLINKY-GAL-03 ;
-Date      2026-06-10 ;
-Revision  01 ;
+Date      2026-06-13 ;
+Revision  02 ;
 Designer  Michael ;
 Company   Blinky ;
 Assembly  Mini-Blinky ;
@@ -9,13 +9,31 @@ Location  U_DEC3 ;
 Device    G16V8 ;
 
 // -----------------------------------------------------------------
-// GAL 3 of 4 -- stack pointers + return data-in mux + clock gate.
-// Outputs: DSP_EN, DSP_UD, RSP_EN, RSP_UD, RDIN_SEL, CLK_RUN
-// (6/8 macrocells -- two spare, the headroom reserved for the
-// immediate-ALU family).
+// GAL 3 of 4 -- stack pointers + return data-in mux + clock gate
+//               + C flag write enable.          *** ALU REV 2 ***
+// Outputs: DSP_EN, DSP_UD, RSP_EN, RSP_UD, RDIN_SEL, CLK_RUN, C_WE
+// (7/8 macrocells -- one spare remains, on pin 12).
 //
-// Sub-op nibble encoding (RATIFIED, sequential) -- see GAL1_ALU.pld.
-// Every sub-op term carries !L3 so nibbles 8..F decode to idle.
+// Sub-op nibble encoding (RE-RATIFIED, rev 2) -- see GAL1_ALU.pld:
+//   ALU: ADD=0 ADC=1 SUB=2 XOR=3 NOT=4 TST=5 SHL=6 SHR=7
+//        AND=8 CMP=9 ASR=B OR=C ROL=E ROR=F ; A, D reserved (idle)
+//
+// REV 2 CHANGES ON THIS DEVICE:
+//   * C_WE is NEW, on pin 13 (one of the two rev-1 spares). It is
+//     the C flip-flop's latch enable: asserted on exactly the ops
+//     that define C -- ADD ADC SUB (carry/borrow), SHL SHR ASR ROL
+//     ROR (shifted-out bit), CMP (borrow of TOS - NOS). The logic
+//     ops XOR NOT TST AND OR no longer touch C: the rev-1 gotcha
+//     "logic ops latch C = 1 from the held-high Cn+4" is retired.
+//     Board change: the C flip-flop's enable moves from the old
+//     FLAG_WE net (now NZ_WE, GAL 2 pin 14, N and Z only) to this
+//     pin. NOTE for the JEDTester rig: GAL 3 pin 13 is now an
+//     OUTPUT -- the Mega must read it, not drive it low.
+//   * DSP_EN gains the AND=8 / OR=C binary-pop cube (L3 & !L1 &
+//     !L0, which excludes CMP, the shifts and the reserved
+//     nibbles). CMP is deliberately absent everywhere on this
+//     device: it is the non-destructive compare -- flags only, no
+//     stack motion, no RAM access, delta-DSP 0.
 //
 // DSP_EN / RSP_EN are active LOW, asserted = the '169 counts this
 // cycle ('169 /ENP is active low). This polarity choice is what
@@ -36,8 +54,11 @@ Device    G16V8 ;
 // (CALL). Don't-care except on those two writes.
 //
 // CLK_RUN: HIGH = clock runs. Goes low only on HALT (SYS nibble 1),
-// freezing the machine with the front panel settled. Reserved
-// nibble 9 (HALT + L3) does NOT halt -- the !L3 guard holds.
+// freezing the machine with the front panel settled. SYS nibble 9
+// (HALT + L3) does NOT halt -- the !L3 guard holds.
+//
+// All equations brute-force verified against the rev-2 control
+// tables over all 256 IR values. Worst output: DSP_EN, 6 terms.
 // -----------------------------------------------------------------
 
 /* Inputs */
@@ -57,22 +78,27 @@ PIN 17 = RSP_EN ;    /* active LOW: return-stack '169 count enable  */
 PIN 16 = RSP_UD ;    /* HIGH = up, LOW = down                       */
 PIN 15 = RDIN_SEL ;  /* return data-in: 0 = TOS (>R), 1 = PC+1      */
 PIN 14 = CLK_RUN ;   /* HIGH = run, LOW = stopped (HALT)            */
+PIN 13 = C_WE ;      /* C flag latch enable (rev 2, was spare)      */
 
 /* Data-stack pointer moves on:
      push: DUP(3), R>(7)  -> SYS & L1 & L0   (HALT=1 excluded by L1)
            PUSH, LOAD     -> opcode 001x
      pop:  DROP(4), >R(6) -> SYS & L2 & !L0  (SWAP=5, R>=7 excluded)
-           ADD..XOR       -> ALU & !L2       (the binary group)
+           ADD..XOR       -> ALU & !L3 & !L2 (the rev-1 binary group)
+           AND, OR (8, C) -> ALU & L3 & !L1 & !L0  (rev 2; excludes
+                             CMP=9, ASR=B, ROL=E, ROR=F, reserved)
            STORE, OUT     -> opcode 4 or 6   (!OP0 excludes IN=5)
-   Holds on everything else: SWAP, NOP/HALT/RET, NOT/TST/SHL/SHR,
-   IN, all control flow, reserved opcodes and nibbles. */
-!DSP_EN = (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & L1 & L0)
-        # (!OP3 & !OP2 & OP1)
-        # (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & L2 & !L0)
-        # (!OP3 & !OP2 & !OP1 & OP0 & !L3 & !L2)
-        # (!OP3 & OP2 & !OP0) ;
+   Holds on everything else: SWAP, NOP/HALT/RET, NOT/TST/CMP, all
+   five shifts, IN, all control flow, reserved opcodes and nibbles. */
+!DSP_EN = (!OP3 & !OP2 & !OP1 & !OP0 & !L3 &  L1 &  L0)
+        # (!OP3 & !OP2 &  OP1)
+        # (!OP3 & !OP2 & !OP1 & !OP0 & !L3 &  L2 & !L0)
+        # (!OP3 & !OP2 & !OP1 &  OP0 & !L3 & !L2)
+        # (!OP3 & !OP2 & !OP1 &  OP0 &  L3 & !L1 & !L0)
+        # (!OP3 &  OP2 & !OP0) ;
 
-/* Up on the push set only; don't-care while DSP_EN is deasserted. */
+/* Up on the push set only; don't-care while DSP_EN is deasserted.
+   AND and OR are pops: no cube fires, the pin sits low -- correct. */
 DSP_UD = (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & L1 & L0)
        # (!OP3 & !OP2 & OP1) ;
 
@@ -93,3 +119,16 @@ RDIN_SEL = OP3 & !OP2 & OP1 & OP0 ;
 
 /* Clock gate: stop only on HALT (SYS nibble 0001). */
 !CLK_RUN = !OP3 & !OP2 & !OP1 & !OP0 & !L3 & !L2 & !L1 & L0 ;
+
+/* C flag latch enable (rev 2). Asserted on the nine C-writing ops:
+     ADD ADC (nib 0,1)    -> term 1  (!L3 & !L2 & !L1)
+     SUB SHL (nib 2,6)    -> term 2  (!L3 & L1 & !L0)
+     SHL SHR ROL ROR
+            (nib 6,7,E,F) -> term 3  (L2 & L1)
+     CMP ASR (nib 9,B)    -> term 4  (L3 & !L2 & L0)
+   Low on XOR NOT TST AND OR (C now survives logic ops), on the
+   reserved nibbles A and D, and outside the ALU class. */
+C_WE = (!OP3 & !OP2 & !OP1 & OP0 & !L3 & !L2 & !L1)
+     # (!OP3 & !OP2 & !OP1 & OP0 & !L3 &  L1 & !L0)
+     # (!OP3 & !OP2 & !OP1 & OP0 &  L2 &  L1)
+     # (!OP3 & !OP2 & !OP1 & OP0 &  L3 & !L2 &  L0) ;

@@ -1,7 +1,7 @@
 Name      GAL4_FLOW ;
 PartNo    BLINKY-GAL-04 ;
-Date      2026-06-11 ;
-Revision  02 ;
+Date      2026-06-13 ;
+Revision  03 ;
 Designer  Michael ;
 Company   Blinky ;
 Assembly  Mini-Blinky ;
@@ -15,16 +15,27 @@ Device    G16V8 ;
 // 12 and 13, which the 16V8 allows as inputs in simple mode (pins
 // 15/16 cannot be inputs, so the outputs sit on 14..19).
 //
+// REVISION 03 (*** ALU REV 2 ***): ALU_CN gains the CMP cube --
+// CMP (ALU nibble 9) is the non-destructive compare, '181 select
+// 0110 arithmetic with Cn = L, exactly SUB's carry treatment with
+// the result discarded (TOS holds, NZ_WE + C_WE latch the flags of
+// TOS - NOS). Everything else on this device is unchanged from
+// revision 02. The exact pin fit is also why the V flag stays
+// parked: a signed branch would need V as a seventh flag-path
+// input here, and there is no pin for it on a 16V8.
+//
 // REVISION 02: pinout harmonized across the four decode GALs --
 // equations unchanged from revision 01. WRPH moves to pin 1 (the
 // same pin GAL 2 uses), and the flags take 11/12/13 in flag order:
 //   pin 1  = WRPH   on every device that uses it (GAL 2, GAL 4)
 //   pins 2..9 = IR  on all four devices (OP0..3, L0..3)
 //   pin 11 = N,  pin 12 = Z,  pin 13 = C   (this device only;
-//   12/13 are outputs on GAL 1/2 and spares on GAL 3)
+//   12/13 are outputs on GAL 1/2; on GAL 3, 13 is C_WE as of ALU
+//   rev 2 and 12 is the last spare)
 //
-// Sub-op nibble encoding (RATIFIED, sequential) -- see GAL1_ALU.pld.
-// Sub-op terms carry !L3 so nibbles 8..F decode to idle.
+// Sub-op nibble encoding (RE-RATIFIED, rev 2) -- see GAL1_ALU.pld:
+//   ALU: ADD=0 ADC=1 SUB=2 XOR=3 NOT=4 TST=5 SHL=6 SHR=7
+//        AND=8 CMP=9 ASR=B OR=C ROL=E ROR=F ; A, D reserved (idle)
 //
 // PCSEL code map (the '153 pair on NEXTPC; PCSEL1 = S1, PCSEL0 = S0,
 // shared by both packages -- wire the mux inputs to match):
@@ -32,14 +43,18 @@ Device    G16V8 ;
 //
 // ALU_CN drives the '181 Cn pin directly (active-high data table:
 // Cn = H no inject, L = +1 inject):
-//   ADD -> H,  SUB -> L,  ADC -> the COMPLEMENT of the C flag.
-// Don't-care off the arithmetic ops (logic mode pins Cn+4 high and
-// FLAG_WE gates every latch), so no further qualification needed.
+//   ADD -> H,  SUB -> L,  CMP -> L,  ADC -> COMPLEMENT of the C flag.
+// Don't-care off those four ops (logic mode pins Cn+4 high, the
+// shifts source C from the '194, and C_WE/NZ_WE gate every latch),
+// so no further qualification is needed.
 //
 // IO_RD / IO_WR are active LOW. IO_WR is phase-gated by WRPH like
 // every write strobe in the machine; IO_RD is a level read and
 // needs no gate. IOADDR_SEL drives the '157 I/O address mux:
 //   0 = TOS (stack-form IN, the default), 1 = IR literal (OUT #port).
+//
+// All equations brute-force verified against the rev-2 control
+// tables over all 256 IR values x both C states.
 // -----------------------------------------------------------------
 
 /* Inputs */
@@ -76,11 +91,14 @@ PCSEL0 = (!OP3 & OP2 & OP1 & OP0)              /* BRANCH 0111  */
 PCSEL1 = !OP3 & !OP2 & !OP1 & !OP0 & !L3 & !L2 & L1 & !L0 ;
 
 /* '181 carry-in, active LOW assertion:
-     SUB (nib 010): force Cn = L (the +1 that turns A-B-1 into A-B)
-     ADC (nib 001): Cn = L exactly when the C flag is set
+     SUB (nib 0010): force Cn = L (the +1 that turns A-B-1 into A-B)
+     ADC (nib 0001): Cn = L exactly when the C flag is set
+     CMP (nib 1001): force Cn = L -- SUB's carry treatment, result
+                     discarded, flags of TOS - NOS latched (rev 2)
    ADD and everything else leave Cn = H. */
 !ALU_CN = (!OP3 & !OP2 & !OP1 & OP0 & !L3 & !L2 & L1 & !L0)
-        # (!OP3 & !OP2 & !OP1 & OP0 & !L3 & !L2 & !L1 & L0 & C) ;
+        # (!OP3 & !OP2 & !OP1 & OP0 & !L3 & !L2 & !L1 & L0 & C)
+        # (!OP3 & !OP2 & !OP1 & OP0 & L3 & !L2 & !L1 & L0) ;
 
 /* Input-port read strobe: stack-form IN (port = TOS). */
 !IO_RD = !OP3 & OP2 & !OP1 & OP0 ;

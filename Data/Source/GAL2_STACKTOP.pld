@@ -1,7 +1,7 @@
 Name      GAL2_STACKTOP ;
 PartNo    BLINKY-GAL-02 ;
-Date      2026-06-10 ;
-Revision  01 ;
+Date      2026-06-13 ;
+Revision  02 ;
 Designer  Michael ;
 Company   Blinky ;
 Assembly  Mini-Blinky ;
@@ -9,14 +9,37 @@ Location  U_DEC2 ;
 Device    G16V8 ;
 
 // -----------------------------------------------------------------
-// GAL 2 of 4 -- stack-top sources + flags + D-memory RAM.
-// Outputs: TOS_SRC0..2, NOS_LD, NOS_SRC, FLAG_WE, DMEM_CS, DMEM_WE
+// GAL 2 of 4 -- stack-top sources + N/Z flags + D-memory RAM.
+//                                              *** ALU REV 2 ***
+// Outputs: TOS_SRC0..2, NOS_LD, NOS_SRC, NZ_WE, DMEM_CS, DMEM_WE
 // (8/8 macrocells).
 //
-// Sub-op nibble encoding (RATIFIED, sequential) -- see GAL1_ALU.pld.
-// Every sub-op term carries !L3 so nibbles 8..F decode to idle.
+// Sub-op nibble encoding (RE-RATIFIED, rev 2) -- see GAL1_ALU.pld:
+//   ALU: ADD=0 ADC=1 SUB=2 XOR=3 NOT=4 TST=5 SHL=6 SHR=7
+//        AND=8 CMP=9 ASR=B OR=C ROL=E ROR=F ; A, D reserved (idle)
 //
-// TOS_SRC mux code map (chosen here; wire the TOS source mux to
+// REV 2 CHANGES ON THIS DEVICE:
+//   * FLAG_WE (pin 14) is renamed NZ_WE and now enables ONLY the
+//     N and Z latches. The C latch has its own enable, C_WE, on
+//     GAL 3 pin 13. This is the per-flag write mask that retires
+//     the rev-1 gotcha "XOR/NOT/TST latch C = 1 from the '181's
+//     logic-mode Cn+4": those ops (and AND/OR) now leave C alone.
+//     Board change: the C flip-flop's enable wire moves from the
+//     old FLAG_WE net to the new C_WE net; N and Z stay on this
+//     pin's net.
+//   * NZ_WE asserts on every LIVE ALU nibble -- 0..9, B, C, E, F --
+//     and stays low on the reserved nibbles A and D, which keeps
+//     them truly inert. The rev-1 single !L3 guard becomes four
+//     cubes.
+//   * NOS_LD gains the AND=8 / OR=C binary-pop cube. CMP (9) holds
+//     NOS (non-destructive compare); the shifts and reserved
+//     nibbles hold as before.
+//   * TOS_SRC is untouched: its ALU cube already covered the whole
+//     ALU class, with hold/shift nibbles don't-care -- CMP and the
+//     new shifts fall into the same don't-care, and AND/OR want the
+//     same ALU(001) code the cube already emits.
+//
+// TOS_SRC mux code map (unchanged; wire the TOS source mux to
 // match). NOS = 000 is the default so the three NOS-loading ops
 // (DROP, SWAP, >R) and STORE/OUT need no product terms at all:
 //   000 NOS   001 ALU   010 LIT   011 DMEM   100 INP   101 RTOS
@@ -33,6 +56,9 @@ Device    G16V8 ;
 // before the IR changes on the cycle-ending edge (master doc,
 // "Write timing"). WRPH is the same clock-phase window used by the
 // external NAND gates that derive the two stack-RAM /WE strobes.
+//
+// All equations brute-force verified against the rev-2 control
+// tables over all 256 IR values. Worst output: NOS_LD, 6 terms.
 // -----------------------------------------------------------------
 
 /* Inputs */
@@ -52,14 +78,14 @@ PIN 18 = TOS_SRC1 ;
 PIN 17 = TOS_SRC2 ;
 PIN 16 = NOS_LD ;
 PIN 15 = NOS_SRC ;
-PIN 14 = FLAG_WE ;
+PIN 14 = NZ_WE ;     /* was FLAG_WE: now N and Z latches only */
 PIN 13 = DMEM_CS ;   /* active LOW: 2114 /CS */
 PIN 12 = DMEM_WE ;   /* active LOW: 2114 /WE, phase-gated */
 
-/* TOS_SRC0: ALU(001) on any ALU op -- TST/SHL/SHR hold or shift the
-   '194 so the source is don't-care, letting opcodes 1 and 3 merge
-   into one cube (!OP3 & !OP2 & OP0 = ALU # LOAD). DMEM(011) needs
-   bit0 via LOAD; RTOS(101) needs it via R>. */
+/* TOS_SRC0: ALU(001) on any ALU op -- TST/CMP/shifts hold or shift
+   the '194 so the source is don't-care, letting opcodes 1 and 3
+   merge into one cube (!OP3 & !OP2 & OP0 = ALU # LOAD). DMEM(011)
+   needs bit0 via LOAD; RTOS(101) needs it via R>. */
 TOS_SRC0 = (!OP3 & !OP2 & OP0)
          # (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & L2 & L1 & L0) ;   /* R> */
 
@@ -71,25 +97,35 @@ TOS_SRC2 = (!OP3 & OP2 & !OP1 & OP0)
          # (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & L2 & L1 & L0) ;   /* R> */
 
 /* NOS latch enable. Loads on:
-     SYS DUP..R> (nib 3..7)  -> terms 1,2 (L2 cube + L1&L0 cube)
-     ALU ADD..XOR (nib 0..3) -> term 3   (the binary/pop group)
-     PUSH, LOAD (opcode 001x)-> term 4
-     STORE, OUT (4 and 6)    -> term 5   (!OP0 excludes IN=5)
-   Holds on NOP/HALT/RET, NOT/TST/SHL/SHR, IN, all control flow. */
-NOS_LD = (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & L2)
-       # (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & L1 & L0)
+     SYS DUP..R> (nib 3..7)    -> terms 1,2 (L2 cube + L1&L0 cube)
+     ALU ADD..XOR (nib 0..3)   -> term 3   (the rev-1 binary group)
+     ALU AND, OR (nib 8, C)    -> term 4   (rev 2: L3 & !L1 & !L0,
+                                  which excludes CMP=9, ASR=B,
+                                  ROL=E, ROR=F and reserved A, D)
+     PUSH, LOAD (opcode 001x)  -> term 5
+     STORE, OUT (4 and 6)      -> term 6   (!OP0 excludes IN=5)
+   Holds on NOP/HALT/RET, NOT/TST/CMP, all five shifts, IN, all
+   control flow, reserved opcodes and nibbles. */
+NOS_LD = (!OP3 & !OP2 & !OP1 & !OP0 & !L3 &  L2)
+       # (!OP3 & !OP2 & !OP1 & !OP0 & !L3 &  L1 &  L0)
        # (!OP3 & !OP2 & !OP1 &  OP0 & !L3 & !L2)
+       # (!OP3 & !OP2 & !OP1 &  OP0 &  L3 & !L1 & !L0)
        # (!OP3 & !OP2 &  OP1)
        # (!OP3 &  OP2 & !OP0) ;
 
 /* NOS source: 1 = old TOS (SYS odd nibbles + PUSH/LOAD),
-   0 = data-stack read (every pop). Don't-care when NOS_LD = 0. */
+   0 = data-stack read (every pop -- AND and OR included by
+   default). Don't-care when NOS_LD = 0. */
 NOS_SRC = (!OP3 & !OP2 & !OP1 & !OP0 & !L3 & L0)
         # (!OP3 & !OP2 & OP1) ;
 
-/* Flags latch only on the ALU class. This is the guard that makes
-   reserved ALU nibbles 8..F truly inert. */
-FLAG_WE = !OP3 & !OP2 & !OP1 & OP0 & !L3 ;
+/* N/Z latch enable: every live ALU nibble; low on reserved A and D
+   so they stay inert, and low everywhere outside the ALU class.
+   (Rev 1: one cube, !L3. Rev 2: the live set straddles L3.) */
+NZ_WE = (!OP3 & !OP2 & !OP1 & OP0 & !L3)               /* 0..7      */
+      # (!OP3 & !OP2 & !OP1 & OP0 &  L3 & !L2 & !L1)   /* AND CMP   */
+      # (!OP3 & !OP2 & !OP1 & OP0 &  L3 &  L1 &  L0)   /* ASR ROR   */
+      # (!OP3 & !OP2 & !OP1 & OP0 &  L3 &  L2 & !L0) ; /* OR  ROL   */
 
 /* D-memory 2114: selected on LOAD and STORE only. */
 !DMEM_CS = (!OP3 & !OP2 & OP1 & OP0)            /* LOAD  */

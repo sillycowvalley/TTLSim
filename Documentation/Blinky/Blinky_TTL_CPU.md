@@ -78,7 +78,7 @@ Cost: one extra EEPROM chip on the I-memory side. Worth it.
 
 | Family | Examples | Notes |
 |---|---|---|
-| ALU | ADD, ADC, SUB, SBC, AND, OR, XOR, NOT, SHL, SHR, NEG, TST | TOS,NOS → TOS. **ALU ops set N, Z, C flags as a side effect.** ADC/SBC read C for multi-byte arithmetic. TST sets flags without writing TOS — it replaces the old two-operand CMP (see below). |
+| ALU | ADD, ADC, SUB, AND, OR, XOR, NOT, SHL, SHR, ASR, ROL, ROR, TST, CMP | TOS,NOS → TOS. **N/Z set by every ALU op; C only by arithmetic, shifts and CMP — logic ops preserve C** (per-flag masking, ALU rev 2). ADC reads C for multi-byte arithmetic. TST (one-operand) and CMP (two-operand, non-destructive `( a b -- a b )`) set flags without writing TOS; the old *popping* CMP stays dropped (see below). SBC and NEG remain unallocated (the two reserved ALU nibbles could host them later). |
 | Stack | DUP, DROP, SWAP, OVER, NIP, TUCK | Data stack manipulation. Does not affect flags. ROT is a macro (`>R SWAP R> SWAP`), never an opcode — not single-cycle on a single-port stack. |
 | Return stack | >R, R>, R@ | Move between stacks. Does not affect flags. |
 | Memory (stack form) | FETCH | Address from TOS (Forth-style), `( addr -- value )`, ΔDSP = 0. Does not affect flags. Stack-form STORE is dropped — see below. |
@@ -106,14 +106,14 @@ Not registers in the traditional sense — these are the architecturally visible
 |---|---|---|
 | PC | 8 bits | Program counter (I-memory address) |
 | IR | 16 bits | Instruction register (current instruction) |
-| TOS | 8 bits | Top of data stack (2× '194 shift register: parallel-loads on writes, shifts on SHL/SHR) |
+| TOS | 8 bits | Top of data stack (2× '194 shift register: parallel-loads on writes, shifts on SHL/SHR/ASR/ROL/ROR) |
 | NOS | 8 bits | Next on data stack (in a '374 latch) |
 | DSP | 8 bits | Data stack pointer |
 | RTOS | 8 bits | Top of return stack |
 | RSP | 8 bits | Return stack pointer |
 | N flag | 1 bit | Negative — bit 7 of the most recent ALU result. Used by BMI/BPL for signed comparisons. |
 | Z flag | 1 bit | Zero — set when the most recent ALU result was all zero. Used by BEQ/BNE. |
-| C flag | 1 bit | Carry — carry-out of bit 7 from the most recent ALU op. Used by ADC/SBC for multi-byte arithmetic, and by BCC/BCS for unsigned comparisons. |
+| C flag | 1 bit | Carry — carry/borrow out of bit 7 (arithmetic, CMP) or the bit shifted out (shifts/rotates). Written only by those ops — logic ops preserve it (per-flag masking, ALU rev 2). Used by ADC for multi-byte arithmetic, and by BCC/BCS for unsigned comparisons. |
 
 TOS and NOS in dedicated latches (not in stack memory) is non-negotiable — it lets ALU ops complete in one cycle without a memory access.
 
@@ -165,8 +165,8 @@ By instruction class:
 | ΔDSP | Instructions |
 |---|---|
 | +1 | `PUSH #imm`, `DUP`, `OVER`, `LOAD #addr`, `IN #port`, `R>` |
-| 0 | `NOT`, `NEG`, `SHL`, `SHR`, `TST`, `SWAP`, `NOP`, branches, stack-form `IN`, stack-form `FETCH` |
-| −1 | `ADD`, `ADC`, `SUB`, `SBC`, `AND`, `OR`, `XOR`, `DROP`, `NIP`, `>R`, `OUT #port`, `STORE #addr` |
+| 0 | `NOT`, `SHL`, `SHR`, `ASR`, `ROL`, `ROR`, `TST`, `CMP`, `SWAP`, `NOP`, branches, stack-form `IN`, stack-form `FETCH` |
+| −1 | `ADD`, `ADC`, `SUB`, `AND`, `OR`, `XOR`, `DROP`, `NIP`, `>R`, `OUT #port`, `STORE #addr` |
 
 #### Why writes are immediate-form only
 
@@ -285,7 +285,7 @@ Core CPU and memory subsystem:
 | Block | Chips |
 |---|---|
 | ALU (2× '181 cascaded for 8 bits — HC primary, LS backup behind an HCT fence; plus an inverter on the Cn+4 → Cn ripple wire: '04, or HCT04 in the LS build — see Flags note and Sourcing notes) | 2–3 |
-| TOS (2× '194 shift register) + NOS latch ('374) | 3 |
+| TOS (2× '194 shift register) + serial-fill mux ('153, ALU rev 2) + NOS latch ('374) | 4 |
 | Data stack memory (256-deep SRAM) | 1 |
 | Data stack pointer ('191 up/down counter, cascaded ×2 for 8 bits) | 2 |
 | Return stack memory + pointer (1× SRAM + 2× '191) | 3 |
@@ -298,7 +298,7 @@ Core CPU and memory subsystem:
 | D-memory (1× SRAM) | 1 |
 | I/O address decoder ('138s) | 2 |
 | Clock / reset / single-step | 2–3 |
-| **Core total** | **~29–34** |
+| **Core total** | **~30–35** |
 
 Optional I/O peripherals (typical v1 build):
 
@@ -381,11 +381,19 @@ An Uno has only ~18 usable pins, which is not enough for the parallel data paths
 
 ## Open Decisions
 
-- **Shifts — resolved: single-bit on the '194 TOS.** The TOS register *is* a '194 bidirectional shift register (2× at W = 8): SHL/SHR are TOS shift modes, costing zero extra chips, with C sourced from the bit shifted out rather than the carry chain. Rotates (ROL/ROR) are intentionally absent on both machines — the shift unit is logical single-bit. (If rotate-through-carry is ever added, it lands on both machines together: one GAL change plus a serial-fill mux feeding the '194.)
-- **Flags.** Three flags: N (negative, bit 7 of result), Z (zero, all bits of result are zero), C (carry-out of bit 7). All three are written by every ALU op and only by ALU ops — stack, memory, I/O, and control instructions leave the flags alone, so a `TST` or arithmetic op can be separated from its consuming branch by any number of non-ALU instructions. Cost: ~1.5 packages (one '74 dual D flip-flop holds two flags, half of a second holds the third) plus three front-panel LEDs. The Z flag rides for free on the '181's A=B output (wire-ANDed across the two cascaded ALU chips); N is bit 7 of the result; C is the Cn+4 output of the high '181 latched directly (active-HIGH when carry occurred, matching the BCS-when-carry-set semantics).
+- **Shifts — resolved: single-bit on the '194 TOS, five forms (ALU rev 2).** The TOS
+  register *is* a '194 bidirectional shift register (2× at W = 8): SHL/SHR (logical, zero
+  fill), ASR (sign fill) and plain rotates ROL/ROR (wrap the falling-out bit) are all TOS
+  shift modes. The fill source is one '153 dual 4:1 mux on the '194 serial pins, selected by
+  raw IR literal bits L3/L2 — don't-care except while shifting, so it costs no decode. C is
+  sourced from the bit shifted out (old top bit leftward, old bottom bit rightward) rather
+  than the carry chain. Multi-bit shifts remain loops — the instruction word has no field
+  for a shift amount. Rotate-through-carry, if ever wanted, is a one-wire change on the
+  '153 inputs (C instead of the wrap bit).
+- **Flags.** Three flags: N (negative, bit 7 of result), Z (zero, all bits of result are zero), C (carry-out of bit 7). The flags are written **only** by the ALU class — stack, memory, I/O, and control instructions leave them alone, so a `TST`, `CMP` or arithmetic op can be separated from its consuming branch by any number of non-ALU instructions. Within the ALU class the write is **per-flag (ALU rev 2):** N/Z latch on every ALU op (`NZ_WE`); C latches only on the ops that define it — ADD/ADC/SUB/CMP (carry/borrow) and the five shifts (the shifted-out bit) — via its own enable, `C_WE`. The logic ops (XOR, NOT, TST, AND, OR) preserve C, so a carry or shifted-out bit survives intervening masking ops until its consuming branch. (This retires the old "logic ops latch C = 1 from the held-high logic-mode Cn+4" caveat.) Cost: ~1.5 packages (one '74 dual D flip-flop holds two flags, half of a second holds the third) plus three front-panel LEDs; the C flip-flop's enable simply sits on the `C_WE` net instead of sharing `NZ_WE`. The Z flag rides for free on the '181's A=B output (wire-ANDed across the two cascaded ALU chips); N is bit 7 of the result; C is the Cn+4 output of the high '181 latched directly (active-HIGH when carry occurred, matching the BCS-when-carry-set semantics).
 
 **Cn/Cn+4 polarity gotcha for the ripple wire.** In the active-high-operand convention this design uses, the '181's Cn *input* takes HIGH to mean "no carry-in" and LOW to mean "+1 carry-in" — the opposite polarity from the Cn+4 *output*, which is HIGH when carry occurred. Direct-wiring Cn+4 of the low '181 to Cn of the high '181 therefore inverts the carry meaning during ripple. A single inverter slot on the cascade wire fixes it — '04 in the all-HC build, **HCT04 when the LS-181 backup is fitted**, since the inverter's input hangs directly on an LS output. In the LS build the flag taps (Cn+4, A=B, result bit 7) are likewise LS-driven nodes and need HCT receivers per the fence rule in Sourcing notes. (For subtract, the '181 internally complements B; the same inverter still gives the correct ripple — the *flag* polarity is what differs between add and subtract conventions, but the C flag is read off the high '181's Cn+4 directly, so software just learns that "carry set after SUB = no borrow", same as the 6502.)
-- **Conditional execution granularity?** Six flag-based conditional branches (BEQ, BNE, BCC, BCS, BMI, BPL) plus unconditional BRANCH, in 6502 style. Comparisons are done by TST ('181 F = A, flags only, write suppressed — replaces the old two-operand CMP, whose clean `( a b -- )` form is a forbidden −2) or fall out as side effects of plain arithmetic (SUB sets the flags of TOS − NOS). The branch-decode logic is a single 8-way mux (six conditions plus always plus the unconditional case) — one '151 or '153, or folded into the flag-reading decode GAL.
+- **Conditional execution granularity?** Six flag-based conditional branches (BEQ, BNE, BCC, BCS, BMI, BPL) plus unconditional BRANCH, in 6502 style. Comparisons are done by TST ('181 F = A, flags only, write suppressed) or by the non-destructive CMP `( a b -- a b )` — SUB's '181 row with the write suppressed and no stack motion, ΔDSP 0, legal where the old *popping* CMP's `( a b -- )` was a forbidden −2 — or fall out as side effects of plain arithmetic (SUB sets the flags of TOS − NOS). The branch-decode logic is a single 8-way mux (six conditions plus always plus the unconditional case) — one '151 or '153, or folded into the flag-reading decode GAL.
 - **Program loading.** During development, an Arduino Mega serves as both boot loader and debug controller — see the Development Rig section above. For a stand-alone deployment, two 8-bit EEPROMs in parallel (low byte + high byte of the 16-bit I-bus) replace the Mega + SRAM, with programs burned off-board and chips swapped via sockets.
 
 ## Summary

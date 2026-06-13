@@ -122,7 +122,7 @@ execution.
 |---|---|---|
 | PC | W | program counter (I-memory address) |
 | IR | 8 (mini) | instruction register |
-| TOS | W | top of data stack ('194: parallel-loads on writes, shifts on SHL/SHR) |
+| TOS | W | top of data stack ('194: parallel-loads on writes, shifts on SHL/SHR/ASR/ROL/ROR) |
 | NOS | W | next on data stack |
 | DSP | W | data-stack pointer |
 | RTOS | W | top of return stack (return address) |
@@ -133,13 +133,17 @@ execution.
 
 Stack, memory, I/O and control instructions leave the flags untouched, so a `TST` or
 arithmetic op can be separated from its consuming branch by any number of non-ALU
-instructions.
+instructions. **Within the ALU class the write is per-flag (ALU rev 2):** N and Z latch on
+every live ALU sub-op (`NZ_WE`); C latches only on the ops that define it — ADD/ADC/SUB/CMP
+(carry/borrow) and the five shifts (the shifted-out bit) — via its own enable, `C_WE`. The
+logic ops (XOR, NOT, TST, AND, OR) **preserve C**, so a carry or shifted-out bit survives
+intervening masking ops until its consuming branch.
 
 | Flag | Definition | Used by |
 |---|---|---|
 | N | bit `(W−1)` of the result (top bit) | `BMI` |
 | Z | result is all-zero | `BEQ` |
-| C | arith: carry / borrow out of the top bit. shift: the bit shifted out (old top on `SHL`, old bottom on `SHR`) | `BCS`, `ADC`, `SUB` |
+| C | arith/CMP: carry / borrow out of the top bit. shift: the bit shifted out (old top on `SHL`/`ROL`, old bottom on `SHR`/`ASR`/`ROR`). Held by logic ops. | `BCS`, `ADC`, `SUB` |
 
 N = bit `(W−1)` scales `W = 4` → `W = 8` with no logic change.
 
@@ -247,49 +251,71 @@ ops" therefore means "fewer GAL rows," nothing structural.
 The '181 columns below are the decoded control the GAL emits (from the sim's `Hc181`
 active-HIGH table), not the operand nibble:
 
-| Sub-op | ΔDSP | Stack effect | '181 S3–S0 | Mode | Cn | Mechanism it uniquely exercises |
-|---|---|---|---|---|---|---|
-| `ADD` | −1 | `( a b -- a+b )` | 1001 | arith | H | binary arithmetic, full carry chain, all three flags |
-| `ADC` | −1 | `( a b -- a+b+C )` | 1001 | arith | /C | carry-*in* mux (Cn ← C) — the path narrow `W` uses to build wide `W` |
-| `SUB` | −1 | `( a b -- b−a )` | 0110 | arith | L | TOS−NOS; cascade borrow polarity |
-| `XOR` | −1 | `( a b -- a⊕b )` | 0110 | logic | — | logic mode M = 1 — the *other* mode; bit-toggle, the blinky workhorse |
-| `NOT` | 0 | `( a -- ¬a )` | 0000 | logic | — | unary path: one operand, no NOS read |
-| `TST` | 0 | `( a -- a )` | 1111 | logic | — | flags-only test of TOS (N/Z); non-destructive, write suppressed |
-| `SHL` | 0 | `( a -- a«1 )` | — | — | — | '194 left shift — a datapath the '181 never drives; C ← old top bit |
-| `SHR` | 0 | `( a -- a»1 )` | — | — | — | the *only* op toward the LSB; '194 right shift; C ← old bottom bit |
+| Sub-op | Nib | ΔDSP | Stack effect | '181 S3–S0 | Mode | Cn | N/Z | C |
+|---|---|---|---|---|---|---|---|---|
+| `ADD` | 0 | −1 | `( a b -- a+b )` | 1001 | arith | H | ✓ | ✓ Cn+4 |
+| `ADC` | 1 | −1 | `( a b -- a+b+C )` | 1001 | arith | /C | ✓ | ✓ Cn+4 |
+| `SUB` | 2 | −1 | `( a b -- b−a )` | 0110 | arith | L | ✓ | ✓ Cn+4 |
+| `XOR` | 3 | −1 | `( a b -- a⊕b )` | 0110 | logic | — | ✓ | — held |
+| `NOT` | 4 | 0 | `( a -- ¬a )` | 0000 | logic | — | ✓ | — held |
+| `TST` | 5 | 0 | `( a -- a )` | 1111 | logic | — | ✓ | — held |
+| `SHL` | 6 | 0 | `( a -- a«1 )` | — | — | — | ✓ | ✓ old top bit |
+| `SHR` | 7 | 0 | `( a -- a»1 )` | — | — | — | ✓ | ✓ old bottom bit |
+| `AND` | 8 | −1 | `( a b -- a∧b )` | 1011 | logic | — | ✓ | — held |
+| `CMP` | 9 | 0 | `( a b -- a b )` | 0110 | arith | L | ✓ | ✓ Cn+4 |
+| `ASR` | B | 0 | `( a -- a»1 )` sign | — | — | — | ✓ | ✓ old bottom bit |
+| `OR` | C | −1 | `( a b -- a∨b )` | 1110 | logic | — | ✓ | — held |
+| `ROL` | E | 0 | `( a -- rol a )` | — | — | — | ✓ | ✓ old top bit |
+| `ROR` | F | 0 | `( a -- ror a )` | — | — | — | ✓ | ✓ old bottom bit |
 
-**Direction:** A = TOS, B = NOS, so `SUB` = TOS − NOS (C = 1 means no borrow, i.e.
-TOS ≥ NOS). **`TST`** runs '181 select 1111 (F = A = TOS), latches flags, and holds TOS — it
-is the row that proves `FLAG_WE` is independent of any TOS write. **Gotcha:** in logic mode
-the '181 holds Cn+4 high, so `XOR`, `NOT` and `TST` latch C = 1 unconditionally — they are
-N/Z tests only. **'181 code sharing:** `SUB`/`XOR` share 0110 (mode differs); `ADD`/`ADC`
-share 1001 (Cn differs); the GAL spends one fewer select bit because of this overlap.
+Nibbles A and D are reserved and decode to the idle vector (`NZ_WE`, `C_WE`, `DSP_EN`,
+`NOS_LD` and the '194 mode all exclude them explicitly).
 
-`OR`, `AND`, and the remaining '181 functions light no new path and are omitted from the
-mini; they cost only GAL rows to add later and do not affect equivalence. `SHL`/`SHR` are
-kept for the opposite reason — they are the *only* ops that light the '194 shift-register
-TOS, so without them the mini fails to exercise the full machine's shifter at all. Rotates
-(`ROL`/`ROR`) are absent on **both** machines: the shift unit is logical single-bit only.
+**Direction:** A = TOS, B = NOS, so `SUB` and `CMP` compute TOS − NOS (C = 1 means no
+borrow, i.e. TOS ≥ NOS). **Per-flag write masking (rev 2):** N/Z latch on every live sub-op
+(`NZ_WE`); C latches only where the C column shows ✓ (`C_WE`). The logic ops XOR, NOT, TST,
+AND, OR therefore *hold* C — the rev-1 "logic ops latch C = 1 from the held-high logic-mode
+Cn+4" gotcha is retired. **`TST`** runs '181 select 1111 (F = A = TOS), latches N/Z, and
+holds TOS — the row that proves the flag write is independent of any TOS write. **`CMP`** is
+the non-destructive compare `( a b -- a b )`: SUB's '181 row and carry-in with the result
+discarded — TOS and NOS hold, no stack access, ΔDSP 0. The old *popping* CMP `( a b -- )`
+remains forbidden (−2). **Shifts:** SHL/SHR are logical (zero fill); ASR fills with the old
+top bit (sign); ROL/ROR are plain rotates wrapping the falling-out bit. The fill source is a
+'153 dual 4:1 mux on the '194 serial pins, selected by **raw IR literal bits L3/L2** — the
+'194 ignores its serial inputs except while shifting, so the select needs no decode or
+gating and costs no GAL output. Rotate-through-carry, if ever wanted, is a one-wire change
+on that mux ('153 input C instead of Q0/Q7). **'181 code sharing:** `SUB`/`XOR`/`CMP` share
+0110 (mode and write-mask differ); `ADD`/`ADC` share 1001 (Cn differs).
 
-## Proposed Full Byte Encoding
+The rev-2 nibble placements (AND=8, CMP=9, ASR=B, OR=C, ROL=E, ROR=F) are **not aesthetic**:
+the serial-fill select on raw L3/L2 pins ASR into 10xx and the rotates into 11xx, and the
+chosen slots are what keep the '194-mode equations (`TOS_M1`/`TOS_M0`, already at the 16V8's
+8-term ceiling in rev 1) on 7 product terms — see `Blinky_ALU_Rev2.md` and `GAL1_ALU.pld`.
+`SHL`/`SHR` remain the proof ops for the '194 shifter; the five shift forms and AND/OR/CMP
+exist on **both** machines.
 
-**PROPOSED — not yet ratified.** The top-level opcodes (0–11) are fixed; the per-sub-op
-nibble codes are an abstract GAL-decode mapping left open by design. The assignment below is
-sequential in doc order, leaving nibbles 8–F free in both families (room for the omitted ALU
-ops `OR`/`AND`/… and future SYS ops). Renumber freely to minimise GAL product terms — nothing
-architectural depends on these values. **Pin them before generating GAL fuse maps or
-finalising the assembler.**
+## Full Byte Encoding (RATIFIED — ALU rev 2)
+
+The top-level opcodes (0–11) are fixed. The sub-op nibbles below are **ratified**: the four
+decode GAL fuse maps (`GAL1_ALU.pld` rev 02 … `GAL4_FLOW.pld` rev 03) are generated from
+them, and the rev-2 ALU placements are load-bearing (serial-fill select on raw L3/L2; '194
+mode equations at 7 of 8 terms — see `Blinky_ALU_Rev2.md`). SYS nibbles 8–F and ALU nibbles
+A and D remain reserved and decode to the idle vector. Renumbering now means regenerating
+and re-burning all four GALs and retargeting the assembler.
 
 | Instr | Byte | Instr | Byte | Instr | Byte | Instr | Byte |
 |---|---|---|---|---|---|---|---|
-| **SYS** NOP | 0x00 | **ALU** ADD | 0x10 | PUSH #n | 0x2n | BRANCH a | 0x7a |
-| HALT | 0x01 | ADC | 0x11 | LOAD #a | 0x3a | BEQ a | 0x8a |
-| RET | 0x02 | SUB | 0x12 | STORE #a | 0x4a | BCS a | 0x9a |
-| DUP | 0x03 | XOR | 0x13 | IN | 0x50\* | BMI a | 0xAa |
-| DROP | 0x04 | NOT | 0x14 | OUT #p | 0x6p | CALL a | 0xBa |
-| SWAP | 0x05 | TST | 0x15 | | | reserved | 0xC_–0xF_ |
-| >R | 0x06 | SHL | 0x16 | | | | |
-| R> | 0x07 | SHR | 0x17 | | | | |
+| **SYS** NOP | 0x00 | **ALU** ADD | 0x10 | AND | 0x18 | PUSH #n | 0x2n |
+| HALT | 0x01 | ADC | 0x11 | CMP | 0x19 | LOAD #a | 0x3a |
+| RET | 0x02 | SUB | 0x12 | ASR | 0x1B | STORE #a | 0x4a |
+| DUP | 0x03 | XOR | 0x13 | OR | 0x1C | IN | 0x50\* |
+| DROP | 0x04 | NOT | 0x14 | ROL | 0x1E | OUT #p | 0x6p |
+| SWAP | 0x05 | TST | 0x15 | ROR | 0x1F | BRANCH a | 0x7a |
+| >R | 0x06 | SHL | 0x16 | ALU rsvd | 0x1A, 0x1D | BEQ a | 0x8a |
+| R> | 0x07 | SHR | 0x17 | | | BCS a | 0x9a |
+| | | | | | | BMI a | 0xAa |
+| | | | | | | CALL a | 0xBa |
+| | | | | | | reserved | 0xC_–0xF_ |
 
 n = 4-bit immediate, a = 4-bit address, p = 4-bit port.
 \* `IN`'s literal is don't-care (port from TOS); 0x50 is the canonical form.
@@ -300,11 +326,12 @@ Instruction byte = `(opcode << 4) | literal`.
 The subset covers *mechanisms*, not operations — each instruction earns its slot only by
 being the sole thing that lights a given datapath or control path:
 
-- **ALU:** both '181 modes (arithmetic via ADD/SUB, logic via XOR), full carry chain,
+- **ALU:** both '181 modes (arithmetic via ADD/SUB, logic via XOR/AND/OR), full carry chain,
   carry-*in* mux (ADC), subtract/borrow polarity (SUB), unary path (NOT), flag-only with
-  suppressed write (TST).
+  suppressed write (TST one-operand, CMP two-operand non-destructive).
 - **Shifter:** the '194 bidirectional shift-register TOS — a datapath the '181 never
-  drives — in both directions (`SHL` left, `SHR` right), with C sourced from the bit shifted
+  drives — in both directions and all three fill modes (`SHL`/`SHR` zero fill, `ASR` sign
+  fill, `ROL`/`ROR` wrap via the '153 serial-fill mux), with C sourced from the bit shifted
   out rather than from the carry chain.
 - **Stack:** push from literal (PUSH) and from TOS latch (DUP), pop with stack-mem read
   (DROP), TOS↔NOS cross (SWAP), inter-stack path (>R / R>, which also synthesizes ROT).
@@ -335,11 +362,12 @@ models land.
 | `ALU_S3..S0` | 4-bit | '181 function select |
 | `ALU_M` | arith / logic | '181 mode (M=L arith, M=H logic) |
 | `ALU_Cn` | H / L / /C | carry-in pin: H = no inject, L = +1 inject, /C = inject the C flag |
-| `TOS_MODE` | hold / load / shL / shR | '194 mode (load = parallel-load from `TOS_SRC`) |
+| `TOS_MODE` | hold / load / shL / shR | '194 mode (load = parallel-load from `TOS_SRC`; shL on SHL/ROL, shR on SHR/ASR/ROR; serial fill from the '153 mux, selected by raw IR L3/L2) |
 | `TOS_SRC` | LIT / DMEM / INP / RTOS / ALU / NOS | parallel-load source (only when `TOS_MODE = load`) |
 | `NOS` | hold / ←TOS / ←stkR | NOS latch: hold, load old TOS, or load data-stack read |
-| `FLAG_WE` | ✓ / – | latch N/Z/C this cycle (ALU class only) |
-| `C_SRC` | 181 / shf | C flip-flop source: '181 Cn+4, or the bit shifted out of the '194 |
+| `NZ_WE` | ✓ / – | latch N and Z this cycle (every live ALU sub-op; reserved nibbles and non-ALU ops deassert it) |
+| `C_WE` | ✓ / – | latch C this cycle (ADD ADC SUB CMP SHL SHR ASR ROL ROR only — logic ops hold C) |
+| `C_SRC` | 181 / shf | C flip-flop source: '181 Cn+4 (arith/CMP), or the bit shifted out of the '194 (all five shifts) |
 
 **Group B — sequencing / memory / I/O**
 
@@ -355,39 +383,45 @@ models land.
 | `CLK` | run / **STOP** | clock-stop (HALT) |
 
 **Idle / default vector** (what an instruction that "does nothing" asserts): `ALU` –,
-`TOS` hold, `NOS` hold, `FLAG_WE` –, `PCSEL` +1, `DSP` 0, `DSTK` –, `RSP` 0, `RSTK` –,
+`TOS` hold, `NOS` hold, `NZ_WE` –, `C_WE` –, `PCSEL` +1, `DSP` 0, `DSTK` –, `RSP` 0, `RSTK` –,
 `DMEM` –, `IO` –, `CLK` run. A blank/`–` cell below means this default.
 
 ## Table A — per-instruction Group A (ALU / shifter / stack-top / flags)
 
-| Instr | ALU_S | ALU_M | ALU_Cn | TOS_MODE | TOS_SRC | NOS | FLAG_WE | C_SRC |
-|---|---|---|---|---|---|---|---|---|
-| **SYS** NOP | – | – | – | hold | – | hold | – | – |
-| HALT | – | – | – | hold | – | hold | – | – |
-| RET | – | – | – | hold | – | hold | – | – |
-| DUP | – | – | – | hold | – | ←TOS | – | – |
-| DROP | – | – | – | load | NOS | ←stkR | – | – |
-| SWAP | – | – | – | load | NOS | ←TOS | – | – |
-| >R | – | – | – | load | NOS | ←stkR | – | – |
-| R> | – | – | – | load | RTOS | ←TOS | – | – |
-| **ALU** ADD | 1001 | arith | H | load | ALU | ←stkR | ✓ | 181 |
-| ADC | 1001 | arith | /C | load | ALU | ←stkR | ✓ | 181 |
-| SUB | 0110 | arith | L | load | ALU | ←stkR | ✓ | 181 |
-| XOR | 0110 | logic | – | load | ALU | ←stkR | ✓ | 181 |
-| NOT | 0000 | logic | – | load | ALU | hold | ✓ | 181 |
-| TST | 1111 | logic | – | hold | – | hold | ✓ | 181 |
-| SHL | – | – | – | shL | – | hold | ✓ | shf |
-| SHR | – | – | – | shR | – | hold | ✓ | shf |
-| PUSH #imm | – | – | – | load | LIT | ←TOS | – | – |
-| LOAD #addr | – | – | – | load | DMEM | ←TOS | – | – |
-| STORE #addr | – | – | – | load | NOS | ←stkR | – | – |
-| IN | – | – | – | load | INP | hold | – | – |
-| OUT #port | – | – | – | load | NOS | ←stkR | – | – |
-| BRANCH addr | – | – | – | hold | – | hold | – | – |
-| BEQ addr | – | – | – | hold | – | hold | – | – |
-| BCS addr | – | – | – | hold | – | hold | – | – |
-| BMI addr | – | – | – | hold | – | hold | – | – |
-| CALL addr | – | – | – | hold | – | hold | – | – |
+| Instr | ALU_S | ALU_M | ALU_Cn | TOS_MODE | TOS_SRC | NOS | NZ_WE | C_WE | C_SRC |
+|---|---|---|---|---|---|---|---|---|---|
+| **SYS** NOP | – | – | – | hold | – | hold | – | – | – |
+| HALT | – | – | – | hold | – | hold | – | – | – |
+| RET | – | – | – | hold | – | hold | – | – | – |
+| DUP | – | – | – | hold | – | ←TOS | – | – | – |
+| DROP | – | – | – | load | NOS | ←stkR | – | – | – |
+| SWAP | – | – | – | load | NOS | ←TOS | – | – | – |
+| >R | – | – | – | load | NOS | ←stkR | – | – | – |
+| R> | – | – | – | load | RTOS | ←TOS | – | – | – |
+| **ALU** ADD | 1001 | arith | H | load | ALU | ←stkR | ✓ | ✓ | 181 |
+| ADC | 1001 | arith | /C | load | ALU | ←stkR | ✓ | ✓ | 181 |
+| SUB | 0110 | arith | L | load | ALU | ←stkR | ✓ | ✓ | 181 |
+| XOR | 0110 | logic | – | load | ALU | ←stkR | ✓ | – | – |
+| NOT | 0000 | logic | – | load | ALU | hold | ✓ | – | – |
+| TST | 1111 | logic | – | hold | – | hold | ✓ | – | – |
+| SHL | – | – | – | shL | – | hold | ✓ | ✓ | shf |
+| SHR | – | – | – | shR | – | hold | ✓ | ✓ | shf |
+| AND | 1011 | logic | – | load | ALU | ←stkR | ✓ | – | – |
+| CMP | 0110 | arith | L | hold | – | hold | ✓ | ✓ | 181 |
+| ASR | – | – | – | shR | – | hold | ✓ | ✓ | shf |
+| OR | 1110 | logic | – | load | ALU | ←stkR | ✓ | – | – |
+| ROL | – | – | – | shL | – | hold | ✓ | ✓ | shf |
+| ROR | – | – | – | shR | – | hold | ✓ | ✓ | shf |
+| PUSH #imm | – | – | – | load | LIT | ←TOS | – | – | – |
+| LOAD #addr | – | – | – | load | DMEM | ←TOS | – | – | – |
+| STORE #addr | – | – | – | load | NOS | ←stkR | – | – | – |
+| IN | – | – | – | load | INP | hold | – | – | – |
+| OUT #port | – | – | – | load | NOS | ←stkR | – | – | – |
+| BRANCH addr | – | – | – | hold | – | hold | – | – | – |
+| BEQ addr | – | – | – | hold | – | hold | – | – | – |
+| BCS addr | – | – | – | hold | – | hold | – | – | – |
+| BMI addr | – | – | – | hold | – | hold | – | – | – |
+| CALL addr | – | – | – | hold | – | hold | – | – | – |
 
 ## Table B — per-instruction Group B (sequencing / memory / I/O)
 
@@ -409,6 +443,12 @@ models land.
 | TST | +1 | 0 | – | 0 | – | – | – | run |
 | SHL | +1 | 0 | – | 0 | – | – | – | run |
 | SHR | +1 | 0 | – | 0 | – | – | – | run |
+| AND | +1 | −1 | rd | 0 | – | – | – | run |
+| CMP | +1 | 0 | – | 0 | – | – | – | run |
+| ASR | +1 | 0 | – | 0 | – | – | – | run |
+| OR | +1 | −1 | rd | 0 | – | – | – | run |
+| ROL | +1 | 0 | – | 0 | – | – | – | run |
+| ROR | +1 | 0 | – | 0 | – | – | – | run |
 | PUSH #imm | +1 | +1 | wr | 0 | – | – | – | run |
 | LOAD #addr | +1 | +1 | wr | 0 | – | rd@LIT | – | run |
 | STORE #addr | +1 | −1 | rd | 0 | – | wr@LIT | – | run |
@@ -458,22 +498,25 @@ remain decoded GAL outputs.
 
 Deriving the four stack strobes from the pointer lines removes `DSTK_CS/WE` and `RSTK_CS/WE`
 from the decode, shrinking the control vector **32 → 28** and dissolving the pressure that
-previously forced a 20V8. With `DMEM_CS/WE` moved onto the stack-top device, the flag-reading
-device carries only 6 outputs against its 11 inputs (17 pins ≤ 18), so it fits a 16V8. The
-whole decode is **four 16V8s**, two with spare macrocells — a single part type, which matches
-the 16V8 stock.
+previously forced a 20V8 (ALU rev 2's per-flag split adds `C_WE` back, landing at 29 decoded
+lines + 4 derived strobes). With `DMEM_CS/WE` moved onto the stack-top device, the
+flag-reading device carries only 6 outputs against its 11 inputs (17 pins ≤ 18), so it fits
+a 16V8. The whole decode is **four 16V8s** — a single part type, which matches the 16V8
+stock.
 
 | GAL | Part | Outputs | Inputs |
 |---|---|---|---|
 | **1 — ALU / shift select** | 16V8 | `ALU_S0..S3`, `ALU_M`, `C_SRC`, `TOS_M0`, `TOS_M1` (8) | opcode + sub-op = 8 |
-| **2 — stack-top + D-mem RAM** | 16V8 | `TOS_SRC0..2`, `NOS_LD`, `NOS_SRC`, `FLAG_WE`, `DMEM_CS`, `DMEM_WE` (8) | opcode + sub-op = 8 |
-| **3 — pointers + return data mux + clk** | 16V8 | `DSP_CNT`, `DSP_UD`, `RSP_CNT`, `RSP_UD`, `RDIN_SEL`, `CLK_RUN` (6) | opcode + sub-op = 8 |
+| **2 — stack-top + D-mem RAM** | 16V8 | `TOS_SRC0..2`, `NOS_LD`, `NOS_SRC`, `NZ_WE`, `DMEM_CS`, `DMEM_WE` (8) | opcode + sub-op = 8 |
+| **3 — pointers + ret data mux + clk + C enable** | 16V8 | `DSP_CNT`, `DSP_UD`, `RSP_CNT`, `RSP_UD`, `RDIN_SEL`, `CLK_RUN`, `C_WE` (7) | opcode + sub-op = 8 |
 | **4 — control flow + I/O + Cn** | 16V8 | `PCSEL0`, `PCSEL1`, `ALU_Cn`, `IO_RD`, `IO_WR`, `IOADDR_SEL` (6) | opcode + sub-op + **N, Z, C** = 11 |
 
 The stack /CS, /WE strobes are generated externally from GAL 3's `DSP` / `RSP` outputs
-(inverter + clock-phase gate per RAM, in the existing glue budget). GAL 3 and GAL 4 each keep
-two spare macrocells — headroom for an immediate-ALU family later (§9 open decisions) without
-adding a device.
+(inverter + clock-phase gate per RAM, in the existing glue budget). GAL 3 keeps one spare
+macrocell (pin 12) and GAL 4 keeps two — the remaining headroom for an immediate-ALU family
+later (§9 open decisions) without adding a device. The '194 serial-fill mux consumes **no**
+GAL output: its '153 selects are raw IR literal bits L3/L2, don't-care except while
+shifting.
 
 Devices: GAL16V8 (18 signal pins on the 20-pin package) throughout. The governing constraint
 is unchanged: **all three flag inputs (N, Z, C) belong on one device** — only `PCSEL` (reads
@@ -488,8 +531,11 @@ once. Every other output decodes from instruction bits alone (opcode + sub-op ni
 Fetch spine on the left (NEXTPC → PC → I-MEM → IR); the IR splits into the opcode (to the
 decode GALs) and the 4-bit literal (to TOS, D-mem and the I/O address mux). Execute cluster:
 TOS ('194) and NOS feed the '181; the result returns to TOS, flags latch to the '74 pair and
-feed back into `PCSEL` / `ALU_Cn`. The two single-port stacks sit on the bottom row with
-their '191 pointers; RTOS feeds both the NEXTPC mux (RET) and TOS (R>).
+feed back into `PCSEL` / `ALU_Cn`. ALU rev 2 hangs a '153 dual 4:1 mux on the '194 serial
+pins (fill source: GND / Q-top / Q-bottom, selected by raw IR literal bits L3/L2) and splits
+the flag-latch enable into `NZ_WE` (GAL 2) and `C_WE` (GAL 3) — neither changes the diagram's
+topology. The two single-port stacks sit on the bottom row with their '191 pointers; RTOS
+feeds both the NEXTPC mux (RET) and TOS (R>).
 
 ```
                  +-------------+      +-----------+      +-------------------+
@@ -567,17 +613,17 @@ carry in (Cn = H) — an incoming carry (Cn = L) adds 1. The rows the mini uses 
 | 1000 | /A + B | A plus A·B |
 | **1001** | /(A⊕B) (XNOR) | **A plus B** (ADD / ADC) |
 | 1010 | B | (A+/B) plus A·B |
-| 1011 | A · B | A·B minus 1 |
+| **1011** | **A · B** (AND) | A·B minus 1 |
 | 1100 | 1 (all ones) | A plus A (left shift) |
 | 1101 | A + /B | (A+B) plus A |
-| 1110 | A + B | (A+/B) plus A |
+| **1110** | **A + B** (OR) | (A+/B) plus A |
 | **1111** | **A** (TST) | A minus 1 |
 
-Mini usage: 1001 arith = `ADD` / `ADC`; 0110 arith = `SUB` (A minus B minus 1, with Cn = L →
-A − B = TOS − NOS); 0110 logic = `XOR`; 0000 logic = `NOT`; 1111 logic = `TST` (F = A = TOS,
-flags only). Cn+4 is the active-HIGH carry-out: on subtract, Cn+4 = 1 means no borrow
-(A ≥ B). The remaining rows cost only GAL rows to add later (OR = 1110 logic, AND = 1011
-logic, etc.).
+Usage (ALU rev 2): 1001 arith = `ADD` / `ADC`; 0110 arith = `SUB` and `CMP` (A minus B
+minus 1, with Cn = L → A − B = TOS − NOS; CMP discards the result); 0110 logic = `XOR`;
+0000 logic = `NOT`; 1111 logic = `TST` (F = A = TOS, flags only); 1011 logic = `AND`;
+1110 logic = `OR`. Cn+4 is the active-HIGH carry-out: on subtract, Cn+4 = 1 means no borrow
+(A ≥ B) — and with the rev-2 per-flag masking it is only latched on the ops that define C.
 
 ---
 
@@ -624,23 +670,39 @@ wide-`W` arithmetic across words.
 arith). C = 1 means no borrow (TOS ≥ NOS).
 
 **XOR** — Logic mode (M=1), select 0110 — the other '181 mode. Shares its select with SUB;
-only the mode bit differs. C latches to 1 (logic-mode Cn+4); use N/Z.
+only the mode bit differs. N/Z latch; **C held** (rev 2, `C_WE` deasserted).
 
-**NOT** — Unary, select 0000 logic: one operand, no NOS read. ΔDSP = 0, NOS held. C latches
-to 1 as for XOR and TST.
+**NOT** — Unary, select 0000 logic: one operand, no NOS read. ΔDSP = 0, NOS held. N/Z latch;
+C held.
 
 **TST** — Non-destructive flags-only test of TOS: '181 select 1111 logic (F = A = TOS),
-`FLAG_WE` asserted, `TOS_MODE = hold`, no stack or memory access (ΔDSP = 0). N = top bit of
-TOS, Z = TOS is zero; C latches to 1 (logic-mode Cn+4), so it is an N/Z test only. This is
-the row that proves `FLAG_WE` is independent of the TOS write — the result is computed and
-discarded with no write at all. **Replaces the old two-operand CMP**, which left a dangling
-operand because a clean `( a b -- )` compare is a forbidden −2.
+`NZ_WE` asserted, `TOS_MODE = hold`, no stack or memory access (ΔDSP = 0). N = top bit of
+TOS, Z = TOS is zero; C held. This is the row that proves the flag write is independent of
+the TOS write — the result is computed and discarded with no write at all.
+
+**AND** — Binary pop `( a b -- a∧b )`, select 1011 logic. Result → TOS, NOS ← stack read,
+ΔDSP −1. N/Z latch; C held. The bit-mask workhorse.
+
+**OR** — Binary pop `( a b -- a∨b )`, select 1110 logic. Same control pattern as AND.
+
+**CMP** — Non-destructive compare `( a b -- a b )`: '181 select 0110 **arith** with
+Cn = L — exactly SUB — but the result is discarded: TOS holds, NOS holds, no stack access,
+ΔDSP 0. Flags of TOS − NOS latch (N/Z via `NZ_WE`, C via `C_WE`): Z = equal, C = 1 = TOS ≥
+NOS. Replaces a SUB-and-restore dance when both operands are still needed; the *popping*
+CMP `( a b -- )` remains a forbidden −2.
 
 **SHL** — Left single-bit shift on the '194 — a datapath the '181 never drives. ΔDSP = 0;
-C ← old top bit (`C_SRC = shf`); N/Z from the shifted result.
+zero fill; C ← old top bit (`C_SRC = shf`); N/Z from the shifted result.
 
-**SHR** — Right single-bit shift on the '194 — the only op toward the LSB. C ← old bottom
-bit. Rotates (ROL/ROR) are intentionally absent on both machines.
+**SHR** — Right single-bit logical shift on the '194 — toward the LSB. Zero fill; C ← old
+bottom bit.
+
+**ASR** — Right single-bit **arithmetic** shift: the '194 serial input is fed the old top
+bit (sign) by the '153 fill mux. C ← old bottom bit. Signed halving.
+
+**ROL / ROR** — Single-bit plain rotates: the falling-out bit re-enters through the fill
+mux (ROL: top → bottom serial-in, C ← old top bit; ROR: bottom → top serial-in, C ← old
+bottom bit). Not through-carry — RCL/RCR would be a one-wire change on the '153 inputs.
 
 ## Stack / memory / I/O / control (opcodes 2–11)
 
@@ -691,23 +753,27 @@ single bit separating SUB from XOR at select 0110.
 **ALU_Cn** — The '181 carry-in. H = no inject (ADD), L = +1 inject (SUB), /C = inject the C
 flag (ADC). One of only two flag-consuming signals.
 
-**TOS_MODE** — '194 mode: hold (NOP, DUP, TST), load (parallel-load from `TOS_SRC` — most
-ops), shL/shR (SHL/SHR). Load is the ordinary TOS write; the shift modes make the TOS a
-shifter at no extra chip.
+**TOS_MODE** — '194 mode: hold (NOP, DUP, TST, CMP), load (parallel-load from `TOS_SRC` —
+most ops), shL (SHL, ROL) / shR (SHR, ASR, ROR). Load is the ordinary TOS write; the shift
+modes make the TOS a shifter at no extra chip, with the serial fill (0 / old top / old
+bottom) chosen by the '153 mux off raw IR literal bits L3/L2.
 
 **TOS_SRC** — Parallel-load source when `TOS_MODE = load`: LIT (PUSH), DMEM (LOAD), INP
 (IN), RTOS (R>), ALU (arith/logic results), NOS (DROP, SWAP, STORE, OUT #port). Don't-care
 while holding/shifting.
 
-**NOS** — The NOS latch: hold (also TST, IN), ←TOS (DUP, SWAP, PUSH, LOAD, R>), or ←stkR
-(every pop).
+**NOS** — The NOS latch: hold (also TST, CMP, IN), ←TOS (DUP, SWAP, PUSH, LOAD, R>), or
+←stkR (every pop).
 
-**FLAG_WE** — Latch N/Z/C this cycle. Asserted only by the ALU class; everywhere else
-deasserted, so non-ALU instructions never disturb the flags. TST asserts it while TOS
-holds — flags latch with no result write at all.
+**NZ_WE / C_WE** — Per-flag latch enables (rev 2). `NZ_WE` asserts on every live ALU
+sub-op; `C_WE` only on the ops that define C — the arithmetic group, the five shifts, and
+CMP. Splitting the enables is what lets logic ops preserve C and what makes the reserved
+nibbles A/D truly inert. Both decode from instruction bits alone. TST and CMP assert their
+enables while TOS holds — flags latch with no result write at all.
 
-**C_SRC** — Chooses the C flip-flop source: 181 (Cn+4, arithmetic ops) or shf (the bit
-shifted out of the '194 — old top on SHL, old bottom on SHR). A one-bit mux the GAL selects.
+**C_SRC** — Chooses the C flip-flop source: 181 (Cn+4 — ADD, ADC, SUB, CMP) or shf (the bit
+shifted out of the '194 — old top on SHL/ROL, old bottom on SHR/ASR/ROR). A one-bit mux the
+GAL selects; don't-care wherever `C_WE` is deasserted.
 
 ## Group B — sequencing / memory / I/O
 
@@ -743,8 +809,7 @@ snapshot.
 
 # 8. Worked Examples
 
-Programs use only mini opcodes. Bytes use the proposed encoding in §2; renumber if you change
-the sub-op nibbles.
+Programs use only mini opcodes. Bytes use the ratified encoding in §2.
 
 ## 8.1 Walking bit on the TOS LEDs
 
@@ -860,6 +925,7 @@ On-hand counts are from `ChipInventory.md` (all-HC baseline, counts verified 11 
 |---|---|---|---|
 | ALU | 74181 | 1 | 10 HC in transit (8 LS as backup — LS build needs the HCT fence; see Sourcing notes) |
 | TOS shift register | 74194 | 1 | 10 in transit |
+| TOS serial-fill mux | 74153 | 1 | ALU rev 2 (fill = 0 / old top / old bottom, select = raw IR L3/L2) — check `ChipInventory.md` |
 | NOS latch | 74374 (or '273) | 1 | 4 HC on hand; 16 HCT374 in transit (HC374 unobtainable; HCT is a drop-in) |
 | Data-stack pointer | 74191 | 1 | 20 in transit — replaces the unobtainable HC169 (see Sourcing notes) |
 | Return-stack pointer | 74191 | 1 | (same stock as DSP) |
@@ -873,9 +939,9 @@ On-hand counts are from `ChipInventory.md` (all-HC baseline, counts verified 11 
 | Stack-strobe glue | '04 / '00 (inverter + phase gate) | ~1 | derives stack /CS, /WE from the pointers; folds into existing glue |
 | Clock / reset / step | 7414 + glue | ~2 | '14: 12 HC on hand |
 
-**Core total: ~17–19 ICs.** (The earlier ~14–16 sketch assumed 1–2 decode GALs; the detailed
-control-signal partition lands at four 16V8s, adding ~2–3.) Front-panel LED drivers/latches
-are additional to this core list.
+**Core total: ~18–20 ICs.** (The earlier ~14–16 sketch assumed 1–2 decode GALs; the detailed
+control-signal partition lands at four 16V8s, adding ~2–3, and ALU rev 2 adds the '153
+serial-fill mux.) Front-panel LED drivers/latches are additional to this core list.
 
 **Sourcing notes (June 2026 inventory):**
 
@@ -895,35 +961,47 @@ are additional to this core list.
 
 ## Open decisions / notes
 
-- **Dropped forms.** Two-operand CMP, stack-form OUT, and stack-form STORE are removed **on
-  both machines** — each was the −1 residue of a forbidden −2 (single-port stack, one access
-  per cycle), leaving a dangling operand. TST replaces CMP; OUT #port and STORE #addr replace
+- **Dropped forms.** The *popping* two-operand CMP, stack-form OUT, and stack-form STORE are
+  removed **on both machines** — each was the −1 residue of a forbidden −2 (single-port
+  stack, one access per cycle), leaving a dangling operand. TST (one-operand) and the rev-2
+  non-destructive CMP `( a b -- a b )` cover comparisons; OUT #port and STORE #addr replace
   the stack forms; stack-form IN survives because it is genuinely 0-delta.
 - **Computed I/O.** Stack-form IN still reads a run-time port (port from TOS). Output to a
   run-time-computed port is no longer single-instruction — unroll to fixed OUT #port, or map
   targets to fixed ports. Fixed-port fan-out of one value is DUP + OUT #port.
 - **Immediate-ALU family (deferred).** CMP #imm / ADD #imm / SUB #imm / AND #imm would all be
   clean 0-delta ops, but each needs a 2:1 mux on the ALU B input (NOS vs IR literal) — one
-  '157, breaking the "B is always NOS" simplicity. Reserved opcodes 12–15 and the two spare
-  GAL macrocells can host them later; B stays wired to NOS for now.
+  '157, breaking the "B is always NOS" simplicity. Reserved opcodes 12–15 and the remaining
+  spare GAL macrocells (one on GAL 3, two on GAL 4 — ALU rev 2 spent one of GAL 3's on
+  `C_WE`) can host them later; B stays wired to NOS for now.
 - **Reserved opcodes 12–15.** Other candidates: indirect CALL (target from a small address
   register) for reach beyond the 16-instruction direct space; a second ALU bank.
 - **Branch set is shared.** The mini carries BEQ/BCS/BMI (one per flag). Any branch the mini
   *uses* must also exist on the full machine, or programs stop transferring. Keep the shared
-  set at three unless the full design is updated to match.
-- **ROT is a macro** on both machines (`>R SWAP R> SWAP`), never an opcode. Rotates
-  ROL/ROR are intentionally absent — the shift unit is logical single-bit on both machines.
-  If the full Blinky later adds rotate-through-carry, the mini gains matching ops at the cost
-  of one GAL change plus a serial-fill mux (0 vs old C) feeding the '194.
+  set at three unless the full design is updated to match. (Signed branches would need a V
+  flag — parked: GAL 4 is an exact 18-pin fit and a V input would force a 20V8.)
+- **ROT is a macro** on both machines (`>R SWAP R> SWAP`), never an opcode. Rotates ROL/ROR
+  **exist as of ALU rev 2** on both machines — single-bit plain rotates through the '153
+  serial-fill mux, alongside ASR. The shift unit remains single-bit per cycle;
+  rotate-through-carry would be a one-wire change on the '153 inputs.
 - **Stack write timing is pinned:** the derived /WE is qualified by the clock phase so the
   write commits before the '191 advances the address. Stack read addressing (pre- vs
   post-increment) remains a board-level wiring choice.
-- **Sub-op nibble codes (§2) are proposed, not ratified** — pin them before generating GAL
-  fuse maps or finalising the assembler.
+- **Sub-op nibble codes (§2) are ratified (ALU rev 2)** — the four GAL fuse maps are
+  generated from them. Renumbering means re-burning all four devices and retargeting the
+  assembler.
 
 ---
 
 # Revision History
+
+**ALU rev 2 (June 2026):** per-flag write masking (`FLAG_WE` → `NZ_WE` + new `C_WE` on
+GAL 3 pin 13 — logic ops now preserve C, retiring the "logic ops latch C = 1" gotcha); new
+sub-ops AND (8), CMP (9, non-destructive `( a b -- a b )`), ASR (B), OR (C), ROL (E),
+ROR (F), with nibbles A/D reserved; one '153 serial-fill mux on the '194 serial pins,
+selected by raw IR L3/L2. Sub-op encoding **ratified**; GAL fuse maps regenerated
+(`GAL1`–`GAL3` rev 02, `GAL4` rev 03), brute-force verified over all 256 IR values. V flag,
+GAL-182 lookahead and barrel shifter evaluated and rejected — see `Blinky_ALU_Rev2.md`.
 
 **June 2026 update:** stack-pointer part is now the 74HC191 (HC169 unobtainable): direction
 equations inverted, /CTEN enable, asynchronous /LOAD-low as reset. '181 sourcing updated (HC
