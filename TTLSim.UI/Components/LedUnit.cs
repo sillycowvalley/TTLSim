@@ -5,7 +5,7 @@ using TTLSim.UI.Model;
 namespace TTLSim.UI.Components;
 
 /// <summary>Selectable LED body colour. The enum name round-trips through Device.Value.</summary>
-public enum LedColor { Red, Green, Yellow, Blue, White }
+public enum LedColor { Red, Green, Yellow, Orange, Blue, White }
 
 /// <summary>LED -- triangle + cathode bar with two emission arrows, 4 cells wide x 2 tall.</summary>
 public sealed class LedUnit : Unit
@@ -142,6 +142,7 @@ public sealed class LedUnit : Unit
     {
         LedColor.Green => System.Drawing.Color.FromArgb(0x2E, 0xCC, 0x40),
         LedColor.Yellow => System.Drawing.Color.FromArgb(0xFF, 0xCC, 0x00),
+        LedColor.Orange => System.Drawing.Color.FromArgb(230, 130, 30),
         LedColor.Blue => System.Drawing.Color.FromArgb(0x33, 0x99, 0xFF),
         LedColor.White => System.Drawing.Color.FromArgb(0xF0, 0xF0, 0xF0),
         _ => System.Drawing.Color.FromArgb(0xE0, 0x10, 0x10),  // Red

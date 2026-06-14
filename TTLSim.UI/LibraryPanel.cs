@@ -115,6 +115,7 @@ public sealed class LibraryPanel : UserControl
 
         var io = tree.Nodes.Add("I/O");
         AddPart(io, "Header out, 2-pin", HeaderPartDefinition.HeaderOut2);
+        AddPart(io, "Header out, 3-pin", HeaderPartDefinition.HeaderOut3);
         AddPart(io, "Header out, 4-pin", HeaderPartDefinition.HeaderOut4);
         AddPart(io, "Header out, 6-pin", HeaderPartDefinition.HeaderOut6);
         AddPart(io, "Header out, 8-pin", HeaderPartDefinition.HeaderOut8);

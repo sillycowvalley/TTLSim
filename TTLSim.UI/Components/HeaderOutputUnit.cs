@@ -60,13 +60,14 @@ public sealed class HeaderOutputUnit : Unit
         : base(device, spec)
     {
         pinCount = definition.PinCount;
-        // Body height = pinCount + 2 (even for the supported pin counts
-        // 2/4/6/8). Even height keeps the integer-div pivot exactly on
-        // the body's vertical centre -- pinCount + 1 (odd) put the pivot
-        // half a cell off and that's what produced the slid-by-half-a-cell
-        // rotated routing rectangle. The extra cell also gives one cell
-        // of padding above pin 1 AND below pin N (symmetric).
-        Size = new Size(StubCells + BodyWidth + FarSpacerCells, pinCount + 2);
+        // Bounding-box height must be EVEN so the rotation pivot (Size.Height / 2)
+        // lands on an integer cell. The visible body is pinCount + 1 tall; round
+        // that up to the next even number. For 2/4/6/8 this equals the old
+        // pinCount + 2; for an odd count (3) it gives pinCount + 1, keeping the
+        // body symmetric and the pivot dead-centre.
+        int boxHeight = pinCount + 1;
+        if ((boxHeight & 1) != 0) boxHeight++;
+        Size = new Size(StubCells + BodyWidth + FarSpacerCells, boxHeight);
         BuildPins(spec);
     }
 

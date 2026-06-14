@@ -199,6 +199,7 @@ public sealed record HeaderPartDefinition(
     : PartDefinition(Identifier, "J")
 {
     public static readonly HeaderPartDefinition HeaderOut2 = new("hdr-out-2", 2, true);
+    public static readonly HeaderPartDefinition HeaderOut3 = new("hdr-out-3", 3, true);
     public static readonly HeaderPartDefinition HeaderOut4 = new("hdr-out-4", 4, true);
     public static readonly HeaderPartDefinition HeaderOut6 = new("hdr-out-6", 6, true);
     public static readonly HeaderPartDefinition HeaderOut8 = new("hdr-out-8", 8, true);

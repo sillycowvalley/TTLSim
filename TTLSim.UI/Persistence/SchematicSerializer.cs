@@ -136,6 +136,7 @@ public static class SchematicSerializer
         {
             [HeaderPartDefinition.HeaderOut2.Identifier] = HeaderPartDefinition.HeaderOut2,
             [HeaderPartDefinition.HeaderOut4.Identifier] = HeaderPartDefinition.HeaderOut4,
+            [HeaderPartDefinition.HeaderOut3.Identifier] = HeaderPartDefinition.HeaderOut3,
             [HeaderPartDefinition.HeaderOut6.Identifier] = HeaderPartDefinition.HeaderOut6,
             [HeaderPartDefinition.HeaderOut8.Identifier] = HeaderPartDefinition.HeaderOut8,
         };

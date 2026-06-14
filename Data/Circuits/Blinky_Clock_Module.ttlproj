@@ -3,11 +3,11 @@
     "devices": [
       {
         "id": "1ef3c8e5d92d224093c140694987f9b2",
-        "designator": "D1",
+        "designator": "D3",
         "partKind": "passive",
         "partIdentifier": "led",
         "family": null,
-        "value": "Yellow",
+        "value": "Orange",
         "program": null,
         "propagationDelayNs": null,
         "function1": null,
@@ -17,7 +17,7 @@
       },
       {
         "id": "148e7ef042fc00ad1d78437e620a2fd9",
-        "designator": "R1",
+        "designator": "R7",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -45,7 +45,7 @@
       },
       {
         "id": "29001541870da471d855f9ed79ad83c8",
-        "designator": "R2",
+        "designator": "RV1",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -61,7 +61,7 @@
         "id": "eeab4d12f6d943827a2b2fd5aaa4c206",
         "designator": "U2",
         "partKind": "chip",
-        "partIdentifier": "04",
+        "partIdentifier": "14",
         "family": "HC",
         "value": null,
         "program": null,
@@ -87,7 +87,7 @@
       },
       {
         "id": "40d94eaac048c074b89e794bc89dae86",
-        "designator": "R4",
+        "designator": "R1",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -115,7 +115,7 @@
       },
       {
         "id": "9c3059069aff62ffd56e8e75bd3ba2c3",
-        "designator": "R7",
+        "designator": "R9",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -171,7 +171,7 @@
       },
       {
         "id": "702cb21137d045db8565521cad46dcd6",
-        "designator": "R8",
+        "designator": "R3",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -185,7 +185,7 @@
       },
       {
         "id": "0e7c1b8439fb498688e5ea806639527f",
-        "designator": "R9",
+        "designator": "R4",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -199,7 +199,7 @@
       },
       {
         "id": "4438bd00ba834fc4a71d2c93c668cd0e",
-        "designator": "D5",
+        "designator": "D2",
         "partKind": "passive",
         "partIdentifier": "led",
         "family": null,
@@ -213,7 +213,7 @@
       },
       {
         "id": "b1be08e4101a42b8afeacaf9a12ef1ff",
-        "designator": "R10",
+        "designator": "R6",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -227,7 +227,7 @@
       },
       {
         "id": "12aebd8a329c477ab73735573bef9b8e",
-        "designator": "D5",
+        "designator": "D1",
         "partKind": "passive",
         "partIdentifier": "led",
         "family": null,
@@ -241,7 +241,7 @@
       },
       {
         "id": "d5ad4f7c5a684ba2b0e7304e70f125b1",
-        "designator": "R10",
+        "designator": "R5",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -268,22 +268,8 @@
         "frequencyHz2": null
       },
       {
-        "id": "52501a0f8cf348adb298ef6a282e88a3",
-        "designator": "U5",
-        "partKind": "chip",
-        "partIdentifier": "DS1813",
-        "family": null,
-        "value": null,
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
         "id": "721c1661caac49ee8515cd58e8ed981b",
-        "designator": "D3",
+        "designator": "D4",
         "partKind": "passive",
         "partIdentifier": "led",
         "family": null,
@@ -297,7 +283,7 @@
       },
       {
         "id": "17982d4e540348eab79b478cfdf5578a",
-        "designator": "R5",
+        "designator": "R8",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -353,9 +339,23 @@
       },
       {
         "id": "002e5f4a928541efa458edad63ab8e7d",
-        "designator": "R3",
+        "designator": "R10",
         "partKind": "passive",
         "partIdentifier": "resistor",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "b896d6bb6d4e43b882cbe064d3250bef",
+        "designator": "U7",
+        "partKind": "chip",
+        "partIdentifier": "DS1813",
         "family": null,
         "value": null,
         "program": null,
@@ -471,7 +471,7 @@
           "x": -23,
           "y": 9
         },
-        "label": "4k9",
+        "label": "4k7",
         "rotation": 90,
         "switchClosed": null
       },
@@ -596,18 +596,6 @@
         "switchClosed": null
       },
       {
-        "id": "08bf521377db461eae6e1afc1b25a993",
-        "deviceId": "52501a0f8cf348adb298ef6a282e88a3",
-        "unitLetter": "",
-        "position": {
-          "x": -48,
-          "y": 66
-        },
-        "label": "",
-        "rotation": 90,
-        "switchClosed": null
-      },
-      {
         "id": "06163fc6b9fb4b9b85c9d8fa6ec2a5a4",
         "deviceId": "721c1661caac49ee8515cd58e8ed981b",
         "unitLetter": "",
@@ -676,6 +664,18 @@
           "y": 21
         },
         "label": "4k7",
+        "rotation": 90,
+        "switchClosed": null
+      },
+      {
+        "id": "29736a154ac34ad28d294e2bbcedca2d",
+        "deviceId": "b896d6bb6d4e43b882cbe064d3250bef",
+        "unitLetter": "",
+        "position": {
+          "x": -48,
+          "y": 65
+        },
+        "label": "",
         "rotation": 90,
         "switchClosed": null
       }
@@ -1724,20 +1724,6 @@
         "color": null
       },
       {
-        "id": "b0b5844b814b4a979a63252e45b505d6",
-        "a": {
-          "itemId": "08bf521377db461eae6e1afc1b25a993",
-          "pinNumber": 1,
-          "external": false
-        },
-        "b": {
-          "itemId": "cc0af404cb474df0b694c27aac534b9d",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
         "id": "af0161d1414e42e0a75f8df4a749cc6c",
         "a": {
           "itemId": "cc0af404cb474df0b694c27aac534b9d",
@@ -1778,20 +1764,6 @@
           "external": false
         },
         "color": null
-      },
-      {
-        "id": "3c4d29a3280a4368952a25d1bcbb3ca8",
-        "a": {
-          "itemId": "fe24ed342033a662a8c2c6e856f96c49",
-          "pinNumber": 12,
-          "external": false
-        },
-        "b": {
-          "itemId": "06163fc6b9fb4b9b85c9d8fa6ec2a5a4",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Yellow"
       },
       {
         "id": "56566977bee3451ba9796eb5732d903c",
@@ -1848,62 +1820,6 @@
           "external": false
         },
         "color": "Orange"
-      },
-      {
-        "id": "f618ab7d245a4c1a9aafb991dadceb29",
-        "a": {
-          "itemId": "cd5941fcc9f3478797bfc74460d0f3c6",
-          "pinNumber": 0,
-          "external": false
-        },
-        "b": {
-          "itemId": "08bf521377db461eae6e1afc1b25a993",
-          "pinNumber": 2,
-          "external": false
-        },
-        "color": "Red"
-      },
-      {
-        "id": "ddda43c15a3341df8d60966e16d76ca6",
-        "a": {
-          "itemId": "fbb18b21448f43a3890f59765e771a54",
-          "pinNumber": 0,
-          "external": false
-        },
-        "b": {
-          "itemId": "08bf521377db461eae6e1afc1b25a993",
-          "pinNumber": 3,
-          "external": false
-        },
-        "color": "Blue"
-      },
-      {
-        "id": "a3f03415c0474c4c89bc57194f8f339f",
-        "a": {
-          "itemId": "47b8e0eec09a4fb1bbaede542d2b98cb",
-          "pinNumber": 2,
-          "external": false
-        },
-        "b": {
-          "itemId": "08bf521377db461eae6e1afc1b25a993",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
-        "id": "ab0eb4da24cc42b7a98c97301819659f",
-        "a": {
-          "itemId": "47b8e0eec09a4fb1bbaede542d2b98cb",
-          "pinNumber": 1,
-          "external": false
-        },
-        "b": {
-          "itemId": "08bf521377db461eae6e1afc1b25a993",
-          "pinNumber": 3,
-          "external": false
-        },
-        "color": "Blue"
       },
       {
         "id": "80b621dfbf804c7790403fd7ad5aa3e1",
@@ -2142,15 +2058,99 @@
           "external": false
         },
         "color": null
+      },
+      {
+        "id": "0c2df3355a8f488a824927fb537c4f7b",
+        "a": {
+          "itemId": "fe24ed342033a662a8c2c6e856f96c49",
+          "pinNumber": 10,
+          "external": false
+        },
+        "b": {
+          "itemId": "06163fc6b9fb4b9b85c9d8fa6ec2a5a4",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "04a8493260214fb68bf655225996b001",
+        "a": {
+          "itemId": "fbb18b21448f43a3890f59765e771a54",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "29736a154ac34ad28d294e2bbcedca2d",
+          "pinNumber": 3,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "fa6ae2b57b3c479cb7a03c45d0fc3e7f",
+        "a": {
+          "itemId": "47b8e0eec09a4fb1bbaede542d2b98cb",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "29736a154ac34ad28d294e2bbcedca2d",
+          "pinNumber": 3,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "d0ab5344480d4058b544083510016251",
+        "a": {
+          "itemId": "cd5941fcc9f3478797bfc74460d0f3c6",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "29736a154ac34ad28d294e2bbcedca2d",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "6a02860264c347c7aaaa2a930f8db8c9",
+        "a": {
+          "itemId": "29736a154ac34ad28d294e2bbcedca2d",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "47b8e0eec09a4fb1bbaede542d2b98cb",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "0769dbc25fe04977b2a5d0bb2c37ebcd",
+        "a": {
+          "itemId": "cc0af404cb474df0b694c27aac534b9d",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "47b8e0eec09a4fb1bbaede542d2b98cb",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Yellow"
       }
     ],
     "wires": []
   },
   "view": {
-    "zoom": 1.4394696,
+    "zoom": 2.1892536,
     "pan": {
-      "x": 473,
-      "y": 99
+      "x": 1137,
+      "y": -236
     }
   }
 }
