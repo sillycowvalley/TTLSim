@@ -68,6 +68,16 @@ public sealed class ChipFactory : IChipFactory
             yield break;
         }
 
+        if (device.PartIdentifier is "NE555" or "NE556")
+        {
+            // One core for the 555, two for the 556 -- like the dual counters,
+            // a single box that yields more than one IChip.
+            foreach (var (_, pinMap) in unitPinMaps)
+                foreach (IChip chip in CreateTimerCores(device, pinMap))
+                    yield return chip;
+            yield break;
+        }
+
         if (device.PartIdentifier is "00" or "02" or "04" or "08" or "10"
             or "14" or "20" or "30" or "32" or "86")
         {
@@ -262,6 +272,70 @@ public sealed class ChipFactory : IChipFactory
             }
             if (ok) yield return make(nets, ny);
         }
+    }
+
+    // ----------------------------------------------------------------- timers
+
+    // Representative output propagation delay for a Schmitt-mode 555/556 core.
+    // The part isn't a 74-series family member, so there's no family grade to
+    // resolve; ~100 ns is a typical bipolar NE555 output delay and only sets
+    // the sim edge timing.
+    private const long TimerSchmittDelayPs = 100_000;
+
+    /// <summary>
+    /// Builds the timer core(s) for a 555 (one) or 556 (two). The 555 ties
+    /// THR(6)/TRG(2) and outputs on pin 3; the 556's two cores are
+    /// THR(2)/TRG(6)->OUT(5) and THR(12)/TRG(8)->OUT(9). Each core's role
+    /// (Schmitt vs Astable) and astable frequency come from the device.
+    /// </summary>
+    private static IEnumerable<IChip> CreateTimerCores(
+        BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        if (device.PartIdentifier == "NE555")
+        {
+            IChip? core = TryCreateTimerCore(
+                pinToNet, device.Function1, device.FrequencyHz1,
+                thr: 6, trg: 2, outPin: 3);
+            if (core is not null) yield return core;
+        }
+        else // NE556
+        {
+            IChip? t1 = TryCreateTimerCore(
+                pinToNet, device.Function1, device.FrequencyHz1,
+                thr: 2, trg: 6, outPin: 5);
+            if (t1 is not null) yield return t1;
+
+            IChip? t2 = TryCreateTimerCore(
+                pinToNet, device.Function2, device.FrequencyHz2,
+                thr: 12, trg: 8, outPin: 9);
+            if (t2 is not null) yield return t2;
+        }
+    }
+
+    private static IChip? TryCreateTimerCore(
+        IReadOnlyDictionary<int, Net> pinToNet,
+        TimerFunction? function, double? frequencyHz,
+        int thr, int trg, int outPin)
+    {
+        // OUT must be wired -- a core whose output drives nothing has no effect.
+        if (!pinToNet.TryGetValue(outPin, out Net? outNet) || outNet is null)
+            return null;
+
+        if (function == TimerFunction.Astable)
+        {
+            double hz = frequencyHz is double f && f > 0 ? f : 1000.0;
+            long periodPs = (long)(1e12 / hz);
+            return new Ne555(outNet, periodPs);
+        }
+
+        // Schmitt (default): the THR/TRG node is the input. They're tied
+        // externally, so prefer THR and fall back to TRG.
+        Net? inNet = null;
+        if (pinToNet.TryGetValue(thr, out Net? t) && t is not null) inNet = t;
+        else if (pinToNet.TryGetValue(trg, out Net? g) && g is not null) inNet = g;
+        if (inNet is null) return null;
+
+        return new Ne555(inNet, outNet, TimerSchmittDelayPs);
     }
 
 
@@ -656,7 +730,11 @@ public sealed class ChipFactory : IChipFactory
             or "244" or "245" or "273" or "283" or "541" or "688" or "7seg-ca"
             => true,
         // Reset supervisor (per-unit dispatch in CreateForUnit).
-        "DS1813" 
+        "DS1813"
+            => true,
+        // Timer ICs: 555 single core, 556 dual core. Digital Schmitt/astable
+        // stand-in, special-cased at the top of CreateForUnits (CreateTimerCores).
+        "NE555" or "NE556"
             => true,
         // GAL/PLD: combinational fuse-map evaluation; fuse map in device.Program.
         "GAL16V8" or "GAL20V8"
@@ -679,8 +757,8 @@ public sealed class ChipFactory : IChipFactory
             => true,
         "hdr-out-2" or "hdr-out-4" or "hdr-out-6" or "hdr-out-8"
             => true,
-        // Anything else -- decoders, '193, timers, etc. -- is on the
-        // catalogue but does not have a sim model yet.
+        // Anything else -- decoders, '193, etc. -- is on the catalogue but
+        // does not have a sim model yet.
         _ => false
     };
 
@@ -856,19 +934,19 @@ public sealed class ChipFactory : IChipFactory
     private static readonly int[] OctalBufferPins =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19 };
 
-    
 
-    
+
+
 
     private static bool IsMemoryPart(string id) =>
         id is "28C256" or "28C128" or "28C64" or "28C16" or "62256"
            or "6116" or "2114";
 
-    
 
-    
 
-    
+
+
+
     private static IChip? TryCreateLs47(IReadOnlyDictionary<int, Net> pinToNet)
     {
         // Required pins: 1,2,6,7 (BCD A,B,C,D); 3,5,4 (LT,RBI,BI); 13,12,11,10,9,15,14 (segs a..g).

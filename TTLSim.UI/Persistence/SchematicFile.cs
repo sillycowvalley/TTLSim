@@ -49,6 +49,20 @@ public sealed class DeviceDto
     /// nanoseconds. Null means "use the part's default speed grade". Not
     /// written for 74-series or passive parts.</summary>
     public int? PropagationDelayNs { get; set; }
+
+    /// <summary>555/556 timer only: timer-1 role ("Schmitt" | "Astable"),
+    /// stored as the enum name. Null for non-timer parts.</summary>
+    public string? Function1 { get; set; }
+
+    /// <summary>556 only: timer-2 role ("Schmitt" | "Astable"). Null otherwise.</summary>
+    public string? Function2 { get; set; }
+
+    /// <summary>555/556 timer only: timer-1 astable frequency in hertz.
+    /// Null for non-timer parts.</summary>
+    public double? FrequencyHz1 { get; set; }
+
+    /// <summary>556 only: timer-2 astable frequency in hertz. Null otherwise.</summary>
+    public double? FrequencyHz2 { get; set; }
 }
 
 /// <summary>

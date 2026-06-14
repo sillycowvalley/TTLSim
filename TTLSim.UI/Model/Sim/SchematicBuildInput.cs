@@ -120,7 +120,11 @@ public sealed class SchematicBuildInput : IBuildInput
                     GroundPinNumber: groundPin,
                     Units: units,
                     Program: dev.Program,
-                    PropagationDelayNs: dev.PropagationDelayNs);
+                    PropagationDelayNs: dev.PropagationDelayNs,
+                    Function1: dev.Function,
+                    Function2: dev.Function2,
+                    FrequencyHz1: dev.FrequencyHz,
+                    FrequencyHz2: dev.FrequencyHz2);
             }
         }
     }

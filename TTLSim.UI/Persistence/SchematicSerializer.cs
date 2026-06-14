@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using TTLSim.Core;
 using TTLSim.UI.Components;
 using TTLSim.UI.Model;
 
@@ -212,7 +213,12 @@ public static class SchematicSerializer
             PartIdentifier = chip.PartNumber,
             Family = chip.IsSeries74 ? device.Family?.ToString() : null,
             Program = device.Program,       // EEPROM/ROM Intel HEX image; null otherwise
-            PropagationDelayNs = device.UsesExplicitDelay ? device.PropagationDelayNs : null
+            PropagationDelayNs = device.UsesExplicitDelay ? device.PropagationDelayNs : null,
+            // 555/556 timer settings; null for non-timer chips.
+            Function1 = device.IsTimer ? device.Function?.ToString() : null,
+            FrequencyHz1 = device.IsTimer ? device.FrequencyHz : null,
+            Function2 = device.Is556 ? device.Function2?.ToString() : null,
+            FrequencyHz2 = device.Is556 ? device.FrequencyHz2 : null
         },
         PassivePartDefinition p => new DeviceDto
         {
@@ -451,6 +457,28 @@ public static class SchematicSerializer
             device.Value = dto.Value;
         }
 
+        // 555/556 timer settings. The Device constructor has already applied
+        // sensible defaults (Schmitt + 1000 Hz), so older files without these
+        // fields load fine; here we just override from whatever the file
+        // carried.
+        if (device.IsTimer)
+        {
+            if (!string.IsNullOrEmpty(dto.Function1)
+                && Enum.TryParse<TimerFunction>(dto.Function1, out var fn1))
+                device.Function = fn1;
+            if (dto.FrequencyHz1 is double hz1)
+                device.FrequencyHz = hz1;
+
+            if (device.Is556)
+            {
+                if (!string.IsNullOrEmpty(dto.Function2)
+                    && Enum.TryParse<TimerFunction>(dto.Function2, out var fn2))
+                    device.Function2 = fn2;
+                if (dto.FrequencyHz2 is double hz2)
+                    device.FrequencyHz2 = hz2;
+            }
+        }
+
         return device;
     }
 
@@ -494,7 +522,7 @@ public static class SchematicSerializer
             UnitKind.Crystal => new CrystalUnit(device, spec),
             UnitKind.Diode => new DiodeUnit(device, spec),
             UnitKind.SevenSegment => new SevenSegmentDisplayUnit(device, spec),
-            UnitKind.Chip => DeviceFactory.CreateChipSymbol(device, spec, (ChipPartDefinition)device.Definition),
+            UnitKind.Chip => new ChipUnit(device, spec, (ChipPartDefinition)device.Definition),
             UnitKind.HeaderOutput => new HeaderOutputUnit(device, spec, (HeaderPartDefinition)device.Definition),
             UnitKind.DFlipFlop => throw new NotImplementedException(
                 "Cannot load unit of kind DFlipFlop: not yet implemented."),
