@@ -7,9 +7,10 @@ namespace TTLSim.UI.Components;
 
 /// <summary>
 /// TO-92 / transistor-style symbol for a 3-pin part such as the DS1813 reset
-/// supervisor. Drawn as a domed package outline -- a flat bottom edge with a
-/// semicircular top -- and three leads emerging downward from the flat edge,
-/// named left-to-right in ascending pin-number order.
+/// supervisor. Drawn as a package outline with a flat bottom edge, short
+/// straight sides, and a domed (semicircular) top -- with three leads emerging
+/// downward from the flat edge, named left-to-right in ascending pin-number
+/// order. The pin names run PARALLEL to their legs (rotated 90 degrees).
 ///
 /// This is a drawing/geometry alternative to <see cref="ChipUnit"/> for the
 /// SAME <see cref="ChipPartDefinition"/>: it reads pin numbers, names, and the
@@ -18,20 +19,35 @@ namespace TTLSim.UI.Components;
 /// definition opts in via <see cref="ChipPartDefinition.To92"/>, and all three
 /// construction paths route through <see cref="DeviceFactory.CreateChipSymbol"/>
 /// so placement, load, and paste agree.
+///
+/// Sizing note: the outline width (<see cref="BodyWidthCells"/>) is fixed, and
+/// the legs are centred inside it at a DIP-standard pitch (<see cref="PinPitch"/>),
+/// so the leg spacing matches the ICs without changing the body. The straight
+/// sides (<see cref="StraightSideCell"/>) push the arc up off the base; the
+/// overall depth is <see cref="FlatEdgeCell"/>, perpendicular to the flat edge.
 /// </summary>
 public sealed class To92Unit : Unit
 {
-    /// <summary>Horizontal grid-cell pitch between adjacent legs.</summary>
-    private const int PinPitch = 3;
+    /// <summary>DIP-style grid-cell pitch between adjacent legs.</summary>
+    private const int PinPitch = 2;
 
-    /// <summary>One cell of margin outside the outer legs.</summary>
-    private const int SideMargin = 1;
+    /// <summary>Bounding-box (outline) width in cells. Fixed independently of
+    /// the leg pitch so tightening the legs doesn't shrink the body.</summary>
+    private const int BodyWidthCells = 8;
 
-    /// <summary>Bounding-box height in cells (even, to keep the pivot centred).</summary>
-    private const int BoxHeight = 4;
+    /// <summary>Bounding-box height in cells (even, to keep the pivot centred):
+    /// dome depth + leg length.</summary>
+    private const int BoxHeight = 6;
 
-    /// <summary>Flat-edge (package bottom) position, in cells from the box top.</summary>
-    private const float FlatEdgeCell = 2.5f;
+    /// <summary>Flat-edge (package bottom) position, in cells from the box top.
+    /// The body rises this many cells above the flat edge; the remainder of the
+    /// box height is the leg length.</summary>
+    private const float FlatEdgeCell = 4.0f;
+
+    /// <summary>Height of the straight vertical sides, in cells, between the
+    /// flat edge and where the arc begins. Pushes the arc up off the base.
+    /// Must be less than <see cref="FlatEdgeCell"/>.</summary>
+    private const float StraightSideCell = 1.5f;
 
     private readonly ChipPin[] orderedPins;
 
@@ -39,20 +55,22 @@ public sealed class To92Unit : Unit
         : base(device, spec)
     {
         orderedPins = definition.Pins.OrderBy(pin => pin.Number).ToArray();
-
-        int span = (orderedPins.Length - 1) * PinPitch;
-        Size = new Size(span + SideMargin * 2, BoxHeight);
+        Size = new Size(BodyWidthCells, BoxHeight);
         BuildPins(spec);
     }
 
     protected override void BuildPins(UnitSpec spec)
     {
-        // Legs along the flat (bottom) edge, pointing Down, left-to-right in
-        // pin-number order. LocalPosition sits on the bounding-box bottom edge
-        // so wire endpoints land there, matching the other units' convention.
-        for (int i = 0; i < orderedPins.Length; i++)
+        // Legs along the flat (bottom) edge, pointing Down, centred in the body
+        // at the DIP pitch, left-to-right in pin-number order. LocalPosition
+        // sits on the bounding-box bottom edge so wire endpoints land there,
+        // matching the other units' convention.
+        int n = orderedPins.Length;
+        int span = (n - 1) * PinPitch;
+        int firstX = (Size.Width - span) / 2;
+        for (int i = 0; i < n; i++)
         {
-            int x = SideMargin + i * PinPitch;
+            int x = firstX + i * PinPitch;
             AddPin(new Pin(orderedPins[i].Name, orderedPins[i].Number,
                 new Point(x, Size.Height), PinDirection.Down));
         }
@@ -85,21 +103,23 @@ public sealed class To92Unit : Unit
         float bodyRightX = (Position.X + Size.Width - 0.5f) * p;
         float topY = Position.Y * p;
         float flatY = (Position.Y + FlatEdgeCell) * p;
-        float domeHeight = flatY - topY;
+        float shoulderY = (Position.Y + FlatEdgeCell - StraightSideCell) * p;
+        float arcHeight = shoulderY - topY;
 
         using var fill = new SolidBrush(ctx.FillColor);
         using var outline = new Pen(Selected ? ctx.SelectedColor : ctx.ForegroundColor, 1.2f);
 
-        // Domed package outline: flat bottom edge + semicircular (half-ellipse)
-        // top. The ellipse's horizontal axis sits on the flat edge, so the top
-        // half rises domeHeight above it. AddArc(...,180,180) traces the upper
-        // half from the left-middle, over the top, to the right-middle.
+        // Package outline: flat bottom edge, short straight sides up to the
+        // shoulder, then a semicircular (half-ellipse) top. The ellipse's
+        // horizontal axis sits on the shoulder line, so AddArc(...,180,180)
+        // traces the upper half from the left shoulder, over the top, to the
+        // right shoulder.
         using (var path = new GraphicsPath())
         {
-            float rectTop = flatY - domeHeight;
-            float rectHeight = domeHeight * 2f;
             float rectWidth = bodyRightX - bodyLeftX;
-            path.AddArc(bodyLeftX, rectTop, rectWidth, rectHeight, 180f, 180f);
+            path.AddLine(bodyLeftX, flatY, bodyLeftX, shoulderY);
+            path.AddArc(bodyLeftX, shoulderY - arcHeight, rectWidth, arcHeight * 2f, 180f, 180f);
+            path.AddLine(bodyRightX, shoulderY, bodyRightX, flatY);
             path.AddLine(bodyRightX, flatY, bodyLeftX, flatY);
             path.CloseFigure();
             g.FillPath(fill, path);
@@ -117,23 +137,31 @@ public sealed class To92Unit : Unit
             g.FillEllipse(pinBrush, px - 2, py - 2, 4, 4);
         }
 
-        // Pin names along the flat edge, one per leg, just inside the dome.
-        // Active-low names (leading '/') print without the slash and get an
-        // overbar, matching the box symbol.
+        // Pin names, one per leg, rotated 90 degrees CCW so each reads PARALLEL
+        // to its leg (bottom-to-top at rotation 0), centred on the leg's column
+        // inside the body. Drawing in the body's rotated frame keeps them
+        // parallel to the legs in every orientation. Active-low names (leading
+        // '/') print without the slash and get an overbar.
         using var textBrush = new SolidBrush(ctx.ForegroundColor);
         using var barPen = new Pen(ctx.ForegroundColor, 0.6f);
         var tightFormat = StringFormat.GenericTypographic;
-        float nameCentreY = (Position.Y + FlatEdgeCell - 0.75f) * p;
+        float nameCentreY = (Position.Y + FlatEdgeCell - 1.2f) * p;
         foreach (var pin in Pins)
         {
             float px = (Position.X + pin.LocalPosition.X) * p;
             (string display, bool barred) = ParseBarredName(pin.Name);
             SizeF size = g.MeasureString(display, ctx.PinFont, int.MaxValue, tightFormat);
-            float textX = px - size.Width / 2f;
-            float textY = nameCentreY - size.Height / 2f;
-            g.DrawString(display, ctx.PinFont, textBrush, textX, textY, tightFormat);
+
+            var state = g.Save();
+            g.TranslateTransform(px, nameCentreY);
+            g.RotateTransform(-90f);
+            g.DrawString(display, ctx.PinFont, textBrush,
+                -size.Width / 2f, -size.Height / 2f, tightFormat);
             if (barred)
-                g.DrawLine(barPen, textX, textY, textX + size.Width, textY);
+                g.DrawLine(barPen,
+                    -size.Width / 2f, -size.Height / 2f,
+                    size.Width / 2f, -size.Height / 2f);
+            g.Restore(state);
         }
     }
 

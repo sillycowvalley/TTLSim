@@ -70,6 +70,46 @@
         "value": null,
         "program": null,
         "propagationDelayNs": null
+      },
+      {
+        "id": "a19dfda19c4340b9baac0ec5753f7715",
+        "designator": "U3",
+        "partKind": "chip",
+        "partIdentifier": "DS1813",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
+      },
+      {
+        "id": "e7036e9f0b494c25b4391a7fdcede885",
+        "designator": "U4",
+        "partKind": "chip",
+        "partIdentifier": "DS1813",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
+      },
+      {
+        "id": "689964f63d814311bcbb5e527fea8886",
+        "designator": "U5",
+        "partKind": "chip",
+        "partIdentifier": "DS1813",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
+      },
+      {
+        "id": "8147fbf6422f4a8f83ddc2f72248f32e",
+        "designator": "U6",
+        "partKind": "chip",
+        "partIdentifier": "DS1813",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null
       }
     ],
     "units": [
@@ -155,6 +195,54 @@
         },
         "label": "",
         "rotation": 90,
+        "switchClosed": null
+      },
+      {
+        "id": "6459e90b916541ec81e97d17d969df9f",
+        "deviceId": "a19dfda19c4340b9baac0ec5753f7715",
+        "unitLetter": "",
+        "position": {
+          "x": 23,
+          "y": -4
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "3796c39e7fdb4d6393f9fa1b74eea93a",
+        "deviceId": "e7036e9f0b494c25b4391a7fdcede885",
+        "unitLetter": "",
+        "position": {
+          "x": 40,
+          "y": -4
+        },
+        "label": "",
+        "rotation": 90,
+        "switchClosed": null
+      },
+      {
+        "id": "e8caf2e7bb4240eab15df2fdf72de321",
+        "deviceId": "689964f63d814311bcbb5e527fea8886",
+        "unitLetter": "",
+        "position": {
+          "x": 56,
+          "y": -4
+        },
+        "label": "",
+        "rotation": 180,
+        "switchClosed": null
+      },
+      {
+        "id": "2c5573f14ee644aab750ee782fbda084",
+        "deviceId": "8147fbf6422f4a8f83ddc2f72248f32e",
+        "unitLetter": "",
+        "position": {
+          "x": 73,
+          "y": -4
+        },
+        "label": "",
+        "rotation": 180,
         "switchClosed": null
       }
     ],
@@ -443,10 +531,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 2.6300669,
+    "zoom": 4.000003,
     "pan": {
-      "x": -22,
-      "y": 319
+      "x": -359,
+      "y": 311
     }
   }
 }
