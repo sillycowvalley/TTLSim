@@ -159,14 +159,15 @@ public sealed class SpdtSwitchUnit : Unit
         JumperGlyphs.DrawLead(g, ctx, Selected, bX, bY, throwEndX, bEndY);
 
         // Shunt bridges COM to the selected throw (SPDT is on-on, so always
-        // connected) -- which post it reaches is the selected-throw indicator.
+        // connected). The bar is a plain conductor; the selected side is shown
+        // by highlighting that throw's post, like the SPDT switch contacts.
         int selX = ThrowB ? bX : aX;
         int selY = ThrowB ? bY : aY;
-        JumperGlyphs.DrawShunt(g, ctx, comX, comY, selX, selY);
+        JumperGlyphs.DrawShunt(g, ctx, Selected, comX, comY, selX, selY);
 
-        JumperGlyphs.DrawPost(g, ctx, comX, comY, Selected);
-        JumperGlyphs.DrawPost(g, ctx, aX, aY, Selected);
-        JumperGlyphs.DrawPost(g, ctx, bX, bY, Selected);
+        JumperGlyphs.DrawPost(g, ctx, comX, comY, Selected, active: false);
+        JumperGlyphs.DrawPost(g, ctx, aX, aY, Selected, active: !ThrowB);
+        JumperGlyphs.DrawPost(g, ctx, bX, bY, Selected, active: ThrowB);
 
         JumperGlyphs.DrawTerminal(g, ctx, comEndX, comEndY);
         JumperGlyphs.DrawTerminal(g, ctx, throwEndX, aEndY);

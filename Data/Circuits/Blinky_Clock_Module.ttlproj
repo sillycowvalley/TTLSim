@@ -392,6 +392,20 @@
         "function2": null,
         "frequencyHz1": null,
         "frequencyHz2": null
+      },
+      {
+        "id": "3a3ac788d554494888d7945899247fa9",
+        "designator": "D5",
+        "partKind": "passive",
+        "partIdentifier": "diode",
+        "family": null,
+        "value": "1N5819",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
       }
     ],
     "units": [
@@ -449,7 +463,7 @@
         "unitLetter": "",
         "position": {
           "x": 38,
-          "y": 19
+          "y": 23
         },
         "label": "",
         "rotation": 0,
@@ -677,7 +691,7 @@
         "unitLetter": "",
         "position": {
           "x": 80,
-          "y": 30
+          "y": 38
         },
         "label": "",
         "rotation": 0,
@@ -729,7 +743,19 @@
         },
         "label": "",
         "rotation": 270,
-        "switchClosed": true
+        "switchClosed": false
+      },
+      {
+        "id": "2298b1df6eb3474296d675cc34b8698c",
+        "deviceId": "3a3ac788d554494888d7945899247fa9",
+        "unitLetter": "",
+        "position": {
+          "x": -43,
+          "y": 64
+        },
+        "label": "1N5819",
+        "rotation": 180,
+        "switchClosed": null
       }
     ],
     "items": [
@@ -895,7 +921,7 @@
         "label": "VCC",
         "position": {
           "x": -19,
-          "y": 68
+          "y": 49
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -999,7 +1025,7 @@
         "label": "VCC",
         "position": {
           "x": -62,
-          "y": 48
+          "y": 49
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -1037,8 +1063,8 @@
         "id": "ad4fecd3397647f79273b20a8f2ba1c3",
         "label": "",
         "position": {
-          "x": 81,
-          "y": 54
+          "x": 71,
+          "y": 59
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -1939,7 +1965,7 @@
           "pinNumber": 7,
           "external": false
         },
-        "color": null
+        "color": "Blue"
       },
       {
         "id": "7971225e182249be836d6bc4216494f5",
@@ -2318,15 +2344,43 @@
           "external": false
         },
         "color": "Orange"
+      },
+      {
+        "id": "d12aa37f806e48d5818acc941f4f2bd0",
+        "a": {
+          "itemId": "2298b1df6eb3474296d675cc34b8698c",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "47b8e0eec09a4fb1bbaede542d2b98cb",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "96c783259db646b29d22dba072770d67",
+        "a": {
+          "itemId": "2298b1df6eb3474296d675cc34b8698c",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "b1d46a7d50ba4d52bc646831b39f6027",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Teal"
       }
     ],
     "wires": []
   },
   "view": {
-    "zoom": 1.6928006,
+    "zoom": 1.472,
     "pan": {
-      "x": 503,
-      "y": -43
+      "x": 483,
+      "y": 146
     }
   }
 }

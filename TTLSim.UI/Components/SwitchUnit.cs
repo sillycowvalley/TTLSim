@@ -156,12 +156,15 @@ public sealed class SwitchUnit : Unit
         JumperGlyphs.DrawLead(g, ctx, Selected, p1x, p1y, postAx, postY);
         JumperGlyphs.DrawLead(g, ctx, Selected, postBx, postY, p2x, p2y);
 
-        // Shunt bridges the two posts only when closed -- the closed indicator.
+        // Shunt bridges the two posts only when closed; the highlight lives on
+        // the posts, so the bar itself stays a plain conductor.
         if (IsClosed)
-            JumperGlyphs.DrawShunt(g, ctx, postAx, postY, postBx, postY);
+            JumperGlyphs.DrawShunt(g, ctx, Selected, postAx, postY, postBx, postY);
 
-        JumperGlyphs.DrawPost(g, ctx, postAx, postY, Selected);
-        JumperGlyphs.DrawPost(g, ctx, postBx, postY, Selected);
+        // Both posts light up when closed (a 2-pin link has no "side"), matching
+        // the SPST switch highlighting both contacts when closed.
+        JumperGlyphs.DrawPost(g, ctx, postAx, postY, Selected, IsClosed);
+        JumperGlyphs.DrawPost(g, ctx, postBx, postY, Selected, IsClosed);
         JumperGlyphs.DrawTerminal(g, ctx, p1x, p1y);
         JumperGlyphs.DrawTerminal(g, ctx, p2x, p2y);
     }

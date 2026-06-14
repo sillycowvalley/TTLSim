@@ -28,21 +28,31 @@ internal static class JumperGlyphs
         g.DrawPath(pen, path);
     }
 
-    /// <summary>Square header-style post centred at (cx, cy).</summary>
-    public static void DrawPost(Graphics g, RenderContext ctx, int cx, int cy, bool selected)
+    /// <summary>
+    /// Square header-style post centred at (cx, cy). <paramref name="active"/>
+    /// fills the post with the highlight colour to mark the selected/closed
+    /// side -- mirroring how the switch contacts highlight the selected throw.
+    /// </summary>
+    public static void DrawPost(Graphics g, RenderContext ctx, int cx, int cy, bool selected, bool active)
     {
         int half = Math.Max(2, (int)(ctx.GridPitch * 0.5f));
         var rect = new Rectangle(cx - half, cy - half, half * 2, half * 2);
-        using var fill = new SolidBrush(ctx.FillColor);
+        using var fill = new SolidBrush(active ? ctx.SelectedColor : ctx.FillColor);
         using var pen = new Pen(selected ? ctx.SelectedColor : ctx.ForegroundColor, 1.2f);
         g.FillRectangle(fill, rect);
         g.DrawRectangle(pen, rect.X, rect.Y, rect.Width, rect.Height);
     }
 
-    /// <summary>The shunt: a fat rounded conductor bridging two joined posts.</summary>
-    public static void DrawShunt(Graphics g, RenderContext ctx, int ax, int ay, int bx, int by)
+    /// <summary>
+    /// The shunt: a fat rounded conductor bridging two joined posts. Drawn in
+    /// the normal conductor colour -- the selected-side highlight lives on the
+    /// post, not the bar -- following the editor-selection colour only when the
+    /// whole unit is selected.
+    /// </summary>
+    public static void DrawShunt(Graphics g, RenderContext ctx, bool selected, int ax, int ay, int bx, int by)
     {
-        using var pen = new Pen(ctx.SelectedColor, Math.Max(3f, ctx.GridPitch * 0.6f))
+        var color = selected ? ctx.SelectedColor : ctx.ForegroundColor;
+        using var pen = new Pen(color, Math.Max(3f, ctx.GridPitch * 0.6f))
         {
             StartCap = LineCap.Round,
             EndCap = LineCap.Round
