@@ -18,7 +18,7 @@ public sealed class MainForm : Form
 {
     private readonly SchematicCanvas canvas;
     private readonly LibraryPanel library;
-    private readonly PropertyGrid propertyGrid;
+    private readonly EnterAwarePropertyGrid propertyGrid;
     private readonly StatusStrip statusStrip;
     private readonly ToolStripStatusLabel coordsLabel;
     private readonly ToolStripStatusLabel zoomLabel;
@@ -82,12 +82,13 @@ public sealed class MainForm : Form
         outputPanel = new OutputPanel();
         outputPanel.Visible = false;
 
-        propertyGrid = new PropertyGrid
+        propertyGrid = new EnterAwarePropertyGrid
         {
             Dock = DockStyle.Fill,
             ToolbarVisible = false,
             PropertySort = PropertySort.Categorized
         };
+        propertyGrid.EnterPressed += (_, _) => canvas.Focus();
 
         var menu = new MenuStrip();
         var fileMenu = new ToolStripMenuItem("&File");
