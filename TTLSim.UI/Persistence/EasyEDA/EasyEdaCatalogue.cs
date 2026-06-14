@@ -407,6 +407,65 @@ public static class EasyEDACatalogue
     private const string Dip16Reference3dModelTransform =
         "787.4,311.8104,0,0,0,0,-0.003,0.001,-118.11";
 
+    // ---------------------------------------------------- DIP-20 ICs
+    //
+    // Identical scheme to DIP-14 / DIP-16: single-PART box symbol, one
+    // shared footprint (dip-20.efoo, the PDIP-20 body, lifted verbatim from
+    // a 74HC273 reference .epro), one shared .esym template (dip-20.esym)
+    // cloned per chip via SymbolTemplateTokens, and per-chip-type device +
+    // symbol entries synthesised inline with deterministic UUIDs. No
+    // per-chip EasyEDA library data is needed; pin names come from each
+    // chip's ChipPartDefinition. Covers the box-drawn 20-pin
+    // ChipPartDefinitions (273, 373, 377, 574, ...) -- NOT the gate
+    // IcPartDefinitions.
+    //
+    // The .esym is drawn at 20px pin pitch (matching ChipUnit's PinPitch)
+    // so the router's pins line up exactly -- the same pitch fix applied to
+    // DIP-8/DIP-14/DIP-16.
+    internal const string Dip20FootprintUuid = "890f22ce76a55c8f";
+
+    // 74HC273 reference device attributes, used as the shared template for
+    // every synthesised DIP-20 device (decorative per EasyEDA_Export.md §2).
+    // The 3D Model is the PDIP-20 model, shared across all DIP-20 chips.
+    private const string Dip20ReferenceSupplierPart = "C5238";
+    private const string Dip20ReferenceManufacturer = "TI";
+    private const string Dip20Reference3dModelUuid = "c925b2ccd25b4584ba0148e94a8429d8";
+    private const string Dip20Reference3dModelTitle =
+        "DIP-20_L26.2-W6.4-H5.4-LS7.62-P2.54";
+    private const string Dip20Reference3dModelTransform =
+        "1031.494,315.7474,0,0,0,0,0,0,-118.11";
+
+    // ---------------------------------------------------- TO-92 (3-pin) parts
+    //
+    // Generic 3-pin TO-92 path for any ChipPartDefinition that opts in via
+    // To92 (e.g. the DS1813 reset supervisor). UNLIKE the DIP parts, the
+    // canvas symbol (To92Unit) is NOT a left/right box -- it draws three
+    // legs along the BOTTOM edge pointing down, centred at the DIP pitch.
+    // The export catalogue therefore uses a bespoke symbol (to92-3.esym,
+    // authored to match To92Unit: three pins down at 20px pitch) and a
+    // matching PinLocalPositions row -- the export placement math is
+    // pin-direction-agnostic (it uses pin world positions + local offsets,
+    // never PinDirection), so a down-pin part rides the same ComputePlacement
+    // as everything else.
+    //
+    // Footprint (to92-3.efoo) and 3D model are lifted verbatim from a DS1813
+    // TO-92-3 reference .epro; both are shared across all 3-pin TO-92 parts
+    // (same body). Per-chip-type device + symbol entries are synthesised
+    // inline with deterministic UUIDs, exactly like the DIP-14/16/20 parts.
+    // The displayed name comes from each chip's FullPartNumber via the
+    // device template Name = "={Manufacturer Part}".
+    internal const string To92FootprintUuid = "5f194b391a8afb9b";
+
+    // DS1813 TO-92-3 reference device attributes, used as the shared
+    // (decorative, per EasyEDA_Export.md §2) template for every synthesised
+    // TO-92 device. The 3D Model is the shared TO-92-3 body.
+    private const string To92ReferenceSupplierPart = "C1354106";
+    private const string To92ReferenceManufacturer = "Maxim";
+    private const string To92Reference3dModelUuid = "86c9a28785b84e52859c2af3e4e264a5";
+    private const string To92Reference3dModelTitle = "TO-92-3_L4.9-W3.7-P1.27-L";
+    private const string To92Reference3dModelTransform =
+        "176.28752,144.88554,0,180,0,0,0,20.669,-196.85";
+
     // ---------------------------------------------------- pre-built entries
 
     private static readonly CataloguePart LedPart = new(
@@ -742,11 +801,18 @@ public static class EasyEDACatalogue
                     "Supported pin counts are 2, 4, 6, 8."),
             },
 
+            // TO-92 (To92 opt-in) is dispatched before the DIP pin-count arms:
+            // it's a package/rendering choice, not a pin count, so a To92 part
+            // must never fall into a DIP arm.
+            ChipPartDefinition cp when cp.To92 => BuildTo92Part(device, cp),
+
             ChipPartDefinition cp when cp.PinCount == 8 => BuildDip8Part(cp),
 
             ChipPartDefinition cp when cp.PinCount == 14 => BuildDip14Part(device, cp),
 
             ChipPartDefinition cp when cp.PinCount == 16 => BuildDip16Part(device, cp),
+
+            ChipPartDefinition cp when cp.PinCount == 20 => BuildDip20Part(device, cp),
 
             _ => throw new NotImplementedException(
                 $"EasyEDA export: no catalogue entry for device {device.Designator} " +
@@ -1345,6 +1411,318 @@ public static class EasyEDACatalogue
         };
         return fragment.ToJsonString();
     }
+
+    // ---------------------------------------------------- DIP-20 synthesis
+    //
+    // 20px pin pitch, matching ChipUnit's PinPitch (same pitch fix as
+    // DIP-8/DIP-14/DIP-16). dip-20.esym: pins 1..10 DOWN the left edge at
+    // x=-50, y = +90,+70,+50,+30,+10,-10,-30,-50,-70,-90; pins 11..20 UP
+    // the right edge at x=+50, y = -90,-70,-50,-30,-10,+10,+30,+50,+70,+90
+    // (the DIP mirror); body half-height 102. Pin number N in TTL Sim maps
+    // to pin number N here.
+    private static readonly Dictionary<int, Point> Dip20PinLocals = new()
+    {
+        [1] = new Point(-50, 90),
+        [2] = new Point(-50, 70),
+        [3] = new Point(-50, 50),
+        [4] = new Point(-50, 30),
+        [5] = new Point(-50, 10),
+        [6] = new Point(-50, -10),
+        [7] = new Point(-50, -30),
+        [8] = new Point(-50, -50),
+        [9] = new Point(-50, -70),
+        [10] = new Point(-50, -90),
+        [11] = new Point(50, -90),
+        [12] = new Point(50, -70),
+        [13] = new Point(50, -50),
+        [14] = new Point(50, -30),
+        [15] = new Point(50, -10),
+        [16] = new Point(50, 10),
+        [17] = new Point(50, 30),
+        [18] = new Point(50, 50),
+        [19] = new Point(50, 70),
+        [20] = new Point(50, 90),
+    };
+
+    private static CataloguePart BuildDip20Part(Device device, ChipPartDefinition cp)
+    {
+        // Displayed chip name -- "74HC273", "74HC574", "74HC377", etc.
+        string chipName = device.FullPartNumber;
+
+        // Deterministic per-chip-type UUIDs so re-exports are byte-stable
+        // (doc §7), keyed on the full part name. Namespaced "dip20-" so they
+        // never collide with the DIP-14 / DIP-16 derivations.
+        string symbolUuid = DeterministicUuid("dip20-symbol:" + chipName);
+        string deviceUuid = DeterministicUuid("dip20-device:" + chipName);
+
+        // Symbol template tokens: part title, displayed symbol name, and
+        // the 20 pin names. Active-low '/' -> '#' (EasyEDA overbar).
+        var tokens = new Dictionary<string, string>
+        {
+            ["@@PART_TITLE@@"] = chipName + ".1",
+            ["@@SYMBOL_NAME@@"] = chipName,
+        };
+        foreach (var pin in cp.Pins)
+            tokens[$"@@PIN_{pin.Number}_NAME@@"] = ToEasyEdaPinName(pin.Name);
+
+        // All 20 pins must be enumerated, or the template ships a literal
+        // "@@PIN_n_NAME@@" string into the .esym.
+        for (int n = 1; n <= 20; n++)
+            if (!tokens.ContainsKey($"@@PIN_{n}_NAME@@"))
+                throw new NotImplementedException(
+                    $"EasyEDA export: DIP-20 chip '{chipName}' is missing a " +
+                    $"definition for pin {n}. All 20 pins must be enumerated in " +
+                    "its ChipPartDefinition before it can be exported.");
+
+        return new CataloguePart(
+            DeviceUuid: deviceUuid,
+            SymbolUuid: symbolUuid,
+            SymbolResourceName: "dip-20.esym",
+            FootprintUuid: Dip20FootprintUuid,
+            FootprintResourceName: "dip-20.efoo",
+            PartTitle: chipName + ".1",
+            PinLocalPositions: Dip20PinLocals,
+            SymbolTemplateTokens: tokens,
+            InlineDeviceJson: BuildDip20DeviceFragment(chipName, symbolUuid),
+            InlineSymbolJson: BuildDip20SymbolFragment(chipName),
+            EmitTemplatedName: true,
+            // Same label layout as DIP-16, raised to clear the taller DIP-20
+            // body (half-height 102, body top at +102; designator at +110).
+            //   R0/R180:  labels ABOVE the body, text horizontal.
+            //   R90/R270: labels to the LEFT (rotated span x[-102,102]
+            //     y[-50,50]), TEXT ROTATED 90 reading along the body.
+            // The body is symmetric, so each rotation pair shares one value.
+            LabelOffsets: new LabelOffsetsByRotation(
+                Rot0: new LabelOffsetSet(new(-40, +110), new(-20, +110), default),
+                Rot90: new LabelOffsetSet(new(-112, -20), new(-112, -2), default, TextRotationDeg: 90),
+                Rot180: new LabelOffsetSet(new(-40, +110), new(-20, +110), default),
+                Rot270: new LabelOffsetSet(new(-112, -20), new(-112, -2), default, TextRotationDeg: 90)));
+    }
+
+    /// <summary>
+    /// Synthesise a DIP-20 device fragment for project.json. Same shape as
+    /// the DIP-16 version, using the 74HC273 reference's decorative
+    /// attributes (shared template, per §2) and overwriting the chip-
+    /// specific fields. The 3D Model is the shared PDIP-20 model.
+    /// </summary>
+    private static string BuildDip20DeviceFragment(string chipName, string symbolUuid)
+    {
+        var attrs = new System.Text.Json.Nodes.JsonObject
+        {
+            ["Supplier Part"] = Dip20ReferenceSupplierPart,
+            ["Manufacturer"] = Dip20ReferenceManufacturer,
+            ["Manufacturer Part"] = chipName,
+            ["Supplier Footprint"] = "DIP-20",
+            ["JLCPCB Part Class"] = "Extended Part",
+            ["Supplier"] = "LCSC",
+            ["Add into BOM"] = "yes",
+            ["Convert to PCB"] = "yes",
+            ["Symbol"] = symbolUuid,
+            ["Designator"] = "U?",
+            ["Footprint"] = Dip20FootprintUuid,
+            ["3D Model"] = Dip20Reference3dModelUuid,
+            ["3D Model Title"] = Dip20Reference3dModelTitle,
+            ["3D Model Transform"] = Dip20Reference3dModelTransform,
+            ["Name"] = "={Manufacturer Part}",
+            ["Description"] = "DIP-20 logic IC",
+        };
+
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["title"] = chipName,
+            ["attributes"] = attrs,
+            ["description"] = "DIP-20 logic IC",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["images"] = new System.Text.Json.Nodes.JsonArray(""),
+            ["source"] = "67204415f0444fada7b9208ff9e12036|0819f05c4eef4c71ace90d822a990e87",
+            ["version"] = "1660159279",
+            ["custom_tags"] = "[\"Logic\"]",
+        };
+
+        return fragment.ToJsonString();
+    }
+
+    /// <summary>
+    /// Synthesise a DIP-20 symbol fragment for project.json (type:2).
+    /// </summary>
+    private static string BuildDip20SymbolFragment(string chipName)
+    {
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["source"] = "1754d3aadc5c46de9f9881bdf1de48cf|0819f05c4eef4c71ace90d822a990e87",
+            ["desc"] = "",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["custom_tags"] = "[\"Logic\"]",
+            ["title"] = chipName,
+            ["version"] = "1681885513",
+            ["type"] = 2,
+        };
+        return fragment.ToJsonString();
+    }
+
+    // ---------------------------------------------------- TO-92 synthesis
+    //
+    // to92-3.esym authored to match To92Unit: a body box with three legs
+    // along the BOTTOM edge pointing down, pin 1 left -> pin 3 right at 20px
+    // pitch, centred on x=0. Pin connection points (endpoints) are at
+    // (-20,-30), (0,-30), (+20,-30) in the symbol's local frame.
+    //
+    // PinLocalPositions encode the SAME relative geometry as the canvas:
+    // To92Unit places its three pins on a horizontal line one grid cell
+    // apart (pins at canvas-local x = 2,4,6, all at y = Size.Height), so in
+    // EasyEDA pixels the pins sit 20px apart horizontally at a common Y.
+    // That makes every exported pin world-position equal its TTLSim world
+    // position (anchor pin matches by construction; the other two match
+    // because the local geometry equals the canvas geometry), so wires land
+    // exactly where they were drawn. The common Y value (-30) is arbitrary
+    // -- only the relative offsets matter -- and is chosen to match the
+    // .esym's pin endpoints.
+    private static readonly Dictionary<int, Point> To92PinLocals = new()
+    {
+        [1] = new Point(-20, -30),
+        [2] = new Point(0, -30),
+        [3] = new Point(20, -30),
+    };
+
+    private static CataloguePart BuildTo92Part(Device device, ChipPartDefinition cp)
+    {
+        // Displayed part name -- "DS1813", etc.
+        string chipName = device.FullPartNumber;
+
+        // The shared to92-3.esym has exactly three pin slots; a To92 part
+        // with a different pin count would silently lose pins, so reject it
+        // with a clear message rather than emit a broken symbol.
+        if (cp.PinCount != 3)
+            throw new NotImplementedException(
+                $"EasyEDA export: TO-92 part '{chipName}' has {cp.PinCount} pins, but " +
+                "the to92-3 symbol/footprint support exactly 3. Add a wider TO-92 " +
+                "template before exporting this part.");
+
+        // Deterministic per-chip-type UUIDs so re-exports are byte-stable
+        // (doc §7), keyed on the full part name. Namespaced "to92-" so they
+        // never collide with the DIP derivations.
+        string symbolUuid = DeterministicUuid("to92-symbol:" + chipName);
+        string deviceUuid = DeterministicUuid("to92-device:" + chipName);
+
+        // Symbol template tokens: part title, displayed symbol name, and the
+        // 3 pin names. Active-low '/' -> '#' (EasyEDA overbar).
+        var tokens = new Dictionary<string, string>
+        {
+            ["@@PART_TITLE@@"] = chipName + ".1",
+            ["@@SYMBOL_NAME@@"] = chipName,
+        };
+        foreach (var pin in cp.Pins)
+            tokens[$"@@PIN_{pin.Number}_NAME@@"] = ToEasyEdaPinName(pin.Name);
+
+        // All 3 pins must be enumerated, or the template ships a literal
+        // "@@PIN_n_NAME@@" string into the .esym.
+        for (int n = 1; n <= 3; n++)
+            if (!tokens.ContainsKey($"@@PIN_{n}_NAME@@"))
+                throw new NotImplementedException(
+                    $"EasyEDA export: TO-92 part '{chipName}' is missing a " +
+                    $"definition for pin {n}. All 3 pins must be enumerated in " +
+                    "its ChipPartDefinition before it can be exported.");
+
+        return new CataloguePart(
+            DeviceUuid: deviceUuid,
+            SymbolUuid: symbolUuid,
+            SymbolResourceName: "to92-3.esym",
+            FootprintUuid: To92FootprintUuid,
+            FootprintResourceName: "to92-3.efoo",
+            PartTitle: chipName + ".1",
+            PinLocalPositions: To92PinLocals,
+            SymbolTemplateTokens: tokens,
+            InlineDeviceJson: BuildTo92DeviceFragment(chipName, symbolUuid),
+            InlineSymbolJson: BuildTo92SymbolFragment(chipName),
+            EmitTemplatedName: true,
+            // Body box spans y[-20,+20]; legs hang to y=-30. Designator/Name
+            // sit ABOVE the body at R0/R180 (text horizontal); to the LEFT,
+            // text rotated 90, at R90/R270. Cosmetic -- verify/tune in the
+            // §9 round-trip (this is the first down-pin part exported).
+            LabelOffsets: new LabelOffsetsByRotation(
+                Rot0: new LabelOffsetSet(new(-15, +30), new(+5, +30), default),
+                Rot90: new LabelOffsetSet(new(-42, -15), new(-42, +3), default, TextRotationDeg: 90),
+                Rot180: new LabelOffsetSet(new(-15, +30), new(+5, +30), default),
+                Rot270: new LabelOffsetSet(new(-42, -15), new(-42, +3), default, TextRotationDeg: 90)));
+    }
+
+    /// <summary>
+    /// Synthesise a TO-92 device fragment for project.json. Same shape as the
+    /// DIP versions, using the DS1813 TO-92-3 reference's decorative
+    /// attributes (shared template, per §2) and overwriting the chip-specific
+    /// fields. The 3D Model is the shared TO-92-3 model.
+    /// </summary>
+    private static string BuildTo92DeviceFragment(string chipName, string symbolUuid)
+    {
+        var attrs = new System.Text.Json.Nodes.JsonObject
+        {
+            ["Supplier Part"] = To92ReferenceSupplierPart,
+            ["Manufacturer"] = To92ReferenceManufacturer,
+            ["Manufacturer Part"] = chipName,
+            ["Supplier Footprint"] = "TO-92-3",
+            ["JLCPCB Part Class"] = "Extended Part",
+            ["Supplier"] = "LCSC",
+            ["Add into BOM"] = "yes",
+            ["Convert to PCB"] = "yes",
+            ["Symbol"] = symbolUuid,
+            ["Designator"] = "U?",
+            ["Footprint"] = To92FootprintUuid,
+            ["3D Model"] = To92Reference3dModelUuid,
+            ["3D Model Title"] = To92Reference3dModelTitle,
+            ["3D Model Transform"] = To92Reference3dModelTransform,
+            ["Name"] = "={Manufacturer Part}",
+            ["Description"] = "TO-92 3-pin part",
+        };
+
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["title"] = chipName,
+            ["attributes"] = attrs,
+            ["description"] = "TO-92 3-pin part",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["images"] = new System.Text.Json.Nodes.JsonArray(""),
+            ["source"] = "67204415f0444fada7b9208ff9e12036|0819f05c4eef4c71ace90d822a990e87",
+            ["version"] = "1660159279",
+            ["custom_tags"] = "[\"Power Management\"]",
+        };
+
+        return fragment.ToJsonString();
+    }
+
+    /// <summary>
+    /// Synthesise a TO-92 symbol fragment for project.json (type:2).
+    /// </summary>
+    private static string BuildTo92SymbolFragment(string chipName)
+    {
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["source"] = "ecd861af66314767861cd03d2a6b0962|0819f05c4eef4c71ace90d822a990e87",
+            ["desc"] = "",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["custom_tags"] = "[\"Power Management\"]",
+            ["title"] = chipName,
+            ["version"] = "1727062214",
+            ["type"] = 2,
+        };
+        return fragment.ToJsonString();
+    }
+
     private static string DeterministicUuid(string seed)
     {
         byte[] hash = System.Security.Cryptography.SHA1.HashData(

@@ -282,6 +282,7 @@ public static class SchematicSerializer
                 VccSymbol => "vcc",
                 GndSymbol => "gnd",
                 ClockSource => "clock",
+                CanOscillatorDip8 => "canosc8",
                 CanOscillator => "canosc",
                 _ => throw new InvalidOperationException(
                     $"No standalone-item discriminator for {item.GetType().Name}")
@@ -568,6 +569,7 @@ public static class SchematicSerializer
             StartHigh = dto.StartHigh ?? false
         },
         "canosc" => new CanOscillator { FrequencyHz = dto.FrequencyHz ?? 1_000_000.0 },
+        "canosc8" => new CanOscillatorDip8 { FrequencyHz = dto.FrequencyHz ?? 1_000_000.0 },
         _ => throw new InvalidDataException(
             $"Unknown standalone item type '{dto.Type}'. Expected 'vcc', 'gnd', or 'clock'.")
     };

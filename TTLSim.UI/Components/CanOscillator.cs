@@ -26,20 +26,38 @@ namespace TTLSim.UI.Components;
 /// (1-cell margin + 6*2-cell pitch + 1-cell margin), body inset one cell each
 /// side for the pin stubs. The frequency is printed on the body like the part's
 /// silkscreen.
+///
+/// The half-size <see cref="CanOscillatorDip8"/> derives from this class and
+/// supplies its own corner geometry; everything else is inherited.
 /// </summary>
-public sealed class CanOscillator : SchematicItem
+public class CanOscillator : SchematicItem
 {
-    // DIP-14 layout constants, kept in step with ChipUnit.
+    // Package-independent layout constants, kept in step with ChipUnit.
     private const int PinPitch = 2;
     private const int VerticalMargin = 1;
-    private const int PinsPerSide = 7;          // 14-pin package
-    private const int BodyWidthCells = 8;       // matches the standard DIP body width
 
-    // Pin numbers for the four populated corners.
-    private const int OutputPin = 8;
-    private const int GroundPin = 7;
-    private const int PowerPin = 14;
-    private const int NcPin = 1;
+    /// <summary>
+    /// Per-package geometry: the pins-per-side, the DIP body width, and the
+    /// pin numbers of the four populated corners. A DIP-14 and a half-size
+    /// DIP-8 can differ only in these values -- the body shape, pin stubs,
+    /// rotation and label are all derived from Size and the Pins collection.
+    /// </summary>
+    protected readonly record struct CanGeometry(
+        int PinsPerSide,
+        int BodyWidthCells,
+        int OutputPin,
+        int GroundPin,
+        int PowerPin,
+        int NcPin);
+
+    // The standard full-size can: a 14-pin DIP footprint.
+    private static readonly CanGeometry Dip14 = new(
+        PinsPerSide: 7,          // 14-pin package
+        BodyWidthCells: 8,       // matches the standard DIP body width
+        OutputPin: 8,
+        GroundPin: 7,
+        PowerPin: 14,
+        NcPin: 1);
 
     /// <summary>
     /// Output frequency in hertz. Offers a dropdown of common oscillator and
@@ -52,18 +70,25 @@ public sealed class CanOscillator : SchematicItem
     [Description("Oscillator output frequency. Pick a standard value or type your own.")]
     public double FrequencyHz { get; set; } = 1_000_000.0;
 
-    public CanOscillator()
+    public CanOscillator() : this(Dip14) { }
+
+    /// <summary>
+    /// Build a can with the given package geometry. Derived packages (e.g.
+    /// the half-size DIP-8 can) pass their own corner geometry here; the rest
+    /// of the part is geometry-driven and needs nothing further.
+    /// </summary>
+    protected CanOscillator(CanGeometry geometry)
     {
-        int top = VerticalMargin;                               // y of slot 0  -> 1
-        int bottom = VerticalMargin + (PinsPerSide - 1) * PinPitch;  // y of slot 6 -> 13
-        Size = new Size(BodyWidthCells + 2, bottom + VerticalMargin); // 10 x 14
+        int top = VerticalMargin;                                          // y of slot 0
+        int bottom = VerticalMargin + (geometry.PinsPerSide - 1) * PinPitch; // y of last slot
+        Size = new Size(geometry.BodyWidthCells + 2, bottom + VerticalMargin);
 
         // OUTPUT MUST be added first: the build pipeline drives PinNumbers[0],
         // and ChipFactory.CreateForItem reads that first entry as the clock net.
-        AddPin(new Pin("OUT", OutputPin, new Point(Size.Width, bottom), PinDirection.Right));
-        AddPin(new Pin("NC", NcPin, new Point(0, top), PinDirection.Left));
-        AddPin(new Pin("GND", GroundPin, new Point(0, bottom), PinDirection.Left));
-        AddPin(new Pin("+5V", PowerPin, new Point(Size.Width, top), PinDirection.Right));
+        AddPin(new Pin("OUT", geometry.OutputPin, new Point(Size.Width, bottom), PinDirection.Right));
+        AddPin(new Pin("NC", geometry.NcPin, new Point(0, top), PinDirection.Left));
+        AddPin(new Pin("GND", geometry.GroundPin, new Point(0, bottom), PinDirection.Left));
+        AddPin(new Pin("+5V", geometry.PowerPin, new Point(Size.Width, top), PinDirection.Right));
     }
 
     public override Rectangle RoutingBounds
