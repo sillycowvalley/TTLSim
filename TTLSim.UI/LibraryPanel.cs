@@ -124,6 +124,7 @@ public sealed class LibraryPanel : UserControl
         AddSymbol(power, "VCC", () => new VccSymbol());
         AddSymbol(power, "GND", () => new GndSymbol());
         AddSymbol(power, "CLK", () => new ClockSource());
+        AddSymbol(power, "OSC - Canned Oscillator", () => new CanOscillator());
         power.Expand();
     }
 

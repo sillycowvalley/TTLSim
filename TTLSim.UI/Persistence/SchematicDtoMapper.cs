@@ -191,7 +191,7 @@ public static class SchematicDtoMapper
                 case Unit unit:
                     dto.Units.Add(UnitToDto(unit));
                     break;
-                case VccSymbol or GndSymbol or UiClockSource:
+                case VccSymbol or GndSymbol or UiClockSource or CanOscillator:
                     dto.Items.Add(StandaloneItemToDto(item));
                     break;
                 default:
@@ -318,6 +318,7 @@ public static class SchematicDtoMapper
                 VccSymbol => "vcc",
                 GndSymbol => "gnd",
                 UiClockSource => "clock",
+                CanOscillator => "canosc",
                 _ => throw new InvalidOperationException(
                     $"No standalone-item discriminator for {item.GetType().Name}")
             }
@@ -329,6 +330,8 @@ public static class SchematicDtoMapper
             dto.DutyCycle = clk.DutyCycle;
             dto.StartHigh = clk.StartHigh;
         }
+        if (item is CanOscillator osc)
+            dto.FrequencyHz = osc.FrequencyHz;
 
         return dto;
     }
@@ -619,6 +622,7 @@ public static class SchematicDtoMapper
             DutyCycle = dto.DutyCycle ?? 0.5,
             StartHigh = dto.StartHigh ?? false
         },
+        "canosc" => new CanOscillator { FrequencyHz = dto.FrequencyHz ?? 1_000_000.0 },
         _ => throw new System.IO.InvalidDataException(
             $"Unknown standalone item type '{dto.Type}'. Expected 'vcc', 'gnd', or 'clock'.")
     };

@@ -1,0 +1,141 @@
+{
+  "schematic": {
+    "devices": [
+      {
+        "id": "af628ceee7d64f318c825f21c901e66f",
+        "designator": "D1",
+        "partKind": "passive",
+        "partIdentifier": "led",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      }
+    ],
+    "units": [
+      {
+        "id": "a29d0ad8cd5445b88aea4be64df2cbbe",
+        "deviceId": "af628ceee7d64f318c825f21c901e66f",
+        "unitLetter": "",
+        "position": {
+          "x": 38,
+          "y": 14
+        },
+        "label": "",
+        "rotation": 90,
+        "switchClosed": null
+      }
+    ],
+    "items": [
+      {
+        "type": "canosc",
+        "id": "6a24422f99784a09a4c07303ae5dc10a",
+        "label": "",
+        "position": {
+          "x": 19,
+          "y": 10
+        },
+        "rotation": 270,
+        "frequencyHz": 1,
+        "dutyCycle": null,
+        "startHigh": null
+      },
+      {
+        "type": "vcc",
+        "id": "bb83ce40c8a54f85bda43c73ebc89cf6",
+        "label": "VCC",
+        "position": {
+          "x": 16,
+          "y": 5
+        },
+        "rotation": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null
+      },
+      {
+        "type": "gnd",
+        "id": "fd01e62bed844dbcb3748ddace9b2a92",
+        "label": "",
+        "position": {
+          "x": 28,
+          "y": 26
+        },
+        "rotation": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null
+      }
+    ],
+    "connections": [
+      {
+        "id": "7bd3d16795b543f3b1e6d057ffec569b",
+        "a": {
+          "itemId": "fd01e62bed844dbcb3748ddace9b2a92",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "6a24422f99784a09a4c07303ae5dc10a",
+          "pinNumber": 7,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "4a15bcb69af445c2a660b0a1074c0460",
+        "a": {
+          "itemId": "6a24422f99784a09a4c07303ae5dc10a",
+          "pinNumber": 14,
+          "external": false
+        },
+        "b": {
+          "itemId": "bb83ce40c8a54f85bda43c73ebc89cf6",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "80e0ec0fe274445683fcc8d242a3a1ea",
+        "a": {
+          "itemId": "a29d0ad8cd5445b88aea4be64df2cbbe",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "fd01e62bed844dbcb3748ddace9b2a92",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "417bb2c451bf4a3d86b5c35b47d8003c",
+        "a": {
+          "itemId": "6a24422f99784a09a4c07303ae5dc10a",
+          "pinNumber": 8,
+          "external": false
+        },
+        "b": {
+          "itemId": "a29d0ad8cd5445b88aea4be64df2cbbe",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": null
+      }
+    ],
+    "wires": []
+  },
+  "view": {
+    "zoom": 3.024575,
+    "pan": {
+      "x": 288,
+      "y": 120
+    }
+  }
+}

@@ -191,6 +191,7 @@ public sealed class SimulationController
                     VccSymbol => "VCC",
                     GndSymbol => "GND",
                     ClockSource => "CLK",
+                    CanOscillator => "OSC",
                     _ => itemId
                 };
 
@@ -235,6 +236,11 @@ public sealed class SimulationController
             {
                 count++;
                 half = (long)(1e12 / clk.FrequencyHz) / 2;
+            }
+            if (item is CanOscillator osc && osc.FrequencyHz > 0)
+            {
+                count++;
+                half = (long)(1e12 / osc.FrequencyHz) / 2;
             }
         }
         return count == 1 ? half : (long?)null;

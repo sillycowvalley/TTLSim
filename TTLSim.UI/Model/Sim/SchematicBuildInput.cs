@@ -140,6 +140,7 @@ public sealed class SchematicBuildInput : IBuildInput
                     VccSymbol => BuildItemKind.Vcc,
                     GndSymbol => BuildItemKind.Gnd,
                     ClockSource => BuildItemKind.ClockSource,
+                    CanOscillator => BuildItemKind.ClockSource,
                     _ => null
                 };
                 if (kind is null) continue;
@@ -148,9 +149,12 @@ public sealed class SchematicBuildInput : IBuildInput
                 foreach (Pin p in item.Pins)
                     pins.Add(p.Number);
 
-                long? period = item is ClockSource cs
-                    ? (long)(1e12 / cs.FrequencyHz)     // hertz to picoseconds
-                    : null;
+                long? period = item switch
+                {
+                    ClockSource cs => (long)(1e12 / cs.FrequencyHz),
+                    CanOscillator osc => (long)(1e12 / osc.FrequencyHz),
+                    _ => null
+                };
 
                 yield return new BuildItem(item.Id, kind.Value, pins, period);
             }

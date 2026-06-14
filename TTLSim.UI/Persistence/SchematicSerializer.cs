@@ -180,7 +180,7 @@ public static class SchematicSerializer
                 case Unit unit:
                     dto.Units.Add(UnitToDto(unit));
                     break;
-                case VccSymbol or GndSymbol or ClockSource:
+                case VccSymbol or GndSymbol or ClockSource or CanOscillator:
                     dto.Items.Add(StandaloneItemToDto(item));
                     break;
                 default:
@@ -273,6 +273,7 @@ public static class SchematicSerializer
                 VccSymbol => "vcc",
                 GndSymbol => "gnd",
                 ClockSource => "clock",
+                CanOscillator => "canosc",
                 _ => throw new InvalidOperationException(
                     $"No standalone-item discriminator for {item.GetType().Name}")
             }
@@ -284,6 +285,9 @@ public static class SchematicSerializer
             dto.DutyCycle = clk.DutyCycle;
             dto.StartHigh = clk.StartHigh;
         }
+
+        if (item is CanOscillator osc)
+            dto.FrequencyHz = osc.FrequencyHz;
 
         return dto;
     }
@@ -551,6 +555,7 @@ public static class SchematicSerializer
             DutyCycle = dto.DutyCycle ?? 0.5,
             StartHigh = dto.StartHigh ?? false
         },
+        "canosc" => new CanOscillator { FrequencyHz = dto.FrequencyHz ?? 1_000_000.0 },
         _ => throw new InvalidDataException(
             $"Unknown standalone item type '{dto.Type}'. Expected 'vcc', 'gnd', or 'clock'.")
     };
