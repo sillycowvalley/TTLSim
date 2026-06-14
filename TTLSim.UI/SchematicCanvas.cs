@@ -53,6 +53,9 @@ public sealed class SchematicCanvas : Control
     /// <summary>Sim-mode: invoked with the new IsClosed state when a switch is clicked.</summary>
     public Action<SwitchUnit, bool>? SwitchToggleHandler { get; set; }
 
+    /// <summary>Sim-mode: invoked with the new ThrowB state when an SPDT switch is clicked.</summary>
+    public Action<SpdtSwitchUnit, bool>? SpdtToggleHandler { get; set; }
+
     private ButtonUnit? heldButton;
 
     private readonly ToolTip probeTooltip = new() { ShowAlways = true, InitialDelay = 200, ReshowDelay = 100 };
@@ -884,6 +887,19 @@ public sealed class SchematicCanvas : Control
             }
         }
 
+        // Sim mode: clicking an SPDT switch symbol flips it between throws.
+        if (SpdtToggleHandler is not null && e.Button == MouseButtons.Left)
+        {
+            var hitSpdt = HitTestSpdt(e.Location);
+            if (hitSpdt is not null)
+            {
+                hitSpdt.ThrowB = !hitSpdt.ThrowB;
+                SpdtToggleHandler(hitSpdt, hitSpdt.ThrowB);
+                Invalidate();
+                return;   // don't fall through to edit-mode handling
+            }
+        }
+
         if (e.Button == MouseButtons.Right && IsPlacingWire)
         {
             CancelWirePlacement();
@@ -1081,6 +1097,21 @@ public sealed class SchematicCanvas : Control
             var b = sw.InteractiveBounds;    // in HitTestSwitch
             if (gx >= b.Left && gx <= b.Right && gy >= b.Top && gy <= b.Bottom)
                 return sw;
+        }
+        return null;
+    }
+
+    private SpdtSwitchUnit? HitTestSpdt(Point screenPoint)
+    {
+        float gx = (screenPoint.X - PanOffset.X) / (Zoom * GridPitch);
+        float gy = (screenPoint.Y - PanOffset.Y) / (Zoom * GridPitch);
+
+        foreach (var item in Schematic.Items)
+        {
+            if (item is not SpdtSwitchUnit sp) continue;
+            var b = sp.InteractiveBounds;
+            if (gx >= b.Left && gx <= b.Right && gy >= b.Top && gy <= b.Bottom)
+                return sp;
         }
         return null;
     }
