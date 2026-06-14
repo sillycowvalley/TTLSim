@@ -121,8 +121,10 @@ public sealed class SpdtSwitchUnit : Unit
         g.DrawLine(leadPen, throwX, aY, throwEndX, aEndY);
         g.DrawLine(leadPen, throwX, bY, throwEndX, bEndY);
 
-        // Three contact terminals; highlight the selected throw.
-        DrawContact(g, pen, fill, comX, comY);
+        // Highlight every terminal on the live path: COM is always connected,
+        // plus whichever throw is selected. The open throw stays plain. Matches
+        // the SPST switch, which lights both ends of a closed connection.
+        DrawContact(g, pen, activeFill, comX, comY);
         DrawContact(g, pen, ThrowB ? fill : activeFill, throwX, aY);
         DrawContact(g, pen, ThrowB ? activeFill : fill, throwX, bY);
 
@@ -165,7 +167,9 @@ public sealed class SpdtSwitchUnit : Unit
         int selY = ThrowB ? bY : aY;
         JumperGlyphs.DrawShunt(g, ctx, Selected, comX, comY, selX, selY);
 
-        JumperGlyphs.DrawPost(g, ctx, comX, comY, Selected, active: false);
+        // COM is always on the live path, so it highlights too; the open throw
+        // is the only plain post (mirrors the SPDT switch contacts).
+        JumperGlyphs.DrawPost(g, ctx, comX, comY, Selected, active: true);
         JumperGlyphs.DrawPost(g, ctx, aX, aY, Selected, active: !ThrowB);
         JumperGlyphs.DrawPost(g, ctx, bX, bY, Selected, active: ThrowB);
 

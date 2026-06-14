@@ -42,6 +42,62 @@
         "function2": null,
         "frequencyHz1": null,
         "frequencyHz2": null
+      },
+      {
+        "id": "766a2c8c5b48448e87b2a56d246da7f4",
+        "designator": "S1",
+        "partKind": "passive",
+        "partIdentifier": "switch",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "b2e70927168f48d3a362c76dea954180",
+        "designator": "S2",
+        "partKind": "passive",
+        "partIdentifier": "spdt-switch",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "c17a8baad6554658bb8ff2a9025378ff",
+        "designator": "J2",
+        "partKind": "passive",
+        "partIdentifier": "jumper-2pin",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "2432dae394754330be13973254496022",
+        "designator": "J3",
+        "partKind": "passive",
+        "partIdentifier": "jumper-3pin",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
       }
     ],
     "units": [
@@ -79,6 +135,54 @@
         },
         "label": "",
         "rotation": 90,
+        "switchClosed": false
+      },
+      {
+        "id": "0450552b036b415b803dcf0dbbd8a7d8",
+        "deviceId": "766a2c8c5b48448e87b2a56d246da7f4",
+        "unitLetter": "",
+        "position": {
+          "x": 2,
+          "y": 13
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": true
+      },
+      {
+        "id": "c2cae0c016ea4eac8deafd3a17e61a32",
+        "deviceId": "b2e70927168f48d3a362c76dea954180",
+        "unitLetter": "",
+        "position": {
+          "x": 2,
+          "y": 6
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": true
+      },
+      {
+        "id": "e78fe57af45d4383ad74b1a56287bbfd",
+        "deviceId": "c17a8baad6554658bb8ff2a9025378ff",
+        "unitLetter": "",
+        "position": {
+          "x": 2,
+          "y": 18
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": true
+      },
+      {
+        "id": "f8804847f9bb4a06b92810f5fb8f67cd",
+        "deviceId": "2432dae394754330be13973254496022",
+        "unitLetter": "",
+        "position": {
+          "x": 2,
+          "y": 0
+        },
+        "label": "",
+        "rotation": 0,
         "switchClosed": false
       }
     ],
@@ -185,10 +289,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 3.478261,
+    "zoom": 4.6,
     "pan": {
-      "x": 85,
-      "y": 131
+      "x": 245,
+      "y": 118
     }
   }
 }
