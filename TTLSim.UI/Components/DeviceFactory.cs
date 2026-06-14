@@ -115,7 +115,7 @@ public static class DeviceFactory
         var spec = new UnitSpec(UnitKind.Chip, '\0',
             InputPins: Array.Empty<int>(),
             OutputPin: 0);
-        var unit = new ChipUnit(device, spec, chip);
+        var unit = CreateChipSymbol(device, spec, chip);
         unit.Position = new Point(
             dropPoint.X - unit.Size.Width / 2,
             dropPoint.Y - unit.Size.Height / 2);
@@ -171,4 +171,14 @@ public static class DeviceFactory
             "Chip units require a ChipPartDefinition and are built via BuildChipUnit, not by Kind alone."),
         _ => throw new ArgumentOutOfRangeException()
     };
+
+    /// <summary>
+    /// Pick the symbol class for a box/chip part: a TO-92 transistor outline when
+    /// the definition opts in via To92, otherwise the standard DIP box. Shared by
+    /// placement, load, and paste so all three render the part the same way.
+    /// </summary>
+    public static Unit CreateChipSymbol(Device device, UnitSpec spec, ChipPartDefinition definition) =>
+        definition.To92
+            ? new To92Unit(device, spec, definition)
+            : new ChipUnit(device, spec, definition);
 }

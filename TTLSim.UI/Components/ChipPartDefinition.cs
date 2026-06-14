@@ -26,7 +26,8 @@ public sealed record ChipPartDefinition(
     // so the pin remains wireable). Null = draw every pin name (default,
     // unchanged behaviour for all existing chips). Gate boxes set this to
     // show only VCC/GND when a Decorate helper makes the I/O pins self-evident.
-    Func<ChipPin, bool>? ShowPinName = null)
+    Func<ChipPin, bool>? ShowPinName = null,
+                           bool To92 = false)                       // draw as a TO-92 transistor, not a DIP box
     : PartDefinition(PartNumber, "U")
 {
     // ------------------------------------------------------------------ catalogue
@@ -1340,7 +1341,8 @@ public sealed record ChipPartDefinition(
         new("/RST", 1, Out),
         new("VCC",  2),
         new("GND",  3),
-        });
+        },
+        To92: true);
 
     // ---- shorthand for readability ------------------------------------
     private const ChipPinRole Out = ChipPinRole.Output;

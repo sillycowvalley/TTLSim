@@ -578,7 +578,7 @@ public static class SchematicDtoMapper
             case UnitKind.Diode: unit = new DiodeUnit(device, spec); break;
             case UnitKind.SevenSegment: unit = new SevenSegmentDisplayUnit(device, spec); break;
             case UnitKind.Chip:
-                unit = new ChipUnit(device, spec, (ChipPartDefinition)device.Definition);
+                unit = DeviceFactory.CreateChipSymbol(device, spec, (ChipPartDefinition)device.Definition);
                 break;
             case UnitKind.HeaderOutput:
                 unit = new HeaderOutputUnit(device, spec, (HeaderPartDefinition)device.Definition);
