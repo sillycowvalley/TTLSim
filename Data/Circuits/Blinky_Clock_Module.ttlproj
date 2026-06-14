@@ -457,7 +457,7 @@
         "unitLetter": "",
         "position": {
           "x": -22,
-          "y": 23
+          "y": 25
         },
         "label": "470n",
         "rotation": 90,
@@ -517,7 +517,7 @@
         "unitLetter": "",
         "position": {
           "x": 5,
-          "y": 24
+          "y": 26
         },
         "label": "2.2uF",
         "rotation": 90,
@@ -541,7 +541,7 @@
         "unitLetter": "",
         "position": {
           "x": -9,
-          "y": 9
+          "y": 8
         },
         "label": "",
         "rotation": 0,
@@ -756,12 +756,12 @@
         "deviceId": "0b99fa84a7214317b2025d0c7c859c7b",
         "unitLetter": "",
         "position": {
-          "x": 24,
-          "y": 14
+          "x": 20,
+          "y": 18
         },
         "label": "",
-        "rotation": 270,
-        "switchClosed": true
+        "rotation": 0,
+        "switchClosed": false
       },
       {
         "id": "2298b1df6eb3474296d675cc34b8698c",
@@ -843,7 +843,7 @@
         "label": "VCC",
         "position": {
           "x": 59,
-          "y": -15
+          "y": -2
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -882,7 +882,7 @@
         "label": "VCC",
         "position": {
           "x": 3,
-          "y": -16
+          "y": -2
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -895,7 +895,7 @@
         "label": "",
         "position": {
           "x": -14,
-          "y": 30
+          "y": 32
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -908,7 +908,7 @@
         "label": "",
         "position": {
           "x": -22,
-          "y": 30
+          "y": 32
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -921,7 +921,7 @@
         "label": "VCC",
         "position": {
           "x": -22,
-          "y": -1
+          "y": -2
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -934,7 +934,7 @@
         "label": "",
         "position": {
           "x": 5,
-          "y": 30
+          "y": 32
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -1077,7 +1077,7 @@
         "label": "",
         "position": {
           "x": 24,
-          "y": -11
+          "y": 3
         },
         "rotation": 270,
         "frequencyHz": 1,
@@ -1089,10 +1089,10 @@
         "id": "501b0c133f55462cb0978250ef75b2fd",
         "label": "",
         "position": {
-          "x": 33,
-          "y": 3
+          "x": 42,
+          "y": 14
         },
-        "rotation": 0,
+        "rotation": 270,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null
@@ -2176,20 +2176,6 @@
         "color": "Orange"
       },
       {
-        "id": "c69eb214e4f749f19f2952d215f892e8",
-        "a": {
-          "itemId": "fca53620e0954202bbd41745f9437f2e",
-          "pinNumber": 8,
-          "external": false
-        },
-        "b": {
-          "itemId": "bec54a838a53454f9a651fe65268f907",
-          "pinNumber": 3,
-          "external": false
-        },
-        "color": "Orange"
-      },
-      {
         "id": "d12aa37f806e48d5818acc941f4f2bd0",
         "a": {
           "itemId": "2298b1df6eb3474296d675cc34b8698c",
@@ -2468,15 +2454,29 @@
           "external": false
         },
         "color": "Red"
+      },
+      {
+        "id": "a952abe0d1b440d49f0ffc6999b77f93",
+        "a": {
+          "itemId": "bec54a838a53454f9a651fe65268f907",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "fe24ed342033a662a8c2c6e856f96c49",
+          "pinNumber": 12,
+          "external": false
+        },
+        "color": "Orange"
       }
     ],
     "wires": []
   },
   "view": {
-    "zoom": 2.6333034,
+    "zoom": 0.9899567,
     "pan": {
-      "x": -513,
-      "y": -739
+      "x": 309,
+      "y": 243
     }
   }
 }
