@@ -50,6 +50,8 @@ public static class SchematicSerializer
             [ChipPartDefinition.IcNe555.PartNumber] = ChipPartDefinition.IcNe555,
             [ChipPartDefinition.IcNe556.PartNumber] = ChipPartDefinition.IcNe556,
 
+            [ChipPartDefinition.Ds1813.PartNumber] = ChipPartDefinition.Ds1813,
+
             // PLD
             [ChipPartDefinition.IcGal16V8.PartNumber] = ChipPartDefinition.IcGal16V8,
             [ChipPartDefinition.IcGal20V8.PartNumber] = ChipPartDefinition.IcGal20V8,

@@ -1327,6 +1327,21 @@ public sealed record ChipPartDefinition(
             new("GND", 12),              new("/OE",  13),
         });
 
+    /// <summary>
+    /// Dallas/Maxim DS1813 5V EconoReset with pushbutton, 3-pin TO-92/SOT-23.
+    /// Pin 1 /RST (open-drain, internal ~5.5k pull-up, doubles as pushbutton
+    /// input), pin 2 VCC, pin 3 GND. Not a 74-series part.
+    /// </summary>
+    public static readonly ChipPartDefinition Ds1813 = new(
+        PartNumber: "DS1813", PinCount: 3, PowerPin: 2, GroundPin: 3,
+        BodyWidth: 6,
+        Pins: new ChipPin[]
+        {
+        new("/RST", 1, Out),
+        new("VCC",  2),
+        new("GND",  3),
+        });
+
     // ---- shorthand for readability ------------------------------------
     private const ChipPinRole Out = ChipPinRole.Output;
 

@@ -284,10 +284,20 @@ public sealed class ChipFactory : IChipFactory
             "283" => TryCreateHc283(device, pinToNet),
             "541" => TryCreateHc541(device, pinToNet),
             "688" => TryCreateHc688(device, pinToNet),
+            "DS1813" => TryCreateDs1813(pinToNet),
             "GAL16V8" or "GAL20V8" => TryCreateGal(device, pinToNet),
             "7seg-ca" => TryCreateSevenSegCa(pinToNet),
             _ => null
         };
+    }
+
+    private static IChip? TryCreateDs1813(IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        // Pin 1 = /RST (open-drain output + pushbutton sense). Pins 2 VCC and
+        // 3 GND are power pins consumed by the build pipeline, not wired through
+        // the model. A DS1813 with /RST unconnected has nothing to do.
+        if (!pinToNet.TryGetValue(1, out Net? rst) || rst is null) return null;
+        return new Ds1813(rst);
     }
 
 
@@ -644,6 +654,9 @@ public sealed class ChipFactory : IChipFactory
         // Box-chip ICs (per-unit dispatch in CreateForUnit).
         "47" or "74" or "153" or "157" or "161" or "163" or "173" or "181"
             or "244" or "245" or "273" or "283" or "541" or "688" or "7seg-ca"
+            => true,
+        // Reset supervisor (per-unit dispatch in CreateForUnit).
+        "DS1813" 
             => true,
         // GAL/PLD: combinational fuse-map evaluation; fuse map in device.Program.
         "GAL16V8" or "GAL20V8"

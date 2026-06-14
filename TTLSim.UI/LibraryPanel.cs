@@ -81,6 +81,7 @@ public sealed class LibraryPanel : UserControl
         var other = tree.Nodes.Add("Other ICs");
         AddPart(other, "NE555 - Single Timer", ChipPartDefinition.IcNe555);
         AddPart(other, "NE556 - Dual Timer", ChipPartDefinition.IcNe556);
+        AddPart(other, "DS1813 - Reset Supervisor", ChipPartDefinition.Ds1813);
         other.Expand();
 
         var sram = tree.Nodes.Add("SRAM");
