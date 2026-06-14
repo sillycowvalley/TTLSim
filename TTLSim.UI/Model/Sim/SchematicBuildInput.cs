@@ -108,7 +108,7 @@ public sealed class SchematicBuildInput : IBuildInput
 
                     units.Add(new BuildUnit(u.Id, u.UnitLetter, inputs, output,
                         OutputPinNumbers: outputPins,
-                        SwitchClosed: u is SwitchUnit sw && sw.IsClosed));
+                        SwitchClosed: (u is SwitchUnit sw && sw.IsClosed) || (u is SpdtSwitchUnit spdt && spdt.ThrowB)));
                 }
 
                 yield return new BuildDevice(

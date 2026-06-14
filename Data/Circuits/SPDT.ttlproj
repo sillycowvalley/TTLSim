@@ -1,0 +1,180 @@
+{
+  "schematic": {
+    "devices": [
+      {
+        "id": "600476b9546f432691414c379059b940",
+        "designator": "D1",
+        "partKind": "passive",
+        "partIdentifier": "led",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "113b67d4235b422ba03cf49f9bc57834",
+        "designator": "D2",
+        "partKind": "passive",
+        "partIdentifier": "led",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "bd3c0188a82c4af3921ffd29f2c75a2e",
+        "designator": "S1",
+        "partKind": "passive",
+        "partIdentifier": "switch",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      }
+    ],
+    "units": [
+      {
+        "id": "8525f06a85c94b02b41e721f17819f21",
+        "deviceId": "600476b9546f432691414c379059b940",
+        "unitLetter": "",
+        "position": {
+          "x": 14,
+          "y": 19
+        },
+        "label": "",
+        "rotation": 90,
+        "switchClosed": null
+      },
+      {
+        "id": "53dedeb0d1614904b27f929bb41a9fa2",
+        "deviceId": "113b67d4235b422ba03cf49f9bc57834",
+        "unitLetter": "",
+        "position": {
+          "x": 36,
+          "y": 19
+        },
+        "label": "",
+        "rotation": 90,
+        "switchClosed": null
+      },
+      {
+        "id": "fc9f60d5ac204b95be04e31c9f028a4f",
+        "deviceId": "bd3c0188a82c4af3921ffd29f2c75a2e",
+        "unitLetter": "",
+        "position": {
+          "x": 21,
+          "y": 17
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": false
+      }
+    ],
+    "items": [
+      {
+        "type": "vcc",
+        "id": "723279f8d6284651b8f45628cebbe365",
+        "label": "VCC",
+        "position": {
+          "x": 25,
+          "y": 5
+        },
+        "rotation": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null
+      },
+      {
+        "type": "gnd",
+        "id": "c97c1e0ff6de4deba4424a71376c5d74",
+        "label": "",
+        "position": {
+          "x": 25,
+          "y": 32
+        },
+        "rotation": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null
+      }
+    ],
+    "connections": [
+      {
+        "id": "e65232a3fce64336814682ad4e674b4e",
+        "a": {
+          "itemId": "fc9f60d5ac204b95be04e31c9f028a4f",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "723279f8d6284651b8f45628cebbe365",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "ee8e3fc36d3f414b98af1376c05bf298",
+        "a": {
+          "itemId": "8525f06a85c94b02b41e721f17819f21",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "fc9f60d5ac204b95be04e31c9f028a4f",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "fc756bb2448241f18c2aeb41ed524668",
+        "a": {
+          "itemId": "8525f06a85c94b02b41e721f17819f21",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "c97c1e0ff6de4deba4424a71376c5d74",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "a10f6598ce7f4034b89e6bd3ab45c6a0",
+        "a": {
+          "itemId": "c97c1e0ff6de4deba4424a71376c5d74",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "53dedeb0d1614904b27f929bb41a9fa2",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": null
+      }
+    ],
+    "wires": []
+  },
+  "view": {
+    "zoom": 4,
+    "pan": {
+      "x": 40,
+      "y": 40
+    }
+  }
+}

@@ -65,6 +65,9 @@ public sealed class SimulationController
     public IReadOnlyDictionary<SchematicItem, SwitchInput> SwitchBindings { get; private set; } =
     new Dictionary<SchematicItem, SwitchInput>();
 
+    public IReadOnlyDictionary<SchematicItem, SpdtSwitchInput> SpdtBindings { get; private set; } =
+    new Dictionary<SchematicItem, SpdtSwitchInput>();
+
     // ------------------------------------------------------------ commands
 
     public BuildResult Build()
@@ -77,6 +80,7 @@ public sealed class SimulationController
         DisplayBindings = BuildDisplayMap();
         ButtonBindings = BuildButtonMap();
         SwitchBindings = BuildSwitchMap();
+        SpdtBindings = BuildSpdtMap();
 
         if (simulator is not null)
         {
@@ -93,6 +97,38 @@ public sealed class SimulationController
 
         SetState(buildResult.Succeeded ? SimState.Built : SimState.Edit);
         return buildResult;
+    }
+
+    private IReadOnlyDictionary<SchematicItem, SpdtSwitchInput> BuildSpdtMap()
+    {
+        Dictionary<SchematicItem, SpdtSwitchInput> map = new();
+        if (simulator is null || buildResult?.NetTable is not NetTable table) return map;
+
+        foreach (Device dev in schematic.Devices)
+        {
+            if (dev.Definition.Identifier != "spdt-switch") continue;
+            foreach (Unit unit in dev.Units)
+            {
+                Net? a = table.FindNet(new PinRef(unit.Id, 1));
+                Net? com = table.FindNet(new PinRef(unit.Id, 2));
+                Net? b = table.FindNet(new PinRef(unit.Id, 3));
+                if (a is null || com is null || b is null) continue;
+                foreach (IChip chip in simulator.Chips)
+                    if (chip is SpdtSwitchInput sp
+                        && ReferenceEquals(sp.Nets[0], a)
+                        && ReferenceEquals(sp.Nets[1], com)
+                        && ReferenceEquals(sp.Nets[2], b))
+                    { map[unit] = sp; break; }
+            }
+        }
+        return map;
+    }
+
+    public void SetSpdtPosition(SpdtSwitchInput sw, bool throwB)
+    {
+        if (simulator is null) return;
+        sw.SetThrowB(throwB, (IScheduler)simulator);
+        simulator.RunUntil(simulator.CurrentTick);
     }
 
     /// <summary>Press or release a button during simulation.</summary>

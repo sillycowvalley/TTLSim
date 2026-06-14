@@ -107,6 +107,7 @@ public sealed class LibraryPanel : UserControl
         AddPart(passive, "LED", PassivePartDefinition.Led);
         AddPart(passive, "Pushbutton", PassivePartDefinition.Button);
         AddPart(passive, "SPST Switch", PassivePartDefinition.Switch);
+        AddPart(passive, "SPDT Switch", PassivePartDefinition.SpdtSwitch);
         AddPart(passive, "Crystal", PassivePartDefinition.Crystal);
         AddPart(passive, "Diode", PassivePartDefinition.Diode);
         AddPart(passive, "7-Segment, common anode", DisplayPartDefinition.SevenSegmentCommonAnode);

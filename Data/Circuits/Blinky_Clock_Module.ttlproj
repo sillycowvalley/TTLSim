@@ -352,8 +352,8 @@
         "frequencyHz2": null
       },
       {
-        "id": "b896d6bb6d4e43b882cbe064d3250bef",
-        "designator": "U7",
+        "id": "9a57b78f696548e99a870a4cc09a20c9",
+        "designator": "U5",
         "partKind": "chip",
         "partIdentifier": "DS1813",
         "family": null,
@@ -637,7 +637,7 @@
         "unitLetter": "",
         "position": {
           "x": -57,
-          "y": 60
+          "y": 63
         },
         "label": "Reset",
         "rotation": 270,
@@ -668,12 +668,12 @@
         "switchClosed": null
       },
       {
-        "id": "29736a154ac34ad28d294e2bbcedca2d",
-        "deviceId": "b896d6bb6d4e43b882cbe064d3250bef",
+        "id": "72efc7ec37354b57afa12fa11ef3a935",
+        "deviceId": "9a57b78f696548e99a870a4cc09a20c9",
         "unitLetter": "",
         "position": {
-          "x": -48,
-          "y": 65
+          "x": -49,
+          "y": 72
         },
         "label": "",
         "rotation": 90,
@@ -2074,51 +2074,9 @@
         "color": "Yellow"
       },
       {
-        "id": "04a8493260214fb68bf655225996b001",
+        "id": "0769dbc25fe04977b2a5d0bb2c37ebcd",
         "a": {
-          "itemId": "fbb18b21448f43a3890f59765e771a54",
-          "pinNumber": 0,
-          "external": false
-        },
-        "b": {
-          "itemId": "29736a154ac34ad28d294e2bbcedca2d",
-          "pinNumber": 3,
-          "external": false
-        },
-        "color": "Blue"
-      },
-      {
-        "id": "fa6ae2b57b3c479cb7a03c45d0fc3e7f",
-        "a": {
-          "itemId": "47b8e0eec09a4fb1bbaede542d2b98cb",
-          "pinNumber": 1,
-          "external": false
-        },
-        "b": {
-          "itemId": "29736a154ac34ad28d294e2bbcedca2d",
-          "pinNumber": 3,
-          "external": false
-        },
-        "color": "Blue"
-      },
-      {
-        "id": "d0ab5344480d4058b544083510016251",
-        "a": {
-          "itemId": "cd5941fcc9f3478797bfc74460d0f3c6",
-          "pinNumber": 0,
-          "external": false
-        },
-        "b": {
-          "itemId": "29736a154ac34ad28d294e2bbcedca2d",
-          "pinNumber": 2,
-          "external": false
-        },
-        "color": "Red"
-      },
-      {
-        "id": "6a02860264c347c7aaaa2a930f8db8c9",
-        "a": {
-          "itemId": "29736a154ac34ad28d294e2bbcedca2d",
+          "itemId": "cc0af404cb474df0b694c27aac534b9d",
           "pinNumber": 1,
           "external": false
         },
@@ -2130,9 +2088,51 @@
         "color": "Yellow"
       },
       {
-        "id": "0769dbc25fe04977b2a5d0bb2c37ebcd",
+        "id": "ee5f67ea99b146768e70f648036c2672",
         "a": {
-          "itemId": "cc0af404cb474df0b694c27aac534b9d",
+          "itemId": "fbb18b21448f43a3890f59765e771a54",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "72efc7ec37354b57afa12fa11ef3a935",
+          "pinNumber": 3,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "5ef1fd6174b44993b2259c009a890ecf",
+        "a": {
+          "itemId": "72efc7ec37354b57afa12fa11ef3a935",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "47b8e0eec09a4fb1bbaede542d2b98cb",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "5787b9f2527c425ea49d2d113a0fa431",
+        "a": {
+          "itemId": "cd5941fcc9f3478797bfc74460d0f3c6",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "72efc7ec37354b57afa12fa11ef3a935",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "176dfaea03b64f63994e4960b6184a1d",
+        "a": {
+          "itemId": "72efc7ec37354b57afa12fa11ef3a935",
           "pinNumber": 1,
           "external": false
         },
@@ -2147,10 +2147,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 2.1892536,
+    "zoom": 1.2517129,
     "pan": {
-      "x": 1137,
-      "y": -236
+      "x": 988,
+      "y": 180
     }
   }
 }

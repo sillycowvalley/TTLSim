@@ -120,6 +120,12 @@ public sealed class ChipFactory : IChipFactory
                 if (sw is not null) yield return sw;
                 continue;
             }
+            if (device.PartIdentifier == "spdt-switch")
+            {
+                IChip? sp = TryCreateSpdtSwitch(device, unit, pinMap);
+                if (sp is not null) yield return sp;
+                continue;
+            }
             if (device.PartIdentifier == "diode")
             {
                 IChip? d = TryCreateDiode(pinMap);
@@ -140,6 +146,16 @@ public sealed class ChipFactory : IChipFactory
         pinToNet.TryGetValue(2, out Net? p2);
         if (p1 is null || p2 is null) return null;
         return new SwitchInput(p1, p2, unit.SwitchClosed);
+    }
+
+    private static IChip? TryCreateSpdtSwitch(
+    BuildDevice device, BuildUnit unit, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        pinToNet.TryGetValue(1, out Net? a);
+        pinToNet.TryGetValue(2, out Net? com);
+        pinToNet.TryGetValue(3, out Net? b);
+        if (a is null || com is null || b is null) return null;
+        return new SpdtSwitchInput(a, com, b, unit.SwitchClosed);
     }
 
     private static IChip? TryCreateButton(IReadOnlyDictionary<int, Net> pinToNet)

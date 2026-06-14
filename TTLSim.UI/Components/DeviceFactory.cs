@@ -160,6 +160,7 @@ public static class DeviceFactory
         UnitKind.Led => new LedUnit(device, spec),
         UnitKind.Button => new ButtonUnit(device, spec),
         UnitKind.Switch => new SwitchUnit(device, spec),
+        UnitKind.SpdtSwitch => new SpdtSwitchUnit(device, spec),
         UnitKind.Crystal => new CrystalUnit(device, spec),
         UnitKind.Diode => new DiodeUnit(device, spec),
         UnitKind.SevenSegment => new SevenSegmentDisplayUnit(device, spec),

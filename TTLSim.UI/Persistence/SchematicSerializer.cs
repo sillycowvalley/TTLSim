@@ -258,7 +258,12 @@ public static class SchematicSerializer
         Position = new PointDto { X = unit.Position.X, Y = unit.Position.Y },
         Label = unit.Label,
         Rotation = (int)unit.Rotation,
-        SwitchClosed = unit is SwitchUnit sw ? sw.IsClosed : null
+        SwitchClosed = unit switch
+        {
+            SwitchUnit sw => sw.IsClosed,
+            SpdtSwitchUnit spdt => spdt.ThrowB,
+            _ => (bool?)null
+        }
     };
 
     private static ItemDto StandaloneItemToDto(SchematicItem item)
@@ -524,6 +529,7 @@ public static class SchematicSerializer
             UnitKind.Led => new LedUnit(device, spec),
             UnitKind.Button => new ButtonUnit(device, spec),
             UnitKind.Switch => new SwitchUnit(device, spec),
+            UnitKind.SpdtSwitch => new SpdtSwitchUnit(device, spec),
             UnitKind.Crystal => new CrystalUnit(device, spec),
             UnitKind.Diode => new DiodeUnit(device, spec),
             UnitKind.SevenSegment => new SevenSegmentDisplayUnit(device, spec),
@@ -542,6 +548,8 @@ public static class SchematicSerializer
         unit.Rotation = ParseRotation(dto.Rotation);
         if (unit is SwitchUnit swUnit && dto.SwitchClosed is bool closed)
             swUnit.IsClosed = closed;
+        if (unit is SpdtSwitchUnit spdt && dto.SwitchClosed is bool pos)
+            spdt.ThrowB = pos;
         device.Units.Add(unit);
         return unit;
     }
