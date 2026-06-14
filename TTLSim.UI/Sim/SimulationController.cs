@@ -106,7 +106,7 @@ public sealed class SimulationController
 
         foreach (Device dev in schematic.Devices)
         {
-            if (dev.Definition.Identifier != "spdt-switch") continue;
+            if (dev.Definition.Identifier is not ("spdt-switch" or "jumper-3pin")) continue;
             foreach (Unit unit in dev.Units)
             {
                 Net? a = table.FindNet(new PinRef(unit.Id, 1));
@@ -336,7 +336,7 @@ public sealed class SimulationController
 
         foreach (Device dev in schematic.Devices)
         {
-            if (dev.Definition.Identifier != "switch") continue;
+            if (dev.Definition.Identifier is not ("switch" or "jumper-2pin")) continue;   // BuildSwitchMap
 
             foreach (Unit unit in dev.Units)
             {

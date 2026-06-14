@@ -148,6 +148,8 @@ public sealed record PassivePartDefinition(
     public static readonly PassivePartDefinition Button = new("button", "SW", UnitKind.Button);
     public static readonly PassivePartDefinition Switch = new("switch", "S", UnitKind.Switch);
     public static readonly PassivePartDefinition SpdtSwitch = new("spdt-switch", "S", UnitKind.SpdtSwitch);
+    public static readonly PassivePartDefinition Jumper2 = new("jumper-2pin", "J", UnitKind.Switch);
+    public static readonly PassivePartDefinition Jumper3 = new("jumper-3pin", "J", UnitKind.SpdtSwitch);
     public static readonly PassivePartDefinition Crystal = new("crystal", "Y", UnitKind.Crystal);
     public static readonly PassivePartDefinition Diode = new("diode", "D", UnitKind.Diode);
 }
@@ -197,7 +199,7 @@ public sealed record HeaderPartDefinition(
     string Identifier,            // "hdr-out-2", "hdr-out-4", "hdr-out-6"
     int PinCount,
     bool IsOutput)                // outputs only for now; inputs land later
-    : PartDefinition(Identifier, "J")
+    : PartDefinition(Identifier, "H")
 {
     public static readonly HeaderPartDefinition HeaderOut2 = new("hdr-out-2", 2, true);
     public static readonly HeaderPartDefinition HeaderOut3 = new("hdr-out-3", 3, true);

@@ -106,14 +106,19 @@ public sealed class LibraryPanel : UserControl
         AddPart(passive, "Capacitor", PassivePartDefinition.Capacitor);
         AddPart(passive, "Capacitor, polarized", PassivePartDefinition.PolarizedCapacitor);
         AddPart(passive, "LED", PassivePartDefinition.Led);
-        AddPart(passive, "Pushbutton", PassivePartDefinition.Button);
-        AddPart(passive, "SPST Switch", PassivePartDefinition.Switch);
-        AddPart(passive, "SPDT Switch", PassivePartDefinition.SpdtSwitch);
         AddPart(passive, "Crystal", PassivePartDefinition.Crystal);
         AddPart(passive, "Diode", PassivePartDefinition.Diode);
         AddPart(passive, "7-Segment, common anode", DisplayPartDefinition.SevenSegmentCommonAnode);
         AddPart(passive, "7-Segment, common cathode", DisplayPartDefinition.SevenSegmentCommonCathode);
         passive.Expand();
+
+        var switches = tree.Nodes.Add("Switches");
+        AddPart(switches, "Pushbutton", PassivePartDefinition.Button);
+        AddPart(switches, "SPST Switch", PassivePartDefinition.Switch);
+        AddPart(switches, "SPDT Switch", PassivePartDefinition.SpdtSwitch);
+        AddPart(switches, "Jumper, 2-pin", PassivePartDefinition.Jumper2);
+        AddPart(switches, "Jumper, 3-pin", PassivePartDefinition.Jumper3);
+        switches.Expand();
 
         var io = tree.Nodes.Add("I/O");
         AddPart(io, "Header out, 2-pin", HeaderPartDefinition.HeaderOut2);

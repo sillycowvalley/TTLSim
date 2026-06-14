@@ -128,6 +128,8 @@ public static class SchematicSerializer
             [PassivePartDefinition.Button.Identifier] = PassivePartDefinition.Button,
             [PassivePartDefinition.Switch.Identifier] = PassivePartDefinition.Switch,
             [PassivePartDefinition.SpdtSwitch.Identifier] = PassivePartDefinition.SpdtSwitch,
+            [PassivePartDefinition.Jumper2.Identifier] = PassivePartDefinition.Jumper2,
+            [PassivePartDefinition.Jumper3.Identifier] = PassivePartDefinition.Jumper3,
             [PassivePartDefinition.Crystal.Identifier] = PassivePartDefinition.Crystal,
             [PassivePartDefinition.Diode.Identifier] = PassivePartDefinition.Diode,
         };

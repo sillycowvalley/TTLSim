@@ -8,12 +8,27 @@ namespace TTLSim.UI.Components;
 /// SPST latching switch. Two pins (1, 2) tied together when closed, open when
 /// open. IsClosed is persistent state -- it serializes with the schematic and
 /// is restored on load. In sim mode a left-click on the symbol toggles it.
+///
+/// When the owning device is the 2-pin jumper part ("jumper-2pin") this same
+/// unit renders as a pin-header jumper instead of a lever switch -- see
+/// <see cref="IsJumper"/>. The electrical model, persisted IsClosed state, and
+/// click-to-toggle are identical; only the drawing and the clickable area
+/// differ.
 /// </summary>
 public sealed class SwitchUnit : Unit
 {
     [Category("State")]
     [Description("True when the switch is closed (conducting). Open-circuit when false.")]
     public bool IsClosed { get; set; }
+
+    /// <summary>
+    /// True when this unit belongs to the 2-pin jumper part rather than the
+    /// SPST switch part. Derived from the part definition (which round-trips
+    /// through PartIdentifier), so it needs no separate stored/serialized
+    /// flag. Drives the jumper rendering and the clickable-area branch.
+    /// </summary>
+    [Browsable(false)]
+    public bool IsJumper => Device.Definition.Identifier == "jumper-2pin";
 
     public SwitchUnit(Device device, UnitSpec spec) : base(device, spec)
     {
@@ -44,17 +59,18 @@ public sealed class SwitchUnit : Unit
     }
 
     /// <summary>
-    /// Clickable extent for sim-mode interaction: the Size box plus one cell on
-    /// top for the lever's open-state overshoot. Rotation-aware, mirroring the
-    /// Bounds rotation logic.
+    /// Clickable extent for sim-mode interaction. A switch's lever overshoots
+    /// one cell above the body, so its target includes that cell; a jumper has
+    /// no lever, so its target is just the body box. Rotation-aware, mirroring
+    /// the Bounds rotation logic.
     /// </summary>
     public Rectangle InteractiveBounds
     {
         get
         {
-            // One extra cell above the body; nothing added on the other sides.
+            int topPad = IsJumper ? 0 : 1;
             var unrotated = new Rectangle(
-                Position.X, Position.Y - 1, Size.Width, Size.Height + 1);
+                Position.X, Position.Y - topPad, Size.Width, Size.Height + topPad);
 
             if (Rotation == Rotation.R0 || Rotation == Rotation.R180)
                 return unrotated;
@@ -75,6 +91,12 @@ public sealed class SwitchUnit : Unit
 
     protected override void DrawShape(Graphics g, RenderContext ctx)
     {
+        if (IsJumper)
+        {
+            DrawJumper(g, ctx);
+            return;
+        }
+
         int p = ctx.GridPitch;
         int leftX = (Position.X + 1) * p;
         int rightX = (Position.X + 5) * p;
@@ -111,6 +133,37 @@ public sealed class SwitchUnit : Unit
         using var pinBrush = new SolidBrush(ctx.PinColor);
         g.FillEllipse(pinBrush, p1x - 2, p1y - 2, 4, 4);
         g.FillEllipse(pinBrush, p2x - 2, p2y - 2, 4, 4);
+    }
+
+    /// <summary>
+    /// 2-pin jumper rendering: two header posts with a shunt conductor bridging
+    /// them when closed. Same pins, same IsClosed state as the switch form.
+    /// </summary>
+    private void DrawJumper(Graphics g, RenderContext ctx)
+    {
+        int p = ctx.GridPitch;
+        int postAx = (Position.X + 1) * p;
+        int postBx = (Position.X + 5) * p;
+        int postY = (Position.Y + 1) * p;
+        int m = (int)(p * 0.8f);
+
+        int p1x = (Position.X + Pins[0].LocalPosition.X) * p;
+        int p1y = (Position.Y + Pins[0].LocalPosition.Y) * p;
+        int p2x = (Position.X + Pins[1].LocalPosition.X) * p;
+        int p2y = (Position.Y + Pins[1].LocalPosition.Y) * p;
+
+        JumperGlyphs.DrawBody(g, ctx, Selected, postAx - m, postY - m, postBx + m, postY + m);
+        JumperGlyphs.DrawLead(g, ctx, Selected, p1x, p1y, postAx, postY);
+        JumperGlyphs.DrawLead(g, ctx, Selected, postBx, postY, p2x, p2y);
+
+        // Shunt bridges the two posts only when closed -- the closed indicator.
+        if (IsClosed)
+            JumperGlyphs.DrawShunt(g, ctx, postAx, postY, postBx, postY);
+
+        JumperGlyphs.DrawPost(g, ctx, postAx, postY, Selected);
+        JumperGlyphs.DrawPost(g, ctx, postBx, postY, Selected);
+        JumperGlyphs.DrawTerminal(g, ctx, p1x, p1y);
+        JumperGlyphs.DrawTerminal(g, ctx, p2x, p2y);
     }
 
     protected override void DrawLabels(Graphics g, RenderContext ctx)

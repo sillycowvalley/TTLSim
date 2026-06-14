@@ -30,10 +30,10 @@
         "frequencyHz2": null
       },
       {
-        "id": "337d991f9ac749919df9a0946ecbf0e4",
-        "designator": "S1",
+        "id": "4d3a7a8f2ef2495da56051005cf61db1",
+        "designator": "J1",
         "partKind": "passive",
-        "partIdentifier": "spdt-switch",
+        "partIdentifier": "jumper-3pin",
         "family": null,
         "value": null,
         "program": null,
@@ -70,12 +70,12 @@
         "switchClosed": null
       },
       {
-        "id": "1c5d20e06ad747dd91360a389c5d31f5",
-        "deviceId": "337d991f9ac749919df9a0946ecbf0e4",
+        "id": "f342f2d381f94a9493068be3c60a4557",
+        "deviceId": "4d3a7a8f2ef2495da56051005cf61db1",
         "unitLetter": "",
         "position": {
           "x": 24,
-          "y": 13
+          "y": 15
         },
         "label": "",
         "rotation": 90,
@@ -140,23 +140,23 @@
         "color": null
       },
       {
-        "id": "bb40dfe3b0424bb2bba9c1dc85a91e9b",
+        "id": "5a26b44436c54ed883a0b3361a3a9909",
         "a": {
-          "itemId": "723279f8d6284651b8f45628cebbe365",
-          "pinNumber": 0,
+          "itemId": "8525f06a85c94b02b41e721f17819f21",
+          "pinNumber": 1,
           "external": false
         },
         "b": {
-          "itemId": "1c5d20e06ad747dd91360a389c5d31f5",
-          "pinNumber": 2,
+          "itemId": "f342f2d381f94a9493068be3c60a4557",
+          "pinNumber": 3,
           "external": false
         },
         "color": null
       },
       {
-        "id": "d67a0e8f99754ab08fc81db22c4883f3",
+        "id": "b73e9fe2a010428c892adef0c3f31630",
         "a": {
-          "itemId": "1c5d20e06ad747dd91360a389c5d31f5",
+          "itemId": "f342f2d381f94a9493068be3c60a4557",
           "pinNumber": 1,
           "external": false
         },
@@ -168,15 +168,15 @@
         "color": null
       },
       {
-        "id": "f157991cb01149db89b8f0e35d91c3c6",
+        "id": "e553ef1a854c405b85f933a9471efaba",
         "a": {
-          "itemId": "1c5d20e06ad747dd91360a389c5d31f5",
-          "pinNumber": 3,
+          "itemId": "f342f2d381f94a9493068be3c60a4557",
+          "pinNumber": 2,
           "external": false
         },
         "b": {
-          "itemId": "8525f06a85c94b02b41e721f17819f21",
-          "pinNumber": 1,
+          "itemId": "723279f8d6284651b8f45628cebbe365",
+          "pinNumber": 0,
           "external": false
         },
         "color": null
@@ -185,10 +185,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 4,
+    "zoom": 3.478261,
     "pan": {
-      "x": 40,
-      "y": 40
+      "x": 85,
+      "y": 131
     }
   }
 }

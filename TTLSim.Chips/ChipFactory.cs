@@ -114,13 +114,13 @@ public sealed class ChipFactory : IChipFactory
                 if (btn is not null) yield return btn;
                 continue;
             }
-            if (device.PartIdentifier == "switch")
+            if (device.PartIdentifier is "switch" or "jumper-2pin")
             {
                 IChip? sw = TryCreateSwitch(device, unit, pinMap);
                 if (sw is not null) yield return sw;
                 continue;
             }
-            if (device.PartIdentifier == "spdt-switch")
+            if (device.PartIdentifier is "spdt-switch" or "jumper-3pin")
             {
                 IChip? sp = TryCreateSpdtSwitch(device, unit, pinMap);
                 if (sp is not null) yield return sp;
@@ -766,12 +766,12 @@ public sealed class ChipFactory : IChipFactory
             or "32" or "86" or "390" or "393"
             => true,
         // Electrically modelled passives.
-        "resistor" or "button" or "switch" or "spdt-switch" or "diode"
+        "resistor" or "button" or "switch" or "spdt-switch" or "jumper-2pin" or "jumper-3pin" or "diode"
             => true,
         // Visual-only parts: no electrical model, but not "unsupported".
         "led" or "capacitor" or "polarized-capacitor" or "crystal"
             => true,
-        "hdr-out-2" or "hdr-out-4" or "hdr-out-6" or "hdr-out-8"
+        "hdr-out-2" or "hdr-out-3" or "hdr-out-4" or "hdr-out-6" or "hdr-out-8"
             => true,
         // Anything else -- decoders, '193, etc. -- is on the catalogue but
         // does not have a sim model yet.

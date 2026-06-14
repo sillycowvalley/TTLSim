@@ -12,14 +12,27 @@ namespace TTLSim.UI.Components;
 /// the unit's switch-state field) and restored on load. In sim mode a left
 /// click on the symbol flips it between the two throws.
 ///
-/// Pin numbering matches <see cref="SpdtSwitchInput"/> and the 3-pin jumper so
-/// the simulation model binds the same regardless of which symbol draws it.
+/// When the owning device is the 3-pin jumper part ("jumper-3pin") this same
+/// unit renders as a 3-post pin-header jumper instead of a lever switch -- see
+/// <see cref="IsJumper"/>. The electrical model, persisted ThrowB state, and
+/// click-to-flip are identical; only the drawing differs.
+///
+/// Pin numbering matches <see cref="SpdtSwitchInput"/> and the jumper so the
+/// simulation model binds the same regardless of which symbol draws it.
 /// </summary>
 public sealed class SpdtSwitchUnit : Unit
 {
     [Category("State")]
     [Description("Selected throw. False = COM connected to throw A (pin 1); true = COM connected to throw B (pin 3).")]
     public bool ThrowB { get; set; }
+
+    /// <summary>
+    /// True when this unit belongs to the 3-pin jumper part rather than the
+    /// SPDT switch part. Derived from the part definition (which round-trips
+    /// through PartIdentifier), so it needs no separate stored/serialized flag.
+    /// </summary>
+    [Browsable(false)]
+    public bool IsJumper => Device.Definition.Identifier == "jumper-3pin";
 
     public SpdtSwitchUnit(Device device, UnitSpec spec) : base(device, spec)
     {
@@ -74,6 +87,12 @@ public sealed class SpdtSwitchUnit : Unit
 
     protected override void DrawShape(Graphics g, RenderContext ctx)
     {
+        if (IsJumper)
+        {
+            DrawJumper(g, ctx);
+            return;
+        }
+
         int p = ctx.GridPitch;
 
         // Contact positions: COM one cell in from the left at mid-height;
@@ -115,6 +134,43 @@ public sealed class SpdtSwitchUnit : Unit
         g.FillEllipse(pinBrush, comEndX - 2, comEndY - 2, 4, 4);
         g.FillEllipse(pinBrush, throwEndX - 2, aEndY - 2, 4, 4);
         g.FillEllipse(pinBrush, throwEndX - 2, bEndY - 2, 4, 4);
+    }
+
+    /// <summary>
+    /// 3-pin jumper rendering: three header posts (COM, A, B) with a shunt
+    /// conductor bridging COM to the selected throw. Same pins, same ThrowB
+    /// state as the SPDT switch form.
+    /// </summary>
+    private void DrawJumper(Graphics g, RenderContext ctx)
+    {
+        int p = ctx.GridPitch;
+        int comX = (Position.X + 1) * p, comY = (Position.Y + 2) * p;
+        int aX = (Position.X + 5) * p, aY = (Position.Y + 1) * p;
+        int bX = (Position.X + 5) * p, bY = (Position.Y + 3) * p;
+        int m = (int)(p * 0.8f);
+
+        int comEndX = Position.X * p, comEndY = (Position.Y + 2) * p;
+        int throwEndX = (Position.X + Size.Width) * p;
+        int aEndY = (Position.Y + 1) * p, bEndY = (Position.Y + 3) * p;
+
+        JumperGlyphs.DrawBody(g, ctx, Selected, comX - m, aY - m, bX + m, bY + m);
+        JumperGlyphs.DrawLead(g, ctx, Selected, comEndX, comEndY, comX, comY);
+        JumperGlyphs.DrawLead(g, ctx, Selected, aX, aY, throwEndX, aEndY);
+        JumperGlyphs.DrawLead(g, ctx, Selected, bX, bY, throwEndX, bEndY);
+
+        // Shunt bridges COM to the selected throw (SPDT is on-on, so always
+        // connected) -- which post it reaches is the selected-throw indicator.
+        int selX = ThrowB ? bX : aX;
+        int selY = ThrowB ? bY : aY;
+        JumperGlyphs.DrawShunt(g, ctx, comX, comY, selX, selY);
+
+        JumperGlyphs.DrawPost(g, ctx, comX, comY, Selected);
+        JumperGlyphs.DrawPost(g, ctx, aX, aY, Selected);
+        JumperGlyphs.DrawPost(g, ctx, bX, bY, Selected);
+
+        JumperGlyphs.DrawTerminal(g, ctx, comEndX, comEndY);
+        JumperGlyphs.DrawTerminal(g, ctx, throwEndX, aEndY);
+        JumperGlyphs.DrawTerminal(g, ctx, throwEndX, bEndY);
     }
 
     private static void DrawContact(Graphics g, Pen pen, Brush fill, int x, int y)
