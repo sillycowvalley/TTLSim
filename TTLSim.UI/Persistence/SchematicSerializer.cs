@@ -127,6 +127,7 @@ public static class SchematicSerializer
             [PassivePartDefinition.Led.Identifier] = PassivePartDefinition.Led,
             [PassivePartDefinition.Button.Identifier] = PassivePartDefinition.Button,
             [PassivePartDefinition.Switch.Identifier] = PassivePartDefinition.Switch,
+            [PassivePartDefinition.SpdtSwitch.Identifier] = PassivePartDefinition.SpdtSwitch,
             [PassivePartDefinition.Crystal.Identifier] = PassivePartDefinition.Crystal,
             [PassivePartDefinition.Diode.Identifier] = PassivePartDefinition.Diode,
         };
@@ -533,7 +534,7 @@ public static class SchematicSerializer
             UnitKind.Crystal => new CrystalUnit(device, spec),
             UnitKind.Diode => new DiodeUnit(device, spec),
             UnitKind.SevenSegment => new SevenSegmentDisplayUnit(device, spec),
-            UnitKind.Chip => new ChipUnit(device, spec, (ChipPartDefinition)device.Definition),
+            UnitKind.Chip => DeviceFactory.CreateChipSymbol(device, spec, (ChipPartDefinition)device.Definition),
             UnitKind.HeaderOutput => new HeaderOutputUnit(device, spec, (HeaderPartDefinition)device.Definition),
             UnitKind.DFlipFlop => throw new NotImplementedException(
                 "Cannot load unit of kind DFlipFlop: not yet implemented."),

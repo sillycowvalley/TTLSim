@@ -766,7 +766,7 @@ public sealed class ChipFactory : IChipFactory
             or "32" or "86" or "390" or "393"
             => true,
         // Electrically modelled passives.
-        "resistor" or "button" or "switch" or "diode"
+        "resistor" or "button" or "switch" or "spdt-switch" or "diode"
             => true,
         // Visual-only parts: no electrical model, but not "unsupported".
         "led" or "capacitor" or "polarized-capacitor" or "crystal"

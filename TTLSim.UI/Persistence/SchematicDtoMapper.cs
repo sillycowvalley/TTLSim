@@ -302,7 +302,12 @@ public static class SchematicDtoMapper
         Position = new PointDto { X = unit.Position.X, Y = unit.Position.Y },
         Label = unit.Label,
         Rotation = (int)unit.Rotation,
-        SwitchClosed = unit is SwitchUnit sw ? sw.IsClosed : null
+        SwitchClosed = unit switch
+        {
+            SwitchUnit sw => sw.IsClosed,
+            SpdtSwitchUnit spdt => spdt.ThrowB,
+            _ => (bool?)null
+        }
     };
 
     private static ItemDto StandaloneItemToDto(SchematicItem item)
@@ -577,6 +582,7 @@ public static class SchematicDtoMapper
             case UnitKind.Led: unit = new LedUnit(device, spec); break;
             case UnitKind.Button: unit = new ButtonUnit(device, spec); break;
             case UnitKind.Switch: unit = new SwitchUnit(device, spec); break;
+            case UnitKind.SpdtSwitch: unit = new SpdtSwitchUnit(device, spec); break;
             case UnitKind.Crystal: unit = new CrystalUnit(device, spec); break;
             case UnitKind.Diode: unit = new DiodeUnit(device, spec); break;
             case UnitKind.SevenSegment: unit = new SevenSegmentDisplayUnit(device, spec); break;
@@ -606,8 +612,12 @@ public static class SchematicDtoMapper
         unit.Label = dto.Label;
         unit.Position = new Point(dto.Position.X, dto.Position.Y);
         unit.Rotation = ParseRotation(dto.Rotation);
+
         if (unit is SwitchUnit swUnit && dto.SwitchClosed is bool closed)
             swUnit.IsClosed = closed;
+        if (unit is SpdtSwitchUnit spdt && dto.SwitchClosed is bool pos)
+            spdt.ThrowB = pos;
+
         device.Units.Add(unit);
         return unit;
     }
