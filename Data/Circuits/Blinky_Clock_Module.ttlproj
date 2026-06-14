@@ -364,6 +364,34 @@
         "function2": null,
         "frequencyHz1": null,
         "frequencyHz2": null
+      },
+      {
+        "id": "d1e2e6bcdd584ab79cb674edf5080e30",
+        "designator": "S1",
+        "partKind": "passive",
+        "partIdentifier": "spdt-switch",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "0332ee52c4874bb08d54a794fd4905de",
+        "designator": "J1",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-3",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
       }
     ],
     "units": [
@@ -372,7 +400,7 @@
         "deviceId": "1ef3c8e5d92d224093c140694987f9b2",
         "unitLetter": "",
         "position": {
-          "x": 115,
+          "x": 99,
           "y": 39
         },
         "label": "OSC",
@@ -384,7 +412,7 @@
         "deviceId": "148e7ef042fc00ad1d78437e620a2fd9",
         "unitLetter": "",
         "position": {
-          "x": 114,
+          "x": 98,
           "y": 46
         },
         "label": " 330",
@@ -420,7 +448,7 @@
         "deviceId": "eeab4d12f6d943827a2b2fd5aaa4c206",
         "unitLetter": "",
         "position": {
-          "x": 35,
+          "x": 38,
           "y": 19
         },
         "label": "",
@@ -678,6 +706,30 @@
         "label": "",
         "rotation": 90,
         "switchClosed": null
+      },
+      {
+        "id": "ec915f3a6fa04f4cb612e471e437fd9a",
+        "deviceId": "d1e2e6bcdd584ab79cb674edf5080e30",
+        "unitLetter": "",
+        "position": {
+          "x": 24,
+          "y": 8
+        },
+        "label": "",
+        "rotation": 270,
+        "switchClosed": true
+      },
+      {
+        "id": "70ee11b5021c4a7f8e3462f8e573b0c6",
+        "deviceId": "0332ee52c4874bb08d54a794fd4905de",
+        "unitLetter": "",
+        "position": {
+          "x": 110,
+          "y": 57
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
       }
     ],
     "items": [
@@ -686,7 +738,7 @@
         "id": "879b523ff38361512c76baa1cfb770d9",
         "label": "",
         "position": {
-          "x": 115,
+          "x": 99,
           "y": 52
         },
         "rotation": 0,
@@ -699,8 +751,8 @@
         "id": "92ec1f7b995764cbd5ed02fba7586c6f",
         "label": "VCC",
         "position": {
-          "x": 18,
-          "y": -1
+          "x": 59,
+          "y": -15
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -752,7 +804,7 @@
         "label": "VCC",
         "position": {
           "x": 3,
-          "y": -1
+          "y": -16
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -992,6 +1044,32 @@
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null
+      },
+      {
+        "type": "canosc",
+        "id": "fca53620e0954202bbd41745f9437f2e",
+        "label": "",
+        "position": {
+          "x": 24,
+          "y": -11
+        },
+        "rotation": 270,
+        "frequencyHz": 1,
+        "dutyCycle": null,
+        "startHigh": null
+      },
+      {
+        "type": "gnd",
+        "id": "501b0c133f55462cb0978250ef75b2fd",
+        "label": "",
+        "position": {
+          "x": 33,
+          "y": 7
+        },
+        "rotation": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null
       }
     ],
     "connections": [
@@ -1061,20 +1139,6 @@
         "b": {
           "itemId": "fe24ed342033a662a8c2c6e856f96c49",
           "pinNumber": 3,
-          "external": false
-        },
-        "color": "Blue"
-      },
-      {
-        "id": "73487d479c1fd73ce196d7395a46cfaa",
-        "a": {
-          "itemId": "03de3b84042397b9f2801fcb3b27d182",
-          "pinNumber": 0,
-          "external": false
-        },
-        "b": {
-          "itemId": "fe24ed342033a662a8c2c6e856f96c49",
-          "pinNumber": 13,
           "external": false
         },
         "color": "Blue"
@@ -1330,20 +1394,6 @@
           "external": false
         },
         "color": null
-      },
-      {
-        "id": "20f6ef47893548e2accb52c0e59b1aab",
-        "a": {
-          "itemId": "adc2b844c241431192e58f685829a88c",
-          "pinNumber": 9,
-          "external": false
-        },
-        "b": {
-          "itemId": "fe24ed342033a662a8c2c6e856f96c49",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Orange"
       },
       {
         "id": "eb93f4e5f48f4602ad866e61a6646caa",
@@ -2142,15 +2192,141 @@
           "external": false
         },
         "color": "Yellow"
+      },
+      {
+        "id": "c770eed3cb6a424c9c3882c839f9e6a4",
+        "a": {
+          "itemId": "adc2b844c241431192e58f685829a88c",
+          "pinNumber": 9,
+          "external": false
+        },
+        "b": {
+          "itemId": "ec915f3a6fa04f4cb612e471e437fd9a",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Orange"
+      },
+      {
+        "id": "dbabd2fdfe6c40c8997efb2c5a4a1a02",
+        "a": {
+          "itemId": "ec915f3a6fa04f4cb612e471e437fd9a",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "fe24ed342033a662a8c2c6e856f96c49",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Orange"
+      },
+      {
+        "id": "fcd96adfc9ce49d5a04ba34a9a43291a",
+        "a": {
+          "itemId": "2545f98cedf6496093188ec621cfd642",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "fca53620e0954202bbd41745f9437f2e",
+          "pinNumber": 14,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "87427694f6e4417e9502274fcaa954f2",
+        "a": {
+          "itemId": "fca53620e0954202bbd41745f9437f2e",
+          "pinNumber": 7,
+          "external": false
+        },
+        "b": {
+          "itemId": "501b0c133f55462cb0978250ef75b2fd",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "ff6d193c674c4fa092dfb9f13ea00775",
+        "a": {
+          "itemId": "fca53620e0954202bbd41745f9437f2e",
+          "pinNumber": 8,
+          "external": false
+        },
+        "b": {
+          "itemId": "fe24ed342033a662a8c2c6e856f96c49",
+          "pinNumber": 13,
+          "external": false
+        },
+        "color": "Orange"
+      },
+      {
+        "id": "9501bcf4d7964560b46aa9728874e1d3",
+        "a": {
+          "itemId": "fe24ed342033a662a8c2c6e856f96c49",
+          "pinNumber": 12,
+          "external": false
+        },
+        "b": {
+          "itemId": "ec915f3a6fa04f4cb612e471e437fd9a",
+          "pinNumber": 3,
+          "external": false
+        },
+        "color": "Orange"
+      },
+      {
+        "id": "d4be934088fe482ab2a7f0da93413304",
+        "a": {
+          "itemId": "879b523ff38361512c76baa1cfb770d9",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "70ee11b5021c4a7f8e3462f8e573b0c6",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "1b1464b781604492b2576b33173102d4",
+        "a": {
+          "itemId": "ad81c6ae686ce7b9e545a2f9d1f08c03",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "70ee11b5021c4a7f8e3462f8e573b0c6",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Orange"
+      },
+      {
+        "id": "4e599f4d91c5426bbb447cdbb41f39aa",
+        "a": {
+          "itemId": "06163fc6b9fb4b9b85c9d8fa6ec2a5a4",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "70ee11b5021c4a7f8e3462f8e573b0c6",
+          "pinNumber": 3,
+          "external": false
+        },
+        "color": "Yellow"
       }
     ],
     "wires": []
   },
   "view": {
-    "zoom": 4.4033704,
+    "zoom": 1.472,
     "pan": {
-      "x": 1889,
-      "y": -1277
+      "x": 483,
+      "y": 146
     }
   }
 }
