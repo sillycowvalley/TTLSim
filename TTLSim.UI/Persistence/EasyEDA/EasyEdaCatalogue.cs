@@ -150,6 +150,17 @@ public static class EasyEDACatalogue
     private const string GndDeviceUuid = "e81f0dd534964512910e0f8ea58466cc";
     private const string GndSymbolUuid = "38bf0daecbc14b51831e971507e9b906";
 
+    // Can oscillator (full-can, DIP-14 / 0.6" footprint). Footprint + 3D model
+    // lifted from the Can_Oscillator_DIP-14 reference (MXO45-2C, OSC-TH_4P).
+    // The schematic symbol is authored to TTL Sim's tall DIP-14 can outline
+    // (4 corner pins 1/7/8/14) so exported wires meet the pins cleanly; the
+    // compact vendor symbol would force large wire extenders. Device/symbol
+    // UUIDs are freshly minted; footprint + 3D are the reference's.
+    private const string CanOscDip14DeviceUuid = "d52508430df1c21355c50516bc1e2c17";
+    private const string CanOscDip14SymbolUuid = "fc8be532ccd30dafc1a7c1cf14997e39";
+    private const string CanOscDip14FootprintUuid = "96a74e205c3b533c";
+    private const string CanOscDip143dModelUuid = "b28ea8a6f4d94dddb31ac04d823ca8bd";
+
     // 2.54 mm 1xN MALE pin headers -- swapped from female sockets to
     // male pin headers (May 2026), now sourced from the HX PH254 series
     // in Models.epro. The HDR-TH_NP-P2.54-V-M footprints come paired
@@ -546,6 +557,34 @@ public static class EasyEDACatalogue
         PinLocalPositions: new() { [0] = new Point(0, 0) },
         IsNetFlag: true,
         NetName: "GND");
+
+    // Can oscillator (full-can, DIP-14). A real 4-pin component (not a net
+    // flag): own symbol + real OSC-TH_4P footprint + 3D. Pin locals match the
+    // authored tall symbol AND the CanOscillator canvas unit (corner pins
+    // 1=EOH/NC, 7=GND, 8=Output, 14=VCC). Because it is a standalone
+    // SchematicItem rather than a Device, EmitComponent currently emits its
+    // designator as "?" -- annotate in EasyEDA after import.
+    private static readonly CataloguePart CanOscDip14Part = new(
+        DeviceUuid: CanOscDip14DeviceUuid,
+        SymbolUuid: CanOscDip14SymbolUuid,
+        SymbolResourceName: "osc-dip14.esym",
+        FootprintUuid: CanOscDip14FootprintUuid,
+        FootprintResourceName: "osc-dip14.efoo",
+        PartTitle: "Can-Oscillator-DIP14.1",
+        PinLocalPositions: new()
+        {
+            [1] = new Point(-50, +60),   // EOH / NC  (top-left)
+            [7] = new Point(-50, -60),   // GND       (bottom-left)
+            [8] = new Point(+50, -60),   // Output    (bottom-right)
+            [14] = new Point(+50, +60),  // VCC       (top-right)
+        },
+        // Designator sits above the tall can body (top edge at +60). Cosmetic;
+        // tune in the §9 round-trip.
+        LabelOffsets: new LabelOffsetsByRotation(
+            Rot0: new LabelOffsetSet(new(-50, +75), new(-10, +75), default),
+            Rot90: new LabelOffsetSet(new(+75, 0), new(+85, 0), default),
+            Rot180: new LabelOffsetSet(new(-50, +75), new(-10, +75), default),
+            Rot270: new LabelOffsetSet(new(+75, 0), new(+85, 0), default)));
 
     // ---------------------------------------------------- pin headers
     //
@@ -965,6 +1004,7 @@ public static class EasyEDACatalogue
         {
             VccSymbol => VccPart,
             GndSymbol => GndPart,
+            CanOscillator => CanOscDip14Part,
             _ => throw new NotImplementedException(
                 $"EasyEDA export: no catalogue entry for item of type " +
                 $"{item.GetType().Name}. Add a CataloguePart entry and " +

@@ -341,6 +341,9 @@ public static class SchematicDtoMapper
         if (item is CanOscillator osc)
             dto.FrequencyHz = osc.FrequencyHz;
 
+        if (item is IDesignatedItem des)
+            dto.Designator = des.Designator;
+
         return dto;
     }
 
@@ -444,6 +447,12 @@ public static class SchematicDtoMapper
             item.Label = itemDto.Label;
             item.Position = new Point(itemDto.Position.X, itemDto.Position.Y);
             item.Rotation = ParseRotation(itemDto.Rotation);
+            // Paste (Fresh): fresh designator, unique against the live schematic
+            // so a pasted oscillator never collides. Load (Preserve): keep verbatim.
+            if (item is IDesignatedItem des)
+                des.Designator = fresh
+                    ? designatorScope!.NextDesignator(des.ReferencePrefix)
+                    : (itemDto.Designator ?? "");
             result.Items.Add(item);
             itemsByOldId[itemDto.Id] = item;
         }

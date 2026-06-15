@@ -1624,6 +1624,11 @@ public sealed class SchematicCanvas : Control
             dropPoint.X - item.Size.Width / 2,
             dropPoint.Y - item.Size.Height / 2);
 
+        // Designated standalone items (the canned oscillator) get the next free
+        // designator, unique against the current schematic.
+        if (item is IDesignatedItem designated)
+            designated.Designator = Schematic.NextDesignator(designated.ReferencePrefix);
+
         UndoStack.DoComposite($"Add {item.GetType().Name}", () =>
         {
             UndoStack.Do(new AddItemCommand(item));

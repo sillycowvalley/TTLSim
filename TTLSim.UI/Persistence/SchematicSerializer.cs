@@ -299,6 +299,9 @@ public static class SchematicSerializer
         if (item is CanOscillator osc)
             dto.FrequencyHz = osc.FrequencyHz;
 
+        if (item is IDesignatedItem des)
+            dto.Designator = des.Designator;
+
         return dto;
     }
 
@@ -366,6 +369,14 @@ public static class SchematicSerializer
             item.Label = dto.Label;
             item.Position = new Point(dto.Position.X, dto.Position.Y);
             item.Rotation = ParseRotation(dto.Rotation);
+
+            // Designated items keep the file's designator; files that predate
+            // designators get the next free one (unique against what's loaded).
+            if (item is IDesignatedItem des)
+                des.Designator = string.IsNullOrEmpty(dto.Designator)
+                    ? schematic.NextDesignator(des.ReferencePrefix)
+                    : dto.Designator;
+
             schematic.Items.Add(item);
             itemsById[item.Id] = item;
         }

@@ -27,10 +27,13 @@ namespace TTLSim.UI.Components;
 /// side for the pin stubs. The frequency is printed on the body like the part's
 /// silkscreen.
 ///
-/// The half-size <see cref="CanOscillatorDip8"/> derives from this class and
-/// supplies its own corner geometry; everything else is inherited.
+/// Unlike VCC/GND/CLK, a canned oscillator is a real orderable part, so it
+/// carries an auto-numbered reference designator ("X1", "X2") via
+/// <see cref="IDesignatedItem"/>. The half-size <see cref="CanOscillatorDip8"/>
+/// derives from this class and supplies its own corner geometry; everything
+/// else -- including the designator -- is inherited.
 /// </summary>
-public class CanOscillator : SchematicItem
+public class CanOscillator : SchematicItem, IDesignatedItem
 {
     // Package-independent layout constants, kept in step with ChipUnit.
     private const int PinPitch = 2;
@@ -58,6 +61,22 @@ public class CanOscillator : SchematicItem
         GroundPin: 7,
         PowerPin: 14,
         NcPin: 1);
+
+    /// <summary>
+    /// Auto-designation prefix. Oscillator modules use "X" (matching the
+    /// Blinky BOM's X1 can); the passive Crystal uses "Y", giving a clean
+    /// X-oscillator / Y-crystal split. Shared by the DIP-8 variant via
+    /// inheritance, so both draw from one X-numbering pool.
+    /// </summary>
+    [Browsable(false)]
+    public string ReferencePrefix => "X";
+
+    /// <summary>
+    /// Reference designator ("X1", "X2"). Auto-assigned on placement and
+    /// editable in the property grid -- mirrors <see cref="Device.Designator"/>.
+    /// </summary>
+    [Category("Identity")]
+    public string Designator { get; set; } = "";
 
     /// <summary>
     /// Output frequency in hertz. Offers a dropdown of common oscillator and
@@ -118,6 +137,7 @@ public class CanOscillator : SchematicItem
         g.Restore(state);
 
         DrawFrequencyLabel(g, ctx);
+        DrawDesignatorLabel(g, ctx);
     }
 
     private void DrawShape(Graphics g, RenderContext ctx)
@@ -194,6 +214,25 @@ public class CanOscillator : SchematicItem
         float cx = (b.X + b.Width / 2f) * p;
         float cy = (b.Y + b.Height / 2f) * p;
         g.DrawString(text, ctx.LabelFont, brush, cx - size.Width / 2f, cy - size.Height / 2f);
+    }
+
+    /// <summary>
+    /// Draw the reference designator ("X1") centred just above the body,
+    /// screen-aligned like the frequency label so it stays readable at every
+    /// rotation. Nothing is drawn until a designator has been assigned.
+    /// </summary>
+    private void DrawDesignatorLabel(Graphics g, RenderContext ctx)
+    {
+        if (string.IsNullOrEmpty(Designator)) return;
+
+        int p = ctx.GridPitch;
+        var b = Bounds;     // rotated visual extent
+        using var brush = new SolidBrush(ctx.ForegroundColor);
+
+        var size = g.MeasureString(Designator, ctx.LabelFont);
+        float cx = (b.X + b.Width / 2f) * p;
+        float topY = b.Y * p;
+        g.DrawString(Designator, ctx.LabelFont, brush, cx - size.Width / 2f, topY - size.Height);
     }
 
     private void ApplyRotationTransform(Graphics g, RenderContext ctx)

@@ -93,6 +93,9 @@ public sealed class ItemDto
     public double? FrequencyHz { get; set; }
     public double? DutyCycle { get; set; }
     public bool? StartHigh { get; set; }
+    // Reference designator ("X1") for designated items (the canned oscillator).
+    // Null on VCC/GND/CLK and on older files; the loader auto-assigns when missing.
+    public string? Designator { get; set; }
 
 }
 

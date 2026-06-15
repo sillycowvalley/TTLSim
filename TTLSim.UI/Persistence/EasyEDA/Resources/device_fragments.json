@@ -1,5 +1,33 @@
 {
   "devices": {
+    "d52508430df1c21355c50516bc1e2c17": {
+      "title": "Can-Oscillator-DIP14",
+      "attributes": {
+        "Convert to PCB": "yes",
+        "Add into BOM": "yes",
+        "Designator": "U?",
+        "Supplier Part": "C1138940",
+        "Supplier": "LCSC",
+        "Manufacturer Part": "MXO45-2C-2M04800000",
+        "Symbol": "fc8be532ccd30dafc1a7c1cf14997e39",
+        "Footprint": "96a74e205c3b533c",
+        "3D Model": "b28ea8a6f4d94dddb31ac04d823ca8bd",
+        "3D Model Title": "OSC-TH_4P-L20.8-W13.2-P15.24-BL",
+        "3D Model Transform": "818.896,519.684,0,0,0,0,0,0,-196.85",
+        "Description": "Full-can crystal oscillator, DIP-14 (0.6\") footprint, 4-pin"
+      },
+      "description": "Full-can crystal oscillator, DIP-14 (0.6\") footprint, 4-pin",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "d52508430df1c21355c50516bc1e2c17|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1660120562",
+      "custom_tags": "[\"Crystals/Oscillators\"]"
+    },
     "085483325abc7b8f7bdc8f340c3d21cd": {
       "title": "Jumper-2P-via-Header",
       "attributes": {
@@ -552,6 +580,18 @@
     }
   },
   "symbols": {
+    "fc8be532ccd30dafc1a7c1cf14997e39": {
+      "source": "fc8be532ccd30dafc1a7c1cf14997e39|0819f05c4eef4c71ace90d822a990e87",
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Crystals/Oscillators\"]",
+      "title": "Can-Oscillator-DIP14",
+      "version": "1660120562",
+      "type": 2
+    },
     "080a6645c5bb30467498799499355002": {
       "source": "080a6645c5bb30467498799499355002|0819f05c4eef4c71ace90d822a990e87",
       "desc": "",
@@ -770,6 +810,18 @@
     }
   },
   "footprints": {
+    "96a74e205c3b533c": {
+      "title": "OSC-TH_4P-L20.8-W13.2-P15.24-BL",
+      "source": "b56ad71a4e314665987a6c3e1bbfa0d8|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1708336256",
+      "type": 4,
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Crystals/Oscillators\"]"
+    },
     "f6b5e63f270148f6": {
       "title": "SW-TH_SS1-0-102-A02-00-Q-N-RS",
       "source": "954f929d6dec4a2db391773be00f9a48|0819f05c4eef4c71ace90d822a990e87",

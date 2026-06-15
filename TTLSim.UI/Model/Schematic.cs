@@ -47,6 +47,17 @@ public sealed class Schematic
                 used.Add(n);
             }
         }
+        // Designated standalone items (the canned oscillator's X1) share the
+        // numbering pool, so X-numbers stay unique against them too.
+        foreach (var item in Items)
+        {
+            if (item is IDesignatedItem di &&
+                di.Designator.StartsWith(prefix) &&
+                int.TryParse(di.Designator.AsSpan(prefix.Length), out int n))
+            {
+                used.Add(n);
+            }
+        }
         for (int i = 1; ; i++)
         {
             if (!used.Contains(i)) return $"{prefix}{i}";
