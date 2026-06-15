@@ -157,10 +157,12 @@ public sealed class ButtonUnit : Unit
     }
 
     /// <summary>
-    /// 4-pin tactile glyph: a rounded body with the four corner leads, a top
-    /// bar joining pins 1,2 and a bottom bar joining pins 3,4, and a central
-    /// actuator that bridges the two bars when pressed (a visible gap when
-    /// released). Filled actuator = pressed.
+    /// 4-pin tactile glyph. The top bar joins pins 1,2 and the bottom bar joins
+    /// pins 3,4 (the two terminals). Between them sit two contact dots with a
+    /// gap. Pressed: a straight bridge closes the gap. Released: a lever hinged
+    /// at the bottom contact lifts up and to the side, leaving an unmistakable
+    /// gap below the top contact -- the same open/closed reading as the 2-pin
+    /// button.
     /// </summary>
     private void DrawFourPin(Graphics g, RenderContext ctx)
     {
@@ -181,48 +183,45 @@ public sealed class ButtonUnit : Unit
         int topY = (Position.Y + 0) * p;        // top bar at the top edge
         int botY = (Position.Y + 2) * p;        // bottom bar at the bottom edge
         int cx = (Position.X + 2) * p;
-        int cy = (Position.Y + 1) * p;
 
         var color = Selected ? ctx.SelectedColor : ctx.ForegroundColor;
-        using var leadPen = new Pen(color, 1.2f);
         using var pen = new Pen(color, 1.2f);
         using var fill = new SolidBrush(IsPressed ? ctx.SelectedColor : ctx.FillColor);
 
         // Leads from the four corner pins inward to the two bars.
-        g.DrawLine(leadPen, p1x, p1y, leftX, topY);
-        g.DrawLine(leadPen, p2x, p2y, rightX, topY);
-        g.DrawLine(leadPen, p3x, p3y, leftX, botY);
-        g.DrawLine(leadPen, p4x, p4y, rightX, botY);
+        g.DrawLine(pen, p1x, p1y, leftX, topY);
+        g.DrawLine(pen, p2x, p2y, rightX, topY);
+        g.DrawLine(pen, p3x, p3y, leftX, botY);
+        g.DrawLine(pen, p4x, p4y, rightX, botY);
 
         // Top bar joins pins 1,2; bottom bar joins pins 3,4.
         g.DrawLine(pen, leftX, topY, rightX, topY);
         g.DrawLine(pen, leftX, botY, rightX, botY);
 
-        // Contact dots, one on each bar, facing the centre.
-        int topContactY = topY + (int)(p * 0.4f);
-        int botContactY = botY - (int)(p * 0.4f);
+        // Two fixed contacts facing each other across a central gap: one
+        // hanging below the top bar, one rising above the bottom bar.
+        int gap = (int)(p * 0.5f);
+        int topContactY = topY + gap;
+        int botContactY = botY - gap;
+
         g.FillEllipse(fill, cx - 3, topContactY - 3, 6, 6);
         g.DrawEllipse(pen, cx - 3, topContactY - 3, 6, 6);
         g.FillEllipse(fill, cx - 3, botContactY - 3, 6, 6);
         g.DrawEllipse(pen, cx - 3, botContactY - 3, 6, 6);
 
-        // Central actuator. Pressed: a solid bridge spanning both contacts.
-        // Released: short stubs from each contact with a gap in the middle.
         if (IsPressed)
         {
+            // Closed: a straight bridge spanning both contacts.
             g.DrawLine(pen, cx, topContactY, cx, botContactY);
         }
         else
         {
-            int stub = (int)(p * 0.35f);
-            g.DrawLine(pen, cx, topContactY, cx, topContactY + stub);
-            g.DrawLine(pen, cx, botContactY, cx, botContactY - stub);
+            // Open: a lever hinged at the bottom contact, lifted up and to the
+            // side so its tip stops short of the top contact -- a clear gap.
+            int tilt = (int)(p * 0.9f);
+            int tipY = topContactY + (int)(p * 0.45f);
+            g.DrawLine(pen, cx, botContactY, cx - tilt, tipY);
         }
-
-        // Actuator cap centred on the body; filled when pressed.
-        int capR = (int)(p * 0.55f);
-        g.FillEllipse(fill, cx - capR, cy - capR, capR * 2, capR * 2);
-        g.DrawEllipse(pen, cx - capR, cy - capR, capR * 2, capR * 2);
 
         using var pinBrush = new SolidBrush(ctx.PinColor);
         g.FillEllipse(pinBrush, p1x - 2, p1y - 2, 4, 4);

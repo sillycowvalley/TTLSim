@@ -116,16 +116,16 @@ public sealed class ChipFactory : IChipFactory
             }
             if (device.PartIdentifier == "button-4")
             {
-                pinMap.TryGetValue(1, out Net? a1);   // terminal A (top)
+                // Pins 1=2 and 3=4 are unioned as device-internal nets by
+                // SchematicBuildInput, so each terminal is reachable via either leg.
+                pinMap.TryGetValue(1, out Net? a1);
                 pinMap.TryGetValue(2, out Net? a2);
-                pinMap.TryGetValue(3, out Net? b1);   // terminal B (bottom)
+                pinMap.TryGetValue(3, out Net? b1);
                 pinMap.TryGetValue(4, out Net? b2);
-                if (a1 is not null && a2 is not null && b1 is not null && b2 is not null)
-                {
-                    yield return new ButtonInput(a1, b1);       // momentary A <-> B
-                    yield return new SwitchInput(a1, a2, true); // terminal A legs common
-                    yield return new SwitchInput(b1, b2, true); // terminal B legs common
-                }
+                Net? termA = a1 ?? a2;
+                Net? termB = b1 ?? b2;
+                if (termA is not null && termB is not null)
+                    yield return new ButtonInput(termA, termB);
                 continue;
             }
             if (device.PartIdentifier is "switch" or "jumper-2pin")
@@ -780,7 +780,7 @@ public sealed class ChipFactory : IChipFactory
             or "32" or "86" or "390" or "393"
             => true,
         // Electrically modelled passives.
-        "resistor" or "button" or "switch" or "spdt-switch" or "jumper-2pin" or "jumper-3pin" or "diode"
+        "resistor" or "button" or "button-4" or "switch" or "spdt-switch" or "jumper-2pin" or "jumper-3pin" or "diode"
             => true,
         // Visual-only parts: no electrical model, but not "unsupported".
         "led" or "capacitor" or "polarized-capacitor" or "crystal"

@@ -174,6 +174,21 @@ public sealed class SchematicBuildInput : IBuildInput
                     new PinRef(c.A.Owner.Id, c.A.Number),
                     new PinRef(c.B.Owner.Id, c.B.Number));
             }
+            // Device-internal bonds for the 4-pin breadboard pushbutton: its two
+            // legs per terminal (pins 1&2 and 3&4) are physically common, so union
+            // them here. The doubled legs then share their terminal's net -- the
+            // floating-pin diagnostic won't flag an unused leg, and the contact
+            // model sees one node per terminal. Export is unaffected (it reads
+            // schematic.Connections, not this adapter).
+            foreach (Device dev in schematic.Devices)
+            {
+                if (dev.Definition.Identifier != "button-4") continue;
+                foreach (Unit u in dev.Units)
+                {
+                    yield return (new PinRef(u.Id, 1), new PinRef(u.Id, 2));
+                    yield return (new PinRef(u.Id, 3), new PinRef(u.Id, 4));
+                }
+            }
         }
     }
 }
