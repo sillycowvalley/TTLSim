@@ -871,12 +871,12 @@ public static class EasyEDACatalogue
         PartTitle: "YZA-057-4.5.1",
         PinLocalPositions: new()
         {
-            // button4.esym pin endpoints, verbatim (EasyEDA Y-up):
-            // 1 top-left, 2 top-right, 3 bottom-left, 4 bottom-right.
-            [1] = new Point(-20, 10),
-            [2] = new Point(20, 10),
-            [3] = new Point(-20, -10),
-            [4] = new Point(20, -10),
+            // button4.esym tips (EasyEDA Y-up): terminal A (pins 1,2) on the
+            // LEFT, terminal B (pins 3,4) on the RIGHT.
+            [1] = new Point(-30, 10),
+            [2] = new Point(-30, -10),
+            [3] = new Point(30, 10),
+            [4] = new Point(30, -10),
         },
         EmitNameOverride: true,
         LabelOffsets: new LabelOffsetsByRotation(

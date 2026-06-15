@@ -34,9 +34,9 @@ public sealed class ButtonUnit : Unit
 
     public ButtonUnit(Device device, UnitSpec spec) : base(device, spec)
     {
-        // 4-pin is a compact 2x2 footprint (pins on all four corners); the
-        // 2-pin keeps the original wider single-row body.
-        Size = IsFourPin ? new Size(4, 2) : new Size(6, 2);
+        // Both variants share the wide 6x2 body. The 4-pin just doubles the
+        // legs on each side, so its default orientation matches the 2-pin.
+        Size = new Size(6, 2);
         BuildPins(spec);
     }
 
@@ -91,13 +91,14 @@ public sealed class ButtonUnit : Unit
     {
         if (IsFourPin)
         {
-            // 2x2 tactile layout. Terminal A (top) = pins 1,2; terminal B
-            // (bottom) = pins 3,4 -- matching the top/bottom bars in the
-            // YZA-057-4.5 EasyEDA symbol. Left column is pins 1,3; right
-            // column is pins 2,4.
+            // 2-pin layout with a doubled leg per side. Terminal A (left) =
+            // pins 1,2; terminal B (right) = pins 3,4 -- the same electrical
+            // pairing as before, just drawn left/right like the 2-pin button
+            // so the default orientation matches it. Pin 1 and pin 3 remain on
+            // opposite terminals, so existing wiring keeps its meaning.
             AddPin(new Pin("1", 1, new Point(0, 0), PinDirection.Left));
-            AddPin(new Pin("2", 2, new Point(Size.Width, 0), PinDirection.Right));
-            AddPin(new Pin("3", 3, new Point(0, Size.Height), PinDirection.Left));
+            AddPin(new Pin("2", 2, new Point(0, Size.Height), PinDirection.Left));
+            AddPin(new Pin("3", 3, new Point(Size.Width, 0), PinDirection.Right));
             AddPin(new Pin("4", 4, new Point(Size.Width, Size.Height), PinDirection.Right));
             return;
         }
@@ -157,18 +158,21 @@ public sealed class ButtonUnit : Unit
     }
 
     /// <summary>
-    /// 4-pin tactile glyph. The top bar joins pins 1,2 and the bottom bar joins
-    /// pins 3,4 (the two terminals). Between them sit two contact dots with a
-    /// gap. Pressed: a straight bridge closes the gap. Released: a lever hinged
-    /// at the bottom contact lifts up and to the side, leaving an unmistakable
-    /// gap below the top contact -- the same open/closed reading as the 2-pin
-    /// button.
+    /// 4-pin tactile glyph. Identical to the 2-pin button -- two contacts on
+    /// the left and right with the moving bar and plunger on top -- except each
+    /// side has two converging legs (pins 1,2 on the left contact; pins 3,4 on
+    /// the right). Pressed: the bar lies flat across both contacts (closed).
+    /// Released: it lifts clear (open).
     /// </summary>
     private void DrawFourPin(Graphics g, RenderContext ctx)
     {
         int p = ctx.GridPitch;
+        int leftX = (Position.X + 1) * p;
+        int rightX = (Position.X + 5) * p;
+        int midY = (Position.Y + 1) * p;
+        int half = (int)(p * 1.0f);
 
-        // Pin endpoints (corners).
+        // Pin endpoints (four corners).
         int p1x = (Position.X + Pins[0].LocalPosition.X) * p;
         int p1y = (Position.Y + Pins[0].LocalPosition.Y) * p;
         int p2x = (Position.X + Pins[1].LocalPosition.X) * p;
@@ -178,50 +182,31 @@ public sealed class ButtonUnit : Unit
         int p4x = (Position.X + Pins[3].LocalPosition.X) * p;
         int p4y = (Position.Y + Pins[3].LocalPosition.Y) * p;
 
-        int leftX = (Position.X + 1) * p;       // body left  (1 cell in)
-        int rightX = (Position.X + 3) * p;      // body right (1 cell in)
-        int topY = (Position.Y + 0) * p;        // top bar at the top edge
-        int botY = (Position.Y + 2) * p;        // bottom bar at the bottom edge
-        int cx = (Position.X + 2) * p;
-
         var color = Selected ? ctx.SelectedColor : ctx.ForegroundColor;
         using var pen = new Pen(color, 1.2f);
         using var fill = new SolidBrush(IsPressed ? ctx.SelectedColor : ctx.FillColor);
 
-        // Leads from the four corner pins inward to the two bars.
-        g.DrawLine(pen, p1x, p1y, leftX, topY);
-        g.DrawLine(pen, p2x, p2y, rightX, topY);
-        g.DrawLine(pen, p3x, p3y, leftX, botY);
-        g.DrawLine(pen, p4x, p4y, rightX, botY);
+        // Leads: pins 1,2 converge on the left contact; pins 3,4 on the right.
+        g.DrawLine(pen, p1x, p1y, leftX, midY);
+        g.DrawLine(pen, p2x, p2y, leftX, midY);
+        g.DrawLine(pen, p3x, p3y, rightX, midY);
+        g.DrawLine(pen, p4x, p4y, rightX, midY);
 
-        // Top bar joins pins 1,2; bottom bar joins pins 3,4.
-        g.DrawLine(pen, leftX, topY, rightX, topY);
-        g.DrawLine(pen, leftX, botY, rightX, botY);
+        // The two fixed contacts.
+        g.FillEllipse(fill, leftX - 3, midY - 3, 6, 6);
+        g.DrawEllipse(pen, leftX - 3, midY - 3, 6, 6);
+        g.FillEllipse(fill, rightX - 3, midY - 3, 6, 6);
+        g.DrawEllipse(pen, rightX - 3, midY - 3, 6, 6);
 
-        // Two fixed contacts facing each other across a central gap: one
-        // hanging below the top bar, one rising above the bottom bar.
-        int gap = (int)(p * 0.5f);
-        int topContactY = topY + gap;
-        int botContactY = botY - gap;
+        // Moving bar across both contacts; lifts up when released. Plunger
+        // stub rises from the bar centre to a fixed cap height.
+        int barLift = IsPressed ? 0 : half;
+        int barY = midY - barLift;
+        g.DrawLine(pen, leftX, barY, rightX, barY);
 
-        g.FillEllipse(fill, cx - 3, topContactY - 3, 6, 6);
-        g.DrawEllipse(pen, cx - 3, topContactY - 3, 6, 6);
-        g.FillEllipse(fill, cx - 3, botContactY - 3, 6, 6);
-        g.DrawEllipse(pen, cx - 3, botContactY - 3, 6, 6);
-
-        if (IsPressed)
-        {
-            // Closed: a straight bridge spanning both contacts.
-            g.DrawLine(pen, cx, topContactY, cx, botContactY);
-        }
-        else
-        {
-            // Open: a lever hinged at the bottom contact, lifted up and to the
-            // side so its tip stops short of the top contact -- a clear gap.
-            int tilt = (int)(p * 0.9f);
-            int tipY = topContactY + (int)(p * 0.45f);
-            g.DrawLine(pen, cx, botContactY, cx - tilt, tipY);
-        }
+        int plungerTop = barY - half;
+        int plungerX = (leftX + rightX) / 2;
+        g.DrawLine(pen, plungerX, barY, plungerX, plungerTop);
 
         using var pinBrush = new SolidBrush(ctx.PinColor);
         g.FillEllipse(pinBrush, p1x - 2, p1y - 2, 4, 4);
