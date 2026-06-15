@@ -517,13 +517,29 @@ internal static class EasyEDASheetWriter
         }
 
         // Regular component below.
-        // Units carry their owning Device's designator. Standalone items
-        // (e.g. a can oscillator) have no Device, so emit "<prefix>?" --
-        // EasyEDA auto-numbers the "?" on import and its DRC requires a
-        // letter-prefixed designator (a bare "?" alone trips the rule).
-        string designator = item is Unit unit
-            ? unit.Device.Designator
-            : (part.DesignatorPrefix ?? "U") + "?";
+        // Designator resolution, in priority order:
+        //   - Unit: its owning Device's designator (e.g. "U1").
+        //   - IDesignatedItem (e.g. a can oscillator): its own auto-numbered
+        //     designator (e.g. "X1"). If somehow still blank, fall back to its
+        //     ReferencePrefix + "?" ("X?") so EasyEDA auto-numbers on import.
+        //   - Any other standalone item: a generic "U?" placeholder.
+        // The "?" forms also satisfy EasyEDA's DRC rule (a designator must be
+        // letters + number or "?"; a bare "?" alone trips it).
+        string designator;
+        if (item is Unit unit)
+        {
+            designator = unit.Device.Designator;
+        }
+        else if (item is IDesignatedItem designated)
+        {
+            designator = string.IsNullOrEmpty(designated.Designator)
+                ? designated.ReferencePrefix + "?"
+                : designated.Designator;
+        }
+        else
+        {
+            designator = "U?";
+        }
 
         // Label positioning. Per-part offsets live on CataloguePart.LabelOffsets
         // -- the catalogue authors derive them by hand-tuning in EasyEDA and

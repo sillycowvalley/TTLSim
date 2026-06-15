@@ -119,14 +119,7 @@ public sealed record CataloguePart(
     // Distinct from EmitNameOverride (which writes the user's Label as
     // the value) and from the resistor's blanked "" Name ATTR. Has no
     // effect when EmitNameOverride is also set.
-    bool EmitTemplatedName = false,
-    // Reference-designator prefix for STANDALONE items (non-Unit), which
-    // have no owning Device to supply one. The sheet writer emits
-    // "<prefix>?" so EasyEDA auto-numbers it on import (e.g. OSC1) and its
-    // DRC "English letters + numeric or question mark" rule is satisfied.
-    // Null falls back to "U". Units ignore this -- they carry their
-    // Device's designator.
-    string? DesignatorPrefix = null);
+    bool EmitTemplatedName = false);
 
 /// <summary>
 /// Maps TTLSim parts to EasyEDA library entries. LED, VCC, GND, Switch, Button,
@@ -599,8 +592,7 @@ public static class EasyEDACatalogue
             Rot0: new LabelOffsetSet(new(-50, +75), new(-10, +75), default),
             Rot90: new LabelOffsetSet(new(+75, 0), new(+85, 0), default),
             Rot180: new LabelOffsetSet(new(-50, +75), new(-10, +75), default),
-            Rot270: new LabelOffsetSet(new(+75, 0), new(+85, 0), default)),
-        DesignatorPrefix: "OSC");
+            Rot270: new LabelOffsetSet(new(+75, 0), new(+85, 0), default)));
 
     // Half-can oscillator (DIP-8). Corners identical to the full can; only the
     // pin numbers (1=EOH/NC, 4=GND, 5=Output, 8=VCC) and the shorter body
@@ -625,8 +617,7 @@ public static class EasyEDACatalogue
             Rot0: new LabelOffsetSet(new(-50, +45), new(-10, +45), default),
             Rot90: new LabelOffsetSet(new(+45, 0), new(+55, 0), default),
             Rot180: new LabelOffsetSet(new(-50, +45), new(-10, +45), default),
-            Rot270: new LabelOffsetSet(new(+45, 0), new(+55, 0), default)),
-        DesignatorPrefix: "OSC");
+            Rot270: new LabelOffsetSet(new(+45, 0), new(+55, 0), default)));
 
     // ---------------------------------------------------- pin headers
     //
