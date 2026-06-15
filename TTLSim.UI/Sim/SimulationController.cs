@@ -304,21 +304,24 @@ public sealed class SimulationController
 
         foreach (Device dev in schematic.Devices)
         {
-            if (dev.Definition.Identifier != "button") continue;
+            bool isButton4 = dev.Definition.Identifier == "button-4";
+            if (dev.Definition.Identifier != "button" && !isButton4) continue;
+
+            // The ButtonInput contact spans pins 1 & 2 (2-pin) or 1 & 3 (4-pin,
+            // one leg of each terminal).
+            int pinB = isButton4 ? 3 : 2;
 
             foreach (Unit unit in dev.Units)
             {
-                // Match by BOTH pin nets -- pin 1 alone isn't unique when two
-                // buttons share a rail (e.g. both pin-1 to VCC).
                 Net? p1Net = table.FindNet(new PinRef(unit.Id, 1));
-                Net? p2Net = table.FindNet(new PinRef(unit.Id, 2));
-                if (p1Net is null || p2Net is null) continue;
+                Net? pBNet = table.FindNet(new PinRef(unit.Id, pinB));
+                if (p1Net is null || pBNet is null) continue;
 
                 foreach (IChip chip in simulator.Chips)
                 {
                     if (chip is ButtonInput btn
                         && ReferenceEquals(btn.Nets[0], p1Net)
-                        && ReferenceEquals(btn.Nets[1], p2Net))
+                        && ReferenceEquals(btn.Nets[1], pBNet))
                     {
                         map[unit] = btn;
                         break;

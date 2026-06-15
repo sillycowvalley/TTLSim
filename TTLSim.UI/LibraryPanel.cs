@@ -113,7 +113,8 @@ public sealed class LibraryPanel : UserControl
         passive.Expand();
 
         var switches = tree.Nodes.Add("Switches");
-        AddPart(switches, "Pushbutton", PassivePartDefinition.Button);
+        AddPart(switches, "Pushbutton, 2-pin", PassivePartDefinition.Button);
+        AddPart(switches, "Pushbutton, 4-pin", PassivePartDefinition.Button4);
         AddPart(switches, "SPST Switch", PassivePartDefinition.Switch);
         AddPart(switches, "SPDT Switch", PassivePartDefinition.SpdtSwitch);
         AddPart(switches, "Jumper, 2-pin", PassivePartDefinition.Jumper2);

@@ -114,6 +114,20 @@ public sealed class ChipFactory : IChipFactory
                 if (btn is not null) yield return btn;
                 continue;
             }
+            if (device.PartIdentifier == "button-4")
+            {
+                pinMap.TryGetValue(1, out Net? a1);   // terminal A (top)
+                pinMap.TryGetValue(2, out Net? a2);
+                pinMap.TryGetValue(3, out Net? b1);   // terminal B (bottom)
+                pinMap.TryGetValue(4, out Net? b2);
+                if (a1 is not null && a2 is not null && b1 is not null && b2 is not null)
+                {
+                    yield return new ButtonInput(a1, b1);       // momentary A <-> B
+                    yield return new SwitchInput(a1, a2, true); // terminal A legs common
+                    yield return new SwitchInput(b1, b2, true); // terminal B legs common
+                }
+                continue;
+            }
             if (device.PartIdentifier is "switch" or "jumper-2pin")
             {
                 IChip? sw = TryCreateSwitch(device, unit, pinMap);

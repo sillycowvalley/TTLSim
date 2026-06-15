@@ -126,6 +126,7 @@ public static class SchematicSerializer
             [PassivePartDefinition.PolarizedCapacitor.Identifier] = PassivePartDefinition.PolarizedCapacitor,
             [PassivePartDefinition.Led.Identifier] = PassivePartDefinition.Led,
             [PassivePartDefinition.Button.Identifier] = PassivePartDefinition.Button,
+            [PassivePartDefinition.Button4.Identifier] = PassivePartDefinition.Button4,
             [PassivePartDefinition.Switch.Identifier] = PassivePartDefinition.Switch,
             [PassivePartDefinition.SpdtSwitch.Identifier] = PassivePartDefinition.SpdtSwitch,
             [PassivePartDefinition.Jumper2.Identifier] = PassivePartDefinition.Jumper2,

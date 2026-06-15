@@ -250,6 +250,9 @@ public static class EasyEDACatalogue
 
     private const string ButtonDeviceUuid = "8a4b2f3d0c5e5f7b9a1d2e3f4a5b6c7d";
     private const string ButtonSymbolUuid = "06cf37fc06354cb7b5e003313b5ce108";
+    private const string Button4DeviceUuid = "7877cd28c903bf81";
+    private const string Button4SymbolUuid = "17541abff2a89ece";
+    private const string Button4FootprintUuid = "a3b4c43d623d8b7a";
 
     // Shared between Switch and Button -- the H1 male 2.54 mm 1x2P
     // through-hole header. This is a DIFFERENT part from the female
@@ -859,6 +862,29 @@ public static class EasyEDACatalogue
             Rot180: new LabelOffsetSet(new(-10, +20), new(-10, +10), default),
             Rot270: new LabelOffsetSet(new(-30, -5), new(-30, -15), default)));
 
+    private static readonly CataloguePart Button4Part = new(
+        DeviceUuid: Button4DeviceUuid,
+        SymbolUuid: Button4SymbolUuid,
+        SymbolResourceName: "button4.esym",
+        FootprintUuid: Button4FootprintUuid,
+        FootprintResourceName: "button4.efoo",
+        PartTitle: "YZA-057-4.5.1",
+        PinLocalPositions: new()
+        {
+            // button4.esym pin endpoints, verbatim (EasyEDA Y-up):
+            // 1 top-left, 2 top-right, 3 bottom-left, 4 bottom-right.
+            [1] = new Point(-20, 10),
+            [2] = new Point(20, 10),
+            [3] = new Point(-20, -10),
+            [4] = new Point(20, -10),
+        },
+        EmitNameOverride: true,
+        LabelOffsets: new LabelOffsetsByRotation(
+            Rot0: new LabelOffsetSet(new(-10, +25), new(-10, +15), default),
+            Rot90: new LabelOffsetSet(new(-30, +5), new(-30, -5), default),
+            Rot180: new LabelOffsetSet(new(-10, +25), new(-10, +15), default),
+            Rot270: new LabelOffsetSet(new(-30, -5), new(-30, -15), default)));
+
     // 2-pin jumper: identical canvas geometry to the SPST switch (both are
     // SwitchUnit -- pins 1/2 horizontal, left/right), so it reuses the same
     // (-30,0)/(+30,0) locals and the male 2-pin header footprint. Own
@@ -994,6 +1020,7 @@ public static class EasyEDACatalogue
             PassivePartDefinition p when p == PassivePartDefinition.Led => LedPart,
             PassivePartDefinition p when p == PassivePartDefinition.Switch => SwitchPart,
             PassivePartDefinition p when p == PassivePartDefinition.Button => ButtonPart,
+            PassivePartDefinition p when p == PassivePartDefinition.Button4 => Button4Part,
             PassivePartDefinition p when p == PassivePartDefinition.SpdtSwitch => SpdtSwitchPart,
             PassivePartDefinition p when p == PassivePartDefinition.Jumper2 => Jumper2Part,
             PassivePartDefinition p when p == PassivePartDefinition.Jumper3 => Jumper3Part,

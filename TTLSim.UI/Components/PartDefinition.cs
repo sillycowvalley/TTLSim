@@ -146,6 +146,7 @@ public sealed record PassivePartDefinition(
     public static readonly PassivePartDefinition PolarizedCapacitor = new("polarized-capacitor", "C", UnitKind.PolarizedCapacitor);
     public static readonly PassivePartDefinition Led = new("led", "D", UnitKind.Led);
     public static readonly PassivePartDefinition Button = new("button", "SW", UnitKind.Button);
+    public static readonly PassivePartDefinition Button4 = new("button-4", "SW", UnitKind.Button);
     public static readonly PassivePartDefinition Switch = new("switch", "S", UnitKind.Switch);
     public static readonly PassivePartDefinition SpdtSwitch = new("spdt-switch", "S", UnitKind.SpdtSwitch);
     public static readonly PassivePartDefinition Jumper2 = new("jumper-2pin", "J", UnitKind.Switch);
