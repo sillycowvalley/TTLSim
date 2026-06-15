@@ -170,6 +170,14 @@ public static class EasyEDACatalogue
     private const string Header2FootprintUuid = "d419dee46db64bc89e7c7d9c6bd005ef";
     private const string Header23dModelUuid = "b9a02bffb1e248eabf92e8e2aa859dc0";
 
+    // 1x3 male header (HX PH254-01-03). UUIDs lifted verbatim from the
+    // 3-Pin_Header reference .epro -- same HX PH254 family as the others,
+    // so the symbol/footprint/3D-model carry across cleanly.
+    private const string Header3DeviceUuid = "1dee39b11efc7523";
+    private const string Header3SymbolUuid = "3d13e4135b2a7fd3";
+    private const string Header3FootprintUuid = "ea2eed413840d7de";
+    private const string Header33dModelUuid = "3b8cf4ff435f4f2b912293f2932d0598";
+
     private const string Header4DeviceUuid = "61d307bf2bdb4663b1f70c9c59055ecc";
     private const string Header4SymbolUuid = "e4b5734c1a83476b8ba4c83689cfc5be";
     private const string Header4FootprintUuid = "5709415b839a4c77b5e71aab5f9c71ae";
@@ -229,6 +237,22 @@ public static class EasyEDACatalogue
     // Header2FootprintUuid above (the female is what TTL Sim's "Pin
     // Header 2" component already uses for output headers).
     private const string Hdr2MaleFootprintUuid = "2fa9edd918204c849d260ba835fd4d43";
+
+    // SPDT switch and 2-/3-pin jumpers -- same Frankenstein pattern as the
+    // SPST switch/button above: each keeps its own simple schematic symbol
+    // (authored to match the part's canvas pin geometry exactly, since the
+    // export anchors symbol pins at the part's canvas pin positions) but is
+    // physically built as a pluggable pin header. The 2-pin jumper reuses
+    // the same male 2-pin header footprint as the switch/button; the SPDT
+    // switch and 3-pin jumper reuse the male 3-pin header footprint added
+    // for the hdr-out-3 output header (Header3FootprintUuid). Device and
+    // symbol UUIDs are freshly minted (SHA1-derived, unique to TTL Sim).
+    private const string Jumper2DeviceUuid = "085483325abc7b8f7bdc8f340c3d21cd";
+    private const string Jumper2SymbolUuid = "080a6645c5bb30467498799499355002";
+    private const string Jumper3DeviceUuid = "a84717d96452e7fd52fb35de70d8fb22";
+    private const string Jumper3SymbolUuid = "71201f3b05ff1f4582973e2ff83fe013";
+    private const string SpdtSwitchDeviceUuid = "70af303575154f3d18f7ba5163296de4";
+    private const string SpdtSwitchSymbolUuid = "356ce089221d0ba18de8ea69e30194dd";
 
     // Capacitors -- Frankenstein parts, same pattern as resistors. One
     // device per dielectric (non-polarised film/ceramic vs polarised
@@ -548,6 +572,16 @@ public static class EasyEDACatalogue
         [2] = new Point(-20, -5),
     };
 
+    // Pins match hdr-out-3.esym verbatim: left edge at x=-15, pin 1 top,
+    // descending by 10 EDA units (= 1 TTL Sim grid cell). Only the relative
+    // Y spacing must match the canvas; the constant x just shifts the anchor.
+    private static readonly Dictionary<int, Point> Header3PinLocals = new()
+    {
+        [1] = new Point(-15, +10),
+        [2] = new Point(-15, 0),
+        [3] = new Point(-15, -10),
+    };
+
     private static readonly Dictionary<int, Point> Header4PinLocals = new()
     {
         [1] = new Point(-20, +15),
@@ -595,6 +629,25 @@ public static class EasyEDACatalogue
             Rot90: new LabelOffsetSet(new(+20, +5), new(+30, +5), default),
             Rot180: new LabelOffsetSet(new(-15, +15), new(-5, +15), default),
             Rot270: new LabelOffsetSet(new(+20, -5), new(+30, -5), default)),
+        EmitNameOverride: true,
+        NameLabelUsesDesignatorStyle: true,
+        MatchesEasyEdaRotationSense: true);
+
+    private static readonly CataloguePart Header3Part = new(
+        DeviceUuid: Header3DeviceUuid,
+        SymbolUuid: Header3SymbolUuid,
+        SymbolResourceName: "hdr-out-3.esym",
+        FootprintUuid: Header3FootprintUuid,
+        FootprintResourceName: "hdr-out-3.efoo",
+        PartTitle: "Header-Male-2.54_1x3.1",   // matches the .esym's PART id
+        PinLocalPositions: Header3PinLocals,
+        // Label offsets between the 2-pin and 4-pin values (body height sits
+        // between them). Cosmetic -- tune in the §9 round-trip if needed.
+        LabelOffsets: new LabelOffsetsByRotation(
+            Rot0: new LabelOffsetSet(new(-10, +20), new(0, +20), default),
+            Rot90: new LabelOffsetSet(new(+25, 0), new(+35, 0), default),
+            Rot180: new LabelOffsetSet(new(-10, +20), new(0, +20), default),
+            Rot270: new LabelOffsetSet(new(+25, 0), new(+35, 0), default)),
         EmitNameOverride: true,
         NameLabelUsesDesignatorStyle: true,
         MatchesEasyEdaRotationSense: true);
@@ -728,6 +781,81 @@ public static class EasyEDACatalogue
             Rot180: new LabelOffsetSet(new(-10, +20), new(-10, +10), default),
             Rot270: new LabelOffsetSet(new(-30, -5), new(-30, -15), default)));
 
+    // 2-pin jumper: identical canvas geometry to the SPST switch (both are
+    // SwitchUnit -- pins 1/2 horizontal, left/right), so it reuses the same
+    // (-30,0)/(+30,0) locals and the male 2-pin header footprint. Own
+    // jumper-2.esym symbol (a header-style box) so it reads as a link.
+    private static readonly CataloguePart Jumper2Part = new(
+        DeviceUuid: Jumper2DeviceUuid,
+        SymbolUuid: Jumper2SymbolUuid,
+        SymbolResourceName: "jumper-2.esym",
+        FootprintUuid: Hdr2MaleFootprintUuid,
+        FootprintResourceName: "hdr-th-2-male.efoo",
+        PartTitle: "Jumper-2P.1",
+        PinLocalPositions: new()
+        {
+            // jumper-2.esym endpoints; match SwitchUnit pins 1 (left), 2 (right).
+            [1] = new Point(-30, 0),
+            [2] = new Point(+30, 0),
+        },
+        EmitNameOverride: true,
+        LabelOffsets: new LabelOffsetsByRotation(
+            Rot0: new LabelOffsetSet(new(-10, +20), new(-10, +10), default),
+            Rot90: new LabelOffsetSet(new(-25, +5), new(-25, -5), default),
+            Rot180: new LabelOffsetSet(new(-10, +20), new(-10, +10), default),
+            Rot270: new LabelOffsetSet(new(-25, -5), new(-25, -15), default)));
+
+    // 3-pin jumper: SpdtSwitchUnit jumper form -- inline pins, COM (pin 2)
+    // tapped down from the centre, throws at the two ends. Locals match that
+    // canvas layout; reuses the male 3-pin header footprint.
+    private static readonly CataloguePart Jumper3Part = new(
+        DeviceUuid: Jumper3DeviceUuid,
+        SymbolUuid: Jumper3SymbolUuid,
+        SymbolResourceName: "jumper-3.esym",
+        FootprintUuid: Header3FootprintUuid,
+        FootprintResourceName: "hdr-out-3.efoo",
+        PartTitle: "Jumper-3P.1",
+        PinLocalPositions: new()
+        {
+            // jumper-3.esym endpoints; match SpdtSwitchUnit jumper form:
+            // pin 1 left, pin 2 COM tapped down-centre, pin 3 right.
+            [1] = new Point(-60, +5),
+            [2] = new Point(0, -5),
+            [3] = new Point(+60, +5),
+        },
+        EmitNameOverride: true,
+        LabelOffsets: new LabelOffsetsByRotation(
+            Rot0: new LabelOffsetSet(new(-10, +20), new(0, +20), default),
+            Rot90: new LabelOffsetSet(new(+25, 0), new(+35, 0), default),
+            Rot180: new LabelOffsetSet(new(-10, +20), new(0, +20), default),
+            Rot270: new LabelOffsetSet(new(+25, 0), new(+35, 0), default)));
+
+    // SPDT switch: SpdtSwitchUnit switch form -- COM (pin 2) mid-left, throws
+    // A/B (pins 1/3) top-right and bottom-right. Locals match that triangle;
+    // reuses the male 3-pin header footprint (COM lands on the centre pad).
+    private static readonly CataloguePart SpdtSwitchPart = new(
+        DeviceUuid: SpdtSwitchDeviceUuid,
+        SymbolUuid: SpdtSwitchSymbolUuid,
+        SymbolResourceName: "spdt.esym",
+        FootprintUuid: Header3FootprintUuid,
+        FootprintResourceName: "hdr-out-3.efoo",
+        PartTitle: "SPDT-Switch.1",
+        PinLocalPositions: new()
+        {
+            // spdt.esym endpoints; match SpdtSwitchUnit switch form:
+            // pin 1 throw-A (top-right), pin 2 COM (mid-left), pin 3 throw-B
+            // (bottom-right).
+            [1] = new Point(+30, +10),
+            [2] = new Point(-30, 0),
+            [3] = new Point(+30, -10),
+        },
+        EmitNameOverride: true,
+        LabelOffsets: new LabelOffsetsByRotation(
+            Rot0: new LabelOffsetSet(new(-10, +25), new(0, +25), default),
+            Rot90: new LabelOffsetSet(new(+30, 0), new(+40, 0), default),
+            Rot180: new LabelOffsetSet(new(-10, +25), new(0, +25), default),
+            Rot270: new LabelOffsetSet(new(+30, 0), new(+40, 0), default)));
+
     private static readonly CataloguePart DiodePart = new(
         DeviceUuid: DiodeDeviceUuid,
         SymbolUuid: DiodeSymbolUuid,
@@ -788,17 +916,21 @@ public static class EasyEDACatalogue
             PassivePartDefinition p when p == PassivePartDefinition.Led => LedPart,
             PassivePartDefinition p when p == PassivePartDefinition.Switch => SwitchPart,
             PassivePartDefinition p when p == PassivePartDefinition.Button => ButtonPart,
+            PassivePartDefinition p when p == PassivePartDefinition.SpdtSwitch => SpdtSwitchPart,
+            PassivePartDefinition p when p == PassivePartDefinition.Jumper2 => Jumper2Part,
+            PassivePartDefinition p when p == PassivePartDefinition.Jumper3 => Jumper3Part,
             PassivePartDefinition p when p == PassivePartDefinition.Diode => DiodePart,
 
             HeaderPartDefinition h => h.PinCount switch
             {
                 2 => Header2Part,
+                3 => Header3Part,
                 4 => Header4Part,
                 6 => Header6Part,
                 8 => Header8Part,
                 _ => throw new NotImplementedException(
                     $"EasyEDA export: no catalogue entry for {h.PinCount}-pin header. " +
-                    "Supported pin counts are 2, 4, 6, 8."),
+                    "Supported pin counts are 2, 3, 4, 6, 8."),
             },
 
             // TO-92 (To92 opt-in) is dispatched before the DIP pin-count arms:

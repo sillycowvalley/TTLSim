@@ -98,6 +98,76 @@
         "function2": null,
         "frequencyHz1": null,
         "frequencyHz2": null
+      },
+      {
+        "id": "004fc2db9fff4968894c5b58ad99e62b",
+        "designator": "H1",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-8",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "2c75485624cd4a31888fb0ce9e614992",
+        "designator": "H2",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-6",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "19e82c39840f46c1be11bc8df6697856",
+        "designator": "H3",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-4",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "968a8752379a429ba7b7accb93d11ea0",
+        "designator": "H4",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-3",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "be6120f28d024f2f839b0632fae049ff",
+        "designator": "H5",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-2",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
       }
     ],
     "units": [
@@ -142,7 +212,7 @@
         "deviceId": "766a2c8c5b48448e87b2a56d246da7f4",
         "unitLetter": "",
         "position": {
-          "x": 2,
+          "x": -29,
           "y": 13
         },
         "label": "",
@@ -154,8 +224,8 @@
         "deviceId": "b2e70927168f48d3a362c76dea954180",
         "unitLetter": "",
         "position": {
-          "x": 2,
-          "y": 6
+          "x": -20,
+          "y": 12
         },
         "label": "",
         "rotation": 0,
@@ -166,7 +236,7 @@
         "deviceId": "c17a8baad6554658bb8ff2a9025378ff",
         "unitLetter": "",
         "position": {
-          "x": 2,
+          "x": -29,
           "y": 18
         },
         "label": "",
@@ -178,12 +248,72 @@
         "deviceId": "2432dae394754330be13973254496022",
         "unitLetter": "",
         "position": {
-          "x": 2,
-          "y": 0
+          "x": -20,
+          "y": 18
         },
         "label": "",
         "rotation": 0,
         "switchClosed": false
+      },
+      {
+        "id": "6542612ef9f543a1866825077f9e29ee",
+        "deviceId": "004fc2db9fff4968894c5b58ad99e62b",
+        "unitLetter": "",
+        "position": {
+          "x": -29,
+          "y": 24
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "c610700cd20d433d863c0ef485233098",
+        "deviceId": "2c75485624cd4a31888fb0ce9e614992",
+        "unitLetter": "",
+        "position": {
+          "x": -24,
+          "y": 24
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "10011e5c9e754ea58f54135a02d73463",
+        "deviceId": "19e82c39840f46c1be11bc8df6697856",
+        "unitLetter": "",
+        "position": {
+          "x": -20,
+          "y": 24
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "bdb74948aabe489ba8eef0ceb467ab67",
+        "deviceId": "968a8752379a429ba7b7accb93d11ea0",
+        "unitLetter": "",
+        "position": {
+          "x": -16,
+          "y": 24
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "b24d340fc18e4e4ab12b1284f47d7642",
+        "deviceId": "be6120f28d024f2f839b0632fae049ff",
+        "unitLetter": "",
+        "position": {
+          "x": -12,
+          "y": 24
+        },
+        "label": "",
+        "rotation": 0,
+        "switchClosed": null
       }
     ],
     "items": [
@@ -289,10 +419,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 4.6,
+    "zoom": 3.0245752,
     "pan": {
-      "x": 245,
-      "y": 118
+      "x": 667,
+      "y": 128
     }
   }
 }

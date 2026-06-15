@@ -1,5 +1,109 @@
 {
   "devices": {
+    "085483325abc7b8f7bdc8f340c3d21cd": {
+      "title": "Jumper-2P-via-Header",
+      "attributes": {
+        "Symbol": "080a6645c5bb30467498799499355002",
+        "Footprint": "2fa9edd918204c849d260ba835fd4d43",
+        "Designator": "J?",
+        "Name": "Jumper",
+        "Add into BOM": "yes",
+        "Convert to PCB": "yes",
+        "Description": "2-pin jumper built as a 2-pin 2.54mm male header"
+      },
+      "description": "2-pin jumper built as a 2-pin 2.54mm male header",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "085483325abc7b8f7bdc8f340c3d21cd|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748313600",
+      "custom_tags": "[\"Connectors\"]"
+    },
+    "a84717d96452e7fd52fb35de70d8fb22": {
+      "title": "Jumper-3P-via-Header",
+      "attributes": {
+        "Symbol": "71201f3b05ff1f4582973e2ff83fe013",
+        "Footprint": "ea2eed413840d7de",
+        "Designator": "J?",
+        "Name": "Jumper",
+        "Add into BOM": "yes",
+        "Convert to PCB": "yes",
+        "Description": "3-pin jumper built as a 3-pin 2.54mm male header"
+      },
+      "description": "3-pin jumper built as a 3-pin 2.54mm male header",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "a84717d96452e7fd52fb35de70d8fb22|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748313600",
+      "custom_tags": "[\"Connectors\"]"
+    },
+    "70af303575154f3d18f7ba5163296de4": {
+      "title": "SPDT-Switch-via-Header",
+      "attributes": {
+        "Symbol": "356ce089221d0ba18de8ea69e30194dd",
+        "Footprint": "ea2eed413840d7de",
+        "Designator": "S?",
+        "Name": "Switch",
+        "Add into BOM": "yes",
+        "Convert to PCB": "yes",
+        "Description": "SPDT switch wired off-board via a 3-pin 2.54mm male header"
+      },
+      "description": "SPDT switch wired off-board via a 3-pin 2.54mm male header",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "70af303575154f3d18f7ba5163296de4|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748313600",
+      "custom_tags": "[\"Connectors\"]"
+    },
+    "1dee39b11efc7523": {
+      "title": "Header-Male-2.54_1x3P",
+      "attributes": {
+        "Convert to PCB": "yes",
+        "Add into BOM": "yes",
+        "Designator": "H?",
+        "Supplier Part": "C52016391",
+        "Supplier": "LCSC",
+        "Manufacturer": "hanxia",
+        "Manufacturer Part": "HX PH254-01-03-Z-L11.5 male header connector",
+        "Symbol": "3d13e4135b2a7fd3",
+        "Footprint": "ea2eed413840d7de",
+        "3D Model": "3b8cf4ff435f4f2b912293f2932d0598",
+        "3D Model Title": "HDR-M-2.54_1x3",
+        "3D Model Transform": "299.9994,100,0,0,0,0,0,0,-118.11",
+        "Holes Structure": "1x3P",
+        "Pitch": "2.54mm",
+        "Mounting Type": "Straight",
+        "Number of Rows": "1",
+        "Number of Holes": "3P",
+        "JLCPCB Part Class": "Extended Part",
+        "Description": "1x3P 2.54mm straight male pin header (through-hole)"
+      },
+      "description": "1x3P 2.54mm straight male pin header (through-hole)",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "1dee39b11efc7523|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "custom_tags": "[\"Connectors\",\"Headers\"]"
+    },
     "856406c93c6149ea8e8e6d8b2f9ca939": {
       "title": "LED",
       "attributes": {
@@ -444,6 +548,54 @@
     }
   },
   "symbols": {
+    "080a6645c5bb30467498799499355002": {
+      "source": "080a6645c5bb30467498799499355002|0819f05c4eef4c71ace90d822a990e87",
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Connectors\"]",
+      "title": "Jumper-2P",
+      "version": "1748313600",
+      "type": 2
+    },
+    "71201f3b05ff1f4582973e2ff83fe013": {
+      "source": "71201f3b05ff1f4582973e2ff83fe013|0819f05c4eef4c71ace90d822a990e87",
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Connectors\"]",
+      "title": "Jumper-3P",
+      "version": "1748313600",
+      "type": 2
+    },
+    "356ce089221d0ba18de8ea69e30194dd": {
+      "source": "356ce089221d0ba18de8ea69e30194dd|0819f05c4eef4c71ace90d822a990e87",
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Connectors\"]",
+      "title": "SPDT-Switch",
+      "version": "1748313600",
+      "type": 2
+    },
+    "3d13e4135b2a7fd3": {
+      "title": "Header-Male-2.54_1x3P",
+      "source": "3d13e4135b2a7fd3|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "desc": "2.54-1*3P male",
+      "type": 2,
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Connectors\"]"
+    },
     "ed6167b3a4844aec980dab702aa58d0c": {
       "title": "VCC",
       "tags": {
@@ -614,6 +766,18 @@
     }
   },
   "footprints": {
+    "ea2eed413840d7de": {
+      "title": "HDR-TH_3P-P2.54-V-M",
+      "source": "ea2eed413840d7de|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1748390400",
+      "type": 4,
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"HDR-TH\"]"
+    },
     "5f194b391a8afb9b": {
       "title": "TO-92-3_L4.9-W3.7-P1.27-L",
       "source": "70ddfee9ffe44bd98a5a8a870710f04c|0819f05c4eef4c71ace90d822a990e87",
