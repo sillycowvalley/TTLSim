@@ -254,6 +254,12 @@ public static class EasyEDACatalogue
     private const string SpdtSwitchDeviceUuid = "70af303575154f3d18f7ba5163296de4";
     private const string SpdtSwitchSymbolUuid = "356ce089221d0ba18de8ea69e30194dd";
 
+    // Real SS1-0-102 slide-switch through-hole footprint, lifted from the
+    // SPDT.epro reference. Used for the SPDT switch's PCB land instead of a
+    // header (the part is an actual slide switch). The 3-pin jumper keeps the
+    // male 3-pin header footprint.
+    private const string SpdtSwitchFootprintUuid = "f6b5e63f270148f6";
+
     // Capacitors -- Frankenstein parts, same pattern as resistors. One
     // device per dielectric (non-polarised film/ceramic vs polarised
     // electrolytic). The displayed capacitance flows through the per-
@@ -837,8 +843,8 @@ public static class EasyEDACatalogue
         DeviceUuid: SpdtSwitchDeviceUuid,
         SymbolUuid: SpdtSwitchSymbolUuid,
         SymbolResourceName: "spdt.esym",
-        FootprintUuid: Header3FootprintUuid,
-        FootprintResourceName: "hdr-out-3.efoo",
+        FootprintUuid: SpdtSwitchFootprintUuid,
+        FootprintResourceName: "spdt-sw.efoo",
         PartTitle: "SPDT-Switch.1",
         PinLocalPositions: new()
         {

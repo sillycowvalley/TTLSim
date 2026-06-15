@@ -47,17 +47,21 @@
       "custom_tags": "[\"Connectors\"]"
     },
     "70af303575154f3d18f7ba5163296de4": {
-      "title": "SPDT-Switch-via-Header",
+      "title": "SPDT-Switch-SS1-0-102",
       "attributes": {
         "Symbol": "356ce089221d0ba18de8ea69e30194dd",
-        "Footprint": "ea2eed413840d7de",
+        "Footprint": "f6b5e63f270148f6",
         "Designator": "S?",
         "Name": "Switch",
+        "Supplier Part": "C22449126",
+        "Supplier": "LCSC",
+        "Manufacturer": "YUEN FUNG",
+        "Manufacturer Part": "SS1-0-102-A02-00-Q-N-RS",
         "Add into BOM": "yes",
         "Convert to PCB": "yes",
-        "Description": "SPDT switch wired off-board via a 3-pin 2.54mm male header"
+        "Description": "SPDT slide switch SS1-0-102 (3-pin through-hole)"
       },
-      "description": "SPDT switch wired off-board via a 3-pin 2.54mm male header",
+      "description": "SPDT slide switch SS1-0-102 (3-pin through-hole)",
       "tags": {
         "parent_tag": [],
         "child_tag": []
@@ -766,6 +770,18 @@
     }
   },
   "footprints": {
+    "f6b5e63f270148f6": {
+      "title": "SW-TH_SS1-0-102-A02-00-Q-N-RS",
+      "source": "954f929d6dec4a2db391773be00f9a48|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1766711510",
+      "type": 4,
+      "desc": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Switches\"]"
+    },
     "ea2eed413840d7de": {
       "title": "HDR-TH_3P-P2.54-V-M",
       "source": "ea2eed413840d7de|0819f05c4eef4c71ace90d822a990e87",
