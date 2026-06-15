@@ -34,6 +34,7 @@ internal static class EasyEDASheetWriter
     private const string StyleDevice = "stDevice";          // invisible Device ATTR, size "10"
     private const string StyleDesignator = "stDesignator";  // visible Designator label, size 8
     private const string StyleValue = "stValue";            // visible Value/Name label, size 6
+    private const string StyleNoConnect = "stNoConnect";    // No-Connect flag marker, size 6.75
 
     // Fetched fresh per access rather than cached: Logging.Log.Reset()
     // would leave a cached ILogger stale.
@@ -62,6 +63,9 @@ internal static class EasyEDASheetWriter
         AppendRecord(sb, "FONTSTYLE", StyleDevice, null, null, null, "10", null, null, null, null, null, null);
         AppendRecord(sb, "FONTSTYLE", StyleDesignator, null, null, null, 8, 0, 0, 0, null, 2, 0);
         AppendRecord(sb, "FONTSTYLE", StyleValue, null, null, null, 6, null, null, null, null, null, null);
+        // No-Connect flag style. Matches the marker EasyEDA writes when you
+        // place a No-Connect by hand (size 6.75).
+        AppendRecord(sb, "FONTSTYLE", StyleNoConnect, null, null, null, 6.75, 0, 0, 0, 0, 2, 0);
 
 
         // ---- record placement positions per item ----
@@ -77,11 +81,15 @@ internal static class EasyEDASheetWriter
         }
 
         // ---- emit COMPONENT + ATTRs for each item ----
+        // Capture each item's allocated COMPONENT id: the No-Connect pass
+        // below builds pin-instance ids (componentId + symbol pin element id)
+        // from it.
+        var componentIds = new Dictionary<SchematicItem, string>();
         foreach (var item in schematic.Items)
         {
             var part = LookupPart(item);
             var placement = placements[item];
-            EmitComponent(sb, item, part, placement, idGen);
+            componentIds[item] = EmitComponent(sb, item, part, placement, idGen);
         }
 
         // ---- emit WIRE records (one per electrical net) ----
@@ -227,6 +235,13 @@ internal static class EasyEDASheetWriter
             if (segments.Count == 0) continue;  // degenerate net
             EmitWireFromSegments(sb, segments, netName, hex, idGen);
         }
+
+        // ---- emit No-Connect flags for floating pins ----
+        // Every pin not present in any Connection is intentionally left open
+        // in TTLSim (connectivity is validated upstream by the simulator and
+        // the floating-input diagnostic). Flag each so EasyEDA's "floating
+        // pin" DRC stays quiet without any manual placement.
+        EmitNoConnectFlags(sb, schematic, placements, componentIds, idGen);
 
         return sb.ToString();
     }
@@ -475,7 +490,7 @@ internal static class EasyEDASheetWriter
 
     // ----------------------------------------------------------- emission
 
-    private static void EmitComponent(StringBuilder sb, SchematicItem item,
+    private static string EmitComponent(StringBuilder sb, SchematicItem item,
         CataloguePart part, EasyEDAPlacement placement, IdGenerator idGen)
     {
         string componentId = idGen.NewComponentId();
@@ -498,11 +513,17 @@ internal static class EasyEDASheetWriter
             AppendRecord(sb, "ATTR", idGen.NewAttrId(), componentId,
                 "Relevance", "[]", 0, 0,
                 placement.ComponentX + 15, placement.ComponentY + 5, 0, StyleDefault, 0);
-            return;
+            return componentId;
         }
 
         // Regular component below.
-        string designator = item is Unit unit ? unit.Device.Designator : "?";
+        // Units carry their owning Device's designator. Standalone items
+        // (e.g. a can oscillator) have no Device, so emit "<prefix>?" --
+        // EasyEDA auto-numbers the "?" on import and its DRC requires a
+        // letter-prefixed designator (a bare "?" alone trips the rule).
+        string designator = item is Unit unit
+            ? unit.Device.Designator
+            : (part.DesignatorPrefix ?? "U") + "?";
 
         // Label positioning. Per-part offsets live on CataloguePart.LabelOffsets
         // -- the catalogue authors derive them by hand-tuning in EasyEDA and
@@ -635,6 +656,153 @@ internal static class EasyEDASheetWriter
                 placement.ComponentY + offsets.Value.Y,
                 null, StyleValue, 0);
         }
+
+        return componentId;
+    }
+
+    // ----------------------------------------------------------- no-connect
+
+    /// <summary>
+    /// Emit a No-Connect flag ATTR for every pin that takes part in no
+    /// Connection. In EasyEDA Pro a No-Connect is not a placed object -- it
+    /// is an ATTR with key "NO_CONNECT" value "yes" whose parent is the pin
+    /// INSTANCE id, formed as the placed COMPONENT's id concatenated with the
+    /// pin's element id inside its symbol (e.g. component "e1068" + symbol pin
+    /// element "e4" => "e1068e4"). The symbol pin element ids are read from
+    /// the .esym itself, since they are author-defined and differ per symbol
+    /// (vendor-lifted, hand-authored, and synthesised DIP symbols all number
+    /// their pin elements differently).
+    ///
+    /// Net-flag parts (VCC/GND) are skipped: a No-Connect on a power flag is
+    /// meaningless, and their single pin is always wired anyway.
+    /// </summary>
+    private static void EmitNoConnectFlags(
+        StringBuilder sb,
+        Schematic schematic,
+        Dictionary<SchematicItem, EasyEDAPlacement> placements,
+        Dictionary<SchematicItem, string> componentIds,
+        IdGenerator idGen)
+    {
+        // Pins that appear in at least one Connection.
+        var connectedPins = new HashSet<Pin>();
+        foreach (var conn in schematic.Connections)
+        {
+            connectedPins.Add(conn.A);
+            connectedPins.Add(conn.B);
+        }
+
+        // number -> symbol-pin-element-id, parsed once per .esym resource and
+        // cached (many components share one symbol; templated resistors share
+        // one template, whose pin element ids are not touched by token
+        // substitution).
+        var pinElementCache = new Dictionary<string, IReadOnlyDictionary<int, string>>();
+
+        foreach (var item in schematic.Items)
+        {
+            var part = LookupPart(item);
+            if (part.IsNetFlag) continue;                       // no NC on power flags
+            if (!componentIds.TryGetValue(item, out var componentId)) continue;
+            if (!placements.TryGetValue(item, out var placement)) continue;
+
+            IReadOnlyDictionary<int, string>? numberToElement = null;
+
+            foreach (var pin in item.Pins)
+            {
+                if (connectedPins.Contains(pin)) continue;       // wired -> no NC
+
+                // Lazily resolve the symbol's pin-number -> element-id map the
+                // first time this item actually needs it.
+                numberToElement ??= GetPinElementIds(part, pinElementCache);
+
+                if (!numberToElement.TryGetValue(pin.Number, out var elementId))
+                    continue;   // symbol has no element for this pin number
+                if (!placement.PinWorldPositions.TryGetValue(pin.Number, out var pos))
+                    continue;   // no placed position (shouldn't happen for a real pin)
+
+                AppendRecord(sb, "ATTR", idGen.NewAttrId(),
+                    componentId + elementId, "NO_CONNECT", "yes",
+                    0, 0, (int)pos.X, (int)pos.Y, 0, StyleNoConnect, 0);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Pin-number -> symbol pin element id for a part's symbol, parsed from
+    /// the embedded .esym resource. Cached by resource name.
+    /// </summary>
+    private static IReadOnlyDictionary<int, string> GetPinElementIds(
+        CataloguePart part,
+        Dictionary<string, IReadOnlyDictionary<int, string>> cache)
+    {
+        if (cache.TryGetValue(part.SymbolResourceName, out var cached))
+            return cached;
+
+        // Load the same .esym text the zip writer emits, including template
+        // token substitution (DIP/resistor templates). Pin element ids and
+        // numbers are token-independent, so caching by resource name is safe
+        // even though different instances substitute different pin names.
+        string esym = EasyEDAExporter.LoadResource(part.SymbolResourceName);
+        if (part.SymbolTemplateTokens != null)
+        {
+            foreach (var (placeholder, replacement) in part.SymbolTemplateTokens)
+                esym = esym.Replace(placeholder, replacement);
+        }
+
+        var map = ParsePinNumberToElementId(esym);
+        cache[part.SymbolResourceName] = map;
+        return map;
+    }
+
+    /// <summary>
+    /// Parse an .esym (NDJSON) into a pin-number -> pin-element-id map. Each
+    /// PIN record's id is its element id; the pin's number is carried by a
+    /// sibling ATTR record with key "NUMBER" whose parent is that element id.
+    /// Two passes so the map is robust to record ordering.
+    /// </summary>
+    private static IReadOnlyDictionary<int, string> ParsePinNumberToElementId(string esym)
+    {
+        var pinIds = new HashSet<string>();
+        var numberAttrs = new List<(string parent, string number)>();
+
+        foreach (var rawLine in esym.Split('\n'))
+        {
+            var line = rawLine.Trim();
+            if (line.Length == 0) continue;
+
+            JsonElement rec;
+            try { rec = JsonSerializer.Deserialize<JsonElement>(line); }
+            catch (JsonException) { continue; }
+            if (rec.ValueKind != JsonValueKind.Array || rec.GetArrayLength() == 0) continue;
+
+            string tag = rec[0].ValueKind == JsonValueKind.String ? rec[0].GetString()! : "";
+            if (tag == "PIN")
+            {
+                if (rec.GetArrayLength() > 1 && rec[1].ValueKind == JsonValueKind.String)
+                    pinIds.Add(rec[1].GetString()!);
+            }
+            else if (tag == "ATTR" && rec.GetArrayLength() > 4
+                     && rec[3].ValueKind == JsonValueKind.String
+                     && rec[3].GetString() == "NUMBER")
+            {
+                string parent = rec[2].ValueKind == JsonValueKind.String ? rec[2].GetString()! : "";
+                string number = rec[4].ValueKind switch
+                {
+                    JsonValueKind.String => rec[4].GetString()!,
+                    JsonValueKind.Number => rec[4].GetRawText(),
+                    _ => ""
+                };
+                if (parent.Length > 0 && number.Length > 0)
+                    numberAttrs.Add((parent, number));
+            }
+        }
+
+        var map = new Dictionary<int, string>();
+        foreach (var (parent, number) in numberAttrs)
+        {
+            if (pinIds.Contains(parent) && int.TryParse(number, out int n))
+                map[n] = parent;
+        }
+        return map;
     }
 
     /// <summary>

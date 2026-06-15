@@ -119,7 +119,14 @@ public sealed record CataloguePart(
     // Distinct from EmitNameOverride (which writes the user's Label as
     // the value) and from the resistor's blanked "" Name ATTR. Has no
     // effect when EmitNameOverride is also set.
-    bool EmitTemplatedName = false);
+    bool EmitTemplatedName = false,
+    // Reference-designator prefix for STANDALONE items (non-Unit), which
+    // have no owning Device to supply one. The sheet writer emits
+    // "<prefix>?" so EasyEDA auto-numbers it on import (e.g. OSC1) and its
+    // DRC "English letters + numeric or question mark" rule is satisfied.
+    // Null falls back to "U". Units ignore this -- they carry their
+    // Device's designator.
+    string? DesignatorPrefix = null);
 
 /// <summary>
 /// Maps TTLSim parts to EasyEDA library entries. LED, VCC, GND, Switch, Button,
@@ -160,6 +167,14 @@ public static class EasyEDACatalogue
     private const string CanOscDip14SymbolUuid = "fc8be532ccd30dafc1a7c1cf14997e39";
     private const string CanOscDip14FootprintUuid = "96a74e205c3b533c";
     private const string CanOscDip143dModelUuid = "b28ea8a6f4d94dddb31ac04d823ca8bd";
+
+    // Half-can oscillator (DIP-8 / 0.3" footprint). Same corner layout as the
+    // full can but pins 1/4/5/8 and a shorter body. Footprint + 3D model lifted
+    // from the Can_Oscillator_DIP-8 reference (MXO45HST-2C, OSC-TH_4P).
+    private const string CanOscDip8DeviceUuid = "206403cff8b74d2993df59ed14fe0dc5";
+    private const string CanOscDip8SymbolUuid = "b06a45bf13be758ce0c349dee733eba7";
+    private const string CanOscDip8FootprintUuid = "5e3a271f66fc3588";
+    private const string CanOscDip83dModelUuid = "0d8056454aa5403aab4efe452ce6339f";
 
     // 2.54 mm 1xN MALE pin headers -- swapped from female sockets to
     // male pin headers (May 2026), now sourced from the HX PH254 series
@@ -584,7 +599,34 @@ public static class EasyEDACatalogue
             Rot0: new LabelOffsetSet(new(-50, +75), new(-10, +75), default),
             Rot90: new LabelOffsetSet(new(+75, 0), new(+85, 0), default),
             Rot180: new LabelOffsetSet(new(-50, +75), new(-10, +75), default),
-            Rot270: new LabelOffsetSet(new(+75, 0), new(+85, 0), default)));
+            Rot270: new LabelOffsetSet(new(+75, 0), new(+85, 0), default)),
+        DesignatorPrefix: "OSC");
+
+    // Half-can oscillator (DIP-8). Corners identical to the full can; only the
+    // pin numbers (1=EOH/NC, 4=GND, 5=Output, 8=VCC) and the shorter body
+    // differ. Pin locals match the authored symbol AND the CanOscillatorDip8
+    // canvas unit. Same standalone "?" designator caveat as the DIP-14.
+    private static readonly CataloguePart CanOscDip8Part = new(
+        DeviceUuid: CanOscDip8DeviceUuid,
+        SymbolUuid: CanOscDip8SymbolUuid,
+        SymbolResourceName: "osc-dip8.esym",
+        FootprintUuid: CanOscDip8FootprintUuid,
+        FootprintResourceName: "osc-dip8.efoo",
+        PartTitle: "Can-Oscillator-DIP8.1",
+        PinLocalPositions: new()
+        {
+            [1] = new Point(-50, +30),   // EOH / NC  (top-left)
+            [4] = new Point(-50, -30),   // GND       (bottom-left)
+            [5] = new Point(+50, -30),   // Output    (bottom-right)
+            [8] = new Point(+50, +30),   // VCC       (top-right)
+        },
+        // Designator above the shorter can body (top edge at +30).
+        LabelOffsets: new LabelOffsetsByRotation(
+            Rot0: new LabelOffsetSet(new(-50, +45), new(-10, +45), default),
+            Rot90: new LabelOffsetSet(new(+45, 0), new(+55, 0), default),
+            Rot180: new LabelOffsetSet(new(-50, +45), new(-10, +45), default),
+            Rot270: new LabelOffsetSet(new(+45, 0), new(+55, 0), default)),
+        DesignatorPrefix: "OSC");
 
     // ---------------------------------------------------- pin headers
     //
@@ -1004,6 +1046,10 @@ public static class EasyEDACatalogue
         {
             VccSymbol => VccPart,
             GndSymbol => GndPart,
+            // CanOscillatorDip8 derives from CanOscillator, so it must be
+            // matched first -- otherwise the CanOscillator arm below swallows
+            // it and hands it the DIP-14 pin map (no pin 4).
+            CanOscillatorDip8 => CanOscDip8Part,
             CanOscillator => CanOscDip14Part,
             _ => throw new NotImplementedException(
                 $"EasyEDA export: no catalogue entry for item of type " +
