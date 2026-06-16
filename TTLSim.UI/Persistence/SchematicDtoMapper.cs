@@ -267,7 +267,13 @@ public static class SchematicDtoMapper
             PartKind = "chip",
             PartIdentifier = chip.PartNumber,
             Family = chip.IsSeries74 ? device.Family?.ToString() : null,
-            PropagationDelayNs = device.UsesExplicitDelay ? device.PropagationDelayNs : null
+            Program = device.Program,
+            PropagationDelayNs = device.UsesExplicitDelay ? device.PropagationDelayNs : null,
+            // 555/556 timer settings; null for non-timer chips.
+            Function1 = device.IsTimer ? device.Function?.ToString() : null,
+            FrequencyHz1 = device.IsTimer ? device.FrequencyHz : null,
+            Function2 = device.Is556 ? device.Function2?.ToString() : null,
+            FrequencyHz2 = device.Is556 ? device.FrequencyHz2 : null
         },
         PassivePartDefinition p => new DeviceDto
         {
