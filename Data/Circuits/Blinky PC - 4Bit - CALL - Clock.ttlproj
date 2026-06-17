@@ -1050,6 +1050,20 @@
         "function2": null,
         "frequencyHz1": null,
         "frequencyHz2": null
+      },
+      {
+        "id": "21a30cc25bca40d893653943d140578d",
+        "designator": "C5",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
       }
     ],
     "units": [
@@ -1106,8 +1120,8 @@
         "deviceId": "e6227a389d1644cbaa562121d59069c3",
         "unitLetter": "",
         "position": {
-          "x": 0,
-          "y": -100
+          "x": -37,
+          "y": 25
         },
         "label": "",
         "rotation": 90,
@@ -1118,8 +1132,8 @@
         "deviceId": "34858131364a4c8e90a93a412843e634",
         "unitLetter": "",
         "position": {
-          "x": -6,
-          "y": -100
+          "x": -45,
+          "y": 25
         },
         "label": "",
         "rotation": 90,
@@ -1130,8 +1144,8 @@
         "deviceId": "fef2d9b3eb564a2197750e05fa0af837",
         "unitLetter": "",
         "position": {
-          "x": -12,
-          "y": -100
+          "x": -53,
+          "y": 25
         },
         "label": "",
         "rotation": 90,
@@ -1142,8 +1156,8 @@
         "deviceId": "fae93a92f36342d1969e52281c4067fd",
         "unitLetter": "",
         "position": {
-          "x": -18,
-          "y": -100
+          "x": -61,
+          "y": 25
         },
         "label": "",
         "rotation": 90,
@@ -1910,8 +1924,8 @@
         "deviceId": "4bb122c6a156431c865bf7615dfa47ab",
         "unitLetter": "",
         "position": {
-          "x": -106,
-          "y": 89
+          "x": -110,
+          "y": 78
         },
         "label": "",
         "rotation": 0,
@@ -1922,8 +1936,8 @@
         "deviceId": "df40934c456d474790311e8a5a643e86",
         "unitLetter": "",
         "position": {
-          "x": -104,
-          "y": 84
+          "x": -108,
+          "y": 73
         },
         "label": "100n",
         "rotation": 0,
@@ -1934,8 +1948,8 @@
         "deviceId": "62d6ae7627de4adb9f19955d28daf8c2",
         "unitLetter": "",
         "position": {
-          "x": -77,
-          "y": 90
+          "x": -81,
+          "y": 79
         },
         "label": "",
         "rotation": 0,
@@ -1946,8 +1960,20 @@
         "deviceId": "7818ff5587a3491994040a56c606f2de",
         "unitLetter": "",
         "position": {
-          "x": -74,
-          "y": 85
+          "x": -78,
+          "y": 74
+        },
+        "label": "100n",
+        "rotation": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "e204a9beca3b449fb6dae8b1c443c3b0",
+        "deviceId": "21a30cc25bca40d893653943d140578d",
+        "unitLetter": "",
+        "position": {
+          "x": -143,
+          "y": 73
         },
         "label": "100n",
         "rotation": 0,
@@ -2394,8 +2420,8 @@
         "id": "621d5163dfae43a59dc406afcf97a2d5",
         "label": "VCC",
         "position": {
-          "x": -66,
-          "y": 77
+          "x": -70,
+          "y": 66
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -2408,8 +2434,8 @@
         "id": "72f0a41112fa42938267552351fdbc07",
         "label": "",
         "position": {
-          "x": -112,
-          "y": 110
+          "x": -116,
+          "y": 99
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -6702,15 +6728,43 @@
           "external": false
         },
         "color": "Teal"
+      },
+      {
+        "id": "0b3f338ba6b34be89a2cdace6954e611",
+        "a": {
+          "itemId": "uNdevN101",
+          "pinNumber": 20,
+          "external": false
+        },
+        "b": {
+          "itemId": "e204a9beca3b449fb6dae8b1c443c3b0",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "8e67943da39a49c78503accb91f1407b",
+        "a": {
+          "itemId": "uNdevN101",
+          "pinNumber": 10,
+          "external": false
+        },
+        "b": {
+          "itemId": "e204a9beca3b449fb6dae8b1c443c3b0",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Blue"
       }
     ],
     "wires": []
   },
   "view": {
-    "zoom": 0.5735623,
+    "zoom": 1.0031642,
     "pan": {
-      "x": 659,
-      "y": 366
+      "x": 758,
+      "y": 261
     }
   }
 }
