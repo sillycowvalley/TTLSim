@@ -77,6 +77,8 @@ the slow end of the trim; a tantalum or film part tightens it.
 ## Totals
 
 6 ICs + 1 TO-92 (+ optional socketed can), 11 resistors + 1 trimmer,
-9 capacitors, 5 LEDs, 4 pushbuttons + 1 power switch, 2 jumpered/IO
-headers. Spares left on the board for expansion: U7 gate-c / gate-d (AND),
-U4 FF6 / FF7.
+8 capacitors, 5 LEDs, 4 pushbuttons + 1 power switch, 2 jumpered/IO
+headers. Spare in the standalone module: U7 gate-c / gate-d (AND) and
+U4 FF6 / FF7. On the integrated bring-up board the hardware breakpoint
+(`Blinky_Breakpoint.md`) takes U7 gate-c / gate-d and U4 FF6, leaving only
+U4 FF7 free.

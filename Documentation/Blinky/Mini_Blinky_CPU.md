@@ -990,10 +990,26 @@ serial-fill mux.) Front-panel LED drivers/latches are additional to this core li
 - **Sub-op nibble codes (§2) are ratified (ALU rev 2)** — the four GAL fuse maps are
   generated from them. Renumbering means re-burning all four devices and retargeting the
   assembler.
+- **Hardware breakpoint (bring-up board).** The PC + clock bring-up board carries a
+  standalone run-to-PC breakpoint — a '688 comparing the PC against four address switches,
+  halting the machine **at** the matched instruction and dropping it into STEP, with no Mega
+  attached. Three added ICs ('688 + '00 + '74) plus the address switches; it reuses spare
+  gates of the clock's '08 and a spare '273 flip-flop. Documented in `Blinky_Breakpoint.md`;
+  it complements the Mega-driven breakpoint of the dev rig. Whether it ships in a final Mini
+  build is open — it is cheap and works standalone.
 
 ---
 
 # Revision History
+
+**Breakpoint + BOM (June 2026):** added the standalone hardware breakpoint subsystem on the
+PC + clock bring-up board — a '688 PC comparator feeding a synchronous HALT flip-flop ('74)
+with edge-detect/halt logic ('00), halting the machine at the matched instruction and
+forcing STEP, glitch-free. Documented in `Blinky_Breakpoint.md`. The PC '173's async CLR is
+now tied to the active-high RST net (reset zeroes the PC). The consolidated BOM
+(`Mini_Blinky_BOM.md`) was corrected: its clock-module section now matches the verified
+capture (six clock ICs incl. the '08 reset-coupling, C9 = 10µF astable timing, no CV caps,
+no 1k astable floor), and a breakpoint section was added.
 
 **ALU rev 2 (June 2026):** per-flag write masking (`FLAG_WE` → `NZ_WE` + new `C_WE` on
 GAL 3 pin 13 — logic ops now preserve C, retiring the "logic ops latch C = 1" gotcha); new

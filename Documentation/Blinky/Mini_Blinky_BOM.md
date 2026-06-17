@@ -1,13 +1,20 @@
 # Mini Blinky CPU — Consolidated BOM (W = 4)
 
-Combines the core chip complement (`Mini_Blinky_CPU.md` §9) with the
-clock module (`blinky_clock_module_BOM.md`). The old §9 placeholder row
-**"Clock / reset / step — 7414 + glue — ~2"** is removed; the clock module
-below replaces it in full. Its **74HC14 (U4)** *is* the '14 the placeholder
-referred to — counted once, here.
+Combines the core chip complement (`Mini_Blinky_CPU.md` §9), the clock
+module (`blinky_clock_module_BOM.md`), and the hardware breakpoint
+(`Blinky_Breakpoint.md`). The old §9 placeholder row **"Clock / reset /
+step — 7414 + glue — ~2"** is removed; the clock module below replaces it
+in full. Its **74HC14 (U2 in the clock capture)** *is* the '14 the
+placeholder referred to — counted once, here.
 
 Stock figures carried through as stated in the source docs; not
 re-verified against `ChipInventory.md` (not on hand this turn).
+
+> **Designator note.** Section A uses the master-document block names.
+> Sections B/C use the standalone clock-module capture (U1–U7). Section D
+> uses the `Blinky_PC_-_4Bit_-_CALL_-_Clock` capture (U9–U13, R9–R13,
+> S4–S8). The U- and R-numbers in B and D are local to their own captures
+> and overlap by coincidence — they are not the same parts.
 
 ---
 
@@ -33,68 +40,109 @@ re-verified against `ChipInventory.md` (not on hand this turn).
 **Core logic subtotal: 20 ICs.**
 (74374 ×2 = NOS + IR; 74191 ×2 = DSP + RSP; 2114 ×3; GAL16V8 ×4; 7474 ×2.)
 
+> The breadboard bring-up board (`Blinky_PC_-_4Bit_-_CALL_-_Clock`) realises
+> the PC as a '173 register + '283 adder + dual '153 next-PC mux rather than
+> the '161 counter listed above — a load-NPC-each-cycle PC instead of a
+> count-up PC. That is a board-level realisation choice, not yet folded into
+> this core list.
+
 ---
 
 ## B. Clock module ICs
 
+Matches `blinky_clock_module_BOM.md` (verified capture).
+
 | Ref | Part | Qty | Stock |
 |---|---|---|---|
 | U1 | NE556 (bipolar) | 1 | on hand |
-| U2, U3 | 74HC00 | 2 | *check stock* |
-| U4 | 74HC14 | 1 | 12 on hand |
-| U5 | 74HC273 | 1 | 8 on hand |
+| U2 | 74HC14 | 1 | 12 on hand |
+| U3, U6 | 74HC00 | 2 | *check stock* |
+| U4 | 74HC273 | 1 | 8 on hand |
+| U7 | 74HC08 | 1 | *check stock* |
 | — | DS1813-5 (TO-92) | 1 | on hand |
 | X1 | Can oscillator, ~1 MHz (optional, socketed) | 1 | *check stock* |
 
-**Clock module subtotal: 5 ICs + 1 TO-92** (+ optional can).
+**Clock module subtotal: 6 ICs + 1 TO-92** (+ optional can).
 
 ---
 
 ## C. Clock module passives & front-panel parts
 
-(Core logic has no passive list in the source — only the clock module is
-specified to this level. Front-panel LED drivers/latches for the CPU
-itself are still additional and not yet enumerated.)
+From the verified clock-module BOM. (Core logic has no passive list in the
+source — only the clock module and the breakpoint are specified to this
+level.)
 
-**Resistors (¼ W):** R1 100k, R2 1k, R3/R4 10k (×2), R5–R8 330R (×4),
-R9/R10 4k7 (×2), R11 10k, RV1 100k multi-turn trimmer.
+**Resistors (¼ W):** R1 100k, R2 330R (power-LED limit), R3/R4 10k (×2),
+R5–R8 330R (×4), R9/R10 4k7 (×2, 556 OUT pull-ups), R12 10k (step one-shot
+clear node), RV1 100k multi-turn trimmer.
 **= 11 resistors + 1 trimmer.**
 
-**Capacitors:** C1 470n, C2 2.2µ, CV1/CV2 10n (×2), 100n decoupling (×5,
-one per IC U1–U5), 10µ bulk (×1).
-**= 10 capacitors.**
+**Capacitors:** C1 470n (step debounce), C3/C5/C6/C7/C8 100n (×5,
+decoupling, one per IC), C4 47µF (rail bulk), C9 10µF (astable timing).
+**= 8 capacitors.** (CONT pins left open — no 10n CV caps in this build.)
 
-**LEDs:** D1/D2 green (mode), D3 yellow (CLK), D4 red (RST). **= 4 LEDs.**
+**LEDs:** D1/D2 green (STEP / RUN mode), D3 amber (CLK), D4 red (RST),
+D8 red (supply present). **= 5 LEDs.**
 
-**Switches / hardware:** S1–S4 6 mm tactile (STEP, mode-STEP, mode-RUN,
-RESET); J1 3-pin header + shunt (556 / CAN select). **= 4 buttons, 1 header.**
+**Switches / hardware:** SW1–SW4 6 mm tactile (STEP, mode-STEP, mode-RUN,
+RESET); S1 supply on/off switch; J2 3-pin header + shunt (556 / CAN);
+H1 2-pin power-input header; H2 4-pin output header (GND/VCC/CLK/RST).
+**= 4 buttons, 1 switch, 1 jumper, 2 IO headers.**
 
 ---
 
-## D. Grand totals
+## D. Hardware breakpoint (debug subsystem)
+
+From `Blinky_Breakpoint.md`. Adds **3 ICs** + 5 switches + 5 pull-ups; the
+force-STEP and run-leg gates reuse spare gates of the clock's '08, and the
+matched-last sample reuses a spare '273 flip-flop — no extra package for
+those.
+
+| Ref | Part | Qty | Stock |
+|---|---|---|---|
+| U13 | 74HC688 (8-bit identity comparator) | 1 | 3 on hand |
+| U10 | 74HC00 (edge detect + halt logic) | 1 | *check stock* |
+| U11 | 74HC74 (HALT flip-flop; one FF spare) | 1 | 8 on hand (shared '74 stock) |
+| S4–S8 | tactile / DIP switch (BP En + BP0–BP3) | 5 | general stock |
+| R9–R13 | 10k pull-ups (for S4–S8) | 5 | general stock |
+
+**Breakpoint subtotal: 3 ICs, 5 switches, 5 resistors.**
+Reused (not added): U9 '08 gate-c (force STEP) + gate-d (gate run leg);
+'273 FF6 (matched-last); PC '173 CLR rewired to the active-high RST net.
+
+---
+
+## E. Grand totals
 
 | Category | Count |
 |---|---|
 | Core logic ICs | 20 |
-| Clock module ICs | 5 |
-| **Total DIP/IC** | **25** |
+| Clock module ICs | 6 |
+| Breakpoint ICs (debug) | 3 |
+| **Total DIP/IC** | **29** |
 | Reset supervisor (TO-92) | 1 |
 | Can oscillator (optional) | 1 |
-| Resistors + trimmer | 11 + 1 |
-| Capacitors | 10 |
-| LEDs | 4 |
-| Pushbuttons | 4 |
-| Headers | 1 |
+| Resistors + trimmer (clock) | 11 + 1 |
+| Resistors (breakpoint) | 5 |
+| Capacitors (clock) | 8 |
+| LEDs (clock front panel) | 5 |
+| Pushbuttons (clock) | 4 + 1 switch |
+| Switches (breakpoint address/enable) | 5 |
+| Headers (clock) | 1 jumper + 2 IO |
 
-The previous §9 sketch read "~18–20 core ICs," but that was rough and folded
-the clock into a 2-IC placeholder. Enumerated properly — 3× 2114, 4× GAL,
-the doubled '374/'191 — the core alone is 20, and the real clock module adds
-5 + a TO-92. **No '14 is double-counted:** the placeholder's '14 is U4.
+The previous §9 sketch read "~18–20 core ICs," folding the clock into a
+2-IC placeholder. Enumerated properly — 3× 2114, 4× GAL, the doubled
+'374/'191 — the core alone is 20; the verified clock module adds 6 + a
+TO-92; the hardware breakpoint adds 3 more. **No '14 is double-counted:**
+the placeholder's '14 is the clock's U2.
 
 **Open / unverified:**
 - `ChipInventory.md` not consulted this turn — stock figures are as-stated.
 - 74HC00, 2114, 28C16, can oscillator all flagged *source / confirm*.
 - Stack-strobe glue (~1 IC) could partly draw on the clock module's spares
-  (U3C/D NAND, U4F Schmitt) but the source treats it as its own part; kept
-  separate here.
+  (U7 gate-c/d AND, '273 FF7) but the source treats it as its own part;
+  kept separate here.
 - CPU front-panel LED drivers/latches not yet enumerated.
+- The breakpoint is a debug aid on the bring-up board; whether it ships in
+  a final Mini build is an open decision (it is cheap — 3 ICs — and works
+  standalone, with no Mega).

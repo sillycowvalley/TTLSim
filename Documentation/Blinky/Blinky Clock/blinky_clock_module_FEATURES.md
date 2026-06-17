@@ -164,8 +164,12 @@ fraction of the charge current, so timing accuracy is a non-issue.
 
 ## 12. Expansion headroom
 
-Spare on the board: two AND gates (U7 gate-c / gate-d, inputs parked low)
-and two '273 flip-flops (FF6/FF7). Both 74HC00s are now fully used — the
+The standalone module ships with spare logic: two AND gates (U7 gate-c /
+gate-d, inputs parked low) and two '273 flip-flops (FF6 / FF7). On the
+integrated bring-up board the hardware breakpoint claims most of it — U7
+gate-c / gate-d become the force-STEP and run-leg gates and '273 FF6 becomes
+the matched-last sample (see `Blinky_Breakpoint.md`), leaving '273 FF7 as
+the only free flip-flop. Both 74HC00s are now fully used — the
 mode latch and step one-shot fill U3, the mux fills U6 — and all six
 Schmitt inverters of U2 are in use. One known, accepted corner: a step
 press and a mode change sampled on the same falling edge can race by one
