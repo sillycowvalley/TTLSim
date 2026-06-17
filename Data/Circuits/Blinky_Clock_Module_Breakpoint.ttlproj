@@ -1246,6 +1246,20 @@
         "function2": null,
         "frequencyHz1": null,
         "frequencyHz2": null
+      },
+      {
+        "id": "c3ee2a53bbf0497e9a9c8a3c1e28349e",
+        "designator": "J1",
+        "partKind": "passive",
+        "partIdentifier": "jumper-2pin",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
       }
     ],
     "units": [
@@ -1734,7 +1748,7 @@
         "deviceId": "9e213ce3fe0c4b57887c35d24fca4f91",
         "unitLetter": "",
         "position": {
-          "x": -175,
+          "x": -191,
           "y": 53
         },
         "label": "BP En",
@@ -1746,7 +1760,7 @@
         "deviceId": "41ef366fd57e45e8a88a50686c923803",
         "unitLetter": "",
         "position": {
-          "x": -174,
+          "x": -190,
           "y": 41
         },
         "label": "10K",
@@ -1854,8 +1868,8 @@
         "deviceId": "59875270311b4368933a933da56e9f1b",
         "unitLetter": "",
         "position": {
-          "x": -139,
-          "y": 28
+          "x": -171,
+          "y": 27
         },
         "label": "",
         "rotation": 0,
@@ -1866,8 +1880,8 @@
         "deviceId": "3ee62563d1d847f8b0dafe8d74d859f2",
         "unitLetter": "",
         "position": {
-          "x": -137,
-          "y": 23
+          "x": -169,
+          "y": 22
         },
         "label": "100n",
         "rotation": 0,
@@ -1878,8 +1892,8 @@
         "deviceId": "175213e778514dc6a88e031bb332a960",
         "unitLetter": "",
         "position": {
-          "x": -110,
-          "y": 29
+          "x": -142,
+          "y": 28
         },
         "label": "",
         "rotation": 0,
@@ -1890,8 +1904,8 @@
         "deviceId": "3fc55ba2f6c746839640e4731d787cd6",
         "unitLetter": "",
         "position": {
-          "x": -107,
-          "y": 24
+          "x": -139,
+          "y": 23
         },
         "label": "100n",
         "rotation": 0,
@@ -2203,7 +2217,7 @@
         "unitLetter": "",
         "position": {
           "x": -223,
-          "y": 19
+          "y": 10
         },
         "label": "100n",
         "rotation": 0,
@@ -2316,6 +2330,18 @@
         "label": "AMSB",
         "rotation": 180,
         "switchClosed": null
+      },
+      {
+        "id": "351b7d6b3a404dc4b94928c30b8cdda7",
+        "deviceId": "c3ee2a53bbf0497e9a9c8a3c1e28349e",
+        "unitLetter": "",
+        "position": {
+          "x": -224,
+          "y": 21
+        },
+        "label": "8 Bit",
+        "rotation": 0,
+        "switchClosed": false
       }
     ],
     "items": [
@@ -2618,7 +2644,7 @@
         "id": "434dbb09e7b8401184003fce5ff0c660",
         "label": "VCC",
         "position": {
-          "x": -173,
+          "x": -189,
           "y": 15
         },
         "rotation": 0,
@@ -2646,8 +2672,8 @@
         "id": "862f98fc585942a1bc51af0627220a41",
         "label": "VCC",
         "position": {
-          "x": -99,
-          "y": 16
+          "x": -131,
+          "y": 15
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -2660,8 +2686,8 @@
         "id": "ef124ec92bc641d393fc2f346f1d70b7",
         "label": "",
         "position": {
-          "x": -145,
-          "y": 49
+          "x": -177,
+          "y": 48
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -6646,15 +6672,43 @@
           "external": false
         },
         "color": "Yellow"
+      },
+      {
+        "id": "384b0caf212c4af591fdb4b58959f5f2",
+        "a": {
+          "itemId": "20b063296b5d4b4e90602cf82804b6bc",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "351b7d6b3a404dc4b94928c30b8cdda7",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "78170de7a8174086a2cf100e65f801e4",
+        "a": {
+          "itemId": "20b063296b5d4b4e90602cf82804b6bc",
+          "pinNumber": 19,
+          "external": false
+        },
+        "b": {
+          "itemId": "351b7d6b3a404dc4b94928c30b8cdda7",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Yellow"
       }
     ],
     "wires": []
   },
   "view": {
-    "zoom": 0.6663542,
+    "zoom": 0.47982353,
     "pan": {
-      "x": 1374,
-      "y": 250
+      "x": 963,
+      "y": 262
     }
   }
 }
