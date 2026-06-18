@@ -10,7 +10,7 @@ the part name says otherwise; deliberate LS/HCT purchases get their own rows.
 | 7400     | 4× 2i NAND                                   | 12      |            | 12    |
 | 7402     | 4× 2i NOR                                    | 12      |            | 12    |
 | 7404     | 6× Inverter                                  | 14      |            | 14    |
-| 74HCT04  | 6× Inverter (HCT — LS boundary duty)         | 0       | 16         | 16    |
+| 74HCT04  | 6× Inverter (HCT — LS boundary duty)         | 16      |            | 16    |
 | 7408     | 4× 2i AND                                    | 8       |            | 8     |
 | 7410     | 3× 3i NAND                                   | 8       |            | 8     |
 | 7414     | 6× Schmitt Inverter                          | 12      |            | 12    |
@@ -32,25 +32,25 @@ the part name says otherwise; deliberate LS/HCT purchases get their own rows.
 | 74165    | 8-Bit PISO Shift Register                    | 4       |            | 4     |
 | 74173    | 4-Bit D-Type Register (tri-state)            | 20      |            | 20    |
 | 74181    | 4-Bit ALU                                    | 0       |            | 0     |
-| 74LS181  | 4-Bit ALU (LS — backup, needs HCT fence)     | 10      | 8          | 18    |
+| 74LS181  | 4-Bit ALU (LS — backup, needs HCT fence)     | 26      |            | 26    |
 | 74191    | 4-Bit Up/Down Counter                        | 20      |            | 20    |
 | 74193    | 4-Bit Up/Down Counter (dual clock)           | 30      |            | 30    |
 | 74194    | 4-Bit Bidirectional Shift Register           | 10      |            | 10    |
 | 74244    | Octal Tri-State Buffer                       | 16      |            | 16    |
 | 74245    | Octal Bus Transceiver                        | 16      |            | 16    |
-| 74HCT245 | Octal Bus Transceiver (HCT — LS fence)       | 0       | 16         | 16    |
+| 74HCT245 | Octal Bus Transceiver (HCT — LS fence)       | 16      |            | 16    |
 | 74273    | Octal D Flip-Flop with Clear                 | 8       |            | 8     |
 | 74283    | 4-Bit Binary Adder                           | 8       |            | 8     |
 | 74373    | Octal Transparent Latch                      | 8       |            | 8     |
 | 74374    | Octal D Flip-Flop                            | 4       |            | 4     |
-| 74HCT374 | Octal D Flip-Flop (HCT — HC374 unobtainable) | 0       | 16         | 16    |
+| 74HCT374 | Octal D Flip-Flop (HCT — HC374 unobtainable) | 16      |            | 16    |
 | 74377    | Octal D Flip-Flop with Enable                | 8       |            | 8     |
 | 74393    | Dual 4-Bit Binary Counter                    | 12      |            | 12    |
 | 74541    | Octal Buffer                                 | 8       |            | 8     |
 | 74573    | Octal Transparent Latch (flow-through)       | 8       |            | 8     |
 | 74574    | Octal D Flip-Flop (flow-through)             | 8       |            | 8     |
 | 74595    | 8-Bit Shift Register with Output Latch       | 4       |            | 4     |
-| 74670    | 4×4 Register File (tri-state)                | 0       | 32         | 32    |
+| 74670    | 4×4 Register File (tri-state)                | 32      |            | 32    |
 | 74688    | 8-Bit Identity Comparator                    | 3       |            | 3     |
 
 ## Notes
