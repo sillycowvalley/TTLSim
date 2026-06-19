@@ -385,6 +385,25 @@ public static class SchematicDtoMapper
         public List<Device> Devices { get; } = new();
         public List<SchematicItem> Items { get; } = new();
         public List<Connection> Connections { get; } = new();
+
+        /// <summary>
+        /// Units present in the source DTO that could not be reconstructed
+        /// (a not-yet-constructable kind) and were therefore omitted. Non-zero
+        /// means this rebuild is a PARTIAL of the source: the caller must
+        /// surface that, never silently accept fewer items than were asked for.
+        /// </summary>
+        public int SkippedUnits { get; set; }
+
+        /// <summary>
+        /// Connections present in the source DTO whose endpoint(s) did not
+        /// resolve -- a wire onto a skipped unit, or (on paste) onto an item
+        /// outside the copied set -- and were therefore omitted. Non-zero means
+        /// a partial rebuild.
+        /// </summary>
+        public int DroppedConnections { get; set; }
+
+        /// <summary>True when anything in the source DTO failed to come across.</summary>
+        public bool IsPartial => SkippedUnits > 0 || DroppedConnections > 0;
     }
 
     /// <summary>
@@ -453,7 +472,10 @@ public static class SchematicDtoMapper
 
             Unit? unit = TryCreateUnit(device, unitDto);
             if (unit is null)
-                continue;   // unconstructable kind -- already logged; skip it
+            {
+                result.SkippedUnits++;   // unconstructable kind -- logged in TryCreateUnit
+                continue;
+            }
 
             if (fresh)
                 unit.Id = Guid.NewGuid().ToString("N");
@@ -489,7 +511,10 @@ public static class SchematicDtoMapper
             var a = ResolvePin(connDto.A, itemsByOldId, designatorScope);
             var b = ResolvePin(connDto.B, itemsByOldId, designatorScope);
             if (a is null || b is null)
+            {
+                result.DroppedConnections++;
                 continue;
+            }
 
             var connection = new Connection(a, b)
             {

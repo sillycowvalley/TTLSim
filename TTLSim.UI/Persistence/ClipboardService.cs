@@ -8,6 +8,26 @@ using TTLSim.UI.Model;
 namespace TTLSim.UI.Persistence;
 
 /// <summary>
+/// Thrown when a clipboard copy or paste genuinely failed -- the clipboard
+/// could not be written or read, the payload could not be deserialised, or it
+/// could not be rebuilt into an object graph.
+///
+/// This exists so failure is LOUD. The previous behaviour logged the reason
+/// and returned null/false, which made a failed paste look identical to "there
+/// was nothing to paste" -- the user saw nothing happen and the only trace was
+/// a log line nobody reads. Callers are expected to catch this and show it.
+///
+/// Note the deliberate non-failure: an empty clipboard (no TTLSim payload
+/// present) is NOT an error and does not throw -- <see cref="ClipboardService.Paste"/>
+/// returns null for that, because "nothing to paste" is a normal no-op.
+/// </summary>
+public sealed class ClipboardException : Exception
+{
+    public ClipboardException(string message) : base(message) { }
+    public ClipboardException(string message, Exception inner) : base(message, inner) { }
+}
+
+/// <summary>
 /// Copy / cut / paste of a schematic selection, via the Windows clipboard.
 ///
 /// The payload is a <see cref="SchematicDto"/> serialised to JSON and stored
@@ -31,10 +51,14 @@ namespace TTLSim.UI.Persistence;
 ///   cascade offset) and adds them through the undo stack.</item>
 /// </list>
 ///
-/// All clipboard access is guarded: the Windows clipboard can genuinely throw
-/// (<see cref="System.Runtime.InteropServices.ExternalException"/>) when
-/// another process has it locked. A failure logs and degrades to a no-op
-/// rather than taking the editor down.
+/// <para>
+/// Failure policy: genuine failures throw <see cref="ClipboardException"/> so
+/// the caller can surface them. The ONLY soft outcomes are the two that are
+/// genuinely "nothing happened, and that's fine": an empty selection (copy)
+/// and an empty clipboard (paste). Everything else -- a clipboard the OS won't
+/// let us read or write, a payload that won't deserialise, content that won't
+/// rebuild -- is raised, never swallowed.
+/// </para>
 /// </summary>
 public static class ClipboardService
 {
@@ -60,8 +84,12 @@ public static class ClipboardService
     /// the caller does not need to pre-filter them.
     /// </para>
     ///
-    /// <para>Returns true on success, false if there was nothing to copy or
-    /// the clipboard write failed.</para>
+    /// <para>
+    /// Returns true on success, false only when there was nothing to copy (an
+    /// empty item selection). Throws <see cref="ClipboardException"/> if the
+    /// selection could not be serialised or the clipboard write failed --
+    /// surfaced loudly rather than silently treated as "nothing happened".
+    /// </para>
     /// </summary>
     public static bool Copy(
         IReadOnlyCollection<Device> devices,
@@ -71,7 +99,8 @@ public static class ClipboardService
         if (items.Count == 0)
         {
             // A selection with no items can't produce a meaningful paste --
-            // connections alone have no endpoints to land on.
+            // connections alone have no endpoints to land on. This is a true
+            // no-op, not a failure.
             return false;
         }
 
@@ -84,7 +113,8 @@ public static class ClipboardService
         catch (Exception ex)
         {
             Log.LogError(ex, "Failed to serialise selection for copy.");
-            return false;
+            throw new ClipboardException(
+                "The selection could not be prepared for the clipboard.", ex);
         }
 
         try
@@ -99,11 +129,14 @@ public static class ClipboardService
         }
         catch (Exception ex)
         {
-            // ExternalException is the documented failure when another
-            // process holds the clipboard; catch broadly so a copy can never
-            // crash the editor.
-            Log.LogWarning(ex, "Clipboard write failed; copy did not complete.");
-            return false;
+            // ExternalException is the documented failure when another process
+            // holds the clipboard. Previously this was swallowed to a false;
+            // now it is raised so the user learns the copy did NOT happen
+            // rather than discovering it at the next (stale) paste.
+            Log.LogError(ex, "Clipboard write failed; copy did not complete.");
+            throw new ClipboardException(
+                "The clipboard could not be written (another application may be holding it). " +
+                "Nothing was copied.", ex);
         }
     }
 
@@ -114,6 +147,13 @@ public static class ClipboardService
     /// here -- it belongs on the undo stack, which the canvas owns. Kept as a
     /// separate named method so call sites read clearly and so a future cut
     /// could diverge without churning callers.
+    ///
+    /// <para>
+    /// Throws <see cref="ClipboardException"/> on a genuine clipboard failure,
+    /// exactly like <see cref="Copy"/>. A caller implementing cut MUST let that
+    /// propagate (or catch it) BEFORE deleting the originals -- a cut whose
+    /// copy failed must never destroy anything.
+    /// </para>
     /// </summary>
     public static bool Cut(
         IReadOnlyCollection<Device> devices,
@@ -126,7 +166,9 @@ public static class ClipboardService
     /// <summary>
     /// True when the clipboard currently holds a TTLSim payload. Cheap enough
     /// to call from a menu's enabled-state binding. Guarded: a clipboard probe
-    /// can itself throw, in which case we report false.
+    /// can itself throw, in which case we report false -- a probe failure only
+    /// affects whether a menu item is greyed, so degrading it to "nothing to
+    /// paste" is harmless and must not throw from a property getter.
     /// </summary>
     public static bool CanPaste
     {
@@ -155,8 +197,26 @@ public static class ClipboardService
     /// returned items and commits them through the undo stack.
     /// </para>
     ///
-    /// <para>Returns null when there is nothing to paste or the payload could
-    /// not be read or rebuilt; in every failure case the reason is logged.</para>
+    /// <para>
+    /// Returns null ONLY when there is genuinely nothing to paste -- the
+    /// clipboard holds no TTLSim payload. That is a normal no-op.
+    /// </para>
+    ///
+    /// <para>
+    /// Throws <see cref="ClipboardException"/> for every actual failure: the
+    /// clipboard could not be read, the payload was present but empty, it would
+    /// not deserialise, or it would not rebuild. These were previously logged
+    /// and returned as null -- indistinguishable from "nothing to paste", which
+    /// is exactly how a real failure went unnoticed.
+    /// </para>
+    ///
+    /// <para>
+    /// A successful rebuild can still be PARTIAL: see
+    /// <see cref="SchematicDtoMapper.MapResult.IsPartial"/>. That is not a
+    /// failure (the parts that could be rebuilt are returned), but the caller
+    /// must surface it -- a paste that quietly placed fewer parts than were
+    /// copied is the same class of silent failure this method now avoids.
+    /// </para>
     /// </summary>
     public static SchematicDtoMapper.MapResult? Paste(Schematic designatorScope)
     {
@@ -167,19 +227,24 @@ public static class ClipboardService
         try
         {
             if (!Clipboard.ContainsData(ClipboardFormat))
-                return null;
+                return null;   // nothing to paste -- normal no-op (see remarks)
             json = Clipboard.GetData(ClipboardFormat) as string;
         }
         catch (Exception ex)
         {
-            Log.LogWarning(ex, "Clipboard read failed; paste did not complete.");
-            return null;
+            Log.LogError(ex, "Clipboard read failed; paste did not complete.");
+            throw new ClipboardException(
+                "The clipboard could not be read (another application may be holding it). " +
+                "Nothing was pasted.", ex);
         }
 
         if (string.IsNullOrEmpty(json))
         {
-            Log.LogWarning("Clipboard reported a TTLSim payload but it was empty.");
-            return null;
+            // ContainsData said yes but the data is empty -- a genuinely
+            // malformed clipboard state, not "nothing to paste".
+            Log.LogError("Clipboard reported a TTLSim payload but it was empty.");
+            throw new ClipboardException(
+                "The clipboard reported a TTLSim payload but it was empty. Nothing was pasted.");
         }
 
         SchematicDto? dto;
@@ -189,34 +254,45 @@ public static class ClipboardService
         }
         catch (Exception ex)
         {
-            // A payload that won't deserialise is most likely stale -- e.g.
-            // copied before an incompatible change to the DTO shape. Treat it
-            // as "nothing to paste" rather than an error the user must see.
-            Log.LogWarning(ex, "Clipboard payload could not be deserialised; treating as nothing to paste.");
-            return null;
+            Log.LogError(ex, "Clipboard payload could not be deserialised.");
+            throw new ClipboardException(
+                "The clipboard contents could not be read as a TTLSim selection " +
+                "(it may have been copied by an incompatible version). Nothing was pasted.", ex);
         }
 
         if (dto is null)
-        {
-            Log.LogWarning("Clipboard payload deserialised to null; treating as nothing to paste.");
-            return null;
-        }
+            throw new ClipboardException(
+                "The clipboard contents could not be read as a TTLSim selection. Nothing was pasted.");
 
+        SchematicDtoMapper.MapResult result;
         try
         {
-            var result = SchematicDtoMapper.FromDto(dto, IdPolicy.Fresh, designatorScope);
-            Log.LogInformation(
-                "Pasted {DeviceCount} device(s), {ItemCount} item(s), {ConnectionCount} connection(s).",
-                result.Devices.Count, result.Items.Count, result.Connections.Count);
-            return result;
+            result = SchematicDtoMapper.FromDto(dto, IdPolicy.Fresh, designatorScope);
         }
         catch (Exception ex)
         {
             // FromDto throws on genuinely malformed content (unknown part
-            // number, bad family, ...). That shouldn't happen for a payload
-            // this app wrote, but if it does, fail soft.
+            // number, bad family, ...). For a payload this app wrote that means
+            // a real bug -- exactly the case that must NOT be swallowed.
             Log.LogError(ex, "Failed to rebuild clipboard payload; paste did not complete.");
-            return null;
+            throw new ClipboardException(
+                $"The clipboard selection could not be rebuilt: {ex.Message}", ex);
         }
+
+        if (result.IsPartial)
+        {
+            // Not a failure -- return what rebuilt -- but log it at warning so
+            // it is distinct from a clean paste. The caller surfaces the
+            // user-facing "pasted N of M" message.
+            Log.LogWarning(
+                "Partial paste: {SkippedUnits} unit(s) and {DroppedConnections} connection(s) " +
+                "in the payload could not be rebuilt and were omitted.",
+                result.SkippedUnits, result.DroppedConnections);
+        }
+
+        Log.LogInformation(
+            "Pasted {DeviceCount} device(s), {ItemCount} item(s), {ConnectionCount} connection(s).",
+            result.Devices.Count, result.Items.Count, result.Connections.Count);
+        return result;
     }
 }
