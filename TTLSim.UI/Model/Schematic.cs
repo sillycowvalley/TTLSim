@@ -78,8 +78,20 @@ public sealed class Schematic
     /// <summary>Hit test: topmost item whose bounds contain the given grid point.</summary>
     public SchematicItem? HitTest(Point gridPoint)
     {
+        // First pass: real items, topmost first. A component sitting on top of
+        // a cosmetic background item (rectangle, text label) must take the
+        // click even though that background item is drawn behind it.
         for (int i = Items.Count - 1; i >= 0; i--)
         {
+            if (Items[i] is IBackgroundItem) continue;
+            if (Items[i].Bounds.Contains(gridPoint))
+                return Items[i];
+        }
+        // Second pass: cosmetic background items, so a click on the bare
+        // interior of a rectangle (or on a text label) still selects it.
+        for (int i = Items.Count - 1; i >= 0; i--)
+        {
+            if (Items[i] is not IBackgroundItem) continue;
             if (Items[i].Bounds.Contains(gridPoint))
                 return Items[i];
         }

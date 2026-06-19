@@ -416,6 +416,15 @@ public sealed class SchematicCanvas : Control
             SignalStateProvider = PinSignalProvider
         };
 
+        // Cosmetic background items (rectangles, text labels) render behind
+        // everything else: before wires, links, junctions, and components.
+        // They are skipped in the main item loop below so each paints exactly
+        // once. They sit on top of the grid (drawn above) but behind all
+        // schematic content.
+        foreach (var item in Schematic.Items)
+            if (item is IBackgroundItem)
+                item.Draw(g, ctx);
+
 #if DEBUG
         // Debug: visualise routing bounds in pale pink.
         using (var routingBrush = new SolidBrush(Color.FromArgb(60, 255, 180, 200)))
@@ -444,7 +453,10 @@ public sealed class SchematicCanvas : Control
         DrawCoincidentCornerWarnings(g);
 
         foreach (var item in Schematic.Items)
+        {
+            if (item is IBackgroundItem) continue;   // drawn in the background pass above
             item.Draw(g, ctx);
+        }
 
         if (wireStartPin != null)
         {

@@ -97,6 +97,18 @@ public sealed class ItemDto
     // Null on VCC/GND/CLK and on older files; the loader auto-assigns when missing.
     public string? Designator { get; set; }
 
+    // Cosmetic rectangle (Type "rect"). Null on every other item type.
+    // Colours are stored as ARGB ints (Color.ToArgb()).
+    public int? Width { get; set; }
+    public int? Height { get; set; }
+    public bool? Filled { get; set; }
+    public int? FillArgb { get; set; }
+    public int? BorderArgb { get; set; }
+
+    // Cosmetic text label (Type "text"). The text itself rides on Label above.
+    public float? FontSize { get; set; }
+    public int? TextArgb { get; set; }
+
 }
 
 /// <summary>Current file format: a pure pin-to-pin connection with no geometry.</summary>

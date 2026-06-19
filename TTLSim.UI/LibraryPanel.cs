@@ -136,6 +136,14 @@ public sealed class LibraryPanel : UserControl
         AddSymbol(power, "OSC - Canned Oscillator (DIP-14)", () => new CanOscillator());
         AddSymbol(power, "OSC - Canned Oscillator (DIP-8)", () => new CanOscillatorDip8());
         power.Expand();
+
+        // Cosmetic annotations: no electrical meaning, rendered behind the
+        // schematic. Standalone SchematicItems, so they use the symbol factory
+        // payload like the power rails do.
+        var annotation = tree.Nodes.Add("Annotation");
+        AddSymbol(annotation, "Rectangle", () => new RectangleItem());
+        AddSymbol(annotation, "Text Label", () => new TextLabelItem());
+        annotation.Expand();
     }
 
     /// <summary>

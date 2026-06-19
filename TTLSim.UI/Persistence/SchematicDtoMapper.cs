@@ -207,7 +207,7 @@ public static class SchematicDtoMapper
                 case Unit unit:
                     dto.Units.Add(UnitToDto(unit));
                     break;
-                case VccSymbol or GndSymbol or UiClockSource or CanOscillator:
+                case VccSymbol or GndSymbol or UiClockSource or CanOscillator or IBackgroundItem:
                     dto.Items.Add(StandaloneItemToDto(item));
                     break;
                 default:
@@ -350,6 +350,8 @@ public static class SchematicDtoMapper
                 // would serialise (and round-trip) as a full-size "canosc".
                 CanOscillatorDip8 => "canosc8",
                 CanOscillator => "canosc",
+                RectangleItem => "rect",
+                TextLabelItem => "text",
                 _ => throw new InvalidOperationException(
                     $"No standalone-item discriminator for {item.GetType().Name}")
             }
@@ -363,6 +365,20 @@ public static class SchematicDtoMapper
         }
         if (item is CanOscillator osc)
             dto.FrequencyHz = osc.FrequencyHz;
+
+        if (item is RectangleItem rect)
+        {
+            dto.Width = rect.Width;
+            dto.Height = rect.Height;
+            dto.Filled = rect.Filled;
+            dto.FillArgb = rect.FillColor.ToArgb();
+            dto.BorderArgb = rect.BorderColor.ToArgb();
+        }
+        if (item is TextLabelItem text)
+        {
+            dto.FontSize = text.FontSize;
+            dto.TextArgb = text.TextColor.ToArgb();
+        }
 
         if (item is IDesignatedItem des)
             dto.Designator = des.Designator;
@@ -717,8 +733,25 @@ public static class SchematicDtoMapper
         },
         "canosc" => new CanOscillator { FrequencyHz = dto.FrequencyHz ?? 1_000_000.0 },
         "canosc8" => new CanOscillatorDip8 { FrequencyHz = dto.FrequencyHz ?? 1_000_000.0 },
+        "rect" => new RectangleItem
+        {
+            Width = dto.Width ?? 20,
+            Height = dto.Height ?? 12,
+            Filled = dto.Filled ?? true,
+            FillColor = dto.FillArgb is int fa
+                ? Color.FromArgb(fa) : Color.FromArgb(32, 120, 120, 120),
+            BorderColor = dto.BorderArgb is int ba
+                ? Color.FromArgb(ba) : Color.FromArgb(150, 120, 120, 120)
+        },
+        "text" => new TextLabelItem
+        {
+            FontSize = dto.FontSize ?? 4.0f,
+            TextColor = dto.TextArgb is int ta
+                ? Color.FromArgb(ta) : Color.FromArgb(110, 110, 110)
+        },
         _ => throw new System.IO.InvalidDataException(
-            $"Unknown standalone item type '{dto.Type}'. Expected 'vcc', 'gnd', 'clock', 'canosc', or 'canosc8'.")
+            $"Unknown standalone item type '{dto.Type}'. " +
+            "Expected 'vcc', 'gnd', 'clock', 'canosc', 'canosc8', 'rect', or 'text'.")
     };
 
     private static Pin? ResolvePin(PinRefDto dto,
