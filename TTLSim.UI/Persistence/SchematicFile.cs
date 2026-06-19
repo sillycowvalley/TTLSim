@@ -98,16 +98,16 @@ public sealed class ItemDto
     public string? Designator { get; set; }
 
     // Cosmetic rectangle (Type "rect"). Null on every other item type.
-    // Colours are stored as ARGB ints (Color.ToArgb()).
+    // Colours are stored as TTLColor enum names ("Grey", "Blue", ...).
     public int? Width { get; set; }
     public int? Height { get; set; }
     public bool? Filled { get; set; }
-    public int? FillArgb { get; set; }
-    public int? BorderArgb { get; set; }
+    public string? FillColor { get; set; }
+    public string? BorderColor { get; set; }
 
     // Cosmetic text label (Type "text"). The text itself rides on Label above.
     public float? FontSize { get; set; }
-    public int? TextArgb { get; set; }
+    public string? TextColor { get; set; }
 
 }
 

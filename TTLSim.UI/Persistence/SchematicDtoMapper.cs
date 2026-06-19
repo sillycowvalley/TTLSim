@@ -254,7 +254,7 @@ public static class SchematicDtoMapper
                     PinNumber = connection.B.Number,
                     External = bExternal
                 },
-                Color = connection.Color == WireColor.Black
+                Color = connection.Color == TTLColor.Black
                     ? null : connection.Color.ToString()
             });
         }
@@ -371,13 +371,13 @@ public static class SchematicDtoMapper
             dto.Width = rect.Width;
             dto.Height = rect.Height;
             dto.Filled = rect.Filled;
-            dto.FillArgb = rect.FillColor.ToArgb();
-            dto.BorderArgb = rect.BorderColor.ToArgb();
+            dto.FillColor = rect.FillColor.ToString();
+            dto.BorderColor = rect.BorderColor.ToString();
         }
         if (item is TextLabelItem text)
         {
             dto.FontSize = text.FontSize;
-            dto.TextArgb = text.TextColor.ToArgb();
+            dto.TextColor = text.TextColor.ToString();
         }
 
         if (item is IDesignatedItem des)
@@ -537,7 +537,7 @@ public static class SchematicDtoMapper
                 Id = fresh ? Guid.NewGuid().ToString("N") : connDto.Id
             };
             if (!string.IsNullOrEmpty(connDto.Color)
-                && Enum.TryParse<WireColor>(connDto.Color, ignoreCase: true, out var wc))
+                && Enum.TryParse<TTLColor>(connDto.Color, ignoreCase: true, out var wc))
             {
                 connection.Color = wc;
             }
@@ -738,21 +738,21 @@ public static class SchematicDtoMapper
             Width = dto.Width ?? 20,
             Height = dto.Height ?? 12,
             Filled = dto.Filled ?? true,
-            FillColor = dto.FillArgb is int fa
-                ? Color.FromArgb(fa) : Color.FromArgb(32, 120, 120, 120),
-            BorderColor = dto.BorderArgb is int ba
-                ? Color.FromArgb(ba) : Color.FromArgb(150, 120, 120, 120)
+            FillColor = ParseTtlColor(dto.FillColor),
+            BorderColor = ParseTtlColor(dto.BorderColor)
         },
         "text" => new TextLabelItem
         {
             FontSize = dto.FontSize ?? 4.0f,
-            TextColor = dto.TextArgb is int ta
-                ? Color.FromArgb(ta) : Color.FromArgb(110, 110, 110)
+            TextColor = ParseTtlColor(dto.TextColor)
         },
         _ => throw new System.IO.InvalidDataException(
             $"Unknown standalone item type '{dto.Type}'. " +
             "Expected 'vcc', 'gnd', 'clock', 'canosc', 'canosc8', 'rect', or 'text'.")
     };
+
+    private static TTLColor ParseTtlColor(string? name) =>
+        Enum.TryParse<TTLColor>(name, out var c) ? c : TTLColor.Grey;
 
     private static Pin? ResolvePin(PinRefDto dto,
         Dictionary<string, SchematicItem> itemsByOldId,

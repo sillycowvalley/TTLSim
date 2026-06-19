@@ -49,19 +49,23 @@ public sealed class RectangleItem : SchematicItem, IBackgroundItem
     [Description("Fill the interior (true) or draw the outline only (false).")]
     public bool Filled { get; set; } = true;
 
-    /// <summary>Interior fill colour. Use an alpha &lt; 255 for a translucent region that lets the grid show through.</summary>
+    /// <summary>Interior fill colour, chosen from the standard palette. Rendered translucent so the grid shows through.</summary>
     [Category("Appearance")]
-    [Description("Interior fill colour. A low alpha gives a translucent region.")]
-    public Color FillColor { get; set; } = Color.FromArgb(32, 120, 120, 120);
+    [Description("Interior fill colour. Drawn translucent so the grid shows through.")]
+    public TTLColor FillColor { get; set; } = TTLColor.Grey;
 
-    /// <summary>Outline colour.</summary>
+    /// <summary>Outline colour, chosen from the standard palette.</summary>
     [Category("Appearance")]
     [Description("Outline colour.")]
-    public Color BorderColor { get; set; } = Color.FromArgb(150, 120, 120, 120);
+    public TTLColor BorderColor { get; set; } = TTLColor.Grey;
 
     // No pins, and nothing for the router to avoid: a cosmetic region must not
     // block wire routing through the area it covers.
     public override Rectangle RoutingBounds => Rectangle.Empty;
+
+    // Fill is always drawn translucent regardless of the chosen colour, so a
+    // filled region never hides the grid or the wires/components behind it.
+    private const int FillAlpha = 48;
 
     public override void Draw(Graphics g, RenderContext ctx)
     {
@@ -74,11 +78,11 @@ public sealed class RectangleItem : SchematicItem, IBackgroundItem
 
         if (Filled)
         {
-            using var brush = new SolidBrush(FillColor);
+            using var brush = new SolidBrush(Color.FromArgb(FillAlpha, FillColor.ToColor()));
             g.FillRectangle(brush, rect);
         }
 
-        using var pen = new Pen(Selected ? ctx.SelectedColor : BorderColor, 1.2f);
+        using var pen = new Pen(Selected ? ctx.SelectedColor : BorderColor.ToColor(), 1.2f);
         g.DrawRectangle(pen, rect);
 
         g.Restore(state);

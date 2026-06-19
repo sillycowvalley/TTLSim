@@ -31,9 +31,9 @@ public sealed class Connection
     /// visual conventions as physical builds. Changes go through the
     /// undo stack via the PropertyGrid's generic SetPropertyCommand path.
     /// </summary>
-    [DefaultValue(WireColor.Black)]
+    [DefaultValue(TTLColor.Black)]
     [Description("Render colour for this wire, mirroring jumper-wire conventions.")]
-    public WireColor Color { get; set; } = WireColor.Black;
+    public TTLColor Color { get; set; } = TTLColor.Black;
 
     public Connection(Pin a, Pin b)
     {

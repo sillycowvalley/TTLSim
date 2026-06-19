@@ -191,7 +191,7 @@ internal static class EasyEDASheetWriter
             // Build a human description of the net for the warning. Prefer
             // the catalogue-supplied net name (VCC/GND); otherwise list pins.
             string netDesc = DescribeNet(group);
-            var distinctColours = new HashSet<WireColor>();
+            var distinctColours = new HashSet<TTLColor>();
             foreach (var c in group) distinctColours.Add(c.Color);
             var colourList = string.Join(", ", distinctColours);
             var connIds = new List<string>(group.Count);
@@ -1073,11 +1073,11 @@ internal static class EasyEDASheetWriter
         new PointF(grid.X * Scale, -grid.Y * Scale);
 
     /// <summary>
-    /// Hex CSS-style colour string for a TTLSim WireColor, matching the
-    /// RGB values in WireColors.ToColor(). EasyEDA's LINESTYLE second
+    /// Hex CSS-style colour string for a TTLSim TTLColor, matching the
+    /// RGB values in TTLColors.ToColor(). EasyEDA's LINESTYLE second
     /// field accepts "#RRGGBB" form.
     /// </summary>
-    private static string WireColorToHex(WireColor color)
+    private static string WireColorToHex(TTLColor color)
     {
         Color c = color.ToColor();
         return $"#{c.R:X2}{c.G:X2}{c.B:X2}";

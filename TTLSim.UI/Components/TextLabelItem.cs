@@ -32,12 +32,12 @@ public sealed class TextLabelItem : SchematicItem, IBackgroundItem
     /// <summary>Font em-size, in the same world units as the rest of the schematic text.</summary>
     [Category("Appearance")]
     [Description("Text size. Larger numbers render bigger text.")]
-    public float FontSize { get; set; } = 4.0f;
+    public float FontSize { get; set; } = 10.0f;
 
-    /// <summary>Text colour.</summary>
+    /// <summary>Text colour, chosen from the standard palette.</summary>
     [Category("Appearance")]
     [Description("Text colour.")]
-    public Color TextColor { get; set; } = Color.FromArgb(110, 110, 110);
+    public TTLColor TextColor { get; set; } = TTLColor.Grey;
 
     // Cosmetic: nothing for the router to avoid.
     public override Rectangle RoutingBounds => Rectangle.Empty;
@@ -63,7 +63,7 @@ public sealed class TextLabelItem : SchematicItem, IBackgroundItem
         var state = g.Save();
         ApplyRotationTransform(g, ctx);
 
-        using var brush = new SolidBrush(Selected ? ctx.SelectedColor : TextColor);
+        using var brush = new SolidBrush(Selected ? ctx.SelectedColor : TextColor.ToColor());
         g.DrawString(Label, font, brush, Position.X * p, Position.Y * p);
 
         g.Restore(state);
