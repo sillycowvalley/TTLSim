@@ -1213,11 +1213,11 @@ public sealed class SchematicCanvas : Control
         // copy-then-paste (rather than cloning directly) so duplicate uses
         // exactly the same path as Ctrl+C / Ctrl+V -- one code path, no
         // second cloning implementation to keep in sync.
-        var (devices, items, connections) = GatherSelectionForClipboard();
+        var (devices, items, connections, links) = GatherSelectionForClipboard();
         if (items.Count == 0)
             return false;
 
-        if (!ClipboardService.Copy(devices, items, connections))
+        if (!ClipboardService.Copy(devices, items, connections, links))
             return false;
 
         UndoStack.BeginComposite("Duplicate");
@@ -1517,11 +1517,12 @@ public sealed class SchematicCanvas : Control
 
     // ---------------------------------------------------------------- copy / cut / paste
 
-    private (List<Device> Devices, List<SchematicItem> Items, List<Connection> Connections)
+    private (List<Device> Devices, List<SchematicItem> Items, List<Connection> Connections, List<HeaderLink> Links)
         GatherSelectionForClipboard()
     {
         var items = Schematic.Selected.ToList();
         var connections = Schematic.SelectedConnections.ToList();
+        var links = Schematic.SelectedLinks.ToList();
 
         var devices = items
             .OfType<Unit>()
@@ -1529,7 +1530,7 @@ public sealed class SchematicCanvas : Control
             .Distinct()
             .ToList();
 
-        return (devices, items, connections);
+        return (devices, items, connections, links);
     }
 
     /// <summary>
@@ -1540,10 +1541,10 @@ public sealed class SchematicCanvas : Control
     /// </summary>
     public void Copy()
     {
-        var (devices, items, connections) = GatherSelectionForClipboard();
+        var (devices, items, connections, links) = GatherSelectionForClipboard();
         if (items.Count == 0) return;
 
-        if (ClipboardService.Copy(devices, items, connections))
+        if (ClipboardService.Copy(devices, items, connections, links))
             pasteCascadeCount = 0;
     }
 
@@ -1557,10 +1558,10 @@ public sealed class SchematicCanvas : Control
     /// </summary>
     public void Cut()
     {
-        var (devices, items, connections) = GatherSelectionForClipboard();
+        var (devices, items, connections, links) = GatherSelectionForClipboard();
         if (items.Count == 0) return;
 
-        if (!ClipboardService.Cut(devices, items, connections))
+        if (!ClipboardService.Cut(devices, items, connections, links))
             return;   // clipboard write failed -- don't delete the originals
 
         pasteCascadeCount = 0;
@@ -1718,6 +1719,8 @@ public sealed class SchematicCanvas : Control
                 UndoStack.Do(new AddItemCommand(item));
             foreach (var connection in result.Connections)
                 UndoStack.Do(new AddConnectionCommand(connection));
+            foreach (var link in result.Links)
+                UndoStack.Do(new AddHeaderLinkCommand(link));
         });
 
         // Make the pasted items and connections the selection, mirroring
@@ -1727,6 +1730,8 @@ public sealed class SchematicCanvas : Control
             item.Selected = true;
         foreach (var connection in result.Connections)
             connection.Selected = true;
+        foreach (var link in result.Links)
+            link.Selected = true;
         OnSelectionChanged();
 
         return result;

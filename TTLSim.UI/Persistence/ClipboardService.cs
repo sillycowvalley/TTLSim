@@ -94,7 +94,8 @@ public static class ClipboardService
     public static bool Copy(
         IReadOnlyCollection<Device> devices,
         IReadOnlyCollection<SchematicItem> items,
-        IReadOnlyCollection<Connection> connections)
+        IReadOnlyCollection<Connection> connections,
+        IReadOnlyCollection<HeaderLink>? links = null)
     {
         if (items.Count == 0)
         {
@@ -107,7 +108,7 @@ public static class ClipboardService
         string json;
         try
         {
-            var dto = SchematicDtoMapper.ToDto(devices, items, connections);
+            var dto = SchematicDtoMapper.ToDto(devices, items, connections, links);
             json = JsonSerializer.Serialize(dto);
         }
         catch (Exception ex)
@@ -158,8 +159,9 @@ public static class ClipboardService
     public static bool Cut(
         IReadOnlyCollection<Device> devices,
         IReadOnlyCollection<SchematicItem> items,
-        IReadOnlyCollection<Connection> connections)
-        => Copy(devices, items, connections);
+        IReadOnlyCollection<Connection> connections,
+        IReadOnlyCollection<HeaderLink>? links = null)
+        => Copy(devices, items, connections, links);
 
     // ----------------------------------------------------------------- Paste
 
@@ -285,9 +287,9 @@ public static class ClipboardService
             // it is distinct from a clean paste. The caller surfaces the
             // user-facing "pasted N of M" message.
             Log.LogWarning(
-                "Partial paste: {SkippedUnits} unit(s) and {DroppedConnections} connection(s) " +
-                "in the payload could not be rebuilt and were omitted.",
-                result.SkippedUnits, result.DroppedConnections);
+                "Partial paste: {SkippedUnits} unit(s), {DroppedConnections} connection(s), and " +
+                "{DroppedLinks} header link(s) in the payload could not be rebuilt and were omitted.",
+                result.SkippedUnits, result.DroppedConnections, result.DroppedLinks);
         }
 
         Log.LogInformation(

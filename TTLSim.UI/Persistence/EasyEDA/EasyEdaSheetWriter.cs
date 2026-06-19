@@ -74,7 +74,13 @@ internal static class EasyEDASheetWriter
         // pins. The pin world positions are used to draw wires.
         var placements = new Dictionary<SchematicItem, EasyEDAPlacement>();
 
-        foreach (var item in schematic.Items)
+        // Cosmetic items (rectangles, text labels) have no electrical presence
+        // and no catalogue entry -- they are dropped from EasyEDA export
+        // entirely. Filtering here keeps them out of placement, component
+        // emission, wires, and No-Connect flags in one place.
+        var placeable = schematic.Items.Where(item => item is not IBackgroundItem);
+
+        foreach (var item in placeable)
         {
             var part = LookupPart(item);
             placements[item] = ComputePlacement(item, part);
@@ -85,7 +91,7 @@ internal static class EasyEDASheetWriter
         // below builds pin-instance ids (componentId + symbol pin element id)
         // from it.
         var componentIds = new Dictionary<SchematicItem, string>();
-        foreach (var item in schematic.Items)
+        foreach (var item in placeable)
         {
             var part = LookupPart(item);
             var placement = placements[item];
@@ -715,10 +721,15 @@ internal static class EasyEDASheetWriter
 
         foreach (var item in schematic.Items)
         {
-            var part = LookupPart(item);
-            if (part.IsNetFlag) continue;                       // no NC on power flags
+            // Skip anything not emitted as a component -- cosmetic background
+            // items, and anything filtered earlier -- BEFORE any catalogue
+            // lookup. LookupPart would otherwise diagnose the missing entry for
+            // an item we deliberately didn't export.
             if (!componentIds.TryGetValue(item, out var componentId)) continue;
             if (!placements.TryGetValue(item, out var placement)) continue;
+
+            var part = LookupPart(item);
+            if (part.IsNetFlag) continue;                       // no NC on power flags
 
             IReadOnlyDictionary<int, string>? numberToElement = null;
 

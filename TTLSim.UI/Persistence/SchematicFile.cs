@@ -24,6 +24,13 @@ public sealed class SchematicDto
     public List<ConnectionDto> Connections { get; set; } = new();
 
     /// <summary>
+    /// Ribbon-cable links between equal-pin-count header units. Pin count is
+    /// not stored -- it is re-derived from the headers on load. Absent on files
+    /// written before the feature; loads as an empty list.
+    /// </summary>
+    public List<HeaderLinkDto> Links { get; set; } = new();
+
+    /// <summary>
     /// Legacy field: wires with embedded waypoint geometry. Kept only so old
     /// files still load; the serializer migrates these into Connections at
     /// load time and never writes new ones.
@@ -137,6 +144,20 @@ public sealed class PinRefDto
     // rather than through the paste's old->new id map. Default false keeps
     // every existing .ttlproj and every fully-internal connection unchanged.
     public bool External { get; set; }
+}
+
+/// <summary>
+/// A ribbon-cable link between two header units, referenced by unit id. The
+/// link ties pin i of A to pin i of B. Pin count is not stored -- it is derived
+/// from the headers on load (both must still have matching pin counts, or the
+/// link is dropped). Reversed is the cosmetic draw flag only.
+/// </summary>
+public sealed class HeaderLinkDto
+{
+    public string Id { get; set; } = "";
+    public string AId { get; set; } = "";
+    public string BId { get; set; } = "";
+    public bool Reversed { get; set; }
 }
 
 // -----------------------------------------------------------------------------

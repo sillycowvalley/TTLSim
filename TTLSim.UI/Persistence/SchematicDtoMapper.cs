@@ -189,7 +189,8 @@ public static class SchematicDtoMapper
     public static SchematicDto ToDto(
         IEnumerable<Device> devices,
         IEnumerable<SchematicItem> items,
-        IEnumerable<Connection> connections)
+        IEnumerable<Connection> connections,
+        IEnumerable<HeaderLink>? links = null)
     {
         var dto = new SchematicDto();
 
@@ -257,6 +258,27 @@ public static class SchematicDtoMapper
                 Color = connection.Color == TTLColor.Black
                     ? null : connection.Color.ToString()
             });
+        }
+
+        if (links is not null)
+        {
+            foreach (var link in links)
+            {
+                // Only links fully inside the supplied item set are emitted.
+                // For a whole-schematic save every header is present so nothing
+                // is lost; for a selection copy this drops a link with an
+                // endpoint outside the selection.
+                if (!itemIds.Contains(link.A.Id) || !itemIds.Contains(link.B.Id))
+                    continue;
+
+                dto.Links.Add(new HeaderLinkDto
+                {
+                    Id = link.Id,
+                    AId = link.A.Id,
+                    BId = link.B.Id,
+                    Reversed = link.Reversed
+                });
+            }
         }
 
         return dto;
@@ -401,6 +423,7 @@ public static class SchematicDtoMapper
         public List<Device> Devices { get; } = new();
         public List<SchematicItem> Items { get; } = new();
         public List<Connection> Connections { get; } = new();
+        public List<HeaderLink> Links { get; } = new();
 
         /// <summary>
         /// Units present in the source DTO that could not be reconstructed
@@ -418,8 +441,16 @@ public static class SchematicDtoMapper
         /// </summary>
         public int DroppedConnections { get; set; }
 
+        /// <summary>
+        /// Header links in the source DTO whose endpoints did not resolve to
+        /// two equal-pin-count headers (a header was skipped, or pin counts no
+        /// longer match) and were therefore omitted. Non-zero means a partial
+        /// rebuild.
+        /// </summary>
+        public int DroppedLinks { get; set; }
+
         /// <summary>True when anything in the source DTO failed to come across.</summary>
-        public bool IsPartial => SkippedUnits > 0 || DroppedConnections > 0;
+        public bool IsPartial => SkippedUnits > 0 || DroppedConnections > 0 || DroppedLinks > 0;
     }
 
     /// <summary>
@@ -542,6 +573,29 @@ public static class SchematicDtoMapper
                 connection.Color = wc;
             }
             result.Connections.Add(connection);
+        }
+
+        // ---- Pass 5: header links ------------------------------------------
+        // Resolve both endpoints against the rebuilt items. A link is dropped
+        // if either endpoint is missing or not a header, or if the two headers
+        // no longer have matching pin counts.
+        foreach (var linkDto in dto.Links)
+        {
+            if (!itemsByOldId.TryGetValue(linkDto.AId, out var ia) ||
+                !itemsByOldId.TryGetValue(linkDto.BId, out var ib) ||
+                ia is not HeaderOutputUnit ha ||
+                ib is not HeaderOutputUnit hb ||
+                ha.Pins.Count() != hb.Pins.Count())
+            {
+                result.DroppedLinks++;
+                continue;
+            }
+
+            result.Links.Add(new HeaderLink(ha, hb)
+            {
+                Id = fresh ? Guid.NewGuid().ToString("N") : linkDto.Id,
+                Reversed = linkDto.Reversed
+            });
         }
 
         return result;

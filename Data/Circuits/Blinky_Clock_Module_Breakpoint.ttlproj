@@ -1971,7 +1971,7 @@
         "unitLetter": "",
         "position": {
           "x": -151,
-          "y": -58
+          "y": -64
         },
         "label": "",
         "rotation": 0,
@@ -1983,7 +1983,7 @@
         "unitLetter": "",
         "position": {
           "x": -166,
-          "y": -38
+          "y": -44
         },
         "label": "3",
         "rotation": 180,
@@ -1995,7 +1995,7 @@
         "unitLetter": "",
         "position": {
           "x": -166,
-          "y": -32
+          "y": -38
         },
         "label": "2",
         "rotation": 180,
@@ -2007,7 +2007,7 @@
         "unitLetter": "",
         "position": {
           "x": -166,
-          "y": -26
+          "y": -32
         },
         "label": "1",
         "rotation": 180,
@@ -2019,7 +2019,7 @@
         "unitLetter": "",
         "position": {
           "x": -166,
-          "y": -20
+          "y": -26
         },
         "label": "0",
         "rotation": 180,
@@ -2031,7 +2031,7 @@
         "unitLetter": "",
         "position": {
           "x": -109,
-          "y": -58
+          "y": -64
         },
         "label": "",
         "rotation": 0,
@@ -2391,7 +2391,7 @@
         "unitLetter": "",
         "position": {
           "x": -361,
-          "y": -14
+          "y": -20
         },
         "label": "",
         "rotation": 270,
@@ -2403,7 +2403,7 @@
         "unitLetter": "",
         "position": {
           "x": -260,
-          "y": -14
+          "y": -20
         },
         "label": "",
         "rotation": 270,
@@ -2415,7 +2415,7 @@
         "unitLetter": "",
         "position": {
           "x": 138,
-          "y": -13
+          "y": -19
         },
         "label": "",
         "rotation": 270,
@@ -2954,7 +2954,7 @@
         "label": "",
         "position": {
           "x": -180,
-          "y": -26
+          "y": -32
         },
         "rotation": 270,
         "frequencyHz": null,
@@ -2975,7 +2975,7 @@
         "label": "VCC",
         "position": {
           "x": -130,
-          "y": -67
+          "y": -73
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -2996,7 +2996,7 @@
         "label": "",
         "position": {
           "x": -122,
-          "y": -34
+          "y": -40
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -3123,6 +3123,48 @@
         "position": {
           "x": -159,
           "y": 1
+        },
+        "rotation": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "fontSize": 24,
+        "textColor": "Black"
+      },
+      {
+        "type": "rect",
+        "id": "3ead32132b9e44a7b75d49d4f709c1bc",
+        "label": "",
+        "position": {
+          "x": -368,
+          "y": -77
+        },
+        "rotation": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 515,
+        "height": 65,
+        "filled": true,
+        "fillColor": "Grey",
+        "borderColor": "Grey",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "text",
+        "id": "d56357c445d6409ba3f08c5e8a386262",
+        "label": "Test Circuitry",
+        "position": {
+          "x": -364,
+          "y": -73
         },
         "rotation": 0,
         "frequencyHz": null,
@@ -7074,13 +7116,27 @@
         "color": "Orange"
       }
     ],
+    "links": [
+      {
+        "id": "e8f1d8b70512486d8944e7442250fac9",
+        "aId": "e12219e9ce9a437da69ee67fd3fb3b13",
+        "bId": "d3019e093448476d8bb8ec179ed16067",
+        "reversed": false
+      },
+      {
+        "id": "f3619321508241aa8dccae542c8bd8f5",
+        "aId": "476cf1585d3d43be8b56cdcf1b73083f",
+        "bId": "d832f570f5aa424aa45a8b9038f72af2",
+        "reversed": false
+      }
+    ],
     "wires": []
   },
   "view": {
-    "zoom": 0.41723853,
+    "zoom": 3.9043589,
     "pan": {
-      "x": 868,
-      "y": 504
+      "x": 5600,
+      "y": 399
     }
   }
 }

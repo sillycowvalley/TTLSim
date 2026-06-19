@@ -50,7 +50,7 @@ public static class SchematicSerializer
         var file = new SchematicFile
         {
             Schematic = SchematicDtoMapper.ToDto(
-                schematic.Devices, schematic.Items, schematic.Connections),
+                schematic.Devices, schematic.Items, schematic.Connections, schematic.Links),
             View = new ViewDto
             {
                 Zoom = zoom,
@@ -88,6 +88,8 @@ public static class SchematicSerializer
             schematic.Add(item);
         foreach (var connection in result.Connections)
             schematic.Add(connection);
+        foreach (var link in result.Links)
+            schematic.Add(link);
 
         // Compat fix-up (1): give any designated item that predates the
         // designator field the next free number, unique against everything
