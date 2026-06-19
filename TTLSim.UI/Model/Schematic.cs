@@ -43,6 +43,40 @@ public sealed class Schematic
     public void Remove(HeaderLink link) => Links.Remove(link);
 
     /// <summary>
+    /// Remove everything: devices, items, connections, and links. This is the
+    /// ONE place that knows the full set of collections, so callers that reset
+    /// the model (File-New) never have to re-list them and silently miss one.
+    /// When a new collection is added to this class, clear it here and every
+    /// reset path inherits it.
+    /// </summary>
+    public void Clear()
+    {
+        Devices.Clear();
+        Items.Clear();
+        Connections.Clear();
+        Links.Clear();
+    }
+
+    /// <summary>
+    /// Replace this schematic's contents in place with another's: clear, then
+    /// take every device, item, connection, and link from <paramref name="other"/>.
+    /// Used by the load path so a freshly loaded schematic moves into the live
+    /// one without swapping the Schematic reference. Like <see cref="Clear"/>,
+    /// this is the single place that enumerates the collections -- a new
+    /// collection added to this class is copied here and every load path
+    /// inherits it.
+    /// </summary>
+    public void CopyFrom(Schematic other)
+    {
+        if (ReferenceEquals(other, this)) return;
+        Clear();
+        Devices.AddRange(other.Devices);
+        Items.AddRange(other.Items);
+        Connections.AddRange(other.Connections);
+        Links.AddRange(other.Links);
+    }
+
+    /// <summary>
     /// Lowest unused integer N such that no existing device has designator
     /// equal to prefix + N. Used by DeviceFactory to assign U1, U2, ..., or
     /// R1, R2, ..., depending on the part's reference prefix.

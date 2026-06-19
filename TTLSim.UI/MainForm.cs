@@ -564,10 +564,7 @@ public sealed class MainForm : Form
     {
         if (!ConfirmDiscardChanges()) return;
         savedAtCommand = null;
-        canvas.Schematic.Devices.Clear();
-        canvas.Schematic.Items.Clear();
-        canvas.Schematic.Connections.Clear();
-        canvas.Schematic.Links.Clear();
+        canvas.Schematic.Clear();
         canvas.UndoStack.Clear();
         currentFilePath = null;
         dirty = false;
@@ -1041,14 +1038,7 @@ public sealed class MainForm : Form
     private void ReplaceSchematic(Persistence.SchematicSerializer.LoadResult loaded)
     {
         savedAtCommand = null;
-        canvas.Schematic.Devices.Clear();
-        canvas.Schematic.Items.Clear();
-        canvas.Schematic.Connections.Clear();
-        canvas.Schematic.Links.Clear();
-        foreach (var device in loaded.Schematic.Devices) canvas.Schematic.Devices.Add(device);
-        foreach (var item in loaded.Schematic.Items) canvas.Schematic.Items.Add(item);
-        foreach (var connection in loaded.Schematic.Connections) canvas.Schematic.Connections.Add(connection);
-        foreach (var link in loaded.Schematic.Links) canvas.Schematic.Links.Add(link);
+        canvas.Schematic.CopyFrom(loaded.Schematic);
         canvas.UndoStack.Clear();
         if (loaded.Zoom is { } z && loaded.Pan is { } pan)
             canvas.SetView(z, pan);
