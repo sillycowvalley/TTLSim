@@ -226,6 +226,14 @@ public sealed class SchematicCanvas : Control
     // Live cursor grid point while placing, for the rubber-band preview.
     private Point wirePreviewEnd;
 
+    // Header-link placement state. Null when not placing. The first click
+    // picks the start header; the second click on a different, equal-pin-count
+    // header creates the link.
+    private HeaderOutputUnit? headerLinkStart;
+    // Live cursor grid point while placing, for the rubber-band preview.
+    private Point headerLinkPreviewEnd;
+    private bool awaitingHeaderLinkStart;
+
     // Last known cursor position in grid units, updated on every mouse move.
     // Used by keyboard/menu paste to decide between "paste under the cursor"
     // (cursor over the canvas) and "paste at a cascade offset" (cursor
@@ -261,6 +269,8 @@ public sealed class SchematicCanvas : Control
 
     public bool IsPlacingWire => wireStartPin != null || awaitingWireStart;
 
+    public bool IsPlacingHeaderLink => headerLinkStart != null || awaitingHeaderLinkStart;
+
     private bool awaitingWireStart;
 
     /// <summary>
@@ -288,6 +298,27 @@ public sealed class SchematicCanvas : Control
     {
         awaitingWireStart = false;
         wireStartPin = null;
+        Cursor = Cursors.Default;
+        Invalidate();
+    }
+
+    /// <summary>
+    /// Enter header-link placement mode. First click picks the start header,
+    /// second click the end header. The two must have the same pin count.
+    /// </summary>
+    public void BeginHeaderLinkPlacement()
+    {
+        awaitingHeaderLinkStart = true;
+        headerLinkStart = null;
+        Cursor = Cursors.Cross;
+        Invalidate();
+    }
+
+    /// <summary>Cancel header-link placement, discarding any in-progress link.</summary>
+    public void CancelHeaderLinkPlacement()
+    {
+        awaitingHeaderLinkStart = false;
+        headerLinkStart = null;
         Cursor = Cursors.Default;
         Invalidate();
     }
@@ -405,6 +436,9 @@ public sealed class SchematicCanvas : Control
         foreach (var connection in Schematic.Connections)
             DrawWire(g, connection);
 
+        foreach (var link in Schematic.Links)
+            DrawHeaderLink(g, link);
+
         DrawJunctions(g);
 
         DrawCoincidentCornerWarnings(g);
@@ -421,6 +455,19 @@ public sealed class SchematicCanvas : Control
             g.DrawLine(dashPen,
                 from.X * p, from.Y * p,
                 wirePreviewEnd.X * p, wirePreviewEnd.Y * p);
+        }
+
+        if (headerLinkStart != null)
+        {
+            int p = GridPitch;
+            // Anchor the preview at the start header's body centre.
+            var bnd = headerLinkStart.Bounds;
+            float ax = (bnd.X + bnd.Width / 2f) * p;
+            float ay = (bnd.Y + bnd.Height / 2f) * p;
+            using var dashPen = new Pen(Color.FromArgb(180, 120, 90, 170), 1.2f)
+            { DashStyle = DashStyle.Dash };
+            g.DrawLine(dashPen, ax, ay,
+                headerLinkPreviewEnd.X * p, headerLinkPreviewEnd.Y * p);
         }
 
         if (marqueeing)
@@ -512,6 +559,42 @@ public sealed class SchematicCanvas : Control
     }
 
     /// <summary>
+    /// Yield the strand endpoints (in grid units) for a header link: pin i of
+    /// A to pin i of B, for every pin both headers share. Strands always
+    /// terminate on the true pin endpoints, so the drawing is honestly 1-to-1
+    /// (it may cross when the headers face each other). The link's Reversed
+    /// flag does not affect these endpoints.
+    /// </summary>
+    private static IEnumerable<(Point A, Point B)> HeaderLinkStrands(HeaderLink link)
+    {
+        int n = link.PinCount;
+        for (int i = 1; i <= n; i++)
+        {
+            var pa = link.A.Pins.FirstOrDefault(p => p.Number == i);
+            var pb = link.B.Pins.FirstOrDefault(p => p.Number == i);
+            if (pa is null || pb is null) continue;
+            yield return (pa.WorldPosition, pb.WorldPosition);
+        }
+    }
+
+    /// <summary>
+    /// Draw a header link as a bundle of straight strands, one per pin pair.
+    /// Not routed -- a link is a fixed bundle, so it bypasses the wire router.
+    /// A selected link renders in the selection colour.
+    /// </summary>
+    private void DrawHeaderLink(Graphics g, HeaderLink link)
+    {
+        int p = GridPitch;
+        Color color = link.Selected
+            ? RenderContext.DefaultSelected
+            : Color.FromArgb(210, 120, 90, 170);   // muted violet ribbon
+
+        using var pen = new Pen(color, 1.4f);
+        foreach (var (a, b) in HeaderLinkStrands(link))
+            g.DrawLine(pen, a.X * p, a.Y * p, b.X * p, b.Y * p);
+    }
+
+    /// <summary>
     /// Render junction blobs (T-junctions and crossings of same-net wires).
     /// Empty for 2-pin connections; will populate when multi-pin nets are
     /// introduced.
@@ -588,6 +671,23 @@ public sealed class SchematicCanvas : Control
         float dx = wx - t * vx;
         float dy = wy - t * vy;
         return MathF.Sqrt(dx * dx + dy * dy);
+    }
+
+    /// <summary>
+    /// Hit-test against header-link strands, topmost link first. Uses the same
+    /// tolerance as wire hit-testing.
+    /// </summary>
+    private HeaderLink? HitTestHeaderLink(Point gridPoint)
+    {
+        float tol = ConnectionHitTolerance;
+        for (int i = Schematic.Links.Count - 1; i >= 0; i--)
+        {
+            var link = Schematic.Links[i];
+            foreach (var (a, b) in HeaderLinkStrands(link))
+                if (DistancePointToSegment(gridPoint, a, b) <= tol)
+                    return link;
+        }
+        return null;
     }
 
     private void DrawGrid(Graphics g)
@@ -906,6 +1006,12 @@ public sealed class SchematicCanvas : Control
             return;
         }
 
+        if (e.Button == MouseButtons.Right && IsPlacingHeaderLink)
+        {
+            CancelHeaderLinkPlacement();
+            return;
+        }
+
         if (e.Button == MouseButtons.Middle)
         {
             panning = true;
@@ -946,9 +1052,47 @@ public sealed class SchematicCanvas : Control
                 return;
             }
 
+            if (awaitingHeaderLinkStart)
+            {
+                if (Schematic.HitTest(grid) is HeaderOutputUnit header)
+                {
+                    headerLinkStart = header;
+                    awaitingHeaderLinkStart = false;
+                    headerLinkPreviewEnd = grid;
+                    Invalidate();
+                }
+                return;
+            }
+            if (headerLinkStart != null)
+            {
+                if (Schematic.HitTest(grid) is HeaderOutputUnit header
+                    && header != headerLinkStart)
+                {
+                    if (header.Pins.Count() == headerLinkStart.Pins.Count())
+                    {
+                        var link = new HeaderLink(headerLinkStart, header);
+                        UndoStack.Do(new AddHeaderLinkCommand(link));
+
+                        headerLinkStart = null;
+                        awaitingHeaderLinkStart = true;
+                        Invalidate();
+                    }
+                    else
+                    {
+                        // Pin counts differ: reject and stay armed for a valid
+                        // second header.
+                        System.Media.SystemSounds.Beep.Play();
+                    }
+                }
+                return;
+            }
+
             var hit = Schematic.HitTest(grid);
             Connection? connectionHit = hit == null
                 ? HitTestConnection(grid)
+                : null;
+            HeaderLink? linkHit = (hit == null && connectionHit == null)
+                ? HitTestHeaderLink(grid)
                 : null;
 
             bool ctrl = (ModifierKeys & Keys.Control) == Keys.Control;
@@ -1001,6 +1145,18 @@ public sealed class SchematicCanvas : Control
                 {
                     Schematic.ClearSelection();
                     connectionHit.Selected = true;
+                }
+            }
+            else if (linkHit != null)
+            {
+                if (ctrl)
+                {
+                    linkHit.Selected = !linkHit.Selected;
+                }
+                else if (!linkHit.Selected)
+                {
+                    Schematic.ClearSelection();
+                    linkHit.Selected = true;
                 }
             }
             else
@@ -1185,6 +1341,13 @@ public sealed class SchematicCanvas : Control
         if (wireStartPin != null)
         {
             wirePreviewEnd = ScreenToGrid(e.Location);
+            Invalidate();
+            return;
+        }
+
+        if (headerLinkStart != null)
+        {
+            headerLinkPreviewEnd = ScreenToGrid(e.Location);
             Invalidate();
             return;
         }
@@ -1739,6 +1902,10 @@ public sealed class SchematicCanvas : Control
         {
             CancelWirePlacement();
         }
+        else if (e.KeyCode == Keys.Escape && (awaitingHeaderLinkStart || headerLinkStart != null))
+        {
+            CancelHeaderLinkPlacement();
+        }
         else if (e.KeyCode == Keys.Escape && marqueeing)
         {
             marqueeing = false;
@@ -1747,6 +1914,11 @@ public sealed class SchematicCanvas : Control
         else if (e.KeyCode == Keys.W && !awaitingWireStart && wireStartPin == null)
         {
             BeginWirePlacement();
+        }
+        else if (e.KeyCode == Keys.L && !awaitingHeaderLinkStart && headerLinkStart == null
+                 && !awaitingWireStart && wireStartPin == null)
+        {
+            BeginHeaderLinkPlacement();
         }
         else if (e.KeyCode == Keys.Space)
         {
@@ -1825,27 +1997,46 @@ public sealed class SchematicCanvas : Control
         foreach (var c in selectedConnections)
             implicitConnections.Remove(c);
 
+        // Header links implicitly removed because an attached header is going.
+        var implicitLinks = new HashSet<HeaderLink>();
+        foreach (var item in allItemsToRemove)
+            foreach (var l in Schematic.LinksOn(item))
+                implicitLinks.Add(l);
+
+        var selectedLinks = Schematic.SelectedLinks.ToList();
+        foreach (var l in selectedLinks)
+            implicitLinks.Remove(l);
+
         int total = allItemsToRemove.Count + selectedConnections.Count
-                  + implicitConnections.Count + devicesToDelete.Count;
+                  + implicitConnections.Count + devicesToDelete.Count
+                  + selectedLinks.Count + implicitLinks.Count;
         if (total == 0) return;
 
         string description;
         if (devicesToDelete.Count == 1 && allItemsToRemove.Count == devicesToDelete.First().Units.Count
-            && nonUnitItemsSelected.Count == 0 && selectedConnections.Count == 0)
+            && nonUnitItemsSelected.Count == 0 && selectedConnections.Count == 0 && selectedLinks.Count == 0)
         {
             description = $"Delete {devicesToDelete.First().Designator}";
         }
-        else if (devicesToDelete.Count == 0 && nonUnitItemsSelected.Count == 1 && selectedConnections.Count == 0)
+        else if (devicesToDelete.Count == 0 && nonUnitItemsSelected.Count == 1
+                 && selectedConnections.Count == 0 && selectedLinks.Count == 0)
         {
             description = $"Delete {nonUnitItemsSelected[0].GetType().Name}";
         }
-        else if (devicesToDelete.Count == 0 && nonUnitItemsSelected.Count == 0 && selectedConnections.Count == 1)
+        else if (devicesToDelete.Count == 0 && nonUnitItemsSelected.Count == 0
+                 && selectedConnections.Count == 1 && selectedLinks.Count == 0)
         {
             description = "Delete Connection";
         }
+        else if (devicesToDelete.Count == 0 && nonUnitItemsSelected.Count == 0
+                 && selectedConnections.Count == 0 && selectedLinks.Count == 1)
+        {
+            description = "Delete Header Link";
+        }
         else
         {
-            int visibleTotal = devicesToDelete.Count + nonUnitItemsSelected.Count + selectedConnections.Count;
+            int visibleTotal = devicesToDelete.Count + nonUnitItemsSelected.Count
+                             + selectedConnections.Count + selectedLinks.Count;
             description = $"Delete {visibleTotal} items";
         }
 
@@ -1857,6 +2048,10 @@ public sealed class SchematicCanvas : Control
                 UndoStack.Do(new RemoveConnectionCommand(c));
             foreach (var c in selectedConnections)
                 UndoStack.Do(new RemoveConnectionCommand(c));
+            foreach (var l in implicitLinks)
+                UndoStack.Do(new RemoveHeaderLinkCommand(l));
+            foreach (var l in selectedLinks)
+                UndoStack.Do(new RemoveHeaderLinkCommand(l));
             foreach (var item in allItemsToRemove)
                 UndoStack.Do(new RemoveItemCommand(item));
             foreach (var device in devicesToDelete)

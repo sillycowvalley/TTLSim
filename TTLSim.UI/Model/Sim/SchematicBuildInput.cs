@@ -174,6 +174,21 @@ public sealed class SchematicBuildInput : IBuildInput
                     new PinRef(c.A.Owner.Id, c.A.Number),
                     new PinRef(c.B.Owner.Id, c.B.Number));
             }
+
+            // Header links (ribbon cables): tie pin i of header A to pin i of
+            // header B for every pin, unconditionally. The cosmetic Reversed
+            // flag never affects this -- the mapping is always A.i <-> B.i.
+            // Each link expands to N independent pin-pairs that NetTable unions,
+            // exactly as if N wires had been drawn between the two headers.
+            // (Export is unaffected: the EasyEDA writer reads schematic.Links
+            // directly and skips them; links never appear on a PCB.)
+            foreach (HeaderLink link in schematic.Links)
+            {
+                int n = link.PinCount;
+                for (int i = 1; i <= n; i++)
+                    yield return (new PinRef(link.A.Id, i), new PinRef(link.B.Id, i));
+            }
+
             // Device-internal bonds for the 4-pin breadboard pushbutton: its two
             // legs per terminal (pins 1&2 and 3&4) are physically common, so union
             // them here. The doubled legs then share their terminal's net -- the

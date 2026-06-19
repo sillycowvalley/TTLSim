@@ -166,6 +166,8 @@ public sealed class MainForm : Form
 
         editMenu.DropDownItems.Add(new ToolStripMenuItem("Place &Wire", null,
             (_, _) => canvas!.BeginWirePlacement()));
+        editMenu.DropDownItems.Add(new ToolStripMenuItem("Place Header &Link", null,
+            (_, _) => canvas!.BeginHeaderLinkPlacement()));
 
         // Rotate items. Space / Shift+Space are handled by the canvas's
         // OnKeyDown directly; the menu items just display the shortcut text
@@ -434,17 +436,18 @@ public sealed class MainForm : Form
         {
             var items = canvas.Schematic.Selected.ToArray();
             var connections = canvas.Schematic.SelectedConnections.ToArray();
-            object[] all = items.Cast<object>().Concat(connections).ToArray();
+            var links = canvas.Schematic.SelectedLinks.ToArray();
+            object[] all = items.Cast<object>().Concat(connections).Concat(links).ToArray();
             propertyGrid.SelectedObjects = all;
             propertyGrid.ExpandAllGridItems();
 
-            int total = items.Length + connections.Length;
+            int total = items.Length + connections.Length + links.Length;
             selectionLabel.Text = total switch
             {
                 0 => "Nothing selected",
                 1 => items.Length == 1
                     ? $"Selected: {items[0].GetType().Name}"
-                    : "Selected: Connection",
+                    : connections.Length == 1 ? "Selected: Connection" : "Selected: Header Link",
                 _ => $"Selected: {total} items"
             };
 

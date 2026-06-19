@@ -25,11 +25,22 @@ public sealed class Schematic
     /// </summary>
     public List<Connection> Connections { get; } = new();
 
+    /// <summary>
+    /// Ribbon-cable links between equal-pin-count header units. Each link ties
+    /// pin i of one header to pin i of the other for every pin. Like a
+    /// Connection a link has no geometry of its own; unlike a Connection it is
+    /// not routed -- the strands are drawn directly between the pin pairs.
+    /// </summary>
+    public List<HeaderLink> Links { get; } = new();
+
     public void Add(SchematicItem item) => Items.Add(item);
     public void Remove(SchematicItem item) => Items.Remove(item);
 
     public void Add(Connection connection) => Connections.Add(connection);
     public void Remove(Connection connection) => Connections.Remove(connection);
+
+    public void Add(HeaderLink link) => Links.Add(link);
+    public void Remove(HeaderLink link) => Links.Remove(link);
 
     /// <summary>
     /// Lowest unused integer N such that no existing device has designator
@@ -89,6 +100,21 @@ public sealed class Schematic
     }
 
     /// <summary>
+    /// All header links with an endpoint on the given item. Used by composite
+    /// delete: when a header (or the device it belongs to) goes, the links
+    /// attached to it go with it -- the same closure rule ConnectionsOn gives
+    /// for wires.
+    /// </summary>
+    public IEnumerable<HeaderLink> LinksOn(SchematicItem item)
+    {
+        foreach (var link in Links)
+        {
+            if (link.A == item || link.B == item)
+                yield return link;
+        }
+    }
+
+    /// <summary>
     /// Find a pin whose world position equals the given grid point. Searches
     /// from topmost item down so that overlapping items resolve consistently
     /// with HitTest. Returns null if no pin sits exactly on that grid point.
@@ -108,10 +134,12 @@ public sealed class Schematic
 
     public IEnumerable<SchematicItem> Selected => Items.Where(i => i.Selected);
     public IEnumerable<Connection> SelectedConnections => Connections.Where(c => c.Selected);
+    public IEnumerable<HeaderLink> SelectedLinks => Links.Where(l => l.Selected);
 
     public void ClearSelection()
     {
         foreach (var item in Items) item.Selected = false;
         foreach (var c in Connections) c.Selected = false;
+        foreach (var l in Links) l.Selected = false;
     }
 }
