@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using TTLSim.Core;
 using TTLSim.UI.Components;
 using TTLSim.UI.Model;
 
@@ -53,6 +54,7 @@ public static class SchematicDtoMapper
             [ChipPartDefinition.Ic28C256.PartNumber] = ChipPartDefinition.Ic28C256,
             [ChipPartDefinition.Ic28C128.PartNumber] = ChipPartDefinition.Ic28C128,
             [ChipPartDefinition.Ic28C64.PartNumber] = ChipPartDefinition.Ic28C64,
+            [ChipPartDefinition.Ic28C16.PartNumber] = ChipPartDefinition.Ic28C16,
             [ChipPartDefinition.Ic62256.PartNumber] = ChipPartDefinition.Ic62256,
             [ChipPartDefinition.Ic6116.PartNumber] = ChipPartDefinition.Ic6116,
             [ChipPartDefinition.Ic2114.PartNumber] = ChipPartDefinition.Ic2114,
@@ -66,6 +68,8 @@ public static class SchematicDtoMapper
 
             // Flip-flops & counters
             [ChipPartDefinition.Ic7474.PartNumber] = ChipPartDefinition.Ic7474,
+            [ChipPartDefinition.Ic74107.PartNumber] = ChipPartDefinition.Ic74107,
+            [ChipPartDefinition.Ic74390.PartNumber] = ChipPartDefinition.Ic74390,
             [ChipPartDefinition.Ic74393.PartNumber] = ChipPartDefinition.Ic74393,
 
             // Gates
@@ -81,15 +85,22 @@ public static class SchematicDtoMapper
             [ChipPartDefinition.Ic7486.PartNumber] = ChipPartDefinition.Ic7486,
 
             // Registers
+            [ChipPartDefinition.Ic74173.PartNumber] = ChipPartDefinition.Ic74173,
+            [ChipPartDefinition.Ic74175.PartNumber] = ChipPartDefinition.Ic74175,
             [ChipPartDefinition.Ic74273.PartNumber] = ChipPartDefinition.Ic74273,
+            [ChipPartDefinition.Ic74373.PartNumber] = ChipPartDefinition.Ic74373,
             [ChipPartDefinition.Ic74377.PartNumber] = ChipPartDefinition.Ic74377,
             [ChipPartDefinition.Ic74574.PartNumber] = ChipPartDefinition.Ic74574,
             [ChipPartDefinition.Ic74299.PartNumber] = ChipPartDefinition.Ic74299,
+            [ChipPartDefinition.Ic74595.PartNumber] = ChipPartDefinition.Ic74595,
 
             // Counters
             [ChipPartDefinition.Ic74161.PartNumber] = ChipPartDefinition.Ic74161,
             [ChipPartDefinition.Ic74163.PartNumber] = ChipPartDefinition.Ic74163,
             [ChipPartDefinition.Ic74193.PartNumber] = ChipPartDefinition.Ic74193,
+
+            // RAM
+            [ChipPartDefinition.Ic74189.PartNumber] = ChipPartDefinition.Ic74189,
 
             // Bus / buffers / muxes
             [ChipPartDefinition.Ic74151.PartNumber] = ChipPartDefinition.Ic74151,
@@ -147,6 +158,7 @@ public static class SchematicDtoMapper
         {
             [HeaderPartDefinition.HeaderOut2.Identifier] = HeaderPartDefinition.HeaderOut2,
             [HeaderPartDefinition.HeaderOut4.Identifier] = HeaderPartDefinition.HeaderOut4,
+            [HeaderPartDefinition.HeaderOut3.Identifier] = HeaderPartDefinition.HeaderOut3,
             [HeaderPartDefinition.HeaderOut6.Identifier] = HeaderPartDefinition.HeaderOut6,
             [HeaderPartDefinition.HeaderOut8.Identifier] = HeaderPartDefinition.HeaderOut8,
         };
@@ -333,6 +345,10 @@ public static class SchematicDtoMapper
                 VccSymbol => "vcc",
                 GndSymbol => "gnd",
                 UiClockSource => "clock",
+                // CanOscillatorDip8 derives from CanOscillator, so it MUST be
+                // matched first -- otherwise the half-size DIP-8 oscillator
+                // would serialise (and round-trip) as a full-size "canosc".
+                CanOscillatorDip8 => "canosc8",
                 CanOscillator => "canosc",
                 _ => throw new InvalidOperationException(
                     $"No standalone-item discriminator for {item.GetType().Name}")
@@ -555,6 +571,29 @@ public static class SchematicDtoMapper
             device.Value = dto.Value;
         }
 
+        // 555/556 timer settings. The Device constructor has already applied
+        // sensible defaults (Schmitt + 1000 Hz), so older files without these
+        // fields load fine; here we just override from whatever the file
+        // carried. Without this block a 555/556 with a non-default function or
+        // frequency would lose those settings on load and on paste.
+        if (device.IsTimer)
+        {
+            if (!string.IsNullOrEmpty(dto.Function1)
+                && Enum.TryParse<TimerFunction>(dto.Function1, out var fn1))
+                device.Function = fn1;
+            if (dto.FrequencyHz1 is double hz1)
+                device.FrequencyHz = hz1;
+
+            if (device.Is556)
+            {
+                if (!string.IsNullOrEmpty(dto.Function2)
+                    && Enum.TryParse<TimerFunction>(dto.Function2, out var fn2))
+                    device.Function2 = fn2;
+                if (dto.FrequencyHz2 is double hz2)
+                    device.FrequencyHz2 = hz2;
+            }
+        }
+
         return device;
     }
 
@@ -652,8 +691,9 @@ public static class SchematicDtoMapper
             StartHigh = dto.StartHigh ?? false
         },
         "canosc" => new CanOscillator { FrequencyHz = dto.FrequencyHz ?? 1_000_000.0 },
+        "canosc8" => new CanOscillatorDip8 { FrequencyHz = dto.FrequencyHz ?? 1_000_000.0 },
         _ => throw new System.IO.InvalidDataException(
-            $"Unknown standalone item type '{dto.Type}'. Expected 'vcc', 'gnd', or 'clock'.")
+            $"Unknown standalone item type '{dto.Type}'. Expected 'vcc', 'gnd', 'clock', 'canosc', or 'canosc8'.")
     };
 
     private static Pin? ResolvePin(PinRefDto dto,
