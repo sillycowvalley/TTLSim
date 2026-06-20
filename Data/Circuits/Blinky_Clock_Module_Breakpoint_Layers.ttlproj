@@ -549,7 +549,7 @@
       },
       {
         "id": "b921dc84081c485abeab10ff9a9b1667",
-        "designator": "U8",
+        "designator": "U10",
         "partKind": "chip",
         "partIdentifier": "688",
         "family": "HC",
@@ -731,7 +731,7 @@
       },
       {
         "id": "175213e778514dc6a88e031bb332a960",
-        "designator": "U8",
+        "designator": "U9",
         "partKind": "chip",
         "partIdentifier": "74",
         "family": "HC",
@@ -1302,6 +1302,20 @@
         "function2": null,
         "frequencyHz1": null,
         "frequencyHz2": null
+      },
+      {
+        "id": "401b1410d2ae4b51be818ce59a72e85d",
+        "designator": "R14",
+        "partKind": "passive",
+        "partIdentifier": "resistor",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
       }
     ],
     "units": [
@@ -1323,11 +1337,11 @@
         "deviceId": "29001541870da471d855f9ed79ad83c8",
         "unitLetter": "",
         "position": {
-          "x": 9,
-          "y": 21
+          "x": 11,
+          "y": 7
         },
         "label": "100k",
-        "rotation": 180,
+        "rotation": 90,
         "layer": 0,
         "switchClosed": null
       },
@@ -2513,6 +2527,19 @@
         "rotation": 270,
         "layer": 1,
         "switchClosed": null
+      },
+      {
+        "id": "d8abd9bf1d824995b4329effa3fffa26",
+        "deviceId": "401b1410d2ae4b51be818ce59a72e85d",
+        "unitLetter": "",
+        "position": {
+          "x": 11,
+          "y": 15
+        },
+        "label": "1K",
+        "rotation": 270,
+        "layer": 0,
+        "switchClosed": null
       }
     ],
     "items": [
@@ -3549,20 +3576,6 @@
           "external": false
         },
         "color": "Orange"
-      },
-      {
-        "id": "28f62adacff341dfb28adab4cafbb793",
-        "a": {
-          "itemId": "adc2b844c241431192e58f685829a88c",
-          "pinNumber": 8,
-          "external": false
-        },
-        "b": {
-          "itemId": "f30e490870ef226b3068447580690a06",
-          "pinNumber": 2,
-          "external": false
-        },
-        "color": null
       },
       {
         "id": "c5569736d190429c943a94adf3e26d7b",
@@ -7329,6 +7342,34 @@
           "external": false
         },
         "color": "Blue"
+      },
+      {
+        "id": "9b47f011cccb43259a6d3e9e446347f0",
+        "a": {
+          "itemId": "adc2b844c241431192e58f685829a88c",
+          "pinNumber": 8,
+          "external": false
+        },
+        "b": {
+          "itemId": "d8abd9bf1d824995b4329effa3fffa26",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "9bc3f873373349bd9adae5052d209dd3",
+        "a": {
+          "itemId": "d8abd9bf1d824995b4329effa3fffa26",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "f30e490870ef226b3068447580690a06",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": null
       }
     ],
     "links": [
@@ -7362,20 +7403,20 @@
       },
       {
         "name": "Breakpoint",
-        "visible": true
+        "visible": false
       },
       {
         "name": "Breakpoint Stub",
-        "visible": false
+        "visible": true
       }
     ],
     "wires": []
   },
   "view": {
-    "zoom": 0.46608943,
+    "zoom": 0.49627426,
     "pan": {
-      "x": 963,
-      "y": 414
+      "x": 940,
+      "y": 410
     }
   }
 }
