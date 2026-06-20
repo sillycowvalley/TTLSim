@@ -907,7 +907,7 @@ public sealed class SchematicCanvas : Control
         {
             if (unusedGates.Contains(item)) continue;
             if (hiddenPower.Contains(item)) continue;
-            var b = item.RoutingBounds;
+            var b = item is IBackgroundItem ? item.Bounds : item.RoutingBounds;
             if (b.Left < minX) minX = b.Left;
             if (b.Top < minY) minY = b.Top;
             if (b.Right > maxX) maxX = b.Right;

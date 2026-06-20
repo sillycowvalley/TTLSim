@@ -35,19 +35,29 @@ public abstract class SchematicItem
 
     /// <summary>Top-left of the UNROTATED bounding box, in grid units.</summary>
     [Category("Layout")]
-    [Browsable(false)] 
+    [Browsable(false)]
     public Point Position { get; set; }
 
     /// <summary>Unrotated bounding box size in grid units. Does not change with rotation.</summary>
     [Category("Layout")]
     [ReadOnly(true)]
-    [Browsable(false)] 
+    [Browsable(false)]
     public Size Size { get; protected set; }
 
     /// <summary>Clockwise rotation applied at draw time.</summary>
     [Category("Layout")]
-    [Browsable(false)] 
+    [Browsable(false)]
     public Rotation Rotation { get; set; } = Rotation.R0;
+
+    /// <summary>
+    /// Index into <see cref="Schematic.Layers"/> of the layer this item belongs
+    /// to. 0 is the always-visible Default layer. Visibility lives on the layer,
+    /// not here -- this stores only WHICH layer the item is on. An out-of-range
+    /// value is treated as Default (visible) by the active rule, so old files
+    /// and freshly placed items (which default to 0) stay active.
+    /// </summary>
+    [Browsable(false)]
+    public int LayerId { get; set; }
 
     /// <summary>
     /// Footprint the router treats as blocked. Defaults to the visual bounds;

@@ -33,6 +33,16 @@ public sealed class Schematic
     /// </summary>
     public List<HeaderLink> Links { get; } = new();
 
+    /// <summary>
+    /// Layers. Index 0 is "Default" and is pinned visible -- it always exists
+    /// and cannot be hidden, so the whole design can never be hidden at once.
+    /// An item's <see cref="SchematicItem.LayerId"/> indexes into this list;
+    /// an out-of-range id is treated as Default by the active rule. The list
+    /// is reset to a single Default by <see cref="Clear"/> and replaced from
+    /// the source by <see cref="CopyFrom"/>.
+    /// </summary>
+    public List<Layer> Layers { get; } = new() { new Layer("Default", visible: true) };
+
     public void Add(SchematicItem item) => Items.Add(item);
     public void Remove(SchematicItem item) => Items.Remove(item);
 
@@ -48,6 +58,9 @@ public sealed class Schematic
     /// the model (File-New) never have to re-list them and silently miss one.
     /// When a new collection is added to this class, clear it here and every
     /// reset path inherits it.
+    ///
+    /// <para>Layers are reset to a single visible "Default" rather than emptied,
+    /// so the Default-always-exists invariant holds after a File-New.</para>
     /// </summary>
     public void Clear()
     {
@@ -55,6 +68,8 @@ public sealed class Schematic
         Items.Clear();
         Connections.Clear();
         Links.Clear();
+        Layers.Clear();
+        Layers.Add(new Layer("Default", visible: true));
     }
 
     /// <summary>
@@ -65,6 +80,10 @@ public sealed class Schematic
     /// this is the single place that enumerates the collections -- a new
     /// collection added to this class is copied here and every load path
     /// inherits it.
+    ///
+    /// <para>Layers replace the post-Clear Default from <paramref name="other"/>.
+    /// If the source carries no layers (a model built before the persistence
+    /// increment), the Default left by Clear is kept so the invariant holds.</para>
     /// </summary>
     public void CopyFrom(Schematic other)
     {
@@ -74,6 +93,11 @@ public sealed class Schematic
         Items.AddRange(other.Items);
         Connections.AddRange(other.Connections);
         Links.AddRange(other.Links);
+        if (other.Layers.Count > 0)
+        {
+            Layers.Clear();
+            Layers.AddRange(other.Layers);
+        }
     }
 
     /// <summary>
@@ -188,4 +212,53 @@ public sealed class Schematic
         foreach (var c in Connections) c.Selected = false;
         foreach (var l in Links) l.Selected = false;
     }
+
+    // ====================================================================
+    //  Layer activity -- the SINGLE home for "visible = active".
+    //
+    //  Every consumer (simulation, router, EasyEDA export, canvas paint,
+    //  hit-test/marquee, View->Fit) decides activity through the predicates
+    //  and enumerators below. No consumer re-derives the visibility check on
+    //  its own. Adding the rule here once is what keeps it from drifting
+    //  across the independent enumeration sites.
+    // ====================================================================
+
+    /// <summary>
+    /// True if the layer at <paramref name="layerId"/> is visible. An
+    /// out-of-range id (including the 0 default on items and on old files) is
+    /// treated as visible, so nothing silently disappears for want of a layer
+    /// entry.
+    /// </summary>
+    public bool IsLayerVisible(int layerId) =>
+        layerId < 0 || layerId >= Layers.Count || Layers[layerId].Visible;
+
+    /// <summary>An item is active iff its layer is visible.</summary>
+    public bool IsItemActive(SchematicItem item) => IsLayerVisible(item.LayerId);
+
+    /// <summary>
+    /// A connection is active iff both endpoint items exist and are active.
+    /// Connections carry no layer of their own; hiding a layer deactivates the
+    /// items on it, and any wire touching one of those items deactivates here
+    /// because one endpoint went inactive.
+    /// </summary>
+    public bool IsConnectionActive(Connection connection) =>
+        connection.A.Owner is { } a && connection.B.Owner is { } b
+        && IsItemActive(a) && IsItemActive(b);
+
+    /// <summary>
+    /// A header link is active iff both endpoint headers are active -- the same
+    /// rule as a connection. Hiding a module's layer hides its header, which
+    /// deactivates every link attached to that header.
+    /// </summary>
+    public bool IsLinkActive(HeaderLink link) =>
+        IsItemActive(link.A) && IsItemActive(link.B);
+
+    /// <summary>Items on a visible layer. The active view of <see cref="Items"/>.</summary>
+    public IEnumerable<SchematicItem> ActiveItems => Items.Where(IsItemActive);
+
+    /// <summary>Connections with both endpoints active. The active view of <see cref="Connections"/>.</summary>
+    public IEnumerable<Connection> ActiveConnections => Connections.Where(IsConnectionActive);
+
+    /// <summary>Header links with both endpoint headers active. The active view of <see cref="Links"/>.</summary>
+    public IEnumerable<HeaderLink> ActiveLinks => Links.Where(IsLinkActive);
 }
