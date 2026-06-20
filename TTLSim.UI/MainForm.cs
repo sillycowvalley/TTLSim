@@ -19,6 +19,7 @@ public sealed class MainForm : Form
     private readonly SchematicCanvas canvas;
     private readonly LibraryPanel library;
     private readonly EnterAwarePropertyGrid propertyGrid;
+    private readonly LayersPanel layersPanel;
     private readonly StatusStrip statusStrip;
     private readonly ToolStripStatusLabel coordsLabel;
     private readonly ToolStripStatusLabel zoomLabel;
@@ -388,6 +389,16 @@ public sealed class MainForm : Form
         };
         rightPanel.Controls.Add(rightHeader);
 
+        // Layers panel pinned to the bottom of the right (Properties) column.
+        // propertyGrid (Fill) was added first so it claims the space between
+        // the header (Top) and this panel (Bottom).
+        layersPanel = new LayersPanel(canvas)
+        {
+            Dock = DockStyle.Bottom,
+            Height = 230
+        };
+        rightPanel.Controls.Add(layersPanel);
+
         var leftSplitter = new Splitter { Dock = DockStyle.Left, Width = 4 };
         var rightSplitter = new Splitter { Dock = DockStyle.Right, Width = 4 };
 
@@ -462,6 +473,7 @@ public sealed class MainForm : Form
             UpdateEditMenuItems();
             UpdateHexMenuItems();
             UpdateGalMenuItems();
+            layersPanel.OnSelectionChanged();
         };
 
         // Initial enabled state for the clipboard items, before any
@@ -1052,6 +1064,8 @@ public sealed class MainForm : Form
         outputPanel.Clear();
         outputPanel.Visible = false;
         simController.Invalidate();
+        canvas.CurrentLayerId = 0;
+        layersPanel.RefreshLayers();
     }
 
     private void UpdateTitle()

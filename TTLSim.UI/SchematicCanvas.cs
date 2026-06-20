@@ -38,6 +38,14 @@ public sealed class SchematicCanvas : Control
     public UndoStack UndoStack { get; }
 
     /// <summary>
+    /// Layer that newly dropped items are placed on. Set by the Layers panel
+    /// when the user picks a current layer; reset to 0 (Default) when the
+    /// schematic is replaced. An out-of-range value is harmless -- the active
+    /// rule clamps it to Default.
+    /// </summary>
+    public int CurrentLayerId { get; set; }
+
+    /// <summary>
     /// When non-null, the canvas is in "sim mode": wires colour by the
     /// signal returned from this callback, and editor wire colours are
     /// suppressed. Null in Edit state.
@@ -1796,6 +1804,12 @@ public sealed class SchematicCanvas : Control
         var device = DeviceFactory.Create(definition, dropPoint, Schematic);
         var unitsToAdd = device.Units.ToList();  // snapshot in case the list mutates
 
+        // New parts land on the current layer. This is part of the item's
+        // initial state, not a separate undo step -- undo/redo of the Add
+        // carries the LayerId with the item.
+        foreach (var unit in unitsToAdd)
+            unit.LayerId = CurrentLayerId;
+
         UndoStack.DoComposite($"Add {device.Designator}", () =>
         {
             UndoStack.Do(new AddDeviceCommand(device));
@@ -1821,6 +1835,8 @@ public sealed class SchematicCanvas : Control
         if (item is IDesignatedItem designated)
             designated.Designator = Schematic.NextDesignator(designated.ReferencePrefix);
 
+        item.LayerId = CurrentLayerId;   // new item lands on the current layer
+
         UndoStack.DoComposite($"Add {item.GetType().Name}", () =>
         {
             UndoStack.Do(new AddItemCommand(item));
@@ -1828,6 +1844,64 @@ public sealed class SchematicCanvas : Control
 
         Schematic.ClearSelection();
         item.Selected = true;
+        Invalidate();
+        OnSelectionChanged();
+    }
+
+    // ---------------------------------------------------------------- layers
+
+    /// <summary>
+    /// Move every selected item onto <paramref name="layerId"/> as one undoable
+    /// step. Connections and links are not moved -- they carry no layer and
+    /// follow their endpoints. No-op if nothing is selected or the layer index
+    /// is out of range.
+    /// </summary>
+    public void MoveSelectionToLayer(int layerId)
+    {
+        if (layerId < 0 || layerId >= Schematic.Layers.Count) return;
+
+        var items = Schematic.Selected.ToList();
+        if (items.Count == 0) return;
+
+        string desc = items.Count == 1
+            ? $"Move {items[0].GetType().Name} to layer"
+            : $"Move {items.Count} items to layer";
+
+        UndoStack.DoComposite(desc, () =>
+        {
+            foreach (var item in items)
+            {
+                if (item.LayerId == layerId) continue;
+                UndoStack.Do(new SetLayerCommand(item, item.LayerId, layerId));
+            }
+        });
+
+        Invalidate();
+        OnSelectionChanged();
+    }
+
+    /// <summary>
+    /// Set a layer's visibility (view state -- not an undo step). Hiding a layer
+    /// deselects anything that just became inactive, so the property grid and
+    /// Delete cannot act on items the user can no longer see, then drops the
+    /// route cache (wires activate/deactivate with their endpoints) and repaints.
+    /// </summary>
+    public void SetLayerVisible(int index, bool visible)
+    {
+        Schematic.SetLayerVisible(index, visible);
+
+        if (!visible)
+        {
+            foreach (var item in Schematic.Items)
+                if (!Schematic.IsItemActive(item)) item.Selected = false;
+            foreach (var c in Schematic.Connections)
+                if (!Schematic.IsConnectionActive(c)) c.Selected = false;
+            foreach (var l in Schematic.Links)
+                if (!Schematic.IsLinkActive(l)) l.Selected = false;
+        }
+
+        routeCache = null;
+        coincidentCornersCache = null;
         Invalidate();
         OnSelectionChanged();
     }
