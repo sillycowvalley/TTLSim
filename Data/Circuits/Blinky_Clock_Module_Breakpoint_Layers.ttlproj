@@ -2485,7 +2485,7 @@
         },
         "label": "",
         "rotation": 270,
-        "layer": 1,
+        "layer": 2,
         "switchClosed": null
       },
       {
@@ -2498,7 +2498,7 @@
         },
         "label": "",
         "rotation": 270,
-        "layer": 1,
+        "layer": 2,
         "switchClosed": null
       },
       {
@@ -3207,7 +3207,7 @@
           "y": -5
         },
         "rotation": 0,
-        "layer": 0,
+        "layer": 4,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -3229,7 +3229,7 @@
           "y": 0
         },
         "rotation": 0,
-        "layer": 0,
+        "layer": 4,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -3307,6 +3307,50 @@
         "borderColor": null,
         "fontSize": 24,
         "textColor": "Black"
+      },
+      {
+        "type": "vcc",
+        "id": "91e126bb328648eeb285326150bae0dc",
+        "label": "VCC",
+        "position": {
+          "x": -94,
+          "y": 56
+        },
+        "rotation": 0,
+        "layer": 3,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "gnd",
+        "id": "a3414afaa04f48b5b997abe402f21ef0",
+        "label": "",
+        "position": {
+          "x": -94,
+          "y": 82
+        },
+        "rotation": 0,
+        "layer": 3,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "fontSize": null,
+        "textColor": null
       }
     ],
     "connections": [
@@ -7243,6 +7287,48 @@
           "external": false
         },
         "color": "Orange"
+      },
+      {
+        "id": "6e7407aad73043f085b260fa6ee72f15",
+        "a": {
+          "itemId": "91e126bb328648eeb285326150bae0dc",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "ca6939079f784afe9b7f4025c8c0fd56",
+          "pinNumber": 13,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "8089a3a33d5b45d2aea27f662f26c498",
+        "a": {
+          "itemId": "ca6939079f784afe9b7f4025c8c0fd56",
+          "pinNumber": 10,
+          "external": false
+        },
+        "b": {
+          "itemId": "91e126bb328648eeb285326150bae0dc",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "2a57cee3e9264fdb9ac24feb644b01be",
+        "a": {
+          "itemId": "a3414afaa04f48b5b997abe402f21ef0",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "cc0af404cb474df0b694c27aac534b9d",
+          "pinNumber": 17,
+          "external": false
+        },
+        "color": "Blue"
       }
     ],
     "links": [
@@ -7272,20 +7358,28 @@
       },
       {
         "name": "Test Circuit",
-        "visible": false
+        "visible": true
       },
       {
         "name": "Breakpoint",
+        "visible": true
+      },
+      {
+        "name": "Breakpoint Stub",
+        "visible": false
+      },
+      {
+        "name": "Cosmetic",
         "visible": true
       }
     ],
     "wires": []
   },
   "view": {
-    "zoom": 0.46608943,
+    "zoom": 1.425778,
     "pan": {
-      "x": 963,
-      "y": 330
+      "x": 1572,
+      "y": -77
     }
   }
 }

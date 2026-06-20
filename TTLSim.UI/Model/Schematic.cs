@@ -133,12 +133,19 @@ public sealed class Schematic
         }
     }
 
-    /// <summary>Hit test: topmost item whose bounds contain the given grid point.</summary>
-    public SchematicItem? HitTest(Point gridPoint)
+    /// <summary>Hit test: topmost item whose bounds contain the given grid
+    /// point, foreground items taking priority over cosmetic background ones.
+    /// Used where any item under the point will do (e.g. header-link arming).
+    /// The selection path uses the two passes separately so wires can be
+    /// tested between them.</summary>
+    public SchematicItem? HitTest(Point gridPoint) =>
+        HitTestForeground(gridPoint) ?? HitTestBackground(gridPoint);
+
+    /// <summary>Topmost non-cosmetic item whose bounds contain the point. A
+    /// component sitting on top of a cosmetic background item (rectangle, text
+    /// label) takes the click even though that item is drawn behind it.</summary>
+    public SchematicItem? HitTestForeground(Point gridPoint)
     {
-        // First pass: real items, topmost first. A component sitting on top of
-        // a cosmetic background item (rectangle, text label) must take the
-        // click even though that background item is drawn behind it.
         for (int i = Items.Count - 1; i >= 0; i--)
         {
             if (Items[i] is IBackgroundItem) continue;
@@ -146,8 +153,15 @@ public sealed class Schematic
             if (Items[i].Bounds.Contains(gridPoint))
                 return Items[i];
         }
-        // Second pass: cosmetic background items, so a click on the bare
-        // interior of a rectangle (or on a text label) still selects it.
+        return null;
+    }
+
+    /// <summary>Topmost cosmetic background item whose bounds contain the
+    /// point, so a click on the bare interior of a rectangle (or on a text
+    /// label) still selects it -- but only once foreground items and wires
+    /// have been given the click first.</summary>
+    public SchematicItem? HitTestBackground(Point gridPoint)
+    {
         for (int i = Items.Count - 1; i >= 0; i--)
         {
             if (Items[i] is not IBackgroundItem) continue;

@@ -1119,13 +1119,20 @@ public sealed class SchematicCanvas : Control
                 return;
             }
 
-            var hit = Schematic.HitTest(grid);
+            // Selection respects the paint Z-order: foreground items and wires
+            // sit in front of cosmetic background items (rectangles, labels),
+            // so a click on a wire crossing a rectangle's bare interior takes
+            // the wire, not the rectangle. Foreground first, then wires, then
+            // links, and only then cosmetic background items.
+            var hit = Schematic.HitTestForeground(grid);
             Connection? connectionHit = hit == null
                 ? HitTestConnection(grid)
                 : null;
             HeaderLink? linkHit = (hit == null && connectionHit == null)
                 ? HitTestHeaderLink(grid)
                 : null;
+            if (hit == null && connectionHit == null && linkHit == null)
+                hit = Schematic.HitTestBackground(grid);
 
             bool ctrl = (ModifierKeys & Keys.Control) == Keys.Control;
 
