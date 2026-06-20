@@ -32,19 +32,28 @@ re-verified against `ChipInventory.md` (not on hand this turn).
 | Program counter | 74161 | 1 | 8 on hand |
 | Instruction register | 74374 (8-bit) | 1 | '374 stock as above |
 | Address-source mux | 74157 | 1 | 8 on hand, 20 in transit |
+| TOS source mux | 74151 | 4 | 8:1 × 4 bit; sel TOS_SRC0..2 (GAL 2). 20 on hand |
+| NOS source mux | 74157 | 1 | quad 2:1; sel NOS_SRC (GAL 2). '157 stock as above |
+| Return-stack data-in mux | 74257 | 1 | quad 2:1, 3-state; sel RDIN_SEL (GAL 3); /OE released on RET/R> reads. **Order — '257 not in stock** |
+| NEXTPC mux | 74153 | 2 | 4:1 × 4 bit; sel PCSEL0/1 (GAL 4). 30 on hand |
+| TOS write buffer | 74125 | 1 | quad 3-state buffer; TOS Q → shared data bus on STORE/OUT; /OE = DMEM_WE·IO_WR. 8 on hand |
+| Data-stack write buffer | 74125 | 1 | quad 3-state buffer; NOS Q → data-stack bus on push; /OE = data-stack write. 8 on hand |
 | I-memory | 8-bit EEPROM (28C16) | 1 | source / confirm |
 | Flags N/Z/C | 7474 | 2 | 8 on hand |
 | Decode / control | GAL16V8 | 4 | in stock; ATF16V8B as active-production alt |
 | Stack-strobe glue | '04 / '00 | ~1 | derives stack /CS,/WE from the '191 pointers |
 
-**Core logic subtotal: 20 ICs.**
-(74374 ×2 = NOS + IR; 74191 ×2 = DSP + RSP; 2114 ×3; GAL16V8 ×4; 7474 ×2.)
+**Core logic subtotal: 30 ICs.**
+(74374 ×2 = NOS + IR; 74191 ×2 = DSP + RSP; 2114 ×3; GAL16V8 ×4; 7474 ×2;
+**data routing:** 74151 ×4, 74153 ×3 = serial-fill + 2× NEXTPC, 74157 ×2 =
+address + NOS, 74257 ×1 = RDIN, 74125 ×2 = TOS + data-stack write buffers.)
 
 > The breadboard bring-up board (`Blinky_PC_-_4Bit_-_CALL_-_Clock`) realises
-> the PC as a '173 register + '283 adder + dual '153 next-PC mux rather than
-> the '161 counter listed above — a load-NPC-each-cycle PC instead of a
-> count-up PC. That is a board-level realisation choice, not yet folded into
-> this core list.
+> the PC as a '173 register + '283 adder rather than the '161 counter listed
+> above — a load-NPC-each-cycle PC instead of a count-up PC. Its dual '153
+> next-PC mux **is** the NEXTPC mux now itemised in this list. The
+> '173 + '283 vs '161 PC choice remains a board-level realisation decision;
+> the '283 adder it adds (for PC+1) is not yet folded into this core list.
 
 ---
 
@@ -116,10 +125,10 @@ Reused (not added): U9 '08 gate-c (force STEP) + gate-d (gate run leg);
 
 | Category | Count |
 |---|---|
-| Core logic ICs | 20 |
+| Core logic ICs | 30 |
 | Clock module ICs | 6 |
 | Breakpoint ICs (debug) | 3 |
-| **Total DIP/IC** | **29** |
+| **Total DIP/IC** | **39** |
 | Reset supervisor (TO-92) | 1 |
 | Can oscillator (optional) | 1 |
 | Resistors + trimmer (clock) | 11 + 1 |
@@ -131,13 +140,18 @@ Reused (not added): U9 '08 gate-c (force STEP) + gate-d (gate run leg);
 | Headers (clock) | 1 jumper + 2 IO |
 
 The previous §9 sketch read "~18–20 core ICs," folding the clock into a
-2-IC placeholder. Enumerated properly — 3× 2114, 4× GAL, the doubled
-'374/'191 — the core alone is 20; the verified clock module adds 6 + a
-TO-92; the hardware breakpoint adds 3 more. **No '14 is double-counted:**
-the placeholder's '14 is the clock's U2.
+2-IC placeholder and omitting the data-path selectors entirely. Enumerated
+properly — 3× 2114, 4× GAL, the doubled '374/'191, **and the data routing**
+(TOS 8:1 source mux 4× '151, NOS and address quad 2:1s 2× '157, the
+return-stack-in 3-state mux '257, the NEXTPC 4:1 2× '153, the serial-fill
+'153, and the two '125 write-bus buffers) — the core alone is **30**; the
+verified clock module adds 6 + a TO-92; the hardware breakpoint adds 3 more.
+**No '14 is double-counted:** the placeholder's '14 is the clock's U2.
 
 **Open / unverified:**
 - `ChipInventory.md` not consulted this turn — stock figures are as-stated.
+- The **74257** (3-state RDIN mux) is the one new part not in current stock —
+  it must be ordered; the '125 write buffers are on hand (8 each).
 - 74HC00, 2114, 28C16, can oscillator all flagged *source / confirm*.
 - Stack-strobe glue (~1 IC) could partly draw on the clock module's spares
   (U7 gate-c/d AND, '273 FF7) but the source treats it as its own part;

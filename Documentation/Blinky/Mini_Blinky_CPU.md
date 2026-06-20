@@ -609,7 +609,7 @@ their sources, so an always-driving source feeding a selector input never conten
 |---|---|---|---|---|
 | TOS '194 (P0–P3) | NOS, ALU, LIT, DMEM, IN, RTOS (6 of 8) | 8:1 × 4 bit | 4× '151 | `TOS_SRC0..2` (GAL 2) |
 | NOS '374 (D0–D3) | old TOS, data-stack read | quad 2:1 | 1× '157 | `NOS_SRC` (GAL 2) |
-| Return-stack 2114 data-in | PC+1, TOS | quad 2:1 | 1× '157 | `RDIN_SEL` (GAL 3) |
+| Return-stack 2114 data-in | PC+1, TOS | quad 2:1, 3-state | 1× '257 | `RDIN_SEL` (GAL 3) |
 | NEXTPC → PC | PC+1, LIT, RTOS, (PC hold) | 4:1 × 4 bit | 2× '153 | `PCSEL0/1` (GAL 4) |
 | D-mem & I/O address | TOS, LIT | quad 2:1 | 1× '157 | `IOADDR_SEL` (GAL 4) |
 | TOS serial fill ('194 SL/SR) | 0, Q-top, Q-bottom | 4:1 (1-bit) | 1× '153 | raw IR L3/L2 |
@@ -621,34 +621,46 @@ corrected complement in §9). The select-line → GAL assignments are fixed (§3
 structures are the wiring realisation and stay provisional until those parts are modelled in
 the simulator.
 
-## TOS write path — the one place a buffer is mandatory
+## Write paths — gated taps onto the shared RAM buses
 
-`STORE` (→ D-mem) and `OUT` (→ I/O) write **old TOS** to a 2114 / port. The 2114 has no
-`/OE`: it drives its bidirectional I/O whenever `/CS` is LOW and `/WE` is HIGH (a LOAD) and
-releases to high-Z during a write. The '194 drives TOS continuously. Tie '194 Q straight to
-the data pins and every LOAD becomes a fight between the 2114 and the '194.
+The 2114s have no `/OE`: each drives its bidirectional I/O whenever `/CS` is LOW and `/WE` is
+HIGH (a read) and releases to high-Z during a write. The registers that supply write data —
+TOS ('194) and NOS ('374) — drive their outputs continuously, because TOS feeds ALU A and the
+front panel and NOS feeds ALU B. Tie either straight to a 2114's data pins and every *read* of
+that RAM becomes a fight between the 2114 and the register.
 
-So TOS reaches a **shared 4-bit data bus** through a 3-state buffer enabled *only* during a
-write:
+**General rule:** every always-on driver that shares a bidirectional 2114 bus reaches it
+through a path that goes high-Z except during that RAM's write. There are three such ports,
+and they resolve two ways — a discrete 3-state buffer where the driver is a register, or a
+3-state *mux* where a selector already sits in the path:
 
-- **Buffer:** one bank of a '244, inputs = '194 Q0–Q3, outputs = the data bus.
-- **`/OE` = `DMEM_WE` AND `IO_WR`** (one '08 gate) — LOW when either write strobe is active.
-  Both strobes are already `WRPH` phase-gated (GAL 2 / GAL 4), so the drive window lands
-  inside the write phase automatically; no extra gating.
-- **Read drivers on the same bus:** the D-mem 2114 (on LOAD) and the input-port '244 (on IN,
-  `/OE = IO_RD`). Their data reaches TOS via the `DMEM` / `IN` inputs of the TOS-src 8:1,
-  which only sense the bus.
-- **Cycle behaviour:** STORE → buffer drives, 2114 captures on `DMEM_WE` rising. OUT → buffer
-  drives, the addressed output '374 is clocked by `IO_WR` + the port decode.
+| RAM write port | Write driver | Gated by | Parts |
+|---|---|---|---|
+| D-mem / I/O | TOS '194 → 3-state buffer | `/OE = DMEM_WE` AND `IO_WR` (spare '08) | 1× '125 |
+| Data stack | NOS '374 → 3-state buffer | `/OE` = data-stack write (push) | 1× '125 |
+| Return stack | RDIN mux **is** the driver | `/OE` released on RET / R> reads | 1× '257 |
 
-The same arbitration applies to the **return stack**: its RDIN '157 (write data) shares the
-2114 I/O pins with the RET read, and a '157 cannot tri-state. Lock this against the 2114
-datasheet during return-stack bring-up — it is flagged provisional in
-`CALL_RET_Implementation_Steps.md`. A '257 (the tri-state '157) is the drop-in if isolation
-on read proves necessary.
+- **D-mem / I/O (`STORE` / `OUT`).** TOS reaches a shared 4-bit data bus through one '125 (quad
+  3-state buffer, active-LOW enable). `/OE = DMEM_WE` AND `IO_WR` — LOW when either write is
+  active; both strobes are `WRPH` phase-gated (GAL 2 / GAL 4), so the drive window already
+  lands inside the write phase. Read drivers on the same bus are the D-mem 2114 (LOAD) and the
+  input-port '244 (IN, `/OE = IO_RD`); their data reaches TOS via the `DMEM` / `IN` inputs of
+  the TOS-src 8:1, which only sense the bus. STORE → '125 drives, 2114 captures on `DMEM_WE`
+  rising; OUT → '125 drives, the addressed output '374 clocks on `IO_WR` + the port decode.
+- **Data stack (push).** The spill of old NOS to the data-stack 2114 has the same shape — NOS
+  feeds ALU B continuously, so it cannot tri-state its own '374 output. A second '125 taps
+  NOS Q onto the data-stack bus, `/OE` = the data-stack write (push) strobe. On a pop the '125
+  is high-Z and the 2114 drives the NOS-src mux unopposed.
+- **Return stack (CALL / >R).** Here a mux already sits in the path, so no separate buffer is
+  needed: make the RDIN mux the gated driver with the **'257** — the pin-compatible 3-state
+  '157 (pin 15 is `/OE` instead of `/E`). Tie `/OE` to the return-stack write condition
+  (asserted on CALL and >R, released on RET / R>), which the pointer logic already produces.
+  On a read the '257 goes high-Z and the 2114 drives RTOS. **Zero added gates, one part swap.**
+  This supersedes the earlier "'157, arbitration provisional" note in
+  `CALL_RET_Implementation_Steps.md`.
 
 > If the output-port '374 latches are wired **directly** to '194 Q rather than to the shared
-> bus, `OUT` needs no buffer (the latch only captures on `IO_WR`); the buffer is then a
+> bus, `OUT` needs no buffer (the latch only captures on `IO_WR`); the D-mem '125 is then a
 > STORE-only part. Shared-bus vs direct-to-TOS for the output ports is a board-level choice
 > not yet pinned.
 
@@ -996,19 +1008,22 @@ On-hand counts are from `ChipInventory.md` (all-HC baseline, counts verified 11 
 | Address-source mux | 74157 | 1 | 8 on hand, 20 in transit |
 | TOS source mux | 74151 | 4 | 8:1 × 4 bit; sel `TOS_SRC0..2` (GAL 2). 20 on hand |
 | NOS source mux | 74157 | 1 | quad 2:1; sel `NOS_SRC` (GAL 2). '157 stock as above |
-| Return-stack data-in mux | 74157 | 1 | quad 2:1; sel `RDIN_SEL` (GAL 3). '157 stock as above |
+| Return-stack data-in mux | 74257 | 1 | quad 2:1, 3-state; sel `RDIN_SEL` (GAL 3); `/OE` released on RET / R> reads. **Order** — '257 not in current stock |
 | NEXTPC mux | 74153 | 2 | 4:1 × 4 bit; sel `PCSEL0/1` (GAL 4). 30 on hand |
-| TOS write buffer | 74244 | 1 | one bank: '194 Q → shared data bus on STORE/OUT; /OE = `DMEM_WE`·`IO_WR` (AND in spare '08 glue). 16 on hand |
+| TOS write buffer | 74125 | 1 | quad 3-state buffer: '194 Q → shared data bus on STORE/OUT; `/OE = DMEM_WE`·`IO_WR` (AND in spare '08 glue). 8 on hand |
+| Data-stack write buffer | 74125 | 1 | quad 3-state buffer: NOS Q → data-stack bus on push; `/OE` = data-stack write. 8 on hand |
 | I-memory | 8-bit EEPROM (e.g. 28C16) | 1 | TTLSim supports 28C-series; source / confirm |
 | Flags N/Z/C | 7474 | 2 | 8 on hand |
 | Decode / control | GAL16V8 × 4 | 4 | 16V8 confirmed in stock; ATF16V8B as active-production alt; **no 20V8 needed** |
 | Stack-strobe glue | '04 / '00 (inverter + phase gate) | ~1 | derives stack /CS, /WE from the pointers; folds into existing glue |
 | Clock / reset / step | 7414 + glue | ~2 | '14: 12 HC on hand |
 
-**Core total: ~27–29 ICs.** (The earlier ~18–20 count omitted the data-path selectors that
-§4a now itemises — the TOS 8:1 source mux (4× '151), the NOS and return-stack-in quad 2:1s
-(2× '157), the NEXTPC 4:1 (2× '153), and the TOS write buffer (one '244 bank); +9 packages.
-The `/OE` AND gate folds into spare '08 glue. The decode itself is still four 16V8s.)
+**Core total: ~28–30 ICs.** (The earlier ~18–20 count omitted the data-path selectors and
+write buffers that §4a now itemises — the TOS 8:1 source mux (4× '151), the NOS quad 2:1
+(1× '157), the return-stack-in quad 2:1 (1× '257), the NEXTPC 4:1 (2× '153), and the two
+write-bus buffers (2× '125, for the TOS and data-stack write paths); +10 packages. The `/OE`
+AND gate folds into spare '08 glue; the return-stack write path needs no buffer because the
+'257 mux is its own gated driver. The decode itself is still four 16V8s.)
 Front-panel LED drivers/latches are additional to this core list.
 
 **Sourcing notes (June 2026 inventory):**
@@ -1070,14 +1085,21 @@ Front-panel LED drivers/latches are additional to this core list.
 
 # Revision History
 
+**Tri-state write paths (June 2026):** resolved the shared-RAM-bus arbitration with tri-state
+parts (§4a). The return-stack RDIN mux becomes a **'257** (pin-compatible 3-state '157, `/OE`
+released on reads) — the mux is now its own gated driver, so the return stack needs no
+buffer and the earlier "arbitration provisional" note in `CALL_RET_Implementation_Steps.md`
+is superseded. The D-mem/I/O and data-stack write buffers are now **'125** quad 3-state
+buffers (in stock) rather than a '244 bank, and the data-stack spill (NOS → 2114) is itemised
+as its own gated tap, matching the general rule. Core complement ~27–29 → ~28–30 ICs (2× '125
++ 1× '257; the '257 is an order, not in current stock).
+
 **Data routing + write buffer (June 2026):** documented the selector-per-sink data routing
 (no global tri-state bus, §4a) and itemised the four data-path selectors the earlier chip
-complement omitted — the TOS 8:1 source mux (4× '151), the NOS and return-stack-in quad 2:1s
-(2× '157), and the NEXTPC 4:1 (2× '153). Added the **TOS write buffer**: because the '194 has
-no output-enable and the 2114 has no `/OE`, `STORE` / `OUT` drive a shared data bus through a
-3-state buffer (one '244 bank) gated by `DMEM_WE` AND `IO_WR` (one '08). Core complement
-corrected ~18–20 → ~27–29 ICs. The same read/write bus arbitration on the return-stack RDIN
-'157 is noted provisional (`CALL_RET_Implementation_Steps.md`).
+complement omitted — the TOS 8:1 source mux (4× '151), the NOS and return-stack-in quad 2:1s,
+and the NEXTPC 4:1 (2× '153). Added the **TOS write buffer**: because the '194 has no
+output-enable and the 2114 has no `/OE`, `STORE` / `OUT` drive a shared data bus through a
+3-state buffer gated by `DMEM_WE` AND `IO_WR` (one '08).
 
 **Breakpoint + BOM (June 2026):** added the standalone hardware breakpoint subsystem on the
 PC + clock bring-up board — a '688 PC comparator feeding a synchronous HALT flip-flop ('74)

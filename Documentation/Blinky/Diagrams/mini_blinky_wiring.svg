@@ -96,7 +96,7 @@
 <text x="180" y="759" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="400" fill="#854f0b" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">2114 + '191</text>
 <polygon points="349,717 399,728 399,760 349,771" fill="#eae8fb" stroke="#3c3489" stroke-width="1.6"/>
 <text x="374" y="741" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11.5" font-weight="700" fill="#2f2870" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">RSTK in</text>
-<text x="374" y="755" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="400" fill="#2f2870" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">2:1 · 157</text>
+<text x="374" y="755" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="400" fill="#2f2870" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">2:1 · 257</text>
 <line x1="337" y1="730.5" x2="349" y2="730.5" stroke="#64748b" stroke-width="1.2"/>
 <text x="334" y="733.8" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="600" fill="#0f766e" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">▸PC1</text>
 <line x1="337" y1="757.5" x2="349" y2="757.5" stroke="#64748b" stroke-width="1.2"/>
@@ -136,19 +136,25 @@
 <text x="489" y="429.5" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="400" fill="#64748b" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">SL/SR</text>
 <path d="M941 430 L996 430" fill="none" stroke="#64748b" stroke-width="1.6" marker-end="url(#ah)"/>
 <path d="M411 744 L500 744" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#ah)"/>
+<text x="374" y="810" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="8" font-weight="600" fill="#b45309" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">/OE: drive on CALL/>R, hi-Z on RET/R></text>
 <path d="M809 628 L809 700 L772 700 L772 715" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#ah)"/>
 <text x="818" y="716" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="400" fill="#475569" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">D-mem addr</text>
 <path d="M809 628 L984 628 L984 715" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#ah)"/>
 <text x="990" y="622" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="400" fill="#475569" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">I/O addr</text>
 <path d="M136 715 L136 572 L143 546.5" fill="none" stroke="#475569" stroke-width="2.2" marker-end="url(#ah)"/>
 <text x="122" y="637.5" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="400" fill="#475569" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">pop</text>
-<path d="M430 589 L430 619 L214 619 L214 715" fill="none" stroke="#475569" stroke-width="2.2" marker-end="url(#ah)"/>
-<text x="258" y="615" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="400" fill="#475569" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">push (old NOS)</text>
+<path d="M430 589 L430 619 L214 619 L214 650" fill="none" stroke="#475569" stroke-width="2.2" marker-end="url(#ah)"/>
+<text x="322" y="615" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="400" fill="#475569" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">push (old NOS)</text>
+<rect x="176" y="650" width="76" height="34" rx="6" fill="#eeedfe" stroke="#534ab7" stroke-width="1.5"/>
+<text x="214" y="665" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="10" font-weight="700" fill="#3c3489" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">'125</text>
+<text x="214" y="678" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="8" font-weight="400" fill="#534ab7" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">dstk-wr buf</text>
+<path d="M214 684 L214 715" fill="none" stroke="#475569" stroke-width="2.2" marker-end="url(#ah)"/>
+<text x="256" y="669" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="8" font-weight="600" fill="#b45309" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">/OE = dstk wr</text>
 <path d="M536 862 L1000 862" fill="none" stroke="#475569" stroke-width="3"/>
 <text x="768" y="892" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="400" fill="#475569" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">shared 4-bit data bus   ·   read ▸ to TOS-src mux   ·   write ◂ from buffer</text>
 <rect x="406" y="840" width="118" height="44" rx="7" fill="#eeedfe" stroke="#534ab7" stroke-width="1.6"/>
 <text x="465" y="858" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="600" fill="#3c3489" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">TOS wr buffer</text>
-<text x="465" y="874" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="400" fill="#534ab7" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">½ '244 · 3-state</text>
+<text x="465" y="874" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="400" fill="#534ab7" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">'125 · 3-state</text>
 <line x1="394" y1="862" x2="406" y2="862" stroke="#475569" stroke-width="3"/>
 <text x="391" y="865.3" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="600" fill="#0f766e" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">▸TOS</text>
 <line x1="524" y1="862" x2="536" y2="862" stroke="#475569" stroke-width="3"/>
