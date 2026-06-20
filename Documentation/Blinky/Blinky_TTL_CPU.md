@@ -397,6 +397,14 @@ An Uno has only ~18 usable pins, which is not enough for the parallel data paths
 - **Program loading.** During development, an Arduino Mega serves as both boot loader and debug controller — see the Development Rig section above. For a stand-alone deployment, two 8-bit EEPROMs in parallel (low byte + high byte of the 16-bit I-bus) replace the Mega + SRAM, with programs burned off-board and chips swapped via sockets.
 - **Hardware breakpoint.** A standalone run-to-PC breakpoint now exists in hardware — a ’688 comparing the PC against a switch-set address feeds a synchronous HALT flip-flop (’74), edge-detected so it fires once per entry. Proven on the W=4 bring-up board, it halts the machine **at** the matched instruction and drops it into single-step with **no host attached**, complementing the Mega-driven breakpoint above. It scales to the full machine by widening the comparator to the 8-bit PC. Three added ICs (’688 + ’00 + ’74) plus address switches; see `Blinky_Breakpoint.md`.
 
+- **TOS write buffer (data-bus arbitration).** Same issue as the mini, scaled to 8 bits: the
+  TOS '194 pair and the '181 drive continuously, and the 2114s have no `/OE`, so `STORE` and
+  `OUT` cannot tie TOS to the D-bus directly — on a LOAD the RAM and the '194s would fight.
+  TOS drives the shared D-bus through a 3-state buffer (one '245 bank, or a '244) enabled only
+  on a write (`/OE = DMEM_WE` · `IO_WR`); the read drivers are the D-mem RAM and the input
+  ports. The full treatment — selector-per-sink table and the return-stack RDIN caveat — is in
+  `Mini_Blinky_CPU.md` §4a; the wiring is identical bar width.
+
 ## Summary
 
 8-bit data, 8-bit address (everywhere — D-memory, I-memory, I/O), 16-bit fixed instructions, Harvard memory, dual stacks, single-cycle execution. Stack machine semantics keep the control logic small and the front panel meaningful. Just over 30 TTL chips for the core datapath, control, and memory, plus ~10 more for an 8×8 LED matrix and other peripherals. A genuine CPU with genuine character — and a front panel that actually shows you what's happening.

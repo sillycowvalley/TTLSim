@@ -1,0 +1,192 @@
+<svg viewBox="0 0 1180 1038" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',system-ui,sans-serif">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="context-stroke" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text x="36" y="38" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="18" font-weight="700" fill="#1f2330" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">Mini Blinky (W=4) — selector-level wiring · one fan-in mux per multi-source sink (no shared data bus)</text>
+<text x="36" y="58" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="11.5" font-weight="400" fill="#5b6170" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">Trapezoid = data selector; its output is the ONLY driver of the sink it feeds → no contention. Single-source paths are hardwired.</text>
+<polygon points="125,92 175,112 175,144 125,164" fill="#eae8fb" stroke="#3c3489" stroke-width="1.6"/>
+<text x="150" y="125" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11.5" font-weight="700" fill="#2f2870" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">NEXTPC</text>
+<text x="150" y="139" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="400" fill="#2f2870" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">4:1 · 2×153</text>
+<line x1="113" y1="101" x2="125" y2="101" stroke="#64748b" stroke-width="1.2"/>
+<text x="110" y="104.3" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="600" fill="#0f766e" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">▸PC1</text>
+<line x1="113" y1="119" x2="125" y2="119" stroke="#64748b" stroke-width="1.2"/>
+<text x="110" y="122.3" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="600" fill="#0f766e" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">▸LIT</text>
+<line x1="113" y1="137" x2="125" y2="137" stroke="#64748b" stroke-width="1.2"/>
+<text x="110" y="140.3" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="600" fill="#0f766e" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">▸RTOS</text>
+<line x1="113" y1="155" x2="125" y2="155" stroke="#64748b" stroke-width="1.2"/>
+<text x="110" y="158.3" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="600" fill="#0f766e" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">▸PC hold</text>
+<line x1="175" y1="128" x2="187" y2="128" stroke="#475569" stroke-width="3"/>
+<line x1="150" y1="154" x2="150" y2="170" stroke="#b45309" stroke-width="1.4" stroke-dasharray="4 3"/>
+<text x="150" y="183" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="600" fill="#b45309" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">PCSEL0/1 · GAL4</text>
+<rect x="270" y="100" width="120" height="56" rx="9" fill="#e1f5ee" stroke="#0f6e56" stroke-width="1.6"/>
+<text x="330" y="123" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="16" font-weight="600" fill="#0b5743" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">PC</text>
+<text x="330" y="143" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="400" fill="#0f6e56" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">'161</text>
+<rect x="445" y="100" width="130" height="56" rx="9" fill="#faeeda" stroke="#854f0b" stroke-width="1.6"/>
+<text x="510" y="123" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="16" font-weight="600" fill="#633806" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">I-MEM</text>
+<text x="510" y="143" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="400" fill="#854f0b" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">16×8 EEPROM</text>
+<rect x="648" y="100" width="184" height="56" rx="9" fill="#e8f0fe" stroke="#2850aa" stroke-width="1.6"/>
+<text x="740" y="123" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="16" font-weight="600" fill="#1e3a8a" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">IR</text>
+<text x="740" y="143" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="400" fill="#2850aa" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">'374 · op[7:4] | lit[3:0]</text>
+<polygon points="154,285 206,343 206,377 154,435" fill="#eae8fb" stroke="#3c3489" stroke-width="1.6"/>
+<text x="180" y="357" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11.5" font-weight="700" fill="#2f2870" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">TOS src</text>
+<text x="180" y="371" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="400" fill="#2f2870" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">8:1 · 4×151</text>
+<line x1="142" y1="294.375" x2="154" y2="294.375" stroke="#64748b" stroke-width="1.2"/>
+<text x="139" y="297.675" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="600" fill="#0f766e" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">▸NOS<tspan fill="#94a3b8" font-size="8">  000</tspan></text>
+<line x1="142" y1="313.125" x2="154" y2="313.125" stroke="#64748b" stroke-width="1.2"/>
+<text x="139" y="316.425" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="600" fill="#0f766e" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">▸ALU<tspan fill="#94a3b8" font-size="8">  001</tspan></text>
+<line x1="142" y1="331.875" x2="154" y2="331.875" stroke="#64748b" stroke-width="1.2"/>
+<text x="139" y="335.175" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="600" fill="#0f766e" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">▸LIT<tspan fill="#94a3b8" font-size="8">  010</tspan></text>
+<line x1="142" y1="350.625" x2="154" y2="350.625" stroke="#64748b" stroke-width="1.2"/>
+<text x="139" y="353.925" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="600" fill="#0f766e" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">▸D-mem<tspan fill="#94a3b8" font-size="8">  011</tspan></text>
+<line x1="142" y1="369.375" x2="154" y2="369.375" stroke="#64748b" stroke-width="1.2"/>
+<text x="139" y="372.675" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="600" fill="#0f766e" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">▸IN<tspan fill="#94a3b8" font-size="8">  100</tspan></text>
+<line x1="142" y1="388.125" x2="154" y2="388.125" stroke="#64748b" stroke-width="1.2"/>
+<text x="139" y="391.425" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="600" fill="#0f766e" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">▸RTOS<tspan fill="#94a3b8" font-size="8">  101</tspan></text>
+<line x1="142" y1="406.875" x2="154" y2="406.875" stroke="#64748b" stroke-width="1.2"/>
+<line x1="142" y1="425.625" x2="154" y2="425.625" stroke="#64748b" stroke-width="1.2"/>
+<line x1="206" y1="360" x2="218" y2="360" stroke="#475569" stroke-width="3"/>
+<line x1="180" y1="406" x2="180" y2="422" stroke="#b45309" stroke-width="1.4" stroke-dasharray="4 3"/>
+<text x="180" y="435" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="600" fill="#b45309" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">TOS_SRC0..2 · GAL2</text>
+<rect x="366" y="331" width="128" height="58" rx="9" fill="#eeedfe" stroke="#534ab7" stroke-width="1.6"/>
+<text x="430" y="355" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="16" font-weight="600" fill="#3c3489" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">TOS</text>
+<text x="430" y="375" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="400" fill="#534ab7" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">'194</text>
+<rect x="626" y="315" width="128" height="58" rx="9" fill="#eeedfe" stroke="#534ab7" stroke-width="1.6"/>
+<text x="690" y="339" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="16" font-weight="600" fill="#3c3489" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">ALU</text>
+<text x="690" y="359" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="400" fill="#534ab7" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">'181</text>
+<polygon points="155,533 205,544 205,576 155,587" fill="#eae8fb" stroke="#3c3489" stroke-width="1.6"/>
+<text x="180" y="557" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11.5" font-weight="700" fill="#2f2870" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">NOS src</text>
+<text x="180" y="571" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="400" fill="#2f2870" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">2:1 · 157</text>
+<line x1="143" y1="546.5" x2="155" y2="546.5" stroke="#64748b" stroke-width="1.2"/>
+<text x="140" y="549.8" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="400" fill="#334155" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">DSTK rd<tspan fill="#94a3b8" font-size="8">  0</tspan></text>
+<line x1="143" y1="573.5" x2="155" y2="573.5" stroke="#64748b" stroke-width="1.2"/>
+<text x="140" y="576.8" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="600" fill="#0f766e" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">▸TOS<tspan fill="#94a3b8" font-size="8">  1</tspan></text>
+<line x1="205" y1="560" x2="217" y2="560" stroke="#475569" stroke-width="3"/>
+<line x1="180" y1="581.5" x2="180" y2="597.5" stroke="#b45309" stroke-width="1.4" stroke-dasharray="4 3"/>
+<text x="180" y="610.5" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="600" fill="#b45309" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">NOS_SRC · GAL2</text>
+<rect x="366" y="531" width="128" height="58" rx="9" fill="#eeedfe" stroke="#534ab7" stroke-width="1.6"/>
+<text x="430" y="555" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="16" font-weight="600" fill="#3c3489" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">NOS</text>
+<text x="430" y="575" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="400" fill="#534ab7" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">'374</text>
+<polygon points="407,442 453,457 453,483 407,498" fill="#eae8fb" stroke="#3c3489" stroke-width="1.6"/>
+<text x="430" y="467" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11.5" font-weight="700" fill="#2f2870" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">fill</text>
+<text x="430" y="481" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="400" fill="#2f2870" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">153</text>
+<line x1="395" y1="449" x2="407" y2="449" stroke="#64748b" stroke-width="1.2"/>
+<text x="392" y="452.3" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="400" fill="#334155" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">0</text>
+<line x1="395" y1="463" x2="407" y2="463" stroke="#64748b" stroke-width="1.2"/>
+<text x="392" y="466.3" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="400" fill="#334155" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">Q-top</text>
+<line x1="395" y1="477" x2="407" y2="477" stroke="#64748b" stroke-width="1.2"/>
+<text x="392" y="480.3" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="400" fill="#334155" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">Q-bot</text>
+<line x1="395" y1="491" x2="407" y2="491" stroke="#64748b" stroke-width="1.2"/>
+<text x="392" y="494.3" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="400" fill="#334155" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">Q-wrap</text>
+<line x1="453" y1="470" x2="465" y2="470" stroke="#475569" stroke-width="3"/>
+<line x1="430" y1="490.5" x2="430" y2="506.5" stroke="#b45309" stroke-width="1.4" stroke-dasharray="4 3"/>
+<text x="430" y="519.5" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="600" fill="#b45309" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">L3:L2 raw</text>
+<polygon points="881,405 929,416 929,444 881,455" fill="#eae8fb" stroke="#3c3489" stroke-width="1.6"/>
+<text x="905" y="427" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11.5" font-weight="700" fill="#2f2870" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">C src</text>
+<text x="905" y="441" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="400" fill="#2f2870" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">2:1</text>
+<line x1="869" y1="417.5" x2="881" y2="417.5" stroke="#64748b" stroke-width="1.2"/>
+<text x="866" y="420.8" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="400" fill="#334155" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">Cn+4</text>
+<line x1="869" y1="442.5" x2="881" y2="442.5" stroke="#64748b" stroke-width="1.2"/>
+<text x="866" y="445.8" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="400" fill="#334155" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">shf-out</text>
+<line x1="929" y1="430" x2="941" y2="430" stroke="#475569" stroke-width="3"/>
+<line x1="905" y1="449.5" x2="905" y2="465.5" stroke="#b45309" stroke-width="1.4" stroke-dasharray="4 3"/>
+<text x="905" y="478.5" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="600" fill="#b45309" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">C_SRC · GAL1</text>
+<rect x="996" y="401" width="128" height="58" rx="9" fill="#eeedfe" stroke="#534ab7" stroke-width="1.6"/>
+<text x="1060" y="425" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="16" font-weight="600" fill="#3c3489" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">Flags</text>
+<text x="1060" y="445" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="400" fill="#534ab7" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">N Z C · '74×2</text>
+<rect x="116" y="715" width="128" height="58" rx="9" fill="#faeeda" stroke="#854f0b" stroke-width="1.6"/>
+<text x="180" y="739" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="16" font-weight="600" fill="#633806" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">DSTK</text>
+<text x="180" y="759" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="400" fill="#854f0b" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">2114 + '191</text>
+<polygon points="349,717 399,728 399,760 349,771" fill="#eae8fb" stroke="#3c3489" stroke-width="1.6"/>
+<text x="374" y="741" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11.5" font-weight="700" fill="#2f2870" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">RSTK in</text>
+<text x="374" y="755" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="400" fill="#2f2870" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">2:1 · 157</text>
+<line x1="337" y1="730.5" x2="349" y2="730.5" stroke="#64748b" stroke-width="1.2"/>
+<text x="334" y="733.8" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="600" fill="#0f766e" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">▸PC1</text>
+<line x1="337" y1="757.5" x2="349" y2="757.5" stroke="#64748b" stroke-width="1.2"/>
+<text x="334" y="760.8" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="600" fill="#0f766e" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">▸TOS</text>
+<line x1="399" y1="744" x2="411" y2="744" stroke="#475569" stroke-width="3"/>
+<line x1="374" y1="765.5" x2="374" y2="781.5" stroke="#b45309" stroke-width="1.4" stroke-dasharray="4 3"/>
+<text x="374" y="794.5" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="600" fill="#b45309" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">RDIN_SEL · GAL3</text>
+<rect x="500" y="715" width="128" height="58" rx="9" fill="#faeeda" stroke="#854f0b" stroke-width="1.6"/>
+<text x="564" y="739" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="16" font-weight="600" fill="#633806" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">RSTK</text>
+<text x="564" y="759" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="400" fill="#854f0b" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">2114 + '191</text>
+<polygon points="747,601 797,612 797,644 747,655" fill="#eae8fb" stroke="#3c3489" stroke-width="1.6"/>
+<text x="772" y="625" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11.5" font-weight="700" fill="#2f2870" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">addr</text>
+<text x="772" y="639" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="400" fill="#2f2870" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">2:1 · 157</text>
+<line x1="735" y1="614.5" x2="747" y2="614.5" stroke="#64748b" stroke-width="1.2"/>
+<text x="732" y="617.8" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="600" fill="#0f766e" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">▸TOS</text>
+<line x1="735" y1="641.5" x2="747" y2="641.5" stroke="#64748b" stroke-width="1.2"/>
+<text x="732" y="644.8" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="600" fill="#0f766e" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">▸LIT</text>
+<line x1="797" y1="628" x2="809" y2="628" stroke="#475569" stroke-width="3"/>
+<line x1="772" y1="649.5" x2="772" y2="665.5" stroke="#b45309" stroke-width="1.4" stroke-dasharray="4 3"/>
+<text x="772" y="678.5" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="600" fill="#b45309" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">IOADDR_SEL · GAL4</text>
+<rect x="708" y="715" width="128" height="58" rx="9" fill="#faeeda" stroke="#854f0b" stroke-width="1.6"/>
+<text x="772" y="739" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="16" font-weight="600" fill="#633806" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">D-mem</text>
+<text x="772" y="759" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="400" fill="#854f0b" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">2114</text>
+<rect x="920" y="715" width="128" height="58" rx="9" fill="#faeeda" stroke="#854f0b" stroke-width="1.6"/>
+<text x="984" y="739" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="16" font-weight="600" fill="#633806" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">I/O</text>
+<text x="984" y="759" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="400" fill="#854f0b" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">ports</text>
+<path d="M187 128 L270 128" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#ah)"/>
+<path d="M390 128 L445 128" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#ah)"/>
+<path d="M575 128 L648 128" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#ah)"/>
+<path d="M218 360 L366 360" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#ah)"/>
+<path d="M494 360 L626 332" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#ah)"/>
+<text x="606" y="330" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#3c3489" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">A</text>
+<path d="M217 560 L366 560" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#ah)"/>
+<path d="M494 560 L516 560 L516 358 L626 358" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#ah)"/>
+<text x="606" y="360" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="10" font-weight="400" fill="#3c3489" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">B</text>
+<path d="M465 470 L465 389" fill="none" stroke="#64748b" stroke-width="1.6" marker-end="url(#ah)"/>
+<text x="489" y="429.5" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="400" fill="#64748b" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">SL/SR</text>
+<path d="M941 430 L996 430" fill="none" stroke="#64748b" stroke-width="1.6" marker-end="url(#ah)"/>
+<path d="M411 744 L500 744" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#ah)"/>
+<path d="M809 628 L809 700 L772 700 L772 715" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#ah)"/>
+<text x="818" y="716" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="400" fill="#475569" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">D-mem addr</text>
+<path d="M809 628 L984 628 L984 715" fill="none" stroke="#475569" stroke-width="3" marker-end="url(#ah)"/>
+<text x="990" y="622" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="400" fill="#475569" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">I/O addr</text>
+<path d="M136 715 L136 572 L143 546.5" fill="none" stroke="#475569" stroke-width="2.2" marker-end="url(#ah)"/>
+<text x="122" y="637.5" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="400" fill="#475569" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">pop</text>
+<path d="M430 589 L430 619 L214 619 L214 715" fill="none" stroke="#475569" stroke-width="2.2" marker-end="url(#ah)"/>
+<text x="258" y="615" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="400" fill="#475569" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">push (old NOS)</text>
+<path d="M536 862 L1000 862" fill="none" stroke="#475569" stroke-width="3"/>
+<text x="768" y="892" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="400" fill="#475569" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">shared 4-bit data bus   ·   read ▸ to TOS-src mux   ·   write ◂ from buffer</text>
+<rect x="406" y="840" width="118" height="44" rx="7" fill="#eeedfe" stroke="#534ab7" stroke-width="1.6"/>
+<text x="465" y="858" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="11" font-weight="600" fill="#3c3489" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">TOS wr buffer</text>
+<text x="465" y="874" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="400" fill="#534ab7" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">½ '244 · 3-state</text>
+<line x1="394" y1="862" x2="406" y2="862" stroke="#475569" stroke-width="3"/>
+<text x="391" y="865.3" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="600" fill="#0f766e" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">▸TOS</text>
+<line x1="524" y1="862" x2="536" y2="862" stroke="#475569" stroke-width="3"/>
+<path d="M772 773 L772 862" fill="none" stroke="#475569" stroke-width="2.2"/>
+<path d="M984 773 L984 862" fill="none" stroke="#475569" stroke-width="2.2"/>
+<rect x="706" y="854" width="55" height="16" rx="3" fill="#ccfbf1" stroke="#0f766e" stroke-width="1"/>
+<text x="715" y="865.5" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="600" fill="#0f766e">D-mem ▸</text>
+<rect x="996" y="854" width="34" height="16" rx="3" fill="#ccfbf1" stroke="#0f766e" stroke-width="1"/>
+<text x="1005" y="865.5" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="600" fill="#0f766e">IN ▸</text>
+<rect x="422" y="910" width="86" height="40" rx="6" fill="#ffffff" stroke="#57534e" stroke-width="1.4"/>
+<text x="465" y="930" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="12" font-weight="700" fill="#44403c" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">'08</text>
+<text x="465" y="944" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="8.5" font-weight="400" fill="#78716c" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">AND</text>
+<line x1="410" y1="920" x2="422" y2="920" stroke="#b45309" stroke-width="1.4" stroke-dasharray="4 3"/>
+<text x="407" y="923" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="600" fill="#b45309" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">DMEM_WE</text>
+<line x1="410" y1="940" x2="422" y2="940" stroke="#b45309" stroke-width="1.4" stroke-dasharray="4 3"/>
+<text x="407" y="943" text-anchor="end" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="600" fill="#b45309" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">IO_WR</text>
+<line x1="465" y1="910" x2="465" y2="884" stroke="#b45309" stroke-width="1.4" stroke-dasharray="4 3"/>
+<text x="520" y="902" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="600" fill="#b45309" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">/OE = wr (low if either write active)</text>
+<rect x="716" y="164" width="41" height="16" rx="3" fill="#ccfbf1" stroke="#0f766e" stroke-width="1"/>
+<text x="725" y="175.5" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="600" fill="#0f766e">LIT ▸</text>
+<rect x="410" y="397" width="41" height="16" rx="3" fill="#ccfbf1" stroke="#0f766e" stroke-width="1"/>
+<text x="419" y="408.5" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="600" fill="#0f766e">TOS ▸</text>
+<rect x="762" y="336" width="41" height="16" rx="3" fill="#ccfbf1" stroke="#0f766e" stroke-width="1"/>
+<text x="771" y="347.5" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="600" fill="#0f766e">ALU ▸</text>
+<rect x="636" y="736" width="48" height="16" rx="3" fill="#ccfbf1" stroke="#0f766e" stroke-width="1"/>
+<text x="645" y="747.5" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="600" fill="#0f766e">RTOS ▸</text>
+<rect x="316" y="76" width="41" height="16" rx="3" fill="#ccfbf1" stroke="#0f766e" stroke-width="1"/>
+<text x="325" y="87.5" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.5" font-weight="600" fill="#0f766e">PC1 ▸</text>
+<text x="814" y="172" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="400" fill="#2850aa" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">(→ GALs: opcode)</text>
+<rect x="36" y="970" width="1108" height="58" rx="8" fill="#fbfbfd" stroke="#d4d4dd"/>
+<text x="52" y="992" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="12" font-weight="700" fill="#1f2330" paint-order="stroke" stroke="#ffffff" stroke-width="3.2" stroke-linejoin="round">Legend</text>
+<line x1="140" y1="988" x2="174" y2="988" stroke="#475569" stroke-width="3" marker-end="url(#ah)"/>
+<text x="182" y="992" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="10.5" font-weight="400" fill="#1f2330">4-bit hardwired bus</text>
+<line x1="320" y1="988" x2="354" y2="988" stroke="#64748b" stroke-width="1.6" marker-end="url(#ah)"/>
+<text x="362" y="992" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="10.5" font-weight="400" fill="#1f2330">1-bit (serial fill / flag)</text>
+<line x1="510" y1="988" x2="544" y2="988" stroke="#b45309" stroke-width="1.4" stroke-dasharray="4 3"/>
+<text x="552" y="992" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="10.5" font-weight="400" fill="#1f2330">select line (decode GAL)</text>
+<rect x="710" y="981" width="28" height="14" rx="3" fill="#ccfbf1" stroke="#0f766e"/>
+<text x="754" y="992" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="10.5" font-weight="600" fill="#0f766e">▸NAME = named net, join by name</text>
+<text x="52" y="1014" text-anchor="start" font-family="'Segoe UI',system-ui,sans-serif" font-size="9.8" font-weight="400" fill="#5b6170">Not drawn (1-bit control glue): ALU_Cn carry-in select (H / L / /C, GAL4); stack /CS,/WE derived from the 191 pointers; 194 mode S1/S0 from GAL1.</text>
+</svg>
