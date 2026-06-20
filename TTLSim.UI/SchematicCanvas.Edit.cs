@@ -1,0 +1,184 @@
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Linq;
+using System.Windows.Forms;
+using TTLSim.Chips.Displays;
+using TTLSim.Core;
+using TTLSim.UI.Commands;
+using TTLSim.UI.Components;
+using TTLSim.UI.Logging;
+using TTLSim.UI.Model;
+using TTLSim.UI.Persistence;
+
+namespace TTLSim.UI.View;
+
+public sealed partial class SchematicCanvas
+{
+    // ---------------------------------------------------------------- rotation
+
+    /// <summary>True iff exactly one item is selected and zero connections are.
+    /// Rotation is gated on this so multi-select rotation doesn't surprise
+    /// the user with per-item rotations around per-item centres.</summary>
+    public bool CanRotateSelection
+    {
+        get
+        {
+            int itemCount = Schematic.Selected.Count();
+            int connectionCount = Schematic.SelectedConnections.Count();
+            return itemCount == 1 && connectionCount == 0;
+        }
+    }
+
+    /// <summary>
+    /// Rotate the single selected item 90 degrees clockwise (or counter-
+    /// clockwise if <paramref name="clockwise"/> is false). No-op if more
+    /// than one item / a connection is selected.
+    /// </summary>
+    public void RotateSelection(bool clockwise)
+    {
+        if (!CanRotateSelection) return;
+        var item = Schematic.Selected.First();
+        var from = item.Rotation;
+        var to = clockwise
+            ? RotateCw(from)
+            : RotateCcw(from);
+        if (from == to) return;
+
+        UndoStack.DoComposite($"Rotate {item.GetType().Name}", () =>
+        {
+            UndoStack.Do(new RotateItemCommand(item, from, to));
+        });
+    }
+
+    private static Rotation RotateCw(Rotation r) => r switch
+    {
+        Rotation.R0 => Rotation.R90,
+        Rotation.R90 => Rotation.R180,
+        Rotation.R180 => Rotation.R270,
+        Rotation.R270 => Rotation.R0,
+        _ => r
+    };
+
+    private static Rotation RotateCcw(Rotation r) => r switch
+    {
+        Rotation.R0 => Rotation.R270,
+        Rotation.R90 => Rotation.R0,
+        Rotation.R180 => Rotation.R90,
+        Rotation.R270 => Rotation.R180,
+        _ => r
+    };
+
+
+    /// <summary>
+    /// Delete-key handler. Selecting any Unit promotes to deleting the entire
+    /// Device (all its units, its power unit if any, and the Device record).
+    /// Selected non-Unit items (VccSymbol, GndSymbol) and selected connections
+    /// are deleted directly. Connections touching anything being deleted are
+    /// deleted implicitly. Everything goes in one composite.
+    /// </summary>
+    private void HandleDelete()
+    {
+        var selectedItems = Schematic.Selected.ToList();
+        var selectedConnections = Schematic.SelectedConnections.ToList();
+
+        // Devices selected via any of their units. Each device contributes
+        // ALL its units (and its power unit, if any) to the deletion set.
+        var devicesToDelete = new HashSet<Device>(
+            selectedItems.OfType<Unit>().Select(u => u.Device));
+
+        // All units that go because their device is going.
+        var unitsImplicit = new HashSet<SchematicItem>();
+        foreach (var device in devicesToDelete)
+        {
+            foreach (var unit in device.Units)
+                unitsImplicit.Add(unit);
+            if (device.PowerUnit != null)
+                unitsImplicit.Add(device.PowerUnit);
+        }
+
+        // Non-Unit items the user explicitly selected (VCC, GND).
+        var nonUnitItemsSelected = selectedItems
+            .Where(i => i is not Unit)
+            .ToList();
+
+        // Items going away in total: implicit-via-device-closure + explicit-non-unit.
+        var allItemsToRemove = new HashSet<SchematicItem>(unitsImplicit);
+        foreach (var i in nonUnitItemsSelected) allItemsToRemove.Add(i);
+
+        // Connections implicitly removed because an attached item is going.
+        var implicitConnections = new HashSet<Connection>();
+        foreach (var item in allItemsToRemove)
+            foreach (var c in Schematic.ConnectionsOn(item))
+                implicitConnections.Add(c);
+
+        foreach (var c in selectedConnections)
+            implicitConnections.Remove(c);
+
+        // Header links implicitly removed because an attached header is going.
+        var implicitLinks = new HashSet<HeaderLink>();
+        foreach (var item in allItemsToRemove)
+            foreach (var l in Schematic.LinksOn(item))
+                implicitLinks.Add(l);
+
+        var selectedLinks = Schematic.SelectedLinks.ToList();
+        foreach (var l in selectedLinks)
+            implicitLinks.Remove(l);
+
+        int total = allItemsToRemove.Count + selectedConnections.Count
+                  + implicitConnections.Count + devicesToDelete.Count
+                  + selectedLinks.Count + implicitLinks.Count;
+        if (total == 0) return;
+
+        string description;
+        if (devicesToDelete.Count == 1 && allItemsToRemove.Count == devicesToDelete.First().Units.Count
+            && nonUnitItemsSelected.Count == 0 && selectedConnections.Count == 0 && selectedLinks.Count == 0)
+        {
+            description = $"Delete {devicesToDelete.First().Designator}";
+        }
+        else if (devicesToDelete.Count == 0 && nonUnitItemsSelected.Count == 1
+                 && selectedConnections.Count == 0 && selectedLinks.Count == 0)
+        {
+            description = $"Delete {nonUnitItemsSelected[0].GetType().Name}";
+        }
+        else if (devicesToDelete.Count == 0 && nonUnitItemsSelected.Count == 0
+                 && selectedConnections.Count == 1 && selectedLinks.Count == 0)
+        {
+            description = "Delete Connection";
+        }
+        else if (devicesToDelete.Count == 0 && nonUnitItemsSelected.Count == 0
+                 && selectedConnections.Count == 0 && selectedLinks.Count == 1)
+        {
+            description = "Delete Header Link";
+        }
+        else
+        {
+            int visibleTotal = devicesToDelete.Count + nonUnitItemsSelected.Count
+                             + selectedConnections.Count + selectedLinks.Count;
+            description = $"Delete {visibleTotal} items";
+        }
+
+        UndoStack.DoComposite(description, () =>
+        {
+            // Order matters for clean undo: connections first, then items, then devices.
+            // Undo replays in reverse so devices come back first, then items, then connections.
+            foreach (var c in implicitConnections)
+                UndoStack.Do(new RemoveConnectionCommand(c));
+            foreach (var c in selectedConnections)
+                UndoStack.Do(new RemoveConnectionCommand(c));
+            foreach (var l in implicitLinks)
+                UndoStack.Do(new RemoveHeaderLinkCommand(l));
+            foreach (var l in selectedLinks)
+                UndoStack.Do(new RemoveHeaderLinkCommand(l));
+            foreach (var item in allItemsToRemove)
+                UndoStack.Do(new RemoveItemCommand(item));
+            foreach (var device in devicesToDelete)
+                UndoStack.Do(new RemoveDeviceCommand(device));
+        });
+
+        Invalidate();
+        OnSelectionChanged();
+    }
+}
