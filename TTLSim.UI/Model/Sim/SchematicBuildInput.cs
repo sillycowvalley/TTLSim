@@ -8,6 +8,14 @@ namespace TTLSim.UI.Model.Sim;
 /// Translates UI model types (Schematic / Device / Unit / Connection /
 /// VccSymbol / GndSymbol / ClockSource) into the abstract Build* records
 /// the Core builder expects.
+///
+/// <para>
+/// Layer activity is applied here: items on an invisible layer are fully
+/// inactive, so this adapter skips inactive units (and any device left with no
+/// active units), inactive standalone items, and any connection or header-link
+/// pin-pair with an inactive endpoint. This is the single choke point for the
+/// simulator -- the build sees exactly the active subset of the schematic.
+/// </para>
 /// </summary>
 public sealed class SchematicBuildInput : IBuildInput
 {
@@ -58,6 +66,13 @@ public sealed class SchematicBuildInput : IBuildInput
                 List<BuildUnit> units = new();
                 foreach (Unit u in dev.Units)
                 {
+                    // Layer filter: a unit on an invisible layer is inactive --
+                    // not simulated. A device whose units are all inactive
+                    // (every shipped part is single-unit, so usually that means
+                    // the one unit is hidden) is skipped entirely below.
+                    if (!schematic.IsItemActive(u))
+                        continue;
+
                     int[] inputs;
                     int? output;
                     IReadOnlyList<int>? outputPins = null;
@@ -111,6 +126,11 @@ public sealed class SchematicBuildInput : IBuildInput
                         SwitchClosed: (u is SwitchUnit sw && sw.IsClosed) || (u is SpdtSwitchUnit spdt && spdt.ThrowB)));
                 }
 
+                // Whole device on an invisible layer (no active units): drop it
+                // -- no power/ground expectation, no simulation.
+                if (units.Count == 0)
+                    continue;
+
                 yield return new BuildDevice(
                     DeviceId: dev.Id,
                     Designator: dev.Designator,
@@ -133,7 +153,8 @@ public sealed class SchematicBuildInput : IBuildInput
     {
         get
         {
-            foreach (SchematicItem item in schematic.Items)
+            // ActiveItems already excludes anything on an invisible layer.
+            foreach (SchematicItem item in schematic.ActiveItems)
             {
                 BuildItemKind? kind = item switch
                 {
@@ -170,6 +191,12 @@ public sealed class SchematicBuildInput : IBuildInput
                 if (c.A.Owner is null || c.B.Owner is null)
                     continue;
 
+                // Layer filter: drop a wire with an endpoint on an invisible
+                // layer. Both owners are non-null here, so IsItemActive applies
+                // directly to each.
+                if (!schematic.IsItemActive(c.A.Owner) || !schematic.IsItemActive(c.B.Owner))
+                    continue;
+
                 yield return (
                     new PinRef(c.A.Owner.Id, c.A.Number),
                     new PinRef(c.B.Owner.Id, c.B.Number));
@@ -184,6 +211,12 @@ public sealed class SchematicBuildInput : IBuildInput
             // directly and skips them; links never appear on a PCB.)
             foreach (HeaderLink link in schematic.Links)
             {
+                // Layer filter: a link is inactive when either endpoint header
+                // is inactive -- hiding a module's layer hides its header and
+                // deactivates the link's pin-pairs for free.
+                if (!schematic.IsLinkActive(link))
+                    continue;
+
                 int n = link.PinCount;
                 for (int i = 1; i <= n; i++)
                     yield return (new PinRef(link.A.Id, i), new PinRef(link.B.Id, i));
@@ -200,6 +233,10 @@ public sealed class SchematicBuildInput : IBuildInput
                 if (dev.Definition.Identifier != "button-4") continue;
                 foreach (Unit u in dev.Units)
                 {
+                    // Layer filter: skip a hidden button's internal bonds.
+                    if (!schematic.IsItemActive(u))
+                        continue;
+
                     yield return (new PinRef(u.Id, 1), new PinRef(u.Id, 2));
                     yield return (new PinRef(u.Id, 3), new PinRef(u.Id, 4));
                 }
