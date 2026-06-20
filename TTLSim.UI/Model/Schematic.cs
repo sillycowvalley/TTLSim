@@ -264,4 +264,90 @@ public sealed class Schematic
 
     /// <summary>Header links with both endpoint headers active. The active view of <see cref="Links"/>.</summary>
     public IEnumerable<HeaderLink> ActiveLinks => Links.Where(IsLinkActive);
+
+    // ====================================================================
+    //  Layer management
+    //
+    //  Visibility toggles and table changes (add / rename / delete) are VIEW
+    //  STATE -- like zoom and pan, they are not undo steps (matching the
+    //  spec's locked decision that visibility carries no undo). The only
+    //  layer operation that goes on the undo stack is item->layer ASSIGNMENT,
+    //  via SetLayerCommand, because that mutates the design.
+    // ====================================================================
+
+    /// <summary>
+    /// Add a layer, with its name made unique against the existing layers (a
+    /// numeric suffix is appended if the name is taken) so the paste-by-name
+    /// match stays unambiguous. Returns the new layer's index.
+    /// </summary>
+    public int AddLayer(string name, bool visible = true)
+    {
+        Layers.Add(new Layer(UniqueLayerName(name), visible));
+        return Layers.Count - 1;
+    }
+
+    /// <summary>
+    /// A layer name not currently in use: <paramref name="baseName"/> itself if
+    /// free, otherwise "<paramref name="baseName"/> 2", " 3", and so on.
+    /// </summary>
+    public string UniqueLayerName(string baseName)
+    {
+        if (string.IsNullOrWhiteSpace(baseName)) baseName = "Layer";
+        bool Taken(string n) =>
+            Layers.Any(l => string.Equals(l.Name, n, StringComparison.Ordinal));
+        if (!Taken(baseName)) return baseName;
+        for (int i = 2; ; i++)
+        {
+            string candidate = $"{baseName} {i}";
+            if (!Taken(candidate)) return candidate;
+        }
+    }
+
+    /// <summary>
+    /// Rename the layer at <paramref name="index"/>, making the new name unique
+    /// against the others. (Callers should leave the Default layer's name
+    /// alone, since "Default" is what old files and paste resolve against.)
+    /// </summary>
+    public void RenameLayer(int index, string name)
+    {
+        if (index < 0 || index >= Layers.Count) return;
+        if (string.Equals(Layers[index].Name, name, StringComparison.Ordinal)) return;
+        Layers[index].Name = UniqueLayerName(name);
+    }
+
+    /// <summary>
+    /// Set a layer's visibility. The Default layer (index 0) is pinned visible
+    /// and cannot be hidden, so the whole design can never be hidden and saved
+    /// looking empty. View state -- not an undo step.
+    /// </summary>
+    public void SetLayerVisible(int index, bool visible)
+    {
+        if (index < 0 || index >= Layers.Count) return;
+        if (index == 0 && !visible) return;   // Default pinned on
+        Layers[index].Visible = visible;
+    }
+
+    /// <summary>
+    /// Delete the layer at <paramref name="index"/> and close the table up.
+    /// The Default layer (index 0) cannot be deleted. Items on the deleted
+    /// layer are reassigned to Default; items on higher-indexed layers have
+    /// their LayerId shifted down by one so every stored index stays valid.
+    ///
+    /// <para>View state -- not an undo step. An item that was moved onto this
+    /// layer loses that assignment permanently (it lands on Default). Note
+    /// also that delete shifts indices, so any SetLayerCommand already on the
+    /// undo stack that referenced a higher index becomes stale; the
+    /// out-of-range clamp in <see cref="IsLayerVisible"/> keeps that safe (a
+    /// stale redo lands the item on Default rather than crashing).</para>
+    /// </summary>
+    public void DeleteLayer(int index)
+    {
+        if (index <= 0 || index >= Layers.Count) return;   // never Default / out of range
+        Layers.RemoveAt(index);
+        foreach (var item in Items)
+        {
+            if (item.LayerId == index) item.LayerId = 0;     // orphan -> Default
+            else if (item.LayerId > index) item.LayerId--;   // shift down to stay valid
+        }
+    }
 }
