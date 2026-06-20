@@ -152,7 +152,13 @@ public sealed class SchematicCanvas : Control
             // and short — the writer has its own copy for EDA003 emission
             // because it also needs the per-net connection groups for net
             // descriptions; the canvas just needs the ids.
-            var parent = new int[Schematic.Connections.Count];
+            //
+            // Built over ACTIVE connections only, to match the router: a hidden
+            // wire produces no polyline and is electrically absent, so it must
+            // not bridge two visible nets into one id (which would hide a real
+            // cross-net corner between them).
+            var activeConns = Schematic.ActiveConnections.ToList();
+            var parent = new int[activeConns.Count];
             for (int i = 0; i < parent.Length; i++) parent[i] = i;
             int Find(int x)
             {
@@ -160,9 +166,9 @@ public sealed class SchematicCanvas : Control
                 return x;
             }
             var pinToConn = new Dictionary<Pin, int>();
-            for (int i = 0; i < Schematic.Connections.Count; i++)
+            for (int i = 0; i < activeConns.Count; i++)
             {
-                var c = Schematic.Connections[i];
+                var c = activeConns[i];
                 if (pinToConn.TryGetValue(c.A, out int j1))
                 { int ra = Find(i), rb = Find(j1); if (ra != rb) parent[ra] = rb; }
                 else pinToConn[c.A] = i;
@@ -170,12 +176,12 @@ public sealed class SchematicCanvas : Control
                 { int ra = Find(i), rb = Find(j2); if (ra != rb) parent[ra] = rb; }
                 else pinToConn[c.B] = i;
             }
-            var netIdOf = new Dictionary<Connection, int>(Schematic.Connections.Count);
-            for (int i = 0; i < Schematic.Connections.Count; i++)
-                netIdOf[Schematic.Connections[i]] = Find(i);
+            var netIdOf = new Dictionary<Connection, int>(activeConns.Count);
+            for (int i = 0; i < activeConns.Count; i++)
+                netIdOf[activeConns[i]] = Find(i);
 
             coincidentCornersCache = Routing.CoincidentCornerDetector.Detect(
-                Schematic.Connections, Routes, c => netIdOf[c]);
+                activeConns, Routes, c => netIdOf[c]);
 
             // Verbose-only diagnostic: turn each red dot into a log line
             // naming the colliding pins and nets. LogDebug is filtered out

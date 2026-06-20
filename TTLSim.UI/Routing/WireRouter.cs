@@ -79,11 +79,20 @@ public sealed class WireRouter : IConnectionRouter
 
     public RouteResult RouteAll(Schematic schematic)
     {
+        // Only active (visible-layer) connections are routed; an inactive
+        // connection -- one with an endpoint on an invisible layer -- is
+        // skipped entirely, exactly as the simulator drops it. Inactive items
+        // are likewise not obstacles and don't seed pin cells. This is the one
+        // place the router consults layer activity; the export writer's own
+        // RouteAll call inherits it for free.
+        var activeConnections =
+            schematic.Connections.Where(schematic.IsConnectionActive).ToList();
+
         var polylines = new Dictionary<Connection, IReadOnlyList<Point>>(
-            schematic.Connections.Count);
+            activeConnections.Count);
         var junctionsSet = new HashSet<Point>();
 
-        if (schematic.Connections.Count == 0)
+        if (activeConnections.Count == 0)
             return new RouteResult(polylines, new List<Point>());
 
         var bounds = ComputeGridBounds(schematic);
@@ -91,7 +100,7 @@ public sealed class WireRouter : IConnectionRouter
         var scratch = new SearchScratch(bounds);
 
         var bodyBlocked = new bool[bounds.Width, bounds.Height];
-        foreach (var item in schematic.Items)
+        foreach (var item in schematic.ActiveItems)
             StampRect(bodyBlocked, bounds, item.RoutingBounds, true);
 
         var foreignWirePenalty = new int[bounds.Width, bounds.Height];
@@ -99,16 +108,16 @@ public sealed class WireRouter : IConnectionRouter
         var foreignWireDir = new byte[bounds.Width, bounds.Height];
 
         // Pre-seed pin cells.
-        foreach (var item in schematic.Items)
+        foreach (var item in schematic.ActiveItems)
             foreach (var pin in item.Pins)
                 SetBit(foreignWireDir, bounds, pin.WorldPosition, ForeignPinSeed);
 
-        var groups = GroupByPin(schematic.Connections);
+        var groups = GroupByPin(activeConnections);
 
         // Restored declaration-order routing — the constraint-based
         // ordering experiment helped some schematics and hurt others.
         // Net wins come from the cost-model and retry pass, not ordering.
-        foreach (var group in groups.OrderBy(g => schematic.Connections.IndexOf(g[0])))
+        foreach (var group in groups.OrderBy(g => activeConnections.IndexOf(g[0])))
         {
             RouteGroup(group, bounds, scratch, bodyBlocked,
                 foreignWirePenalty, ownNetPenalty, foreignWireDir,
@@ -132,7 +141,7 @@ public sealed class WireRouter : IConnectionRouter
         // route traverses. Detect those and try to reroute the wire that
         // owns the vertex with that cell hard-blocked from being a bend.
         // Take the new route only if it doesn't introduce more collisions.
-        TryFixCollisions(schematic, polylines,
+        TryFixCollisions(schematic, activeConnections, polylines,
             bounds, scratch, bodyBlocked,
             junctionsSet);
 
@@ -147,16 +156,20 @@ public sealed class WireRouter : IConnectionRouter
     /// </summary>
     private static void TryFixCollisions(
         Schematic schematic,
+        IReadOnlyList<Connection> connections,
         Dictionary<Connection, IReadOnlyList<Point>> polylines,
         Rectangle bounds, SearchScratch scratch, bool[,] bodyBlocked,
         HashSet<Point> junctionsSet)
     {
         // Net id per connection via the same union-find used at routing
-        // time, so "same net" matches the routing groups.
-        var netIdOf = BuildNetIdMap(schematic.Connections);
+        // time, so "same net" matches the routing groups. Built over the
+        // ACTIVE connections only: an inactive (hidden) wire is electrically
+        // absent and must not bridge two visible nets into one id, which would
+        // mask a real cross-net corner between them.
+        var netIdOf = BuildNetIdMap(connections);
 
         var collisions = CoincidentCornerDetector.Detect(
-            schematic.Connections, new RouteResult(polylines, junctionsSet.ToList()),
+            connections, new RouteResult(polylines, junctionsSet.ToList()),
             c => netIdOf[c]);
 
         if (collisions.Count == 0) return;
@@ -201,7 +214,7 @@ public sealed class WireRouter : IConnectionRouter
                     [conn] = candidate
                 };
                 var newCollisions = CoincidentCornerDetector.Detect(
-                    schematic.Connections,
+                    connections,
                     new RouteResult(tentative, junctionsSet.ToList()),
                     c => netIdOf[c]);
 
@@ -236,8 +249,8 @@ public sealed class WireRouter : IConnectionRouter
         var foreignWireDir = new byte[bounds.Width, bounds.Height];
         var ownNetPenalty = new int[bounds.Width, bounds.Height];
 
-        // Pre-seed pin cells (same as the main pass).
-        foreach (var item in schematic.Items)
+        // Pre-seed pin cells (same as the main pass: active items only).
+        foreach (var item in schematic.ActiveItems)
             foreach (var pin in item.Pins)
                 SetBit(foreignWireDir, bounds, pin.WorldPosition, ForeignPinSeed);
 
