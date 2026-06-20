@@ -131,6 +131,12 @@ public static class EasyEDAExporter
 
         foreach (var device in schematic.Devices)
         {
+            // A device whose every unit is on an invisible layer is fully
+            // inactive: it isn't simulated, drawn, or placed, so it must emit
+            // no .esym/.efoo resource either. Parts are deduped by device, so
+            // the rule is "device has at least one active unit".
+            if (!device.Units.Any(u => schematic.IsItemActive(u))) continue;
+
             CataloguePart part = EasyEDACatalogue.LookupForDevice(device);
             if (result.ContainsKey(part.SymbolUuid)) continue;
             result[part.SymbolUuid] = part;
@@ -140,6 +146,7 @@ public static class EasyEDAExporter
         {
             if (item is Unit) continue;          // covered via Devices above
             if (item is IBackgroundItem) continue;   // cosmetic — no catalogue entry, not exported
+            if (!schematic.IsItemActive(item)) continue;   // invisible layer — not exported
             CataloguePart part = EasyEDACatalogue.LookupForStandaloneItem(item);
             if (result.ContainsKey(part.SymbolUuid)) continue;
             result[part.SymbolUuid] = part;

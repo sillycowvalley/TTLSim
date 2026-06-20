@@ -78,7 +78,8 @@ internal static class EasyEDASheetWriter
         // and no catalogue entry -- they are dropped from EasyEDA export
         // entirely. Filtering here keeps them out of placement, component
         // emission, wires, and No-Connect flags in one place.
-        var placeable = schematic.Items.Where(item => item is not IBackgroundItem);
+        var placeable = schematic.Items.Where(
+            item => item is not IBackgroundItem && schematic.IsItemActive(item));
 
         foreach (var item in placeable)
         {
@@ -138,18 +139,25 @@ internal static class EasyEDASheetWriter
             }
         }
 
-        // Group connections by net (transitive pin closure). The grouping
-        // drives BOTH the colour-mismatch diagnostic AND the per-net WIRE
-        // emission -- EasyEDA's PCB sync ("Update PCB from Schematic")
-        // only fuses segments into one electrical net when they live in
-        // the SAME WIRE record and share endpoints there. It does NOT
-        // infer junctions from one WIRE's endpoint landing on another
-        // WIRE's interior segment, nor even from two separate WIREs
-        // sharing an exact corner point. A hand-saved EasyEDA reference
-        // file with a T-junction puts all of its segments in one WIRE
-        // record, with the trunk vertex appearing as a shared endpoint
-        // between segments inside that single record.
-        var netGroups = GroupConnectionsByNet(schematic.Connections);
+        // Group connections by net (transitive pin closure). Only active
+        // (visible-layer) connections are grouped: a wire with an endpoint on
+        // an invisible layer is not exported, exactly as the simulator drops
+        // it and the router skips it. Building over active connections also
+        // keeps a hidden wire from bridging two visible nets into one id,
+        // which would corrupt the EDA003 cross-net check below.
+        var activeConnections =
+            schematic.Connections.Where(schematic.IsConnectionActive).ToList();
+
+        // The grouping drives BOTH the colour-mismatch diagnostic AND the
+        // per-net WIRE emission -- EasyEDA's PCB sync ("Update PCB from
+        // Schematic") only fuses segments into one electrical net when they
+        // live in the SAME WIRE record and share endpoints there. It does NOT
+        // infer junctions from one WIRE's endpoint landing on another WIRE's
+        // interior segment, nor even from two separate WIREs sharing an exact
+        // corner point. A hand-saved EasyEDA reference file with a T-junction
+        // puts all of its segments in one WIRE record, with the trunk vertex
+        // appearing as a shared endpoint between segments inside that record.
+        var netGroups = GroupConnectionsByNet(activeConnections);
 
         // ---- EDA003: cross-net coincident wire corners --------------------
         // Detection lives in Routing.CoincidentCornerDetector so the canvas
@@ -157,12 +165,12 @@ internal static class EasyEDASheetWriter
         // for why these cells matter (EasyEDA infers a junction → silent
         // net merge).
         {
-            var netIdOf = new Dictionary<Connection, int>(schematic.Connections.Count);
+            var netIdOf = new Dictionary<Connection, int>(activeConnections.Count);
             for (int netId = 0; netId < netGroups.Count; netId++)
                 foreach (var c in netGroups[netId]) netIdOf[c] = netId;
 
             var corners = Routing.CoincidentCornerDetector.Detect(
-                schematic.Connections, routes, c => netIdOf[c]);
+                activeConnections, routes, c => netIdOf[c]);
 
             foreach (var corner in corners)
             {
@@ -705,10 +713,14 @@ internal static class EasyEDASheetWriter
         Dictionary<SchematicItem, string> componentIds,
         IdGenerator idGen)
     {
-        // Pins that appear in at least one Connection.
+        // Pins that appear in at least one ACTIVE Connection. A wire to an
+        // item on an invisible layer is not exported, so a pin reachable only
+        // through such a wire is effectively open here and must still get a
+        // No-Connect flag.
         var connectedPins = new HashSet<Pin>();
         foreach (var conn in schematic.Connections)
         {
+            if (!schematic.IsConnectionActive(conn)) continue;
             connectedPins.Add(conn.A);
             connectedPins.Add(conn.B);
         }
