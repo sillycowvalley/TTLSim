@@ -156,6 +156,45 @@ public sealed class SchematicBuilder
                 NetId: sharedNet));
         }
 
+        // Phase 1c (cont.): output-pin-to-rail short. An IC output sitting on a
+        // net that is also tied straight to VCC or GND is fighting the rail --
+        // a hard short the instant that output drives the opposite level. This
+        // is distinct from TTL001 (rail-to-rail): here exactly one rail shares
+        // the net with a driving output. Reuses the vccNets/gndNets computed
+        // above.
+        //
+        // Inactive (hidden-layer) rails and outputs are already absent from the
+        // build, so a correctly-hidden stub stays silent; the short only fires
+        // when the stub and the module driving the pin are both visible. A
+        // pull-up/down doesn't match -- its rail symbol sits on the resistor's
+        // far pin, a different net.
+        foreach (BuildDevice dev in input.Devices)
+        {
+            foreach (BuildUnit unit in dev.Units)
+            {
+                string label = unit.Letter == '\0'
+                    ? dev.Designator
+                    : $"{dev.Designator}{unit.Letter}";
+
+                foreach (int outPin in OutputPinsOf(unit))
+                {
+                    Net? net = netTable.FindNet(new PinRef(unit.UnitId, outPin));
+                    if (net is null) continue;
+
+                    string? rail =
+                        vccNets.Contains(net.Id) ? "VCC" :
+                        gndNets.Contains(net.Id) ? "GND" : null;
+                    if (rail is null) continue;
+
+                    diagnostics.Add(new Diagnostic(
+                        DiagnosticSeverity.Error,
+                        Code: "TTL004",
+                        Message: $"{label} output (pin {outPin}) is shorted to {rail} -- net {net.Id}.",
+                        NetId: net.Id));
+                }
+            }
+        }
+
         // Phase 1d: unsupported-part detection. A part placed on the canvas
         // but not handled by the chip factory would otherwise vanish from
         // the built simulator (its outputs would never drive, its inputs
@@ -309,6 +348,18 @@ public sealed class SchematicBuilder
             }
         }
         return map;
+    }
+
+    /// <summary>All output pin numbers on a unit -- the single gate-style
+    /// output and any box-chip outputs together. Empty for input-only units
+    /// (passives, displays).</summary>
+    private static IEnumerable<int> OutputPinsOf(BuildUnit unit)
+    {
+        if (unit.OutputPinNumber is int single)
+            yield return single;
+        if (unit.OutputPinNumbers is { Count: > 0 } many)
+            foreach (int p in many)
+                yield return p;
     }
 
     private static HashSet<int> NetsFromItems(IBuildInput input, NetTable table, BuildItemKind kind)

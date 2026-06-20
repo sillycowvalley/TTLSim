@@ -2485,7 +2485,7 @@
         },
         "label": "",
         "rotation": 270,
-        "layer": 2,
+        "layer": 1,
         "switchClosed": null
       },
       {
@@ -2498,7 +2498,7 @@
         },
         "label": "",
         "rotation": 270,
-        "layer": 2,
+        "layer": 1,
         "switchClosed": null
       },
       {
@@ -3207,7 +3207,7 @@
           "y": -5
         },
         "rotation": 0,
-        "layer": 4,
+        "layer": 0,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -3229,7 +3229,7 @@
           "y": 0
         },
         "rotation": 0,
-        "layer": 4,
+        "layer": 0,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -3310,11 +3310,11 @@
       },
       {
         "type": "vcc",
-        "id": "91e126bb328648eeb285326150bae0dc",
+        "id": "d2f88303dafc432596cb01f4d92017df",
         "label": "VCC",
         "position": {
-          "x": -94,
-          "y": 56
+          "x": -25,
+          "y": 61
         },
         "rotation": 0,
         "layer": 3,
@@ -3332,11 +3332,11 @@
       },
       {
         "type": "gnd",
-        "id": "a3414afaa04f48b5b997abe402f21ef0",
+        "id": "d83d4049d6484869a1a204ef1a5112dd",
         "label": "",
         "position": {
-          "x": -94,
-          "y": 82
+          "x": 59,
+          "y": 102
         },
         "rotation": 0,
         "layer": 3,
@@ -7289,9 +7289,9 @@
         "color": "Orange"
       },
       {
-        "id": "6e7407aad73043f085b260fa6ee72f15",
+        "id": "bc493da8a1584dbf9a9301fe167bedb9",
         "a": {
-          "itemId": "91e126bb328648eeb285326150bae0dc",
+          "itemId": "d2f88303dafc432596cb01f4d92017df",
           "pinNumber": 0,
           "external": false
         },
@@ -7303,23 +7303,23 @@
         "color": "Red"
       },
       {
-        "id": "8089a3a33d5b45d2aea27f662f26c498",
+        "id": "88541636380546bb837563001a8f46c5",
         "a": {
-          "itemId": "ca6939079f784afe9b7f4025c8c0fd56",
-          "pinNumber": 10,
+          "itemId": "d2f88303dafc432596cb01f4d92017df",
+          "pinNumber": 0,
           "external": false
         },
         "b": {
-          "itemId": "91e126bb328648eeb285326150bae0dc",
-          "pinNumber": 0,
+          "itemId": "ca6939079f784afe9b7f4025c8c0fd56",
+          "pinNumber": 10,
           "external": false
         },
         "color": "Red"
       },
       {
-        "id": "2a57cee3e9264fdb9ac24feb644b01be",
+        "id": "b1e9e444090a489ebea3ec8978f64ea0",
         "a": {
-          "itemId": "a3414afaa04f48b5b997abe402f21ef0",
+          "itemId": "d83d4049d6484869a1a204ef1a5112dd",
           "pinNumber": 0,
           "external": false
         },
@@ -7367,19 +7367,15 @@
       {
         "name": "Breakpoint Stub",
         "visible": false
-      },
-      {
-        "name": "Cosmetic",
-        "visible": true
       }
     ],
     "wires": []
   },
   "view": {
-    "zoom": 1.425778,
+    "zoom": 0.70886374,
     "pan": {
-      "x": 1572,
-      "y": -77
+      "x": 1297,
+      "y": 268
     }
   }
 }

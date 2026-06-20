@@ -144,6 +144,7 @@ public sealed class OutputPanel : Panel
         bool hasLocator = d.ItemId is not null
             || (d.ItemIds is { Count: > 0 })
             || (d.ConnectionIds is { Count: > 0 })
+            || d.NetId is not null
             || d.GridPoint is not null;
         if (!hasLocator) return;
         LocateRequested?.Invoke(this, new DiagnosticLocateEventArgs(d));

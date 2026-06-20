@@ -981,6 +981,29 @@ public sealed class MainForm : Form
             }
         }
 
+        // NetId locator: select every wire on that built net. Used by the
+        // short-circuit errors (VCC/GND short, output-to-rail short) so a
+        // double-click highlights the offending net's wires rather than a
+        // single unit. Resolved against the build that produced these
+        // diagnostics; if the schematic was edited since (build invalidated)
+        // this no-ops.
+        if (e.Diagnostic.NetId is { } netId
+            && simController.LastBuild?.NetTable is { } netTable)
+        {
+            var net = netTable.Nets.FirstOrDefault(n => n.Id == netId);
+            if (net is not null)
+            {
+                var pinSet = new HashSet<TTLSim.Core.PinRef>(net.Pins);
+                foreach (var c in canvas.Schematic.ActiveConnections)
+                {
+                    if (c.A.Owner is not { } a || c.B.Owner is not { } b) continue;
+                    if (pinSet.Contains(new TTLSim.Core.PinRef(a.Id, c.A.Number))
+                        || pinSet.Contains(new TTLSim.Core.PinRef(b.Id, c.B.Number)))
+                        connections.Add(c);
+                }
+            }
+        }
+
         if (items.Count == 0 && connections.Count == 0 && e.Diagnostic.GridPoint is null) return;
 
         canvas.Schematic.ClearSelection();
