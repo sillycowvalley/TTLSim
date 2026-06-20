@@ -95,7 +95,8 @@ public static class ClipboardService
         IReadOnlyCollection<Device> devices,
         IReadOnlyCollection<SchematicItem> items,
         IReadOnlyCollection<Connection> connections,
-        IReadOnlyCollection<HeaderLink>? links = null)
+        IReadOnlyCollection<HeaderLink>? links = null,
+        IReadOnlyList<Layer>? layers = null)
     {
         if (items.Count == 0)
         {
@@ -108,7 +109,7 @@ public static class ClipboardService
         string json;
         try
         {
-            var dto = SchematicDtoMapper.ToDto(devices, items, connections, links);
+            var dto = SchematicDtoMapper.ToDto(devices, items, connections, links, layers);
             json = JsonSerializer.Serialize(dto);
         }
         catch (Exception ex)
@@ -160,8 +161,9 @@ public static class ClipboardService
         IReadOnlyCollection<Device> devices,
         IReadOnlyCollection<SchematicItem> items,
         IReadOnlyCollection<Connection> connections,
-        IReadOnlyCollection<HeaderLink>? links = null)
-        => Copy(devices, items, connections, links);
+        IReadOnlyCollection<HeaderLink>? links = null,
+        IReadOnlyList<Layer>? layers = null)
+        => Copy(devices, items, connections, links, layers);
 
     // ----------------------------------------------------------------- Paste
 

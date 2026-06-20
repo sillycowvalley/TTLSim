@@ -1217,7 +1217,7 @@ public sealed class SchematicCanvas : Control
         if (items.Count == 0)
             return false;
 
-        if (!ClipboardService.Copy(devices, items, connections, links))
+        if (!ClipboardService.Copy(devices, items, connections, links, Schematic.Layers))
             return false;
 
         UndoStack.BeginComposite("Duplicate");
@@ -1544,7 +1544,7 @@ public sealed class SchematicCanvas : Control
         var (devices, items, connections, links) = GatherSelectionForClipboard();
         if (items.Count == 0) return;
 
-        if (ClipboardService.Copy(devices, items, connections, links))
+        if (ClipboardService.Copy(devices, items, connections, links, Schematic.Layers))
             pasteCascadeCount = 0;
     }
 
@@ -1561,7 +1561,7 @@ public sealed class SchematicCanvas : Control
         var (devices, items, connections, links) = GatherSelectionForClipboard();
         if (items.Count == 0) return;
 
-        if (!ClipboardService.Cut(devices, items, connections, links))
+        if (!ClipboardService.Cut(devices, items, connections, links, Schematic.Layers))
             return;   // clipboard write failed -- don't delete the originals
 
         pasteCascadeCount = 0;

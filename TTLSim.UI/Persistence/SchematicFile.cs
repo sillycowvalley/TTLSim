@@ -31,9 +31,16 @@ public sealed class SchematicDto
     public List<HeaderLinkDto> Links { get; set; } = new();
 
     /// <summary>
+    /// Layers. Index 0 is the visible "Default". Each unit/item's Layer field
+    /// indexes into this list. Absent on files written before the feature; the
+    /// loader synthesizes a single visible Default so index 0 always resolves.
+    /// </summary>
+    public List<LayerDto> Layers { get; set; } = new();
+
+    /// <summary>
     /// Legacy field: wires with embedded waypoint geometry. Kept only so old
     /// files still load; the serializer migrates these into Connections at
-    /// load time and never writes new ones.
+    /// load time and never writes them.
     /// </summary>
     public List<WireDto> Wires { get; set; } = new();
 }
@@ -85,6 +92,10 @@ public sealed class UnitDto
     public PointDto Position { get; set; }
     public string Label { get; set; } = "";
     public int Rotation { get; set; }                 // 0, 90, 180, 270
+
+    /// <summary>Index into the schematic's Layers list. 0 (Default) when absent.</summary>
+    public int Layer { get; set; }
+
     public bool? SwitchClosed { get; set; }           // SPST switch units only; null otherwise
 }
 
@@ -96,6 +107,10 @@ public sealed class ItemDto
     public string Label { get; set; } = "";
     public PointDto Position { get; set; }
     public int Rotation { get; set; }                 // 0, 90, 180, 270
+
+    /// <summary>Index into the schematic's Layers list. 0 (Default) when absent.</summary>
+    public int Layer { get; set; }
+
     // Clock source signal properties. Null for VCC/GND.
     public double? FrequencyHz { get; set; }
     public double? DutyCycle { get; set; }
@@ -116,6 +131,17 @@ public sealed class ItemDto
     public float? FontSize { get; set; }
     public string? TextColor { get; set; }
 
+}
+
+/// <summary>
+/// One layer's persisted state. Layers are referenced by index from each
+/// unit/item's Layer field. Absent on files written before the feature; the
+/// loader synthesizes a single visible "Default" so index 0 always resolves.
+/// </summary>
+public sealed class LayerDto
+{
+    public string Name { get; set; } = "";
+    public bool Visible { get; set; } = true;
 }
 
 /// <summary>Current file format: a pure pin-to-pin connection with no geometry.</summary>

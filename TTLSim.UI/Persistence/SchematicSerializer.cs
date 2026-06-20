@@ -50,7 +50,8 @@ public static class SchematicSerializer
         var file = new SchematicFile
         {
             Schematic = SchematicDtoMapper.ToDto(
-                schematic.Devices, schematic.Items, schematic.Connections, schematic.Links),
+                schematic.Devices, schematic.Items, schematic.Connections,
+                schematic.Links, schematic.Layers),
             View = new ViewDto
             {
                 Zoom = zoom,
@@ -90,6 +91,16 @@ public static class SchematicSerializer
             schematic.Add(connection);
         foreach (var link in result.Links)
             schematic.Add(link);
+
+        // Layers: replace the fresh schematic's pinned Default with the file's
+        // table. FromDto synthesises a single visible Default for files that
+        // carry no layer data, so result.Layers always has at least one entry
+        // and index 0 always resolves.
+        if (result.Layers.Count > 0)
+        {
+            schematic.Layers.Clear();
+            schematic.Layers.AddRange(result.Layers);
+        }
 
         // Compat fix-up (1): give any designated item that predates the
         // designator field the next free number, unique against everything

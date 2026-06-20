@@ -190,9 +190,20 @@ public static class SchematicDtoMapper
         IEnumerable<Device> devices,
         IEnumerable<SchematicItem> items,
         IEnumerable<Connection> connections,
-        IEnumerable<HeaderLink>? links = null)
+        IEnumerable<HeaderLink>? links = null,
+        IReadOnlyList<Layer>? layers = null)
     {
         var dto = new SchematicDto();
+
+        // Layer table. Items carry an index into this list (UnitDto.Layer /
+        // ItemDto.Layer). When a caller serialises without layers (an old call
+        // site, or a copy with none supplied) the table is left empty and
+        // FromDto falls everything back to the Default layer.
+        if (layers is not null)
+        {
+            foreach (var layer in layers)
+                dto.Layers.Add(new LayerDto { Name = layer.Name, Visible = layer.Visible });
+        }
 
         foreach (var device in devices)
             dto.Devices.Add(DeviceToDto(device));
@@ -346,6 +357,7 @@ public static class SchematicDtoMapper
         Position = new PointDto { X = unit.Position.X, Y = unit.Position.Y },
         Label = unit.Label,
         Rotation = (int)unit.Rotation,
+        Layer = unit.LayerId,
         SwitchClosed = unit switch
         {
             SwitchUnit sw => sw.IsClosed,
@@ -362,6 +374,7 @@ public static class SchematicDtoMapper
             Label = item.Label,
             Position = new PointDto { X = item.Position.X, Y = item.Position.Y },
             Rotation = (int)item.Rotation,
+            Layer = item.LayerId,
             Type = item switch
             {
                 VccSymbol => "vcc",
@@ -424,6 +437,14 @@ public static class SchematicDtoMapper
         public List<SchematicItem> Items { get; } = new();
         public List<Connection> Connections { get; } = new();
         public List<HeaderLink> Links { get; } = new();
+
+        /// <summary>
+        /// Rebuilt layer table, populated on the LOAD path only. On paste the
+        /// destination schematic already owns its layers, so any layer a pasted
+        /// item needs is matched/created directly against the designatorScope
+        /// instead and this list stays empty.
+        /// </summary>
+        public List<Layer> Layers { get; } = new();
 
         /// <summary>
         /// Units present in the source DTO that could not be reconstructed
@@ -496,6 +517,56 @@ public static class SchematicDtoMapper
         // passes, read in the connection pass.
         var itemsByOldId = new Dictionary<string, SchematicItem>();
 
+        // ---- Layer table ----------------------------------------------------
+        // Map each source layer index to a destination layer index.
+        //
+        //  Preserve (load): the file's table is the source of truth. Rebuild it
+        //  verbatim into result.Layers; an old file with no table gets the one
+        //  visible Default. The per-item index is used as-is (clamped).
+        //
+        //  Fresh (paste): match each source layer to the live schematic BY NAME.
+        //  An existing same-named layer is reused; a source layer with no name
+        //  match is appended to the live schematic and that new index is used.
+        //  This lands a pasted block on the same-named layer it came from, and
+        //  creates that layer in the destination when it isn't there yet.
+        int[] layerRemap = Array.Empty<int>();
+        if (fresh)
+        {
+            var dest = designatorScope!.Layers;
+            layerRemap = new int[dto.Layers.Count];
+            for (int i = 0; i < dto.Layers.Count; i++)
+            {
+                var src = dto.Layers[i];
+                int found = dest.FindIndex(l =>
+                    string.Equals(l.Name, src.Name, StringComparison.Ordinal));
+                if (found >= 0)
+                {
+                    layerRemap[i] = found;
+                }
+                else
+                {
+                    dest.Add(new Layer(src.Name, src.Visible));
+                    layerRemap[i] = dest.Count - 1;
+                }
+            }
+        }
+        else
+        {
+            if (dto.Layers.Count == 0)
+                result.Layers.Add(new Layer("Default", visible: true));
+            else
+                foreach (var l in dto.Layers)
+                    result.Layers.Add(new Layer(l.Name, l.Visible));
+        }
+
+        int RemapLayer(int sourceId)
+        {
+            if (fresh)
+                return sourceId >= 0 && sourceId < layerRemap.Length ? layerRemap[sourceId] : 0;
+            // Load: ids index the file's own table; clamp out-of-range to Default.
+            return sourceId >= 0 && sourceId < result.Layers.Count ? sourceId : 0;
+        }
+
         // ---- Pass 1: devices ------------------------------------------------
         foreach (var deviceDto in dto.Devices)
         {
@@ -527,6 +598,8 @@ public static class SchematicDtoMapper
             if (fresh)
                 unit.Id = Guid.NewGuid().ToString("N");
 
+            unit.LayerId = RemapLayer(unitDto.Layer);
+
             result.Items.Add(unit);
             itemsByOldId[unitDto.Id] = unit;
         }
@@ -539,6 +612,7 @@ public static class SchematicDtoMapper
             item.Label = itemDto.Label;
             item.Position = new Point(itemDto.Position.X, itemDto.Position.Y);
             item.Rotation = ParseRotation(itemDto.Rotation);
+            item.LayerId = RemapLayer(itemDto.Layer);
             // Paste (Fresh): fresh designator, unique against the live schematic
             // so a pasted oscillator never collides. Load (Preserve): keep verbatim.
             if (item is IDesignatedItem des)
