@@ -421,7 +421,7 @@ public sealed class SchematicCanvas : Control
         // They are skipped in the main item loop below so each paints exactly
         // once. They sit on top of the grid (drawn above) but behind all
         // schematic content.
-        foreach (var item in Schematic.Items)
+        foreach (var item in Schematic.ActiveItems)
             if (item is IBackgroundItem)
                 item.Draw(g, ctx);
 
@@ -430,7 +430,7 @@ public sealed class SchematicCanvas : Control
         using (var routingBrush = new SolidBrush(Color.FromArgb(60, 255, 180, 200)))
         {
             int p = GridPitch;
-            foreach (var item in Schematic.Items)
+            foreach (var item in Schematic.ActiveItems)
             {
                 var rb = item.RoutingBounds;
                 g.FillRectangle(routingBrush,
@@ -438,21 +438,21 @@ public sealed class SchematicCanvas : Control
             }
         }
 
-        foreach (var connection in Schematic.Connections)
+        foreach (var connection in Schematic.ActiveConnections)
             DrawConnector(g, connection);
 #endif
 
-        foreach (var connection in Schematic.Connections)
+        foreach (var connection in Schematic.ActiveConnections)
             DrawWire(g, connection);
 
-        foreach (var link in Schematic.Links)
+        foreach (var link in Schematic.ActiveLinks)
             DrawHeaderLink(g, link);
 
         DrawJunctions(g);
 
         DrawCoincidentCornerWarnings(g);
 
-        foreach (var item in Schematic.Items)
+        foreach (var item in Schematic.ActiveItems)
         {
             if (item is IBackgroundItem) continue;   // drawn in the background pass above
             item.Draw(g, ctx);
@@ -657,6 +657,7 @@ public sealed class SchematicCanvas : Control
         for (int i = Schematic.Connections.Count - 1; i >= 0; i--)
         {
             var c = Schematic.Connections[i];
+            if (!Schematic.IsConnectionActive(c)) continue;
             if (!polylines.TryGetValue(c, out var pts) || pts.Count < 2) continue;
 
             for (int j = 0; j < pts.Count - 1; j++)
@@ -695,6 +696,7 @@ public sealed class SchematicCanvas : Control
         for (int i = Schematic.Links.Count - 1; i >= 0; i--)
         {
             var link = Schematic.Links[i];
+            if (!Schematic.IsLinkActive(link)) continue;
             foreach (var (a, b) in HeaderLinkStrands(link))
                 if (DistancePointToSegment(gridPoint, a, b) <= tol)
                     return link;
@@ -860,7 +862,7 @@ public sealed class SchematicCanvas : Control
     /// </summary>
     public void FitView()
     {
-        if (Schematic.Items.Count == 0)
+        if (!Schematic.ActiveItems.Any())
         {
             ResetView();
             return;
@@ -876,7 +878,7 @@ public sealed class SchematicCanvas : Control
         // Pre-compute the set of unused gates so we can skip them and their
         // tie-off connections when framing the view.
         var unusedGates = new HashSet<SchematicItem>();
-        foreach (var item in Schematic.Items)
+        foreach (var item in Schematic.ActiveItems)
             if (IsUnusedGate(item)) unusedGates.Add(item);
 
         // Power symbols (GND/VCC) whose every connection terminates on an
@@ -884,7 +886,7 @@ public sealed class SchematicCanvas : Control
         // too. A power symbol with at least one connection to a USED item,
         // or with no connections at all, stays in the frame.
         var hiddenPower = new HashSet<SchematicItem>();
-        foreach (var item in Schematic.Items)
+        foreach (var item in Schematic.ActiveItems)
         {
             if (item is not (GndSymbol or VccSymbol)) continue;
 
@@ -903,7 +905,7 @@ public sealed class SchematicCanvas : Control
             if (hasAny && allToUnusedGates) hiddenPower.Add(item);
         }
 
-        foreach (var item in Schematic.Items)
+        foreach (var item in Schematic.ActiveItems)
         {
             if (unusedGates.Contains(item)) continue;
             if (hiddenPower.Contains(item)) continue;
@@ -917,6 +919,10 @@ public sealed class SchematicCanvas : Control
         foreach (var kvp in Routes.Polylines)
         {
             var c = kvp.Key;
+            // Skip wires on an invisible layer -- a hidden wire must not drag
+            // the viewport. (Routes still routes every connection until the
+            // router increment, so the filter lives here for now.)
+            if (!Schematic.IsConnectionActive(c)) continue;
             // Skip connections whose only purpose is to tie off an unused gate.
             if ((c.A.Owner is { } oa && (unusedGates.Contains(oa) || hiddenPower.Contains(oa))) ||
                 (c.B.Owner is { } ob && (unusedGates.Contains(ob) || hiddenPower.Contains(ob))))
@@ -1259,7 +1265,7 @@ public sealed class SchematicCanvas : Control
         float gx = (screenPoint.X - PanOffset.X) / (Zoom * GridPitch);
         float gy = (screenPoint.Y - PanOffset.Y) / (Zoom * GridPitch);
 
-        foreach (var item in Schematic.Items)
+        foreach (var item in Schematic.ActiveItems)
         {
             if (item is not SwitchUnit sw) continue;
             var b = sw.InteractiveBounds;    // in HitTestSwitch
@@ -1274,7 +1280,7 @@ public sealed class SchematicCanvas : Control
         float gx = (screenPoint.X - PanOffset.X) / (Zoom * GridPitch);
         float gy = (screenPoint.Y - PanOffset.Y) / (Zoom * GridPitch);
 
-        foreach (var item in Schematic.Items)
+        foreach (var item in Schematic.ActiveItems)
         {
             if (item is not SpdtSwitchUnit sp) continue;
             var b = sp.InteractiveBounds;
@@ -1290,7 +1296,7 @@ public sealed class SchematicCanvas : Control
         float gx = (screenPoint.X - PanOffset.X) / (Zoom * GridPitch);
         float gy = (screenPoint.Y - PanOffset.Y) / (Zoom * GridPitch);
 
-        foreach (var item in Schematic.Items)
+        foreach (var item in Schematic.ActiveItems)
         {
             if (item is not ButtonUnit btn) continue;
             var b = btn.InteractiveBounds;   // in HitTestButton
@@ -1493,14 +1499,14 @@ public sealed class SchematicCanvas : Control
         if (!marqueeCtrl) Schematic.ClearSelection();
         if (isClick) return;
 
-        foreach (var item in Schematic.Items)
+        foreach (var item in Schematic.ActiveItems)
         {
             var b = item.Bounds;
             bool match = overlapMode ? marquee.IntersectsWith(b) : marquee.Contains(b);
             if (match) item.Selected = true;
         }
 
-        foreach (var c in Schematic.Connections)
+        foreach (var c in Schematic.ActiveConnections)
         {
             var a = c.A.WorldPosition;
             var bp = c.B.WorldPosition;

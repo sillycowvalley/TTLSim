@@ -142,6 +142,7 @@ public sealed class Schematic
         for (int i = Items.Count - 1; i >= 0; i--)
         {
             if (Items[i] is IBackgroundItem) continue;
+            if (!IsItemActive(Items[i])) continue;
             if (Items[i].Bounds.Contains(gridPoint))
                 return Items[i];
         }
@@ -150,6 +151,7 @@ public sealed class Schematic
         for (int i = Items.Count - 1; i >= 0; i--)
         {
             if (Items[i] is not IBackgroundItem) continue;
+            if (!IsItemActive(Items[i])) continue;
             if (Items[i].Bounds.Contains(gridPoint))
                 return Items[i];
         }
@@ -193,6 +195,7 @@ public sealed class Schematic
     {
         for (int i = Items.Count - 1; i >= 0; i--)
         {
+            if (!IsItemActive(Items[i])) continue;
             foreach (var pin in Items[i].Pins)
             {
                 if (pin.WorldPosition == gridPoint)
