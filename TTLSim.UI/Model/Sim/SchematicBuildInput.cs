@@ -144,7 +144,8 @@ public sealed class SchematicBuildInput : IBuildInput
                     Function1: dev.Function,
                     Function2: dev.Function2,
                     FrequencyHz1: dev.FrequencyHz,
-                    FrequencyHz2: dev.FrequencyHz2);
+                    FrequencyHz2: dev.FrequencyHz2,
+                    IsPassive: dev.Definition is PassivePartDefinition);
             }
         }
     }

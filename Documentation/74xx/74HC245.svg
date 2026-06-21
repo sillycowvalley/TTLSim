@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 850" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <style>
+      .bg     { fill:#fafaf7; }
+      .thin   { stroke:#1f2933; stroke-width:1.2; fill:none; }
+      .body   { fill:#ffffff; stroke:#1f2933; stroke-width:2; }
+      .title  { fill:#1f2933; font-size:32px; font-weight:700; }
+      .sub    { fill:#52606d; font-size:15px; }
+      .panel  { fill:#3e4c59; font-size:14px; font-weight:600; letter-spacing:.4px; }
+      .pinno  { fill:#7b8794; font-size:11px; font-weight:600; }
+      .sig    { font-size:13px; font-weight:700; }
+      .green  { fill:#2e7d32; }
+      .blue   { fill:#1565c0; }
+      .orange { fill:#e65100; }
+      .purple { fill:#7b1fa2; }
+      .red    { fill:#c62828; }
+      .slate  { fill:#37474f; }
+      .lbl    { fill:#1f2933; font-size:13px; font-weight:700; }
+      .small  { fill:#52606d; font-size:11px; }
+      .tbl    { fill:#1f2933; font-size:13px; }
+      .tblh   { fill:#1f2933; font-size:13px; font-weight:700; }
+      .note   { fill:#3e4c59; font-size:13px; }
+      .noteh  { fill:#1f2933; font-size:14px; font-weight:700; }
+      .grid   { stroke:#cbd2d9; stroke-width:1; }
+    </style>
+    <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#1f2933"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1040" height="850"/>
+
+  <!-- Title -->
+  <text class="title" x="40" y="46">74HC245</text>
+  <text class="sub"   x="40" y="72">Octal Bus Transceiver, 3-State outputs  ·  DIP-20  ·  bidirectional, non-inverting</text>
+  <line class="thin" x1="40" y1="88" x2="1000" y2="88"/>
+
+  <!-- ============ LEFT: PINOUT ============ -->
+  <text class="panel" x="60" y="118">PINOUT  (top view, notch up)</text>
+
+  <rect class="body" x="175" y="150" width="120" height="385" rx="4"/>
+  <path class="thin" d="M 218 150 A 17 17 0 0 0 252 150" fill="#fafaf7"/>
+
+  <!-- LEFT PINS 1-10 -->
+  <line class="thin" x1="175" y1="170" x2="153" y2="170"/><text class="pinno" x="148" y="174" text-anchor="end">1</text><text class="sig orange" x="186" y="174">DIR</text>
+  <line class="thin" x1="175" y1="208" x2="153" y2="208"/><text class="pinno" x="148" y="212" text-anchor="end">2</text><text class="sig green" x="186" y="212">A1</text>
+  <line class="thin" x1="175" y1="246" x2="153" y2="246"/><text class="pinno" x="148" y="250" text-anchor="end">3</text><text class="sig green" x="186" y="250">A2</text>
+  <line class="thin" x1="175" y1="284" x2="153" y2="284"/><text class="pinno" x="148" y="288" text-anchor="end">4</text><text class="sig green" x="186" y="288">A3</text>
+  <line class="thin" x1="175" y1="322" x2="153" y2="322"/><text class="pinno" x="148" y="326" text-anchor="end">5</text><text class="sig green" x="186" y="326">A4</text>
+  <line class="thin" x1="175" y1="360" x2="153" y2="360"/><text class="pinno" x="148" y="364" text-anchor="end">6</text><text class="sig green" x="186" y="364">A5</text>
+  <line class="thin" x1="175" y1="398" x2="153" y2="398"/><text class="pinno" x="148" y="402" text-anchor="end">7</text><text class="sig green" x="186" y="402">A6</text>
+  <line class="thin" x1="175" y1="436" x2="153" y2="436"/><text class="pinno" x="148" y="440" text-anchor="end">8</text><text class="sig green" x="186" y="440">A7</text>
+  <line class="thin" x1="175" y1="474" x2="153" y2="474"/><text class="pinno" x="148" y="478" text-anchor="end">9</text><text class="sig green" x="186" y="478">A8</text>
+  <line class="thin" x1="175" y1="512" x2="153" y2="512"/><text class="pinno" x="148" y="516" text-anchor="end">10</text><text class="sig slate" x="186" y="516">GND</text>
+
+  <!-- RIGHT PINS 20-11 -->
+  <line class="thin" x1="295" y1="170" x2="317" y2="170"/><text class="pinno" x="322" y="174">20</text><text class="sig red" x="284" y="174" text-anchor="end">VCC</text>
+  <line class="thin" x1="295" y1="208" x2="317" y2="208"/><text class="pinno" x="322" y="212">19</text><text class="sig orange" x="284" y="212" text-anchor="end">O&#x305;E&#x305;</text>
+  <line class="thin" x1="295" y1="246" x2="317" y2="246"/><text class="pinno" x="322" y="250">18</text><text class="sig green" x="284" y="250" text-anchor="end">B1</text>
+  <line class="thin" x1="295" y1="284" x2="317" y2="284"/><text class="pinno" x="322" y="288">17</text><text class="sig green" x="284" y="288" text-anchor="end">B2</text>
+  <line class="thin" x1="295" y1="322" x2="317" y2="322"/><text class="pinno" x="322" y="326">16</text><text class="sig green" x="284" y="326" text-anchor="end">B3</text>
+  <line class="thin" x1="295" y1="360" x2="317" y2="360"/><text class="pinno" x="322" y="364">15</text><text class="sig green" x="284" y="364" text-anchor="end">B4</text>
+  <line class="thin" x1="295" y1="398" x2="317" y2="398"/><text class="pinno" x="322" y="402">14</text><text class="sig green" x="284" y="402" text-anchor="end">B5</text>
+  <line class="thin" x1="295" y1="436" x2="317" y2="436"/><text class="pinno" x="322" y="440">13</text><text class="sig green" x="284" y="440" text-anchor="end">B6</text>
+  <line class="thin" x1="295" y1="474" x2="317" y2="474"/><text class="pinno" x="322" y="478">12</text><text class="sig green" x="284" y="478" text-anchor="end">B7</text>
+  <line class="thin" x1="295" y1="512" x2="317" y2="512"/><text class="pinno" x="322" y="516">11</text><text class="sig green" x="284" y="516" text-anchor="end">B8</text>
+
+  <!-- ============ RIGHT: SYMBOL ============ -->
+  <text class="panel" x="440" y="118">SCHEMATIC SYMBOL</text>
+
+  <rect class="body" x="560" y="180" width="260" height="330" rx="4"/>
+
+  <!-- A port pins -->
+  <line class="thin" x1="510" y1="200" x2="560" y2="200"/><text class="lbl green" x="504" y="204" text-anchor="end">A1</text><text class="pinno" x="566" y="196">2</text>
+  <line class="thin" x1="510" y1="238" x2="560" y2="238"/><text class="lbl green" x="504" y="242" text-anchor="end">A2</text><text class="pinno" x="566" y="234">3</text>
+  <line class="thin" x1="510" y1="276" x2="560" y2="276"/><text class="lbl green" x="504" y="280" text-anchor="end">A3</text><text class="pinno" x="566" y="272">4</text>
+  <line class="thin" x1="510" y1="314" x2="560" y2="314"/><text class="lbl green" x="504" y="318" text-anchor="end">A4</text><text class="pinno" x="566" y="310">5</text>
+  <line class="thin" x1="510" y1="352" x2="560" y2="352"/><text class="lbl green" x="504" y="356" text-anchor="end">A5</text><text class="pinno" x="566" y="348">6</text>
+  <line class="thin" x1="510" y1="390" x2="560" y2="390"/><text class="lbl green" x="504" y="394" text-anchor="end">A6</text><text class="pinno" x="566" y="386">7</text>
+  <line class="thin" x1="510" y1="428" x2="560" y2="428"/><text class="lbl green" x="504" y="432" text-anchor="end">A7</text><text class="pinno" x="566" y="424">8</text>
+  <line class="thin" x1="510" y1="466" x2="560" y2="466"/><text class="lbl green" x="504" y="470" text-anchor="end">A8</text><text class="pinno" x="566" y="462">9</text>
+
+  <!-- B port pins -->
+  <line class="thin" x1="820" y1="200" x2="870" y2="200"/><text class="lbl green" x="876" y="204">B1</text><text class="pinno" x="816" y="196" text-anchor="end">18</text>
+  <line class="thin" x1="820" y1="238" x2="870" y2="238"/><text class="lbl green" x="876" y="242">B2</text><text class="pinno" x="816" y="234" text-anchor="end">17</text>
+  <line class="thin" x1="820" y1="276" x2="870" y2="276"/><text class="lbl green" x="876" y="280">B3</text><text class="pinno" x="816" y="272" text-anchor="end">16</text>
+  <line class="thin" x1="820" y1="314" x2="870" y2="314"/><text class="lbl green" x="876" y="318">B4</text><text class="pinno" x="816" y="310" text-anchor="end">15</text>
+  <line class="thin" x1="820" y1="352" x2="870" y2="352"/><text class="lbl green" x="876" y="356">B5</text><text class="pinno" x="816" y="348" text-anchor="end">14</text>
+  <line class="thin" x1="820" y1="390" x2="870" y2="390"/><text class="lbl green" x="876" y="394">B6</text><text class="pinno" x="816" y="386" text-anchor="end">13</text>
+  <line class="thin" x1="820" y1="428" x2="870" y2="428"/><text class="lbl green" x="876" y="432">B7</text><text class="pinno" x="816" y="424" text-anchor="end">12</text>
+  <line class="thin" x1="820" y1="466" x2="870" y2="466"/><text class="lbl green" x="876" y="470">B8</text><text class="pinno" x="816" y="462" text-anchor="end">11</text>
+
+  <!-- controls -->
+  <line class="thin" x1="630" y1="130" x2="630" y2="180"/><text class="lbl orange" x="630" y="124" text-anchor="middle">DIR</text><text class="small orange" x="630" y="140" text-anchor="middle">1</text>
+  <line class="thin" x1="750" y1="130" x2="750" y2="174"/>
+  <circle cx="750" cy="180" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.4"/>
+  <text class="lbl orange" x="750" y="124" text-anchor="middle">O&#x305;E&#x305;</text><text class="small orange" x="750" y="140" text-anchor="middle">19</text>
+
+  <!-- opposing tri-state buffers -->
+  <line class="thin" x1="620" y1="300" x2="650" y2="300"/>
+  <polygon points="650,288 650,312 700,300" fill="#ffffff" stroke="#1f2933" stroke-width="1.4"/>
+  <line class="thin" x1="700" y1="300" x2="760" y2="300" marker-end="url(#arr)"/>
+  <text class="small" x="690" y="282" text-anchor="middle"><tspan class="green">A</tspan> &#8594; <tspan class="green">B</tspan>   (<tspan class="orange">DIR</tspan> = H)</text>
+  <line class="thin" x1="760" y1="392" x2="730" y2="392"/>
+  <polygon points="730,380 730,404 680,392" fill="#ffffff" stroke="#1f2933" stroke-width="1.4"/>
+  <line class="thin" x1="680" y1="392" x2="620" y2="392" marker-end="url(#arr)"/>
+  <text class="small" x="690" y="424" text-anchor="middle"><tspan class="green">B</tspan> &#8594; <tspan class="green">A</tspan>   (<tspan class="orange">DIR</tspan> = L)</text>
+
+  <text class="lbl" x="690" y="350" text-anchor="middle" font-size="16">&#215; 8 lines</text>
+
+  <text class="small" x="690" y="500" text-anchor="middle"><tspan class="red">VCC</tspan> = pin 20   ·   <tspan class="slate">GND</tspan> = pin 10</text>
+
+  <!-- ============ FUNCTION TABLE ============ -->
+  <text class="panel" x="340" y="630">FUNCTION TABLE</text>
+
+  <rect x="340" y="640" width="360" height="26" fill="#eef1f4" stroke="#cbd2d9"/>
+  <rect x="340" y="640" width="360" height="104" fill="none" stroke="#9aa5b1" stroke-width="1.4"/>
+  <line class="grid" x1="410" y1="640" x2="410" y2="744"/>
+  <line class="grid" x1="480" y1="640" x2="480" y2="744"/>
+
+  <text class="tblh orange" x="375" y="658" text-anchor="middle">O&#x305;E&#x305;</text>
+  <text class="tblh orange" x="445" y="658" text-anchor="middle">DIR</text>
+  <text class="tblh" x="492" y="658">Operation</text>
+  <line class="grid" x1="340" y1="666" x2="700" y2="666"/>
+
+  <text class="tbl" x="375" y="685" text-anchor="middle">L</text><text class="tbl" x="445" y="685" text-anchor="middle">H</text>
+  <text class="tbl" x="492" y="685">Bus <tspan class="green">A</tspan> data drives Bus <tspan class="green">B</tspan>  (<tspan class="green">A</tspan> &#8594; <tspan class="green">B</tspan>)</text>
+  <line class="grid" x1="340" y1="692" x2="700" y2="692"/>
+  <text class="tbl" x="375" y="711" text-anchor="middle">L</text><text class="tbl" x="445" y="711" text-anchor="middle">L</text>
+  <text class="tbl" x="492" y="711">Bus <tspan class="green">B</tspan> data drives Bus <tspan class="green">A</tspan>  (<tspan class="green">B</tspan> &#8594; <tspan class="green">A</tspan>)</text>
+  <line class="grid" x1="340" y1="718" x2="700" y2="718"/>
+  <text class="tbl" x="375" y="737" text-anchor="middle">H</text><text class="tbl" x="445" y="737" text-anchor="middle">X</text>
+  <text class="tbl" x="492" y="737">Both ports high-impedance (isolated)</text>
+
+  <text class="small" x="340" y="762">H = high · L = low · X = don&#39;t care.  Non-inverting: <tspan class="green">B</tspan> = <tspan class="green">A</tspan> (or <tspan class="green">A</tspan> = <tspan class="green">B</tspan>) bit-for-bit when enabled.</text>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <text class="noteh" x="40" y="630">How it works</text>
+  <text class="note" x="40" y="655">Eight non-inverting channels sit</text>
+  <text class="note" x="40" y="674">between port <tspan class="green">A</tspan> and port <tspan class="green">B</tspan>, each</text>
+  <text class="note" x="40" y="693">with a tri-state buffer in both</text>
+  <text class="note" x="40" y="712">directions.</text>
+  <text class="note" x="40" y="735"><tspan class="orange">DIR</tspan> (pin 1) picks the direction:</text>
+  <text class="note" x="40" y="754">H = <tspan class="green">A</tspan>&#8594;<tspan class="green">B</tspan>, L = <tspan class="green">B</tspan>&#8594;<tspan class="green">A</tspan>.</text>
+  <text class="note" x="40" y="777"><tspan class="orange">O&#x305;E&#x305;</tspan> (pin 19) is the active-LOW</text>
+  <text class="note" x="40" y="796">master enable: HIGH puts both</text>
+  <text class="note" x="40" y="815">buses into high-Z so the part</text>
+  <text class="note" x="40" y="834">drops off a shared bus cleanly.</text>
+
+  <!-- ============ LEGEND ============ -->
+  <text class="noteh" x="720" y="630">Colour key</text>
+  <rect x="720" y="645" width="14" height="14" fill="#2e7d32"/><text class="note" x="742" y="657">data buses <tspan class="green">A1&#8211;A8, B1&#8211;B8</tspan></text>
+  <rect x="720" y="668" width="14" height="14" fill="#e65100"/><text class="note" x="742" y="680">controls <tspan class="orange">DIR, O&#x305;E&#x305;</tspan></text>
+  <rect x="720" y="691" width="14" height="14" fill="#c62828"/><text class="note" x="742" y="703"><tspan class="red">VCC</tspan> (pin 20)</text>
+  <rect x="720" y="714" width="14" height="14" fill="#37474f"/><text class="note" x="742" y="726"><tspan class="slate">GND</tspan> (pin 10)</text>
+  <text class="small" x="720" y="754">Pairing: <tspan class="green">A1</tspan>&#8596;<tspan class="green">B1</tspan>, <tspan class="green">A2</tspan>&#8596;<tspan class="green">B2</tspan>, &#8230; <tspan class="green">A8</tspan>&#8596;<tspan class="green">B8</tspan></text>
+</svg>

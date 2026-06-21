@@ -235,6 +235,16 @@ public static class EasyEDACatalogue
     private const string ResistorDeviceUuid = "6d850419aea044bb805429ccd89d98eb";
     private const string ResistorSymbolUuid = "2d1d4b07d6cd4afeaf2cd056f4440b61";
 
+    // Bussed SIP-9 resistor network (Bourns 4609X-101 family): pin 1 common,
+    // pins 2..9 each a resistor to the common. One shared library device --
+    // the resistance comes from the per-instance Value ATTR override, exactly
+    // like the discrete resistor. UUIDs lifted verbatim from Network.epro;
+    // the footprint .efoo ships verbatim and its manifest block lives in
+    // device_fragments.json, while device + symbol fragments are inlined below.
+    internal const string ResistorNetworkFootprintUuid = "7dc4dff0ffd2ec64";
+    private const string ResistorNetworkDeviceUuid = "ad9b8177d7792bfe";
+    private const string ResistorNetworkSymbolUuid = "bc10366d41f207d3";
+
     // Switch / Pushbutton -- "Frankenstein" parts that combine a real
     // schematic symbol (SS11-RBDWQ-R20-R rocker / SKPMAPE010 tactile) with
     // a 2-pin 2.54mm male through-hole header footprint so the physical
@@ -1013,6 +1023,8 @@ public static class EasyEDACatalogue
         {
             PassivePartDefinition p when p == PassivePartDefinition.Resistor
                 => BuildResistorPart(device),
+            PassivePartDefinition p when p == PassivePartDefinition.ResistorNetwork
+                => BuildResistorNetworkPart(device),
             PassivePartDefinition p when p == PassivePartDefinition.Capacitor
                 => BuildCapacitorPart(device),
             PassivePartDefinition p when p == PassivePartDefinition.PolarizedCapacitor
@@ -1231,6 +1243,142 @@ public static class EasyEDACatalogue
             ["custom_tags"] = "[\"Resistors\"]",
             ["title"] = "Resistor",
             ["version"] = "1660802535",
+            ["type"] = 2,
+        };
+        return fragment.ToJsonString();
+    }
+
+    // ------------------------------------------- resistor-network synthesis
+    //
+    // Same Frankenstein pattern as the discrete resistor: one shared library
+    // device whose displayed resistance comes from the per-instance Value ATTR
+    // override. The symbol (resistor-network.esym) and footprint
+    // (resistor-network.efoo, SIP-9) ship verbatim; the footprint's manifest
+    // block lives in device_fragments.json, the device + symbol blocks are
+    // inlined here. Placeholder LCSC/Bourns part data (4609X-101-472LF) lets
+    // EasyEDA's PCB router accept the part and gives the 3D viewer a real body;
+    // the BOM lists every network as that 4.7k part, which is harmless because
+    // the value is carried per instance.
+
+    private static CataloguePart BuildResistorNetworkPart(Device device)
+    {
+        string label = "";
+        foreach (var u in device.Units)
+        {
+            label = u.Label ?? "";
+            break;
+        }
+
+        string displayValue;
+        try
+        {
+            displayValue = ResistorValueParser.FormatForDisplay(label);
+        }
+        catch (FormatException ex)
+        {
+            throw new NotImplementedException(
+                $"EasyEDA export: resistor network {device.Designator} has an unparseable " +
+                $"value '{label}'. {ex.Message} " +
+                "Supported value forms: 100, 100R, 220Ω, 2k2, 2K2, 1.5K, 1M, 1M5.");
+        }
+
+        return new CataloguePart(
+            DeviceUuid: ResistorNetworkDeviceUuid,
+            SymbolUuid: ResistorNetworkSymbolUuid,
+            SymbolResourceName: "resistor-network.esym",
+            FootprintUuid: ResistorNetworkFootprintUuid,
+            FootprintResourceName: "resistor-network.efoo",
+            PartTitle: "ResistorNetwork.1",
+            PinLocalPositions: new()
+            {
+                // resistor-network.esym pin tips: x = -20, 10px pitch, pin 1
+                // (common) at the top (+40) down to pin 9 (-40). That 10px
+                // pitch equals ResistorNetworkUnit's 1-cell pin pitch (×10),
+                // so TTLSim pin N lands on EasyEDA pin N with no rescale.
+                [1] = new Point(-20, 40),
+                [2] = new Point(-20, 30),
+                [3] = new Point(-20, 20),
+                [4] = new Point(-20, 10),
+                [5] = new Point(-20, 0),
+                [6] = new Point(-20, -10),
+                [7] = new Point(-20, -20),
+                [8] = new Point(-20, -30),
+                [9] = new Point(-20, -40),
+            },
+            EmitValueLabel: true,
+            ValueOverride: displayValue,
+            InlineDeviceJson: BuildResistorNetworkDeviceFragment(),
+            InlineSymbolJson: BuildResistorNetworkSymbolFragment(),
+            // Initial label-offset guesses (anchored at pin 1, top of the
+            // symbol, Y-up). Hand-tune per EasyEDA_Export.md §0 after a first
+            // export if the Designator / Value sit awkwardly.
+            LabelOffsets: new LabelOffsetsByRotation(
+                Rot0: new LabelOffsetSet(new(-20, 60), new(-20, -60), new(-20, 48)),
+                Rot90: new LabelOffsetSet(new(60, 20), new(-60, 20), new(48, 20)),
+                Rot180: new LabelOffsetSet(new(-20, 60), new(-20, -60), new(-20, 48)),
+                Rot270: new LabelOffsetSet(new(-60, 20), new(60, 20), new(-48, 20))));
+    }
+
+    private static string BuildResistorNetworkDeviceFragment()
+    {
+        var attrs = new System.Text.Json.Nodes.JsonObject
+        {
+            ["LCSC Part Name"] = "4.7k\u03a9 \u00b12%",
+            ["Supplier Part"] = "C840659",
+            ["Manufacturer"] = "BOURNS",
+            ["Manufacturer Part"] = "4609X-101-472LF",
+            ["Supplier Footprint"] = "SIP-9-2.54mm",
+            ["JLCPCB Part Class"] = "Extended Part",
+            ["Datasheet"] = "https://item.szlcsc.com/datasheet/4609X-101-472LF/897111.html",
+            ["Supplier"] = "LCSC",
+            ["Add into BOM"] = "yes",
+            ["Convert to PCB"] = "yes",
+            ["Symbol"] = ResistorNetworkSymbolUuid,
+            ["Designator"] = "RN?",
+            ["Footprint"] = ResistorNetworkFootprintUuid,
+            ["3D Model"] = "f10af32c56eb4a21a68d2ce3222feb1b|0819f05c4eef4c71ace90d822a990e87",
+            ["3D Model Title"] = "RES-ARRAY-TH_9P-L22.0-W2.5-P2.54-L",
+            ["3D Model Transform"] = "898.03,97.851,0,0,0,0,0,0,-137.795",
+            ["Name"] = "={Value}",
+            ["Type"] = "Resistor Network",
+            ["Value"] = "4.7k\u03a9",
+            ["Tolerance"] = "\u00b12%",
+            ["Description"] = "Bussed SIP-9 resistor network -- value supplied per instance via Value ATTR override",
+        };
+
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["title"] = "4609X-101-472LF",
+            ["attributes"] = attrs,
+            ["description"] = "Bussed SIP-9 resistor network -- value supplied per instance via Value ATTR override",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["images"] = new System.Text.Json.Nodes.JsonArray(""),
+            ["source"] = ResistorNetworkDeviceUuid + "|0819f05c4eef4c71ace90d822a990e87",
+            ["version"] = "1758104403",
+            ["custom_tags"] = "[\"Resistor Networks, Arrays\"]",
+        };
+
+        return fragment.ToJsonString();
+    }
+
+    private static string BuildResistorNetworkSymbolFragment()
+    {
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["source"] = ResistorNetworkSymbolUuid + "|0819f05c4eef4c71ace90d822a990e87",
+            ["desc"] = "",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["custom_tags"] = "[\"Resistor Networks, Arrays\"]",
+            ["title"] = "ResistorNetwork",
+            ["version"] = "1758103521",
             ["type"] = 2,
         };
         return fragment.ToJsonString();

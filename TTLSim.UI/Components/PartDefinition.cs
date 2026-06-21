@@ -16,7 +16,7 @@ public enum UnitKind
     // Sequential -- placeholder; concrete unit class added in a later phase
     DFlipFlop,
     // Passives
-    Resistor, Capacitor, PolarizedCapacitor, Led, Button, Switch, SpdtSwitch, Crystal, Diode,
+    Resistor, ResistorNetwork, Capacitor, PolarizedCapacitor, Led, Button, Switch, SpdtSwitch, Crystal, Diode,
     // Display
     SevenSegment,
     // I/O
@@ -142,6 +142,7 @@ public sealed record PassivePartDefinition(
     : PartDefinition(Identifier, ReferencePrefix)
 {
     public static readonly PassivePartDefinition Resistor = new("resistor", "R", UnitKind.Resistor);
+    public static readonly PassivePartDefinition ResistorNetwork = new("resnet-sip9", "RN", UnitKind.ResistorNetwork);
     public static readonly PassivePartDefinition Capacitor = new("capacitor", "C", UnitKind.Capacitor);
     public static readonly PassivePartDefinition PolarizedCapacitor = new("polarized-capacitor", "C", UnitKind.PolarizedCapacitor);
     public static readonly PassivePartDefinition Led = new("led", "D", UnitKind.Led);

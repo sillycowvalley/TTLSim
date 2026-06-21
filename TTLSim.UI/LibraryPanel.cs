@@ -103,6 +103,7 @@ public sealed class LibraryPanel : UserControl
 
         var passive = tree.Nodes.Add("Passive");
         AddPart(passive, "Resistor", PassivePartDefinition.Resistor);
+        AddPart(passive, "Resistor Network", PassivePartDefinition.ResistorNetwork);
         AddPart(passive, "Capacitor", PassivePartDefinition.Capacitor);
         AddPart(passive, "Capacitor, polarized", PassivePartDefinition.PolarizedCapacitor);
         AddPart(passive, "LED", PassivePartDefinition.Led);

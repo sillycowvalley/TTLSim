@@ -30,7 +30,10 @@ public sealed record BuildDevice(
     TimerFunction? Function1 = null,  // 555/556 timer-1 role; null for non-timer parts
     TimerFunction? Function2 = null,  // 556 timer-2 role; null otherwise
     double? FrequencyHz1 = null,      // 555/556 timer-1 astable frequency; null otherwise
-    double? FrequencyHz2 = null);     // 556 timer-2 astable frequency; null otherwise
+    double? FrequencyHz2 = null,      // 556 timer-2 astable frequency; null otherwise
+    bool IsPassive = false);          // true for passive parts (R/C/L/diode/switch/...);
+                                      // suppresses floating-input diagnostics that only
+                                      // make sense for logic ICs. Pins still reach the net map.
 
 /// <summary>One placeable unit within a device.</summary>
 /// <param name="OutputPinNumber">Single output pin for gate-style units (from UnitSpec).</param>

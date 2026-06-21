@@ -131,6 +131,7 @@ public static class SchematicDtoMapper
         new()
         {
             [PassivePartDefinition.Resistor.Identifier] = PassivePartDefinition.Resistor,
+            [PassivePartDefinition.ResistorNetwork.Identifier] = PassivePartDefinition.ResistorNetwork,
             [PassivePartDefinition.Capacitor.Identifier] = PassivePartDefinition.Capacitor,
             [PassivePartDefinition.PolarizedCapacitor.Identifier] = PassivePartDefinition.PolarizedCapacitor,
             [PassivePartDefinition.Led.Identifier] = PassivePartDefinition.Led,
@@ -804,6 +805,7 @@ public static class SchematicDtoMapper
             case UnitKind.Xor: unit = new XorGateUnit(device, spec); break;
             case UnitKind.Not: unit = new NotGateUnit(device, spec); break;
             case UnitKind.Resistor: unit = new ResistorUnit(device, spec); break;
+            case UnitKind.ResistorNetwork: unit = new ResistorNetworkUnit(device, spec); break;
             case UnitKind.Capacitor: unit = new CapacitorUnit(device, spec); break;
             case UnitKind.PolarizedCapacitor: unit = new PolarizedCapacitorUnit(device, spec); break;
             case UnitKind.Led: unit = new LedUnit(device, spec); break;

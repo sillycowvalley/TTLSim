@@ -155,6 +155,7 @@ public static class DeviceFactory
         UnitKind.Xor => new XorGateUnit(device, spec),
         UnitKind.Not => new NotGateUnit(device, spec),
         UnitKind.Resistor => new ResistorUnit(device, spec),
+        UnitKind.ResistorNetwork => new ResistorNetworkUnit(device, spec),
         UnitKind.Capacitor => new CapacitorUnit(device, spec),
         UnitKind.PolarizedCapacitor => new PolarizedCapacitorUnit(device, spec),
         UnitKind.Led => new LedUnit(device, spec),

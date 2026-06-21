@@ -22,6 +22,16 @@ public sealed class SchematicBuilder
         // Phase 1b: per-unit floating-pin diagnostics.
         foreach (BuildDevice dev in input.Devices)
         {
+            // Passives (resistors, networks, caps, LEDs, switches, ...) have no
+            // CMOS inputs to tie off -- an unconnected terminal is a deliberately
+            // unused element, not a floating logic input. The "tie unused CMOS
+            // inputs to VCC or GND" advice is meaningless for them, so skip the
+            // unused/floating/dangling diagnostics (TTL010/011/012) entirely.
+            // Their pins still reach the simulator's net map via InputPinNumbers;
+            // only the diagnostics are suppressed here.
+            if (dev.IsPassive)
+                continue;
+
             foreach (BuildUnit unit in dev.Units)
             {
                 string label = unit.Letter == '\0'

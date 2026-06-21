@@ -108,6 +108,13 @@ public sealed class ChipFactory : IChipFactory
                 continue;
             }
 
+            if (device.PartIdentifier == "resnet-sip9")
+            {
+                foreach (IChip resnet in CreateResistorNetwork(pinMap, powerNets))
+                    yield return resnet;
+                continue;
+            }
+
             if (device.PartIdentifier == "button")
             {
                 IChip? btn = TryCreateButton(pinMap);
@@ -212,6 +219,33 @@ public sealed class ChipFactory : IChipFactory
 
         // Neither end on a rail -> series resistor, unmodelled for now.
         return new ResistorContact(net1, net2);
+    }
+
+    /// <summary>
+    /// Bussed SIP-9 resistor network: pin 1 is the common bus, pins 2..9 are
+    /// the eight resistor ends. Each element behaves exactly like a single
+    /// resistor between the common net and that element's net -- so it reuses
+    /// TryCreatePullResistor, which decides pull-up/pull-down (when one end is
+    /// on a rail) versus a transparent series contact (when neither is).
+    /// </summary>
+    private static IEnumerable<IChip> CreateResistorNetwork(
+        IReadOnlyDictionary<int, Net> pinToNet,
+        IReadOnlyDictionary<int, Signal> powerNets)
+    {
+        if (!pinToNet.TryGetValue(1, out Net? common) || common is null)
+            yield break;
+
+        for (int elementPin = 2; elementPin <= 9; elementPin++)
+        {
+            if (!pinToNet.TryGetValue(elementPin, out Net? element) || element is null)
+                continue;
+
+            // Present each element to the single-resistor model as pins {1, 2}
+            // = {common, element}, so behaviour is identical by construction.
+            var pair = new Dictionary<int, Net> { [1] = common, [2] = element };
+            IChip? chip = TryCreatePullResistor(pair, powerNets);
+            if (chip is not null) yield return chip;
+        }
     }
 
     // Each gate is (inputPins[], outputPin) in
@@ -780,7 +814,7 @@ public sealed class ChipFactory : IChipFactory
             or "32" or "86" or "390" or "393"
             => true,
         // Electrically modelled passives.
-        "resistor" or "button" or "button-4" or "switch" or "spdt-switch" or "jumper-2pin" or "jumper-3pin" or "diode"
+        "resistor" or "resnet-sip9" or "button" or "button-4" or "switch" or "spdt-switch" or "jumper-2pin" or "jumper-3pin" or "diode"
             => true,
         // Visual-only parts: no electrical model, but not "unsupported".
         "led" or "capacitor" or "polarized-capacitor" or "crystal"
