@@ -1,175 +1,209 @@
 # Blinky Hardware Breakpoint — Design & Features
 
-A standalone, hardware run-to-PC breakpoint built into the PC + CALL +
-Clock board. It compares the program counter against a switch-set address
-and, on a match, halts the machine **at** that instruction and drops it
-into single-step — no host computer involved. It complements, rather than
-replaces, the Mega-driven breakpoint of the development rig: this one works
-on a bare board with no Mega attached.
+A standalone hardware address breakpoint — a small card that compares an
+address bus against a switch-set value and, on a match, halts the machine
+**at** that cycle and drops it into single-step. No host computer is
+involved: it works on a bare board with no Mega attached, and it complements
+rather than replaces the Mega-driven breakpoint of the development rig.
 
-Designators follow the `Blinky_PC_-_4Bit_-_CALL_-_Clock` capture (W = 4):
-U1 ’173 (PC), U13 ’688 (comparator), U10 ’00 (halt logic), U11 ’74 (HALT
-flip-flop). It also borrows two spare gates of U9 ’08 and one spare
-flip-flop (FF6) of the clock module’s ’273, so it adds only **three** ICs
-plus the address switches.
+It is built as its own card. The address bus comes in on input headers; a
+short clock-and-halt handshake runs back to the clock module. Because it
+watches a *bus* rather than tapping one CPU's program-counter pins, it drops
+onto any machine whose address — or instruction-address — bus you can wire to
+the input header. A jumper sets whether it compares 8 or 16 bits, so the same
+card serves a 4-bit testbed or a full 16-bit machine.
 
 ## Summary
 
-1. PC-vs-switch address comparator, switch-enabled
-2. Synchronous HALT flip-flop — the heart, and why it’s glitch-free
-3. Edge-triggered: one halt per entry, not a held level
-4. Halts **at** the breakpoint cycle, not the one after
-5. Drops the panel into STEP and lights the mode LED
-6. Single-step and Run both continue cleanly from a breakpoint
-7. Reset clears the breakpoint state and the PC
+1. Identity comparator: address bus vs switch-set value, switch-armed
+2. 8- or 16-bit compare, selected by one jumper
+3. Synchronous HALT flip-flop — the heart, and why it's glitch-free
+4. Edge-triggered: one halt per entry, on the *first* cycle of the match
+5. Halts **at** the matched cycle, not the one after
+6. Drops the machine into STEP and lights the mode LED
+7. Single-step and Run both continue cleanly
+8. Reset clears the breakpoint state
+9. Watches the bus, so it breaks on **data** access too — a watchpoint for free
+10. First-cycle stop makes it a CPU **bring-up** tool, not just a program debugger
 
-The hard-won design rules from bringing this up are collected at the end —
-they are the reason the final circuit is shaped the way it is.
+The hard-won design rules are collected at the end — they are the reason the
+circuit is shaped the way it is.
 
 ## 1. Address comparator
 
-U13 (74688, 8-bit identity comparator) takes the four PC bits (U1 ’173
-Q0–Q3 on pins 3–6) on its P inputs and the breakpoint address from four
-DIP/tactile switches — S5–S8, labelled **BP0–BP3** — on its Q inputs, each
-held by a 10k pull-up (R10–R13). The upper four comparator bits are tied to
-GND on both sides, so they always match. The comparator’s enable /G (pin 1)
-hangs on a fifth switch, S4 (**BP En**, pull-up R9): open the switch and the
-breakpoint is disabled (/P=Q forced high); close it to arm.
+The compare is built from a pair of '688 8-bit identity comparators. The low
+byte of the address bus arrives on the **ALSB** input header and the high byte
+on **AMSB**; each comparator's other side is a bank of address switches
+(**BP0–BPF**), each held by a 10k pull-up — two SIP-9 resistor networks carry
+most of them. When the bus equals the switch value, the comparator's match
+output goes low.
 
-When armed and PC equals the switch value, /P=Q (pin 19) goes low. It is a
-purely combinational output — it follows the PC the moment the register
-settles, with no clock of its own. That immediacy is essential (see §4) and
-also the source of the trap that §2 exists to avoid.
+That output is purely **combinational** — it follows the bus the instant it
+settles, with no clock of its own. The immediacy is essential (see §5) and is
+also the source of the trap that §3 exists to avoid.
 
-## 2. Synchronous HALT flip-flop
+## 2. Eight or sixteen bits — one jumper
 
-The breakpoint’s state lives in one flip-flop: **U11 ’74 FF1 = HALT**,
-clocked on /OSC (the same edge the clock module’s ’273 uses), with /CLR on
-/RST and /PRE tied high. Q = HALT, /Q = /HALT.
+The two '688s cascade: the low comparator's match feeds the high comparator's
+enable, so the high byte is only judged once the low byte already matches, and
+the final match is taken from the high comparator. The **"8 Bit" jumper** taps
+across the high comparator's enable and output. Leave it open for the full
+16-bit cascade; close it to drop the high byte out and collapse the compare to
+8 bits. One card, any width from a nibble to sixteen bits.
+
+## 3. Arming
+
+The low comparator's enable hangs on the **BP En** switch, held disabled by a
+pull-up. Open the switch and the breakpoint is off — the match is forced
+inactive; close it to arm. The card powers up disarmed, so it never halts the
+machine on boot, and you choose when it goes live.
+
+## 4. Synchronous HALT flip-flop
+
+The breakpoint's state lives in one '74 flip-flop — **HALT** — clocked on /OSC
+(the same edge the clock module's register uses), cleared by /RST, preset tied
+high.
 
 This is the single most important choice in the design. /HALT is a
-**registered** output: it changes only on a clock edge, exactly once, with
-no combinational hazard. Everything the breakpoint does to the rest of the
+**registered** output: it changes only on a clock edge, exactly once, with no
+combinational hazard. Everything the breakpoint does to the rest of the
 machine is driven from /HALT, never from the live comparator. An earlier
-attempt that drove the mode latch directly from the combinational /P=Q
-oscillated the latch into metastability — a hung simulator — because a
-glitch on an asynchronous SR latch’s set input is enough to tip it. Routing
-through HALT launders the comparator’s combinational output into a clean
-registered signal first. **This is the rule (see Design rules): never drive
-an async latch from a combinational, clock-edge-aligned signal.**
+attempt that drove the mode latch straight from the combinational match
+oscillated the latch into metastability — a hung simulator — because a glitch
+on an asynchronous SR latch's set input is enough to tip it. Routing through
+HALT launders the comparator's combinational output into a clean registered
+signal first.
 
-## 3. Edge-triggered — one halt per entry
+## 5. Edge-triggered — one halt per entry
 
-If the breakpoint forced the halt on the *level* of /P=Q, it could never be
-escaped: the PC freezes at the breakpoint, so /P=Q stays asserted, so the
-halt re-asserts forever. The fix is to fire on the match **edge** — the
-cycle the PC *first* reaches the address — and then ignore the held level.
+If the breakpoint halted on the *level* of the match it could never be
+escaped: the address freezes at the breakpoint, so the match stays asserted,
+so the halt re-asserts forever. The fix is to fire on the match **edge** — the
+cycle the bus *first* reaches the address — and then ignore the held level.
 
-U10 (’00) computes this from /P=Q and one delayed copy:
+The '00 computes this from the match and one delayed copy:
 
-- gate-a: `match_now = NAND(/P=Q, /P=Q)` — an inverter; high when PC = BP now
-- the clock module’s ’273 FF6 samples /P=Q on /OSC → **Q6 = matched-last-cycle**
-- gate-b: `/entry = NAND(match_now, Q6)` — low for exactly the entry cycle
-- gate-c: `hold = NAND(HALT, /R)` — holds the halt until Run is pressed (/R)
-- gate-d: `D_halt = NAND(/entry, hold) = entry OR (HALT · /R)`
+- an inverter gives `match_now` — high while the bus equals BP
+- a flip-flop clocked on /OSC gives `matched_last` — the same signal one cycle
+  late (a spare flop on the clock module's register, over the handshake)
+- `/entry = NAND(match_now, matched_last)` — low for exactly the first cycle
+  of a match
+- `hold = NAND(HALT, /R)` — keeps the halt set until Run is pressed
+- `D_halt = NAND(/entry, hold) = entry OR (HALT · /R)`
 
-So HALT sets on entry and stays set (via the `HALT · /R` feedback) until the
-Run button pulls /R low, at which point D_halt drops and HALT clears on the
-next /OSC edge. While sitting at the breakpoint, `entry` is false (Q6 has
-caught up), so it never re-fires on the held match.
+So HALT sets on entry and stays set until the Run button pulls /R low, when it
+clears on the next /OSC edge. Sitting at the breakpoint, `matched_last` has
+caught up, `entry` is false, and it never re-fires on the held match.
 
-## 4. Halts on the breakpoint cycle, not the one after
+## 6. Halts on the matched cycle, not the one after
 
-Getting the machine to stop **at** the breakpoint instruction rather than
-one past it is a timing constraint. The PC loads on the CLK rising edge; the
-control flip-flops resample half a period later on /OSC falling. For the
-machine to not advance past BP, the run clock must be gated before the next
-rising edge.
+Stopping **at** the matched cycle rather than one past it is a timing
+constraint. /HALT does it **directly**, combinationally, through a spare AND
+gate on the clock module: the run leg of the clock mux is gated by
+`SEL_RUN · /HALT`. Because HALT is registered and asserts cleanly at the cycle
+boundary, the run leg is cut the instant /HALT drops — before the next
+address-advancing edge. Relying on the mode latch to gate the clock instead
+would lose a cycle to its resample race and stop one instruction late.
 
-/HALT does this **directly**, combinationally, through a spare U9 ’08 gate:
+This is what makes the card useful for **bringing up a CPU**, not just
+debugging a program on it: it freezes on the very first cycle the address
+appears, so you can stop the machine on the exact cycle you want to inspect
+and walk it forward by hand. More on that in §10.
 
-- gate-d: `run-enable = SEL_RUN · /HALT` → feeds the mux’s RUN-leg NAND
+## 7. Drops the machine into STEP
 
-Because HALT is registered and asserts cleanly at the cycle boundary, the
-run leg is gated the instant /HALT drops — before the next PC-advancing
-edge. Relying on the mode latch alone to gate the clock would lose a cycle
-to the ’273’s SEL_RUN resample race and stop one instruction late. Gating
-the run leg with the registered HALT side-steps that race.
+A breakpoint should *look* like one. /HALT also forces the mode latch into
+STEP through a second spare AND gate on the clock module, so the STEP LED
+lights and the Step button works immediately without first pressing the mode
+button. This is a *held* Set, not a one-shot — safe **only because /HALT is
+registered**: its single clean edge can never coincide with the Run button to
+release the latch from both sides at once, the condition that oscillates it.
 
-## 5. Drops the panel into STEP
+## 8. Continue — Step or Run
 
-A breakpoint should *look* like a breakpoint. /HALT also forces the mode
-latch into STEP, through the other spare U9 ’08 gate:
-
-- gate-c: `/S = (mode-set term) · /HALT` → mode-latch Set
-
-When HALT is high, /S is pulled low and the latch shows STEP — the STEP LED
-lights, and because the step path isn’t gated by HALT, the Step button works
-immediately without first pressing the mode button. This is a *held* Set,
-not a one-shot, which is safe **only because /HALT is registered**: its
-single clean edge can never coincide with the Run button to release the
-latch from both sides simultaneously (the condition that oscillates it). A
-literal one-shot would need a NAND the board hasn’t got spare, and isn’t
-necessary here.
-
-## 6. Continue — Step or Run
-
-- **Single-step:** you are already in STEP, so the Step button advances one
-  instruction. HALT stays set (held by `HALT · /R`) so you keep stepping.
-- **Run:** pressing Run pulls /R low; HALT clears on the next /OSC edge, /S
-  releases cleanly while Run still holds /R (non-simultaneous → no
-  oscillation), the latch resolves to RUN, and the PC steps off the address
-  and free-runs to the next hit.
-- **Run held through a loop:** each re-entry sets HALT for a single cycle,
-  then clears (the `HALT · /R` hold needs /R high to maintain), so the
-  machine pauses one cycle per hit and runs on — effectively “ignore
-  breakpoints while Run is held.” HALT is a clean D flip-flop throughout, so
+- **Single-step:** you are already in STEP, so Step advances one cycle; HALT
+  stays set (held by `HALT · /R`), so you keep stepping.
+- **Run:** Run pulls /R low, HALT clears on the next /OSC edge, the mode latch
+  resolves to RUN while Run still holds (non-simultaneous, so no oscillation),
+  and the machine steps off the address and free-runs to the next hit.
+- **Run held through a loop:** each re-entry sets HALT for one cycle, then
+  clears — the machine pauses a cycle per hit and runs on. Effectively "ignore
+  breakpoints while Run is held." HALT is a clean D flip-flop throughout, so
   none of this can hang.
 
-## 7. Reset
+## 9. Reset
 
-/RST clears HALT through U11’s /CLR, so the machine never powers up halted by
-a stale match. Reset also clears the PC: the ’173’s CLR (pin 15, async,
-**active-HIGH** on this part) now sits on the active-high RST net, so the PC
-goes to zero on reset and releases synchronously with the rest of the
-machine. (Previously pin 15 was tied to GND and the PC retained its value
-through reset.)
+/RST clears HALT, so the machine never powers up halted by a stale match. On
+an integrated board the same reset net also zeroes the CPU's program counter,
+so the machine leaves reset cleanly aligned; on the standalone card, clearing
+the bus source is the host's business — the card only guarantees HALT is
+clear.
+
+## 10. Two features that fall out of the design
+
+**It breaks on data, not just instructions.** Because the card watches an
+address *bus* rather than a dedicated PC tap, on a shared-bus (von Neumann)
+machine it matches on **any** access to the target address — an instruction
+fetch *or* a data read or write. That is a hardware watchpoint for free: arm
+it on a variable's address and the machine stops the moment anything touches
+it. If instead you only want to break on the *program counter* — the classic
+"stop when execution reaches this line" — qualify the enable with the CPU's
+fetch/SYNC strobe, a one-wire addition into the comparator enable, so it only
+compares while the bus carries the PC. On a single-cycle or Harvard machine
+the distinction disappears: the instruction-address bus only ever carries the
+PC, so the same card is a pure program breakpoint with nothing added.
+
+**It stops on the first cycle.** The edge-trigger halts on the very first
+cycle the address appears — exactly what you want when you are debugging the
+*machine* rather than a program: bringing up a new datapath, checking that an
+instruction lands on the right cycle, watching a counter or an address line
+reach a value. Set the value, run, and the hardware freezes on the cycle it
+appears, every time.
 
 ## Design rules (earned the hard way)
 
 1. **Never drive an asynchronous latch from a combinational, clock-aligned
-   signal.** Glitches at the edge tip an SR latch metastable; the simulator
-   hangs and real hardware is unpredictable. Register the signal first
-   (here: HALT), then drive from the registered output.
-2. **For an on-time halt, gate the run clock with the registered halt signal
+   signal.** Glitches at the edge tip an SR latch metastable; register the
+   signal first (here: HALT), then drive from the registered output.
+2. **For an on-time halt, gate the run clock with the registered halt
    directly** — not via the mode-select resample, which costs a cycle to the
    resample race and stops one instruction late.
-3. **A held Set from a registered source is safe; a held Set from a
-   combinational source is not.** The difference is whether the release can
-   line up, within a gate delay, with the opposing latch input. Registered
-   transitions land on clock edges; a human button never does.
-4. **Never diode-OR onto a push-pull or weak-pull-up node** (carried over
-   from the clock module). Once a node is actively driven, every other
-   contributor has to be a gate input, not a diode — which is what retired
-   the original 1N5817 breakpoint-OR in favour of this gated scheme.
+3. **A held Set from a registered source is safe; from a combinational source
+   it is not.** Registered transitions land on clock edges; a human button
+   never does, so their releases can't line up to oscillate the latch.
+4. **Never diode-OR onto a push-pull or weak-pull-up node.** Once a node is
+   actively driven, every other contributor must be a gate input, not a diode
+   — which retired the original 1N5817 breakpoint-OR in favour of the gated
+   scheme.
 
-## Bill of materials (breakpoint-specific)
+## The handshake to the clock module
 
-Three added ICs, five switches, five pull-ups. Two gates of U9 ’08 and one
-’273 flip-flop (FF6) are borrowed from existing chips — no new package.
+The card is not fully self-contained, by choice — it leans on the clock module
+for the few resources already sitting there. A small handshake header carries
+/OSC and /RST in (the card's HALT flop and edge logic run in the clock's
+domain), HALT and the match terms out (to the two spare AND gates that gate
+the run leg and force STEP), and ground and supply. Keeping these on the clock
+module means the breakpoint adds no flip-flop or gate it doesn't strictly
+need.
 
-| Ref | Part | Role | Qty |
-|-----|------|------|-----|
-| U13 | 74HC688 | 8-bit identity comparator — PC vs switch address | 1 |
-| U10 | 74HC00 | Edge detect + halt logic (4 of 4 gates) | 1 |
-| U11 | 74HC74 | HALT flip-flop (FF1; FF2 spare) | 1 |
-| S4 | tactile / DIP switch | BP En (comparator enable, /G) | 1 |
-| S5–S8 | tactile / DIP switch | BP0–BP3 (breakpoint address) | 4 |
-| R9–R13 | 10k | Pull-ups for S4–S8 | 5 |
+## Bill of materials
 
-Borrowed, not added: U9 ’08 gate-c (force STEP) and gate-d (gate run leg);
-U14 ’273 FF6 (matched-last sample). The PC ’173 (U1) CLR is rewired to the
-active-high RST net — no new part.
+Four ICs, the address and enable switches, their pull-ups, and one jumper. Two
+AND gates and one flip-flop are borrowed from the clock module over the
+handshake — no new package for those.
 
-**Stock:** 74688 — 3 on hand (`ChipInventory.md`); 74HC00, 74HC74 — see
-clock-module stock. Switches/pull-ups from general stock.
+| Part | Role | Qty |
+|------|------|-----|
+| '688 | 8-bit identity comparator (low + high byte, cascaded) | 2 |
+| '00 | Edge detect + halt logic | 1 |
+| '74 | HALT flip-flop (one flop spare) | 1 |
+| switch | BP0–BPF breakpoint address | 16 |
+| switch | BP En (comparator enable) | 1 |
+| SIP-9 resnet | address-switch pull-ups | 2 |
+| 10k | enable / spare pull-ups | as needed |
+| jumper, 2-pin | 8- / 16-bit select | 1 |
+| input header | address bus in (ALSB, AMSB) | 2 |
+| handshake header | to clock module | 1 |
+
+Borrowed, not added: two clock-module AND gates (force STEP, gate run leg) and
+one clock-module flip-flop (matched-last sample).
