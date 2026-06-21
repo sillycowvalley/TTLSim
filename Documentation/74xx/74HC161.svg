@@ -1,0 +1,170 @@
+<svg viewBox="0 0 1040 850" xmlns="http://www.w3.org/2000/svg"
+     font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#1f2933"/>
+    </marker>
+    <style>
+      .bg     { fill:#fafaf7; }
+      .thin   { stroke:#1f2933; stroke-width:1.2; fill:none; }
+      .body   { fill:#ffffff; stroke:#1f2933; stroke-width:2; }
+      .title  { fill:#1f2933; font-size:32px; font-weight:700; }
+      .sub    { fill:#52606d; font-size:15px; }
+      .panel  { fill:#3e4c59; font-size:14px; font-weight:600; letter-spacing:.4px; }
+      .pinno  { fill:#7b8794; font-size:11px; font-weight:600; }
+      .sig    { font-size:13px; font-weight:700; }
+      .green  { fill:#2e7d32 !important; }
+      .blue   { fill:#1565c0 !important; }
+      .orange { fill:#e65100 !important; }
+      .purple { fill:#7b1fa2 !important; }
+      .red    { fill:#c62828 !important; }
+      .slate  { fill:#37474f !important; }
+      .lbl    { fill:#1f2933; font-size:13px; font-weight:700; }
+      .small  { fill:#52606d; font-size:11px; }
+      .tbl    { fill:#1f2933; font-size:13px; }
+      .tblh   { fill:#1f2933; font-size:13px; font-weight:700; }
+      .note   { fill:#3e4c59; font-size:13px; }
+      .noteh  { fill:#1f2933; font-size:14px; font-weight:700; }
+      .grid   { stroke:#cbd2d9; stroke-width:1; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1040" height="850"/>
+
+  <!-- ============ TITLE BLOCK ============ -->
+  <text class="title" x="40" y="50">74HC161</text>
+  <text class="sub" x="40" y="74">4-Bit Synchronous Binary Counter  ·  DIP-16  ·  asynchronous clear, presettable</text>
+  <line class="thin" x1="40" y1="88" x2="1000" y2="88"/>
+
+  <!-- ============ PINOUT ============ -->
+  <text class="panel" x="40" y="114">PINOUT  ·  top view</text>
+
+  <rect class="body" x="175" y="150" width="130" height="384"/>
+  <path d="M 223 150 A 17 17 0 0 0 257 150" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
+
+  <!-- left pins 1..8 -->
+  <g>
+    <line class="thin" x1="160" y1="195" x2="175" y2="195"/><text class="pinno" x="153" y="199" text-anchor="end">1</text><text class="sig orange" x="187" y="199">C&#x305;L&#x305;R&#x305;</text>
+    <line class="thin" x1="160" y1="237" x2="175" y2="237"/><text class="pinno" x="153" y="241" text-anchor="end">2</text><text class="sig orange" x="187" y="241">CLK</text>
+    <line class="thin" x1="160" y1="279" x2="175" y2="279"/><text class="pinno" x="153" y="283" text-anchor="end">3</text><text class="sig green" x="187" y="283">D0</text>
+    <line class="thin" x1="160" y1="321" x2="175" y2="321"/><text class="pinno" x="153" y="325" text-anchor="end">4</text><text class="sig green" x="187" y="325">D1</text>
+    <line class="thin" x1="160" y1="363" x2="175" y2="363"/><text class="pinno" x="153" y="367" text-anchor="end">5</text><text class="sig green" x="187" y="367">D2</text>
+    <line class="thin" x1="160" y1="405" x2="175" y2="405"/><text class="pinno" x="153" y="409" text-anchor="end">6</text><text class="sig green" x="187" y="409">D3</text>
+    <line class="thin" x1="160" y1="447" x2="175" y2="447"/><text class="pinno" x="153" y="451" text-anchor="end">7</text><text class="sig orange" x="187" y="451">CEP</text>
+    <line class="thin" x1="160" y1="489" x2="175" y2="489"/><text class="pinno" x="153" y="493" text-anchor="end">8</text><text class="sig slate" x="187" y="493">GND</text>
+  </g>
+
+  <!-- right pins 16..9 -->
+  <g>
+    <line class="thin" x1="305" y1="195" x2="320" y2="195"/><text class="pinno" x="328" y="199">16</text><text class="sig red" x="293" y="199" text-anchor="end">VCC</text>
+    <line class="thin" x1="305" y1="237" x2="320" y2="237"/><text class="pinno" x="328" y="241">15</text><text class="sig purple" x="293" y="241" text-anchor="end">RCO</text>
+    <line class="thin" x1="305" y1="279" x2="320" y2="279"/><text class="pinno" x="328" y="283">14</text><text class="sig purple" x="293" y="283" text-anchor="end">Q0</text>
+    <line class="thin" x1="305" y1="321" x2="320" y2="321"/><text class="pinno" x="328" y="325">13</text><text class="sig purple" x="293" y="325" text-anchor="end">Q1</text>
+    <line class="thin" x1="305" y1="363" x2="320" y2="363"/><text class="pinno" x="328" y="367">12</text><text class="sig purple" x="293" y="367" text-anchor="end">Q2</text>
+    <line class="thin" x1="305" y1="405" x2="320" y2="405"/><text class="pinno" x="328" y="409">11</text><text class="sig purple" x="293" y="409" text-anchor="end">Q3</text>
+    <line class="thin" x1="305" y1="447" x2="320" y2="447"/><text class="pinno" x="328" y="451">10</text><text class="sig orange" x="293" y="451" text-anchor="end">CET</text>
+    <line class="thin" x1="305" y1="489" x2="320" y2="489"/><text class="pinno" x="328" y="493">9</text><text class="sig orange" x="293" y="493" text-anchor="end">L&#x305;D&#x305;</text>
+  </g>
+
+  <!-- ============ SCHEMATIC SYMBOL ============ -->
+  <text class="panel" x="560" y="114">SCHEMATIC SYMBOL</text>
+
+  <rect class="body" x="655" y="185" width="215" height="300"/>
+  <text class="lbl" x="762" y="324" text-anchor="middle">4-BIT</text>
+  <text class="lbl" x="762" y="344" text-anchor="middle">BINARY COUNTER</text>
+  <text class="small" x="762" y="366" text-anchor="middle">÷16</text>
+
+  <!-- D0-D3 input bus -->
+  <line class="thin" x1="585" y1="230" x2="655" y2="230" marker-end="url(#arr)"/>
+  <line class="thin" x1="616" y1="222" x2="628" y2="238"/>
+  <text class="small" x="626" y="216" text-anchor="middle">4</text>
+  <text class="lbl green" x="580" y="226" text-anchor="end">D0–D3</text>
+  <text class="pinno" x="580" y="242" text-anchor="end">3,4,5,6</text>
+
+  <!-- CLK with edge triangle -->
+  <line class="thin" x1="585" y1="300" x2="655" y2="300" marker-end="url(#arr)"/>
+  <polyline class="thin" points="655,293 670,300 655,307"/>
+  <text class="lbl orange" x="580" y="296" text-anchor="end">CLK</text><text class="pinno" x="580" y="312" text-anchor="end">2</text>
+
+  <!-- CEP -->
+  <line class="thin" x1="585" y1="350" x2="655" y2="350" marker-end="url(#arr)"/>
+  <text class="lbl orange" x="580" y="346" text-anchor="end">CEP</text><text class="pinno" x="580" y="362" text-anchor="end">7</text>
+
+  <!-- CET -->
+  <line class="thin" x1="585" y1="400" x2="655" y2="400" marker-end="url(#arr)"/>
+  <text class="lbl orange" x="580" y="396" text-anchor="end">CET</text><text class="pinno" x="580" y="412" text-anchor="end">10</text>
+
+  <!-- /LD active-low input, bubble on body edge -->
+  <circle cx="649" cy="450" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
+  <line class="thin" x1="585" y1="450" x2="643" y2="450" marker-end="url(#arr)"/>
+  <text class="lbl orange" x="580" y="446" text-anchor="end">L&#x305;D&#x305;</text><text class="pinno" x="580" y="462" text-anchor="end">9</text>
+
+  <!-- /CLR active-low from top, bubble -->
+  <line class="thin" x1="762" y1="153" x2="762" y2="179"/>
+  <circle cx="762" cy="185" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
+  <text class="lbl orange" x="762" y="147" text-anchor="middle">C&#x305;L&#x305;R&#x305;</text><text class="pinno" x="783" y="170">1</text>
+
+  <!-- Q0-Q3 output bus -->
+  <line class="thin" x1="870" y1="260" x2="940" y2="260" marker-end="url(#arr)"/>
+  <line class="thin" x1="899" y1="252" x2="911" y2="268"/>
+  <text class="small" x="909" y="246" text-anchor="middle">4</text>
+  <text class="lbl purple" x="945" y="256">Q0–Q3</text>
+  <text class="pinno" x="945" y="272">14,13,12,11</text>
+
+  <!-- RCO output -->
+  <line class="thin" x1="870" y1="420" x2="940" y2="420" marker-end="url(#arr)"/>
+  <text class="lbl purple" x="945" y="416">RCO</text><text class="pinno" x="945" y="432">15</text>
+
+  <text class="small" x="762" y="520" text-anchor="middle"><tspan class="red">VCC</tspan> = pin 16  ·  <tspan class="slate">GND</tspan> = pin 8</text>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <text class="noteh" x="40" y="612">How it works</text>
+  <text class="note" x="40" y="638">A presettable synchronous 4-bit binary counter. All four flip-flops</text>
+  <text class="note" x="40" y="658">share <tspan class="orange">CLK</tspan>, so every output settles on the same edge — no ripple.</text>
+  <text class="note" x="40" y="678">Two enables gate counting: <tspan class="orange">CEP</tspan> and <tspan class="orange">CET</tspan> must both be H to advance.</text>
+  <text class="note" x="40" y="698"><tspan class="orange">CET</tspan> also gates the carry <tspan class="purple">RCO</tspan>, which goes H only when <tspan class="orange">CET</tspan> is H and</text>
+  <text class="note" x="40" y="718">the count reaches 1111 — feed it to the next stage’s enables to cascade.</text>
+  <text class="note" x="40" y="738"><tspan class="orange">L&#x305;D&#x305;</tspan> low loads <tspan class="green">D0–D3</tspan> synchronously on the next edge. <tspan class="orange">C&#x305;L&#x305;R&#x305;</tspan> is</text>
+  <text class="note" x="40" y="758">asynchronous on the ’161: low forces <tspan class="purple">Q</tspan> to 0000 at once, overriding</text>
+  <text class="note" x="40" y="778">the clock. (The pin-compatible ’163 clears synchronously instead.)</text>
+
+  <!-- ============ FUNCTION TABLE ============ -->
+  <text class="panel" x="400" y="612">FUNCTION TABLE</text>
+  <rect x="400" y="622" width="380" height="24" fill="#eef1f4" stroke="#9aa5b1"/>
+  <rect x="400" y="622" width="380" height="139" fill="none" stroke="#9aa5b1"/>
+  <line class="grid" x1="448" y1="622" x2="448" y2="761"/>
+  <line class="grid" x1="496" y1="622" x2="496" y2="761"/>
+  <line class="grid" x1="544" y1="622" x2="544" y2="761"/>
+  <line class="grid" x1="592" y1="622" x2="592" y2="761"/>
+  <line class="grid" x1="640" y1="622" x2="640" y2="761"/>
+  <line class="grid" x1="400" y1="646" x2="780" y2="646"/>
+  <line class="grid" x1="400" y1="669" x2="780" y2="669"/>
+  <line class="grid" x1="400" y1="692" x2="780" y2="692"/>
+  <line class="grid" x1="400" y1="715" x2="780" y2="715"/>
+  <line class="grid" x1="400" y1="738" x2="780" y2="738"/>
+
+  <text class="tblh orange" x="424" y="639" text-anchor="middle">C&#x305;L&#x305;R&#x305;</text>
+  <text class="tblh orange" x="472" y="639" text-anchor="middle">L&#x305;D&#x305;</text>
+  <text class="tblh orange" x="520" y="639" text-anchor="middle">CEP</text>
+  <text class="tblh orange" x="568" y="639" text-anchor="middle">CET</text>
+  <text class="tblh orange" x="616" y="639" text-anchor="middle">CLK</text>
+  <text class="tblh"        x="710" y="639" text-anchor="middle">Action</text>
+
+  <g>
+    <text class="tbl" x="424" y="662" text-anchor="middle">L</text><text class="tbl" x="472" y="662" text-anchor="middle">X</text><text class="tbl" x="520" y="662" text-anchor="middle">X</text><text class="tbl" x="568" y="662" text-anchor="middle">X</text><text class="tbl" x="616" y="662" text-anchor="middle">X</text><text class="tbl" x="710" y="662" text-anchor="middle">Clear → 0000  (async)</text>
+    <text class="tbl" x="424" y="685" text-anchor="middle">H</text><text class="tbl" x="472" y="685" text-anchor="middle">L</text><text class="tbl" x="520" y="685" text-anchor="middle">X</text><text class="tbl" x="568" y="685" text-anchor="middle">X</text><text class="tbl" x="616" y="685" text-anchor="middle">↑</text><text class="tbl" x="710" y="685" text-anchor="middle">Load Q ← D0–D3</text>
+    <text class="tbl" x="424" y="708" text-anchor="middle">H</text><text class="tbl" x="472" y="708" text-anchor="middle">H</text><text class="tbl" x="520" y="708" text-anchor="middle">H</text><text class="tbl" x="568" y="708" text-anchor="middle">H</text><text class="tbl" x="616" y="708" text-anchor="middle">↑</text><text class="tbl" x="710" y="708" text-anchor="middle">Count up</text>
+    <text class="tbl" x="424" y="731" text-anchor="middle">H</text><text class="tbl" x="472" y="731" text-anchor="middle">H</text><text class="tbl" x="520" y="731" text-anchor="middle">L</text><text class="tbl" x="568" y="731" text-anchor="middle">X</text><text class="tbl" x="616" y="731" text-anchor="middle">↑</text><text class="tbl" x="710" y="731" text-anchor="middle">Hold</text>
+    <text class="tbl" x="424" y="754" text-anchor="middle">H</text><text class="tbl" x="472" y="754" text-anchor="middle">H</text><text class="tbl" x="520" y="754" text-anchor="middle">X</text><text class="tbl" x="568" y="754" text-anchor="middle">L</text><text class="tbl" x="616" y="754" text-anchor="middle">↑</text><text class="tbl" x="710" y="754" text-anchor="middle">Hold</text>
+  </g>
+
+  <text class="small" x="400" y="781">↑ = rising edge · C&#x305;L&#x305;R&#x305; overrides the clock · RCO = H when CET = H and Q = 1111.</text>
+
+  <!-- ============ COLOUR KEY ============ -->
+  <text class="panel" x="820" y="612">COLOUR KEY</text>
+  <rect x="820" y="628" width="16" height="12" fill="#2e7d32"/><text class="small" x="844" y="638">Input data — <tspan class="green">D0–D3</tspan></text>
+  <rect x="820" y="652" width="16" height="12" fill="#7b1fa2"/><text class="small" x="844" y="662">Output — <tspan class="purple">Q0–Q3</tspan>, <tspan class="purple">RCO</tspan></text>
+  <rect x="820" y="676" width="16" height="12" fill="#e65100"/><text class="small" x="844" y="686">Control — <tspan class="orange">CLK</tspan>, <tspan class="orange">CEP</tspan>, <tspan class="orange">CET</tspan>, <tspan class="orange">L&#x305;D&#x305;</tspan>, <tspan class="orange">C&#x305;L&#x305;R&#x305;</tspan></text>
+  <rect x="820" y="700" width="16" height="12" fill="#c62828"/><text class="small" x="844" y="710">Power — <tspan class="red">VCC</tspan></text>
+  <rect x="820" y="724" width="16" height="12" fill="#37474f"/><text class="small" x="844" y="734">Ground — <tspan class="slate">GND</tspan></text>
+</svg>

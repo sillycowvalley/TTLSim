@@ -1,0 +1,164 @@
+<svg viewBox="0 0 1040 850" xmlns="http://www.w3.org/2000/svg"
+     font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#1f2933"/>
+    </marker>
+    <style>
+      .bg     { fill:#fafaf7; }
+      .thin   { stroke:#1f2933; stroke-width:1.2; fill:none; }
+      .body   { fill:#ffffff; stroke:#1f2933; stroke-width:2; }
+      .title  { fill:#1f2933; font-size:32px; font-weight:700; }
+      .sub    { fill:#52606d; font-size:15px; }
+      .panel  { fill:#3e4c59; font-size:14px; font-weight:600; letter-spacing:.4px; }
+      .pinno  { fill:#7b8794; font-size:11px; font-weight:600; }
+      .sig    { font-size:13px; font-weight:700; }
+      .green  { fill:#2e7d32 !important; }
+      .blue   { fill:#1565c0 !important; }
+      .orange { fill:#e65100 !important; }
+      .purple { fill:#7b1fa2 !important; }
+      .red    { fill:#c62828 !important; }
+      .slate  { fill:#37474f !important; }
+      .lbl    { fill:#1f2933; font-size:13px; font-weight:700; }
+      .small  { fill:#52606d; font-size:11px; }
+      .tbl    { fill:#1f2933; font-size:13px; }
+      .tblh   { fill:#1f2933; font-size:13px; font-weight:700; }
+      .note   { fill:#3e4c59; font-size:13px; }
+      .noteh  { fill:#1f2933; font-size:14px; font-weight:700; }
+      .grid   { stroke:#cbd2d9; stroke-width:1; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1040" height="850"/>
+
+  <!-- ============ TITLE BLOCK ============ -->
+  <text class="title" x="40" y="50">74HC74</text>
+  <text class="sub" x="40" y="74">Dual D Flip-Flop with Preset and Clear  ·  DIP-14  ·  positive-edge clocked</text>
+  <line class="thin" x1="40" y1="88" x2="1000" y2="88"/>
+
+  <!-- ============ PINOUT ============ -->
+  <text class="panel" x="40" y="114">PINOUT  ·  top view</text>
+
+  <rect class="body" x="175" y="150" width="130" height="370"/>
+  <path d="M 223 150 A 17 17 0 0 0 257 150" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
+
+  <!-- left pins 1..7 -->
+  <g>
+    <line class="thin" x1="160" y1="200" x2="175" y2="200"/><text class="pinno" x="153" y="204" text-anchor="end">1</text><text class="sig orange" x="187" y="204">A&#x305;C&#x305;L&#x305;R&#x305;</text>
+    <line class="thin" x1="160" y1="245" x2="175" y2="245"/><text class="pinno" x="153" y="249" text-anchor="end">2</text><text class="sig green" x="187" y="249">AD</text>
+    <line class="thin" x1="160" y1="290" x2="175" y2="290"/><text class="pinno" x="153" y="294" text-anchor="end">3</text><text class="sig orange" x="187" y="294">ACLK</text>
+    <line class="thin" x1="160" y1="335" x2="175" y2="335"/><text class="pinno" x="153" y="339" text-anchor="end">4</text><text class="sig orange" x="187" y="339">A&#x305;P&#x305;R&#x305;E&#x305;</text>
+    <line class="thin" x1="160" y1="380" x2="175" y2="380"/><text class="pinno" x="153" y="384" text-anchor="end">5</text><text class="sig purple" x="187" y="384">AQ</text>
+    <line class="thin" x1="160" y1="425" x2="175" y2="425"/><text class="pinno" x="153" y="429" text-anchor="end">6</text><text class="sig purple" x="187" y="429">A&#x305;Q&#x305;</text>
+    <line class="thin" x1="160" y1="470" x2="175" y2="470"/><text class="pinno" x="153" y="474" text-anchor="end">7</text><text class="sig slate" x="187" y="474">GND</text>
+  </g>
+
+  <!-- right pins 14..8 -->
+  <g>
+    <line class="thin" x1="305" y1="200" x2="320" y2="200"/><text class="pinno" x="328" y="204">14</text><text class="sig red" x="293" y="204" text-anchor="end">VCC</text>
+    <line class="thin" x1="305" y1="245" x2="320" y2="245"/><text class="pinno" x="328" y="249">13</text><text class="sig orange" x="293" y="249" text-anchor="end">B&#x305;C&#x305;L&#x305;R&#x305;</text>
+    <line class="thin" x1="305" y1="290" x2="320" y2="290"/><text class="pinno" x="328" y="294">12</text><text class="sig green" x="293" y="294" text-anchor="end">BD</text>
+    <line class="thin" x1="305" y1="335" x2="320" y2="335"/><text class="pinno" x="328" y="339">11</text><text class="sig orange" x="293" y="339" text-anchor="end">BCLK</text>
+    <line class="thin" x1="305" y1="380" x2="320" y2="380"/><text class="pinno" x="328" y="384">10</text><text class="sig orange" x="293" y="384" text-anchor="end">B&#x305;P&#x305;R&#x305;E&#x305;</text>
+    <line class="thin" x1="305" y1="425" x2="320" y2="425"/><text class="pinno" x="328" y="429">9</text><text class="sig purple" x="293" y="429" text-anchor="end">BQ</text>
+    <line class="thin" x1="305" y1="470" x2="320" y2="470"/><text class="pinno" x="328" y="474">8</text><text class="sig purple" x="293" y="474" text-anchor="end">B&#x305;Q&#x305;</text>
+  </g>
+
+  <!-- ============ SCHEMATIC SYMBOL ============ -->
+  <text class="panel" x="560" y="114">SCHEMATIC SYMBOL</text>
+
+  <!-- FF-A -->
+  <rect class="body" x="655" y="185" width="180" height="130"/>
+  <text class="lbl" x="745" y="255" text-anchor="middle">D-FF  A</text>
+  <line class="thin" x1="585" y1="225" x2="655" y2="225" marker-end="url(#arr)"/>
+  <text class="lbl green" x="580" y="221" text-anchor="end">AD</text><text class="pinno" x="580" y="237" text-anchor="end">2</text>
+  <line class="thin" x1="585" y1="280" x2="655" y2="280" marker-end="url(#arr)"/>
+  <polyline class="thin" points="655,273 670,280 655,287"/>
+  <text class="lbl orange" x="580" y="276" text-anchor="end">ACLK</text><text class="pinno" x="580" y="292" text-anchor="end">3</text>
+  <line class="thin" x1="745" y1="153" x2="745" y2="179"/>
+  <circle cx="745" cy="185" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
+  <text class="lbl orange" x="745" y="147" text-anchor="middle">A&#x305;P&#x305;R&#x305;E&#x305;</text><text class="pinno" x="765" y="170">4</text>
+  <line class="thin" x1="745" y1="321" x2="745" y2="347"/>
+  <circle cx="745" cy="315" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
+  <text class="lbl orange" x="745" y="362" text-anchor="middle">A&#x305;C&#x305;L&#x305;R&#x305;</text><text class="pinno" x="765" y="338">1</text>
+  <line class="thin" x1="835" y1="225" x2="905" y2="225" marker-end="url(#arr)"/>
+  <text class="lbl purple" x="910" y="221">AQ</text><text class="pinno" x="910" y="237">5</text>
+  <circle cx="841" cy="280" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
+  <line class="thin" x1="847" y1="280" x2="905" y2="280" marker-end="url(#arr)"/>
+  <text class="lbl purple" x="910" y="276">A&#x305;Q&#x305;</text><text class="pinno" x="910" y="292">6</text>
+
+  <!-- FF-B -->
+  <rect class="body" x="655" y="360" width="180" height="130"/>
+  <text class="lbl" x="745" y="430" text-anchor="middle">D-FF  B</text>
+  <line class="thin" x1="585" y1="400" x2="655" y2="400" marker-end="url(#arr)"/>
+  <text class="lbl green" x="580" y="396" text-anchor="end">BD</text><text class="pinno" x="580" y="412" text-anchor="end">12</text>
+  <line class="thin" x1="585" y1="455" x2="655" y2="455" marker-end="url(#arr)"/>
+  <polyline class="thin" points="655,448 670,455 655,462"/>
+  <text class="lbl orange" x="580" y="451" text-anchor="end">BCLK</text><text class="pinno" x="580" y="467" text-anchor="end">11</text>
+  <line class="thin" x1="745" y1="328" x2="745" y2="354"/>
+  <circle cx="745" cy="360" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
+  <text class="lbl orange" x="745" y="322" text-anchor="middle">B&#x305;P&#x305;R&#x305;E&#x305;</text><text class="pinno" x="765" y="345">10</text>
+  <line class="thin" x1="745" y1="496" x2="745" y2="522"/>
+  <circle cx="745" cy="490" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
+  <text class="lbl orange" x="745" y="537" text-anchor="middle">B&#x305;C&#x305;L&#x305;R&#x305;</text><text class="pinno" x="765" y="513">13</text>
+  <line class="thin" x1="835" y1="400" x2="905" y2="400" marker-end="url(#arr)"/>
+  <text class="lbl purple" x="910" y="396">BQ</text><text class="pinno" x="910" y="412">9</text>
+  <circle cx="841" cy="455" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
+  <line class="thin" x1="847" y1="455" x2="905" y2="455" marker-end="url(#arr)"/>
+  <text class="lbl purple" x="910" y="451">B&#x305;Q&#x305;</text><text class="pinno" x="910" y="467">8</text>
+
+  <text class="small" x="745" y="568" text-anchor="middle"><tspan class="red">VCC</tspan> = pin 14  ·  <tspan class="slate">GND</tspan> = pin 7</text>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <text class="noteh" x="40" y="612">How it works</text>
+  <text class="note" x="40" y="638">Two independent positive-edge D flip-flops in one package, named</text>
+  <text class="note" x="40" y="658">here as halves <tspan class="purple">A</tspan> and <tspan class="purple">B</tspan>. On each rising edge of <tspan class="orange">CLK</tspan>, input <tspan class="green">D</tspan> is</text>
+  <text class="note" x="40" y="678">captured to <tspan class="purple">Q</tspan>; the complement appears on <tspan class="purple">Q&#x305;</tspan>.</text>
+  <text class="note" x="40" y="698"><tspan class="orange">P&#x305;R&#x305;E&#x305;</tspan> and <tspan class="orange">C&#x305;L&#x305;R&#x305;</tspan> are asynchronous and active-low; they override the</text>
+  <text class="note" x="40" y="718">clock. <tspan class="orange">P&#x305;R&#x305;E&#x305;</tspan> low forces <tspan class="purple">Q</tspan> = H, <tspan class="orange">C&#x305;L&#x305;R&#x305;</tspan> low forces <tspan class="purple">Q</tspan> = L.</text>
+  <text class="note" x="40" y="738">Holding both low at once is not a normal state — both <tspan class="purple">Q</tspan> and <tspan class="purple">Q&#x305;</tspan></text>
+  <text class="note" x="40" y="758">go H and the part is no longer complementary, so avoid it.</text>
+  <text class="note" x="40" y="778">For a divide-by-two, tie <tspan class="green">D</tspan> to <tspan class="purple">Q&#x305;</tspan> and clock the flip-flop.</text>
+
+  <!-- ============ FUNCTION TABLE ============ -->
+  <text class="panel" x="400" y="612">FUNCTION TABLE  ·  per flip-flop</text>
+  <rect x="400" y="622" width="380" height="24" fill="#eef1f4" stroke="#9aa5b1"/>
+  <rect x="400" y="622" width="380" height="162" fill="none" stroke="#9aa5b1"/>
+  <line class="grid" x1="463" y1="622" x2="463" y2="784"/>
+  <line class="grid" x1="527" y1="622" x2="527" y2="784"/>
+  <line class="grid" x1="590" y1="622" x2="590" y2="784"/>
+  <line class="grid" x1="653" y1="622" x2="653" y2="784"/>
+  <line class="grid" x1="717" y1="622" x2="717" y2="784"/>
+  <line class="grid" x1="400" y1="646" x2="780" y2="646"/>
+  <line class="grid" x1="400" y1="669" x2="780" y2="669"/>
+  <line class="grid" x1="400" y1="692" x2="780" y2="692"/>
+  <line class="grid" x1="400" y1="715" x2="780" y2="715"/>
+  <line class="grid" x1="400" y1="738" x2="780" y2="738"/>
+  <line class="grid" x1="400" y1="761" x2="780" y2="761"/>
+
+  <text class="tblh orange" x="431" y="639" text-anchor="middle">P&#x305;R&#x305;E&#x305;</text>
+  <text class="tblh orange" x="495" y="639" text-anchor="middle">C&#x305;L&#x305;R&#x305;</text>
+  <text class="tblh orange" x="558" y="639" text-anchor="middle">CLK</text>
+  <text class="tblh green"  x="621" y="639" text-anchor="middle">D</text>
+  <text class="tblh purple" x="685" y="639" text-anchor="middle">Q</text>
+  <text class="tblh purple" x="748" y="639" text-anchor="middle">Q&#x305;</text>
+
+  <g>
+    <text class="tbl" x="431" y="662" text-anchor="middle">L</text><text class="tbl" x="495" y="662" text-anchor="middle">H</text><text class="tbl" x="558" y="662" text-anchor="middle">X</text><text class="tbl" x="621" y="662" text-anchor="middle">X</text><text class="tbl" x="685" y="662" text-anchor="middle">H</text><text class="tbl" x="748" y="662" text-anchor="middle">L</text>
+    <text class="tbl" x="431" y="685" text-anchor="middle">H</text><text class="tbl" x="495" y="685" text-anchor="middle">L</text><text class="tbl" x="558" y="685" text-anchor="middle">X</text><text class="tbl" x="621" y="685" text-anchor="middle">X</text><text class="tbl" x="685" y="685" text-anchor="middle">L</text><text class="tbl" x="748" y="685" text-anchor="middle">H</text>
+    <text class="tbl" x="431" y="708" text-anchor="middle">L</text><text class="tbl" x="495" y="708" text-anchor="middle">L</text><text class="tbl" x="558" y="708" text-anchor="middle">X</text><text class="tbl" x="621" y="708" text-anchor="middle">X</text><text class="tbl" x="685" y="708" text-anchor="middle">H*</text><text class="tbl" x="748" y="708" text-anchor="middle">H*</text>
+    <text class="tbl" x="431" y="731" text-anchor="middle">H</text><text class="tbl" x="495" y="731" text-anchor="middle">H</text><text class="tbl" x="558" y="731" text-anchor="middle">↑</text><text class="tbl" x="621" y="731" text-anchor="middle">H</text><text class="tbl" x="685" y="731" text-anchor="middle">H</text><text class="tbl" x="748" y="731" text-anchor="middle">L</text>
+    <text class="tbl" x="431" y="754" text-anchor="middle">H</text><text class="tbl" x="495" y="754" text-anchor="middle">H</text><text class="tbl" x="558" y="754" text-anchor="middle">↑</text><text class="tbl" x="621" y="754" text-anchor="middle">L</text><text class="tbl" x="685" y="754" text-anchor="middle">L</text><text class="tbl" x="748" y="754" text-anchor="middle">H</text>
+    <text class="tbl" x="431" y="777" text-anchor="middle">H</text><text class="tbl" x="495" y="777" text-anchor="middle">H</text><text class="tbl" x="558" y="777" text-anchor="middle">L</text><text class="tbl" x="621" y="777" text-anchor="middle">X</text><text class="tbl" x="685" y="777" text-anchor="middle">Q₀</text><text class="tbl" x="748" y="777" text-anchor="middle">Q&#x305;₀</text>
+  </g>
+
+  <text class="small" x="400" y="804">↑ = rising edge · Q₀ = previous state · * both low is non-standard (Q and Q&#x305; both H, not complementary).</text>
+
+  <!-- ============ COLOUR KEY ============ -->
+  <text class="panel" x="820" y="612">COLOUR KEY</text>
+  <rect x="820" y="628" width="16" height="12" fill="#2e7d32"/><text class="small" x="844" y="638">Input data — <tspan class="green">AD</tspan>, <tspan class="green">BD</tspan></text>
+  <rect x="820" y="652" width="16" height="12" fill="#7b1fa2"/><text class="small" x="844" y="662">Output — <tspan class="purple">Q</tspan>, <tspan class="purple">Q&#x305;</tspan></text>
+  <rect x="820" y="676" width="16" height="12" fill="#e65100"/><text class="small" x="844" y="686">Control — <tspan class="orange">CLK</tspan>, <tspan class="orange">P&#x305;R&#x305;E&#x305;</tspan>, <tspan class="orange">C&#x305;L&#x305;R&#x305;</tspan></text>
+  <rect x="820" y="700" width="16" height="12" fill="#c62828"/><text class="small" x="844" y="710">Power — <tspan class="red">VCC</tspan></text>
+  <rect x="820" y="724" width="16" height="12" fill="#37474f"/><text class="small" x="844" y="734">Ground — <tspan class="slate">GND</tspan></text>
+</svg>
