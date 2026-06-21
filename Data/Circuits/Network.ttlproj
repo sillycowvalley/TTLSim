@@ -42,62 +42,6 @@
         "function2": null,
         "frequencyHz1": null,
         "frequencyHz2": null
-      },
-      {
-        "id": "4e207b74ea0c4004b251115af59571a6",
-        "designator": "RN2",
-        "partKind": "passive",
-        "partIdentifier": "resnet-sip9",
-        "family": null,
-        "value": null,
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "636ff8bba4024246bab4979951319ede",
-        "designator": "RN3",
-        "partKind": "passive",
-        "partIdentifier": "resnet-sip9",
-        "family": null,
-        "value": null,
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "b83e7e0ed9784f8dbeadd54a323f2aa0",
-        "designator": "RN4",
-        "partKind": "passive",
-        "partIdentifier": "resnet-sip9",
-        "family": null,
-        "value": null,
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "53609914d2434bc78db61d585fc39dea",
-        "designator": "RN5",
-        "partKind": "passive",
-        "partIdentifier": "resnet-sip9",
-        "family": null,
-        "value": null,
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
       }
     ],
     "units": [
@@ -106,11 +50,11 @@
         "deviceId": "070d5607c025402fbac49fad7f56b67d",
         "unitLetter": "",
         "position": {
-          "x": 18,
-          "y": 15
+          "x": 6,
+          "y": 14
         },
         "label": "10K",
-        "rotation": 270,
+        "rotation": 180,
         "layer": 0,
         "switchClosed": null
       },
@@ -119,11 +63,11 @@
         "deviceId": "813905c37c1a45e3836d7df801f7a042",
         "unitLetter": "",
         "position": {
-          "x": 16,
-          "y": 28
+          "x": 19,
+          "y": 23
         },
         "label": "",
-        "rotation": 270,
+        "rotation": 180,
         "layer": 0,
         "switchClosed": null
       },
@@ -132,63 +76,11 @@
         "deviceId": "3d091ad2c339462f8ba7938bcef05cc8",
         "unitLetter": "",
         "position": {
-          "x": 18,
-          "y": 28
+          "x": 19,
+          "y": 19
         },
         "label": "",
-        "rotation": 270,
-        "layer": 0,
-        "switchClosed": null
-      },
-      {
-        "id": "4409298055e043daa71fd596291b9289",
-        "deviceId": "4e207b74ea0c4004b251115af59571a6",
-        "unitLetter": "",
-        "position": {
-          "x": 5,
-          "y": -5
-        },
-        "label": "10K",
-        "rotation": 0,
-        "layer": 0,
-        "switchClosed": null
-      },
-      {
-        "id": "217e72a1eecd4e4e8f816063e7a461c5",
-        "deviceId": "636ff8bba4024246bab4979951319ede",
-        "unitLetter": "",
-        "position": {
-          "x": 17,
-          "y": -5
-        },
-        "label": "10K",
-        "rotation": 90,
-        "layer": 0,
-        "switchClosed": null
-      },
-      {
-        "id": "3cbfa6dc45954f6caba47b9207497c1d",
-        "deviceId": "b83e7e0ed9784f8dbeadd54a323f2aa0",
-        "unitLetter": "",
-        "position": {
-          "x": 30,
-          "y": -5
-        },
-        "label": "10K",
         "rotation": 180,
-        "layer": 0,
-        "switchClosed": null
-      },
-      {
-        "id": "b4974320d5e94280b5dcb91da560c23f",
-        "deviceId": "53609914d2434bc78db61d585fc39dea",
-        "unitLetter": "",
-        "position": {
-          "x": 40,
-          "y": -6
-        },
-        "label": "10K",
-        "rotation": 270,
         "layer": 0,
         "switchClosed": null
       }
@@ -199,8 +91,8 @@
         "id": "564d50aacb5e49ac8c72022c26d489d8",
         "label": "",
         "position": {
-          "x": 8,
-          "y": 33
+          "x": 11,
+          "y": 28
         },
         "rotation": 0,
         "layer": 0,
@@ -221,8 +113,8 @@
         "id": "3a8a1d21a95046bdaf80a6875002692e",
         "label": "VCC",
         "position": {
-          "x": 44,
-          "y": 8
+          "x": 27,
+          "y": 7
         },
         "rotation": 0,
         "layer": 0,
@@ -252,7 +144,7 @@
           "pinNumber": 1,
           "external": false
         },
-        "color": null
+        "color": "Blue"
       },
       {
         "id": "0780a094da54446682881e4d22897e76",
@@ -294,7 +186,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": null
+        "color": "Red"
       },
       {
         "id": "7b5d0ab716024d8ca8c4cdec256fc881",
@@ -308,7 +200,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": null
+        "color": "Red"
       }
     ],
     "links": [],
@@ -321,10 +213,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 2.2870133,
+    "zoom": 7.22688,
     "pan": {
-      "x": 211,
-      "y": 414
+      "x": 10,
+      "y": -234
     }
   }
 }
