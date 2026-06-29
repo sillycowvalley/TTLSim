@@ -6,10 +6,10 @@ using TTLSim.UI.Model;
 namespace TTLSim.UI.Components;
 
 /// <summary>
-/// A cosmetic free-text label drawn behind the schematic -- for titling a
+/// A cosmetic free-text label drawn in front of the schematic -- for titling a
 /// block, annotating a region, noting a revision. No pins, no electrical
 /// meaning; the router and electrical export ignore it (see
-/// <see cref="IBackgroundItem"/>).
+/// <see cref="IForegroundItem"/>).
 ///
 /// <para>
 /// The displayed text is the item's <see cref="SchematicItem.Label"/>, so it
@@ -19,7 +19,7 @@ namespace TTLSim.UI.Components;
 /// screen and tracks edits to the text or font size.
 /// </para>
 /// </summary>
-public sealed class TextLabelItem : SchematicItem, IBackgroundItem
+public sealed class TextLabelItem : SchematicItem, IForegroundItem
 {
     public TextLabelItem()
     {

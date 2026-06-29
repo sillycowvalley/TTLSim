@@ -145,7 +145,7 @@ public static class EasyEDAExporter
         foreach (var item in schematic.Items)
         {
             if (item is Unit) continue;          // covered via Devices above
-            if (item is IBackgroundItem) continue;   // cosmetic — no catalogue entry, not exported
+            if (item is ICosmeticItem) continue;   // cosmetic — no catalogue entry, not exported
             if (!schematic.IsItemActive(item)) continue;   // invisible layer — not exported
             CataloguePart part = EasyEDACatalogue.LookupForStandaloneItem(item);
             if (result.ContainsKey(part.SymbolUuid)) continue;

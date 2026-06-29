@@ -16,7 +16,8 @@ using TTLSim.UI.Persistence;
 namespace TTLSim.UI.View;
 
 public sealed partial class SchematicCanvas
-{
+{
+
     // ---------------------------------------------------------------- coordinate math
 
     /// <summary>Convert a screen-pixel point to a grid-unit point.</summary>
@@ -209,7 +210,7 @@ public sealed partial class SchematicCanvas
         {
             if (unusedGates.Contains(item)) continue;
             if (hiddenPower.Contains(item)) continue;
-            var b = item is IBackgroundItem ? item.Bounds : item.RoutingBounds;
+            var b = item is ICosmeticItem ? item.Bounds : item.RoutingBounds;
             if (b.Left < minX) minX = b.Left;
             if (b.Top < minY) minY = b.Top;
             if (b.Right > maxX) maxX = b.Right;

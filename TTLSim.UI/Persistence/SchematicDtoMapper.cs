@@ -221,7 +221,7 @@ public static class SchematicDtoMapper
                 case Unit unit:
                     dto.Units.Add(UnitToDto(unit));
                     break;
-                case VccSymbol or GndSymbol or UiClockSource or CanOscillator or IBackgroundItem:
+                case VccSymbol or GndSymbol or UiClockSource or CanOscillator or ICosmeticItem:
                     dto.Items.Add(StandaloneItemToDto(item));
                     break;
                 default:

@@ -16,7 +16,7 @@ using TTLSim.UI.Persistence;
 namespace TTLSim.UI.View;
 
 public sealed partial class SchematicCanvas
-{
+{
     // ---------------------------------------------------------------- painting
 
     protected override void OnPaint(PaintEventArgs e)
@@ -57,11 +57,12 @@ public sealed partial class SchematicCanvas
             SignalStateProvider = PinSignalProvider
         };
 
-        // Cosmetic background items (rectangles, text labels) render behind
-        // everything else: before wires, links, junctions, and components.
-        // They are skipped in the main item loop below so each paints exactly
-        // once. They sit on top of the grid (drawn above) but behind all
-        // schematic content.
+        // Cosmetic background items (rectangles) render behind everything else:
+        // before wires, links, junctions, and components. They are skipped in
+        // the main item loop below so each paints exactly once. They sit on top
+        // of the grid (drawn above) but behind all schematic content. Foreground
+        // cosmetic items (text labels) are NOT drawn here -- they go in the
+        // post-pass after the component loop so they land in front.
         foreach (var item in Schematic.ActiveItems)
             if (item is IBackgroundItem)
                 item.Draw(g, ctx);
@@ -95,9 +96,19 @@ public sealed partial class SchematicCanvas
 
         foreach (var item in Schematic.ActiveItems)
         {
-            if (item is IBackgroundItem) continue;   // drawn in the background pass above
+            if (item is ICosmeticItem) continue;   // background drawn above; foreground drawn below
             item.Draw(g, ctx);
         }
+
+        // Cosmetic foreground items (text labels) render in front of all
+        // schematic content: after wires, links, junctions, and components.
+        // They are skipped in the main item loop above so each paints exactly
+        // once. The transient overlays below (wire/link placement previews and
+        // the marquee) still draw on top of labels, since those are cursor
+        // feedback rather than schematic content.
+        foreach (var item in Schematic.ActiveItems)
+            if (item is IForegroundItem)
+                item.Draw(g, ctx);
 
         if (wireStartPin != null)
         {

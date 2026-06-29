@@ -16,7 +16,8 @@ using TTLSim.UI.Persistence;
 namespace TTLSim.UI.View;
 
 public sealed partial class SchematicCanvas
-{
+{
+
     // ---------------------------------------------------------------- mouse
 
     protected override void OnMouseDown(MouseEventArgs e)
@@ -151,12 +152,15 @@ public sealed partial class SchematicCanvas
                 return;
             }
 
-            // Selection respects the paint Z-order: foreground items and wires
-            // sit in front of cosmetic background items (rectangles, labels),
-            // so a click on a wire crossing a rectangle's bare interior takes
-            // the wire, not the rectangle. Foreground first, then wires, then
-            // links, and only then cosmetic background items.
-            var hit = Schematic.HitTestForeground(grid);
+            // Selection mirrors the paint Z-order. Cosmetic FOREGROUND items
+            // (text labels) render in front of everything, so they take the
+            // click first. Then real components and wires, which sit in front
+            // of cosmetic BACKGROUND items (rectangles): a click on a wire
+            // crossing a rectangle's bare interior takes the wire, not the
+            // rectangle. Top labels first, then foreground components, then
+            // wires, then links, and only then background rectangles.
+            var hit = Schematic.HitTestTop(grid)
+                      ?? Schematic.HitTestForeground(grid);
             Connection? connectionHit = hit == null
                 ? HitTestConnection(grid)
                 : null;

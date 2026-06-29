@@ -133,22 +133,28 @@ public sealed class Schematic
         }
     }
 
-    /// <summary>Hit test: topmost item whose bounds contain the given grid
-    /// point, foreground items taking priority over cosmetic background ones.
-    /// Used where any item under the point will do (e.g. header-link arming).
-    /// The selection path uses the two passes separately so wires can be
-    /// tested between them.</summary>
+    /// <summary>Hit test: topmost electrical-or-background item whose bounds
+    /// contain the given grid point, real components taking priority over
+    /// cosmetic background ones. Used where any item under the point will do
+    /// (e.g. header-link arming), which wants the electrical item beneath a
+    /// label -- so cosmetic FOREGROUND items (text labels) are deliberately
+    /// NOT part of this aggregate. The selection path tests
+    /// <see cref="HitTestTop"/> separately, ahead of these, so a label still
+    /// wins a selection click. The two passes here stay separate so wires can
+    /// be tested between them.</summary>
     public SchematicItem? HitTest(Point gridPoint) =>
         HitTestForeground(gridPoint) ?? HitTestBackground(gridPoint);
 
-    /// <summary>Topmost non-cosmetic item whose bounds contain the point. A
-    /// component sitting on top of a cosmetic background item (rectangle, text
-    /// label) takes the click even though that item is drawn behind it.</summary>
-    public SchematicItem? HitTestForeground(Point gridPoint)
+    /// <summary>Topmost cosmetic FOREGROUND item (a text label) whose bounds
+    /// contain the point. Foreground items render in front of all schematic
+    /// content, so they take a selection click ahead of components, wires,
+    /// links, and background items -- the selection mirror of the front paint
+    /// order.</summary>
+    public SchematicItem? HitTestTop(Point gridPoint)
     {
         for (int i = Items.Count - 1; i >= 0; i--)
         {
-            if (Items[i] is IBackgroundItem) continue;
+            if (Items[i] is not IForegroundItem) continue;
             if (!IsItemActive(Items[i])) continue;
             if (Items[i].Bounds.Contains(gridPoint))
                 return Items[i];
@@ -156,10 +162,27 @@ public sealed class Schematic
         return null;
     }
 
-    /// <summary>Topmost cosmetic background item whose bounds contain the
-    /// point, so a click on the bare interior of a rectangle (or on a text
-    /// label) still selects it -- but only once foreground items and wires
-    /// have been given the click first.</summary>
+    /// <summary>Topmost non-cosmetic item whose bounds contain the point. A
+    /// component sitting on top of a cosmetic item (a background rectangle or a
+    /// foreground label) takes the click over that rectangle; foreground labels
+    /// are handled ahead of this by <see cref="HitTestTop"/>. Both cosmetic
+    /// kinds are skipped here so only real electrical items are returned.</summary>
+    public SchematicItem? HitTestForeground(Point gridPoint)
+    {
+        for (int i = Items.Count - 1; i >= 0; i--)
+        {
+            if (Items[i] is ICosmeticItem) continue;
+            if (!IsItemActive(Items[i])) continue;
+            if (Items[i].Bounds.Contains(gridPoint))
+                return Items[i];
+        }
+        return null;
+    }
+
+    /// <summary>Topmost cosmetic BACKGROUND item (a rectangle) whose bounds
+    /// contain the point, so a click on its bare interior still selects it --
+    /// but only once foreground labels, real components, and wires have been
+    /// given the click first.</summary>
     public SchematicItem? HitTestBackground(Point gridPoint)
     {
         for (int i = Items.Count - 1; i >= 0; i--)

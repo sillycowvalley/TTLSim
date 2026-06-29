@@ -79,7 +79,7 @@ internal static class EasyEDASheetWriter
         // entirely. Filtering here keeps them out of placement, component
         // emission, wires, and No-Connect flags in one place.
         var placeable = schematic.Items.Where(
-            item => item is not IBackgroundItem && schematic.IsItemActive(item));
+            item => item is not ICosmeticItem && schematic.IsItemActive(item));
 
         foreach (var item in placeable)
         {
