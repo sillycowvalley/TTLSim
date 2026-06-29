@@ -412,6 +412,7 @@ public sealed class ChipFactory : IChipFactory
             "74" => TryCreateHc74(device, pinToNet),
             "153" => TryCreateHc153(device, pinToNet),
             "157" => TryCreateHc157(device, pinToNet),
+            "257" => TryCreateHc257(device, pinToNet),
             "161" => TryCreateHc161(device, pinToNet),
             "163" => TryCreateHc163(device, pinToNet),
             "173" => TryCreateHc173(device, pinToNet),
@@ -817,7 +818,7 @@ public sealed class ChipFactory : IChipFactory
     {
         // Box-chip ICs (per-unit dispatch in CreateForUnit).
         "47" or "74" or "153" or "157" or "161" or "163" or "173" or "181" or "191"
-            or "244" or "245" or "273" or "283" or "541" or "688" or "7seg-ca"
+            or "244" or "245" or "257" or "273" or "283" or "541" or "688" or "7seg-ca"
             => true,
         // Reset supervisor (per-unit dispatch in CreateForUnit).
         "DS1813"
@@ -1007,6 +1008,27 @@ public sealed class ChipFactory : IChipFactory
 
         return new Hc157(
             s: Get(1), enN: Get(15),
+            i1_0: Get(2), i1_1: Get(3), y1: Get(4),
+            i2_0: Get(5), i2_1: Get(6), y2: Get(7),
+            i3_0: Get(11), i3_1: Get(10), y3: Get(9),
+            i4_0: Get(14), i4_1: Get(13), y4: Get(12),
+            delayPs: TtlTiming.ResolvePs(device));
+    }
+
+    private IChip? TryCreateHc257(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        // Same pinout as the '157 except pin 15 is /OE (tri-state) not /E.
+        // 1 S, 15 /OE, 2 1I0, 3 1I1, 4 1Y, 5 2I0, 6 2I1, 7 2Y,
+        // 11 3I0, 10 3I1, 9 3Y, 14 4I0, 13 4I1, 12 4Y.
+        // Pin 8 GND and pin 16 VCC are consumed by the build pipeline.
+        int[] needed = { 1, 15, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14 };
+        foreach (int p in needed)
+            if (!pinToNet.TryGetValue(p, out Net? n) || n is null) return null;
+
+        Net Get(int pin) => pinToNet[pin];
+
+        return new Hc257(
+            s: Get(1), oeN: Get(15),
             i1_0: Get(2), i1_1: Get(3), y1: Get(4),
             i2_0: Get(5), i2_1: Get(6), y2: Get(7),
             i3_0: Get(11), i3_1: Get(10), y3: Get(9),
