@@ -43,7 +43,7 @@ public sealed class LibraryPanel : UserControl
     private static readonly HashSet<string> SimulatedChipIdentifiers = new(StringComparer.Ordinal)
     {
         "00", "02", "04", "08", "10", "14", "20", "30", "32", "86",
-        "47", "74", "153", "157", "161", "163", "173", "181", "244", "245", "273", "283", "390", "393", "541", "688",
+        "47", "74", "153", "157", "161", "163", "173", "181", "191", "244", "245", "273", "283", "390", "393", "541", "688",
         "DS1813",
         "7seg-ca",
         "NE555", "NE556",
@@ -211,6 +211,7 @@ public sealed class LibraryPanel : UserControl
         var counters = logicRoot.Nodes.Add(IcCategoryLabels.DisplayName(IcCategory.Counters));
         AddBoxPart(counters, ChipPartDefinition.Ic74161, "4-bit Binary Counter, async clear");
         AddBoxPart(counters, ChipPartDefinition.Ic74163, "4-bit Binary Counter, sync clear");
+        AddBoxPart(counters, ChipPartDefinition.Ic74191, "4-bit Up/Down Counter, 1 clock");
         AddBoxPart(counters, ChipPartDefinition.Ic74193, "4-bit Up/Down Counter");
         AddBoxPart(counters, ChipPartDefinition.Ic74390, "Dual Decade Counter");
         AddBoxPart(counters, ChipPartDefinition.Ic74393, "Dual 4-bit Counter");

@@ -97,6 +97,7 @@ public static class TtlTiming
         ["LS:163"] = new(27_000),  ["HC:163"] = new(44_000),  // sync counter
         ["LS:173"] = new(27_000),  ["HC:173"] = new(44_000),  // quad D register (3-state)
         ["LS:273"] = new(30_000),  ["HC:273"] = new(44_000),  // octal D flip-flop, async clear
+        ["LS:191"] = new(27_000),  ["HC:191"] = new(44_000),  // sync up/down counter
         ["LS:390"] = new(35_000),  ["HC:390"] = new(44_000),  // dual decade counter
         ["LS:393"] = new(35_000),  ["HC:393"] = new(44_000),  // dual binary counter
     };

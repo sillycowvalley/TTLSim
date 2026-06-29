@@ -416,6 +416,7 @@ public sealed class ChipFactory : IChipFactory
             "163" => TryCreateHc163(device, pinToNet),
             "173" => TryCreateHc173(device, pinToNet),
             "181" => TryCreateHc181(device, pinToNet),
+            "191" => TryCreateHc191(device, pinToNet),
             "244" => TryCreateHc244(device, pinToNet),
             "245" => TryCreateHc245(device, pinToNet),
             "273" => TryCreateHc273(device, pinToNet),
@@ -436,6 +437,31 @@ public sealed class ChipFactory : IChipFactory
         // the model. A DS1813 with /RST unconnected has nothing to do.
         if (!pinToNet.TryGetValue(1, out Net? rst) || rst is null) return null;
         return new Ds1813(rst);
+    }
+
+    private IChip? TryCreateHc191(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        // Required: 1 D1, 2 Q1, 3 Q0, 4 /CTEN, 5 D/U, 6 Q2, 7 Q3,
+        // 9 D3, 10 D2, 11 /LD, 14 CLK, 15 D0. The cascade outputs
+        // MAX/MIN (pin 12) and /RCO (pin 13) are OPTIONAL -- a lone
+        // counter (e.g. the Mini Blinky RSP) leaves them open.
+        int[] needed = { 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 14, 15 };
+        foreach (int p in needed)
+            if (!pinToNet.TryGetValue(p, out Net? n) || n is null) return null;
+
+        Net Get(int pin) => pinToNet[pin];
+        Net maxMinNet = pinToNet.TryGetValue(12, out Net? mm) && mm is not null
+            ? mm : new Net(-1, "maxmin-unconnected");
+        Net rcoNet = pinToNet.TryGetValue(13, out Net? rco) && rco is not null
+            ? rco : new Net(-1, "rco-unconnected");
+
+        return new Hc191(
+            d0: Get(15), d1: Get(1), d2: Get(10), d3: Get(9),
+            ctenN: Get(4), du: Get(5), ldN: Get(11), clkN: Get(14),
+            q0: Get(3), q1: Get(2), q2: Get(6), q3: Get(7),
+            maxMinN: maxMinNet, rcoN: rcoNet,
+            label: "191", logger: logger,
+            delayPs: TtlTiming.ResolvePs(device));
     }
 
 
@@ -790,7 +816,7 @@ public sealed class ChipFactory : IChipFactory
     public bool IsSimulated(BuildDevice device) => device.PartIdentifier switch
     {
         // Box-chip ICs (per-unit dispatch in CreateForUnit).
-        "47" or "74" or "153" or "157" or "161" or "163" or "173" or "181"
+        "47" or "74" or "153" or "157" or "161" or "163" or "173" or "181" or "191"
             or "244" or "245" or "273" or "283" or "541" or "688" or "7seg-ca"
             => true,
         // Reset supervisor (per-unit dispatch in CreateForUnit).

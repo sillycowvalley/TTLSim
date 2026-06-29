@@ -791,6 +791,32 @@ public sealed record ChipPartDefinition(
         IsSeries74: true
         );
 
+    /// <summary>74HC191 presettable synchronous 4-bit binary UP/DOWN counter
+    /// with a single clock and direction control, 16-pin DIP. D/U selects
+    /// direction (LOW = up, HIGH = down); /CTEN is the active-low count
+    /// enable. /LD asynchronously loads D0..D3 (level-sensitive, overrides
+    /// the clock); there is no clear pin. MAX/MIN is the terminal-count
+    /// output (HIGH at 15 up / 0 down) and /RCO is the active-low ripple
+    /// clock for cascading. The '169's pin-compatible substitute, with
+    /// inverted direction sense and a single /CTEN.</summary>
+    public static readonly ChipPartDefinition Ic74191 = new(
+        PartNumber: "191", PinCount: 16, PowerPin: 16, GroundPin: 8,
+        BodyWidth: 8,
+        Pins: new ChipPin[]
+        {
+            new("D1",      1),              new("VCC",     16),
+            new("Q1",      2, Out),         new("D0",      15),
+            new("Q0",      3, Out),         new("CLK",     14),
+            new("/CTEN",   4),              new("/RCO",    13, Out),
+            new("D/U",     5),              new("MAX/MIN", 12, Out),
+            new("Q2",      6, Out),         new("/LD",     11),
+            new("Q3",      7, Out),         new("D2",      10),
+            new("GND",     8),              new("D3",       9),
+        },
+        IsSeries74: true
+        );
+
+
     // ---- ALU / shift register / adders --------------------------------
 
     /// <summary>74HC181 4-bit arithmetic/logic unit, 24-pin DIP. The classic
