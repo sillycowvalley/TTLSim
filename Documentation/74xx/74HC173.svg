@@ -196,47 +196,83 @@
 
   <!-- ============ FUNCTION TABLE ============ -->
   <rect x="395" y="620" width="405" height="30" fill="#eef1f4" stroke="#9aa5b1"/>
-  <rect x="395" y="650" width="405" height="128" fill="none" stroke="#9aa5b1"/>
-  <line class="grid" x1="450" y1="620" x2="450" y2="778"/>
-  <line class="grid" x1="518" y1="620" x2="518" y2="778"/>
-  <line class="grid" x1="578" y1="620" x2="578" y2="778"/>
-  <line class="grid" x1="628" y1="620" x2="628" y2="778"/>
-  <line class="grid" x1="395" y1="682" x2="800" y2="682"/>
-  <line class="grid" x1="395" y1="714" x2="800" y2="714"/>
-  <line class="grid" x1="395" y1="746" x2="800" y2="746"/>
+  <rect x="395" y="650" width="405" height="126" fill="none" stroke="#9aa5b1"/>
+  <line class="grid" x1="443" y1="620" x2="443" y2="776"/>
+  <line class="grid" x1="491" y1="620" x2="491" y2="776"/>
+  <line class="grid" x1="539" y1="620" x2="539" y2="776"/>
+  <line class="grid" x1="587" y1="620" x2="587" y2="776"/>
+  <line class="grid" x1="635" y1="620" x2="635" y2="776"/>
+  <line class="grid" x1="683" y1="620" x2="683" y2="776"/>
+  <line class="grid" x1="395" y1="671" x2="800" y2="671"/>
+  <line class="grid" x1="395" y1="692" x2="800" y2="692"/>
+  <line class="grid" x1="395" y1="713" x2="800" y2="713"/>
+  <line class="grid" x1="395" y1="734" x2="800" y2="734"/>
+  <line class="grid" x1="395" y1="755" x2="800" y2="755"/>
 
-  <text class="tblh orange" x="422" y="640" text-anchor="middle">CLR</text>
-  <text class="tblh orange" x="484" y="640" text-anchor="middle">G1</text>
-  <text class="tblh orange" x="548" y="640" text-anchor="middle">G2</text>
-  <text class="tblh orange" x="603" y="640" text-anchor="middle">CLK</text>
-  <text class="tblh" x="714" y="640" text-anchor="middle">Operation</text>
+  <text class="tblh orange" x="419" y="640" text-anchor="middle">M</text>
+  <text class="tblh orange" x="467" y="640" text-anchor="middle">N</text>
+  <text class="tblh orange" x="515" y="640" text-anchor="middle">CLR</text>
+  <text class="tblh orange" x="563" y="640" text-anchor="middle">G1</text>
+  <text class="tblh orange" x="611" y="640" text-anchor="middle">G2</text>
+  <text class="tblh orange" x="659" y="640" text-anchor="middle">CLK</text>
+  <text class="tblh purple" x="741" y="640" text-anchor="middle">Q outputs</text>
 
-  <text class="tbl" x="422" y="671" text-anchor="middle">H</text>
-  <text class="tbl" x="484" y="671" text-anchor="middle">X</text>
-  <text class="tbl" x="548" y="671" text-anchor="middle">X</text>
-  <text class="tbl" x="603" y="671" text-anchor="middle">X</text>
-  <text class="tbl" x="714" y="671" text-anchor="middle"><tspan class="purple">Q</tspan> &#8592; 0  (clear)</text>
+  <!-- row 1: output disabled (M high) -->
+  <text class="tbl" x="419" y="665" text-anchor="middle">H</text>
+  <text class="tbl" x="467" y="665" text-anchor="middle">X</text>
+  <text class="tbl" x="515" y="665" text-anchor="middle">X</text>
+  <text class="tbl" x="563" y="665" text-anchor="middle">X</text>
+  <text class="tbl" x="611" y="665" text-anchor="middle">X</text>
+  <text class="tbl" x="659" y="665" text-anchor="middle">X</text>
+  <text class="tbl" x="741" y="665" text-anchor="middle">high-Z</text>
 
-  <text class="tbl" x="422" y="703" text-anchor="middle">L</text>
-  <text class="tbl" x="484" y="703" text-anchor="middle">L</text>
-  <text class="tbl" x="548" y="703" text-anchor="middle">L</text>
-  <text class="tbl" x="603" y="703" text-anchor="middle">&#8593;</text>
-  <text class="tbl" x="714" y="703" text-anchor="middle"><tspan class="purple">Q</tspan> &#8592; <tspan class="green">D</tspan>  (load)</text>
+  <!-- row 2: output disabled (N high) -->
+  <text class="tbl" x="419" y="686" text-anchor="middle">X</text>
+  <text class="tbl" x="467" y="686" text-anchor="middle">H</text>
+  <text class="tbl" x="515" y="686" text-anchor="middle">X</text>
+  <text class="tbl" x="563" y="686" text-anchor="middle">X</text>
+  <text class="tbl" x="611" y="686" text-anchor="middle">X</text>
+  <text class="tbl" x="659" y="686" text-anchor="middle">X</text>
+  <text class="tbl" x="741" y="686" text-anchor="middle">high-Z</text>
 
-  <text class="tbl" x="422" y="735" text-anchor="middle">L</text>
-  <text class="tbl" x="484" y="735" text-anchor="middle">H</text>
-  <text class="tbl" x="548" y="735" text-anchor="middle">X</text>
-  <text class="tbl" x="603" y="735" text-anchor="middle">&#8593;</text>
-  <text class="tbl" x="714" y="735" text-anchor="middle">hold</text>
+  <!-- row 3: clear -->
+  <text class="tbl" x="419" y="707" text-anchor="middle">L</text>
+  <text class="tbl" x="467" y="707" text-anchor="middle">L</text>
+  <text class="tbl" x="515" y="707" text-anchor="middle">H</text>
+  <text class="tbl" x="563" y="707" text-anchor="middle">X</text>
+  <text class="tbl" x="611" y="707" text-anchor="middle">X</text>
+  <text class="tbl" x="659" y="707" text-anchor="middle">X</text>
+  <text class="tbl" x="741" y="707" text-anchor="middle"><tspan class="purple">Q</tspan> &#8592; 0</text>
 
-  <text class="tbl" x="422" y="767" text-anchor="middle">L</text>
-  <text class="tbl" x="484" y="767" text-anchor="middle">X</text>
-  <text class="tbl" x="548" y="767" text-anchor="middle">H</text>
-  <text class="tbl" x="603" y="767" text-anchor="middle">&#8593;</text>
-  <text class="tbl" x="714" y="767" text-anchor="middle">hold</text>
+  <!-- row 4: load -->
+  <text class="tbl" x="419" y="728" text-anchor="middle">L</text>
+  <text class="tbl" x="467" y="728" text-anchor="middle">L</text>
+  <text class="tbl" x="515" y="728" text-anchor="middle">L</text>
+  <text class="tbl" x="563" y="728" text-anchor="middle">L</text>
+  <text class="tbl" x="611" y="728" text-anchor="middle">L</text>
+  <text class="tbl" x="659" y="728" text-anchor="middle">&#8593;</text>
+  <text class="tbl" x="741" y="728" text-anchor="middle"><tspan class="purple">Q</tspan> &#8592; <tspan class="green">D</tspan></text>
 
-  <text class="small" x="395" y="798">&#8593; rising edge &#183; X don&#39;t-care &#183; load needs G1 = G2 = L. CLR is async, active-HIGH.</text>
-  <text class="small" x="395" y="814">Outputs drive only when M = L and N = L; otherwise <tspan class="purple">1Q&#8211;4Q</tspan> go high-Z.</text>
+  <!-- row 5: hold (G1 high) -->
+  <text class="tbl" x="419" y="749" text-anchor="middle">L</text>
+  <text class="tbl" x="467" y="749" text-anchor="middle">L</text>
+  <text class="tbl" x="515" y="749" text-anchor="middle">L</text>
+  <text class="tbl" x="563" y="749" text-anchor="middle">H</text>
+  <text class="tbl" x="611" y="749" text-anchor="middle">X</text>
+  <text class="tbl" x="659" y="749" text-anchor="middle">&#8593;</text>
+  <text class="tbl" x="741" y="749" text-anchor="middle">hold</text>
+
+  <!-- row 6: hold (G2 high) -->
+  <text class="tbl" x="419" y="770" text-anchor="middle">L</text>
+  <text class="tbl" x="467" y="770" text-anchor="middle">L</text>
+  <text class="tbl" x="515" y="770" text-anchor="middle">L</text>
+  <text class="tbl" x="563" y="770" text-anchor="middle">X</text>
+  <text class="tbl" x="611" y="770" text-anchor="middle">H</text>
+  <text class="tbl" x="659" y="770" text-anchor="middle">&#8593;</text>
+  <text class="tbl" x="741" y="770" text-anchor="middle">hold</text>
+
+  <text class="small" x="395" y="794">&#8593; rising edge &#183; X don&#39;t-care. Outputs drive only when M = L AND N = L (else high-Z).</text>
+  <text class="small" x="395" y="810">Register loads when G1 = G2 = L on a clock edge, holds otherwise; CLR = H clears async (active-HIGH).</text>
 
   <!-- ============ COLOUR KEY ============ -->
   <text class="noteh" x="830" y="612">COLOUR KEY</text>
