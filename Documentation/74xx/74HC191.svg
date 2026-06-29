@@ -30,7 +30,7 @@
   <text class="sub" x="40" y="74">4-Bit Synchronous Up/Down Binary Counter  &#183;  DIP-16  &#183;  single clock, direction-controlled</text>
   <line class="thin" x1="40" y1="88" x2="1000" y2="88"/>
 
-  <!-- ============ PINOUT ============ -->
+  <!-- ============ PINOUT (name inside, number outside) ============ -->
   <text class="panel" x="185" y="116">PINOUT &#183; top view</text>
 
   <rect class="body" x="185" y="130" width="110" height="380"/>
@@ -102,78 +102,78 @@
   <text class="pinno" x="330" y="478">9</text>
   <text class="sig green"  x="288" y="478" text-anchor="end">D3</text>
 
-  <!-- ============ SCHEMATIC SYMBOL ============ -->
+  <!-- ============ SCHEMATIC SYMBOL (name outside, number inside) ============ -->
   <text class="panel" x="630" y="120">SCHEMATIC SYMBOL</text>
 
   <rect class="body" x="630" y="180" width="200" height="380"/>
 
   <!-- top control: D/U -->
   <line class="thin" x1="730" y1="148" x2="730" y2="180"/>
-  <text class="pinno" x="738" y="160">5</text>
-  <text class="sig orange" x="730" y="140" text-anchor="middle">D/U</text>
+  <text class="lbl orange" x="730" y="140" text-anchor="middle">D/U</text>
+  <text class="pinno" x="730" y="200" text-anchor="middle">5</text>
 
   <!-- left pins -->
   <!-- CLK (clock, dynamic triangle) -->
   <line class="thin" x1="590" y1="230" x2="630" y2="230"/>
   <polyline class="thin" points="630,223 643,230 630,237"/>
-  <text class="pinno" x="585" y="234" text-anchor="end">14</text>
-  <text class="lbl orange" x="648" y="234">CLK</text>
+  <text class="lbl orange" x="585" y="234" text-anchor="end">CLK</text>
+  <text class="pinno" x="650" y="234">14</text>
 
-  <!-- /CTEN (bubble) -->
+  <!-- CTEN (bubble = active-low) -->
   <line class="thin" x1="590" y1="278" x2="618" y2="278"/>
   <circle cx="624" cy="278" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
-  <text class="pinno" x="585" y="282" text-anchor="end">4</text>
-  <text class="lbl orange" x="642" y="282">C&#x305;T&#x305;E&#x305;N&#x305;</text>
+  <text class="lbl orange" x="585" y="282" text-anchor="end">C&#x305;T&#x305;E&#x305;N&#x305;</text>
+  <text class="pinno" x="648" y="282">4</text>
 
-  <!-- /LD (bubble) -->
+  <!-- LD (bubble = active-low) -->
   <line class="thin" x1="590" y1="326" x2="618" y2="326"/>
   <circle cx="624" cy="326" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
-  <text class="pinno" x="585" y="330" text-anchor="end">11</text>
-  <text class="lbl orange" x="642" y="330">L&#x305;D&#x305;</text>
+  <text class="lbl orange" x="585" y="330" text-anchor="end">L&#x305;D&#x305;</text>
+  <text class="pinno" x="648" y="330">11</text>
 
   <!-- data D0..D3 -->
   <line class="thin" x1="590" y1="374" x2="630" y2="374"/>
-  <text class="pinno" x="585" y="378" text-anchor="end">15</text>
-  <text class="lbl green" x="642" y="378">D0</text>
+  <text class="lbl green" x="585" y="378" text-anchor="end">D0</text>
+  <text class="pinno" x="648" y="378">15</text>
 
   <line class="thin" x1="590" y1="422" x2="630" y2="422"/>
-  <text class="pinno" x="585" y="426" text-anchor="end">1</text>
-  <text class="lbl green" x="642" y="426">D1</text>
+  <text class="lbl green" x="585" y="426" text-anchor="end">D1</text>
+  <text class="pinno" x="648" y="426">1</text>
 
   <line class="thin" x1="590" y1="470" x2="630" y2="470"/>
-  <text class="pinno" x="585" y="474" text-anchor="end">10</text>
-  <text class="lbl green" x="642" y="474">D2</text>
+  <text class="lbl green" x="585" y="474" text-anchor="end">D2</text>
+  <text class="pinno" x="648" y="474">10</text>
 
   <line class="thin" x1="590" y1="518" x2="630" y2="518"/>
-  <text class="pinno" x="585" y="522" text-anchor="end">9</text>
-  <text class="lbl green" x="642" y="522">D3</text>
+  <text class="lbl green" x="585" y="522" text-anchor="end">D3</text>
+  <text class="pinno" x="648" y="522">9</text>
 
   <!-- right pins -->
   <line class="thin" x1="830" y1="230" x2="870" y2="230"/>
-  <text class="pinno" x="875" y="234">3</text>
-  <text class="lbl purple" x="818" y="234" text-anchor="end">Q0</text>
+  <text class="lbl purple" x="875" y="234">Q0</text>
+  <text class="pinno" x="812" y="234" text-anchor="end">3</text>
 
   <line class="thin" x1="830" y1="278" x2="870" y2="278"/>
-  <text class="pinno" x="875" y="282">2</text>
-  <text class="lbl purple" x="818" y="282" text-anchor="end">Q1</text>
+  <text class="lbl purple" x="875" y="282">Q1</text>
+  <text class="pinno" x="812" y="282" text-anchor="end">2</text>
 
   <line class="thin" x1="830" y1="326" x2="870" y2="326"/>
-  <text class="pinno" x="875" y="330">6</text>
-  <text class="lbl purple" x="818" y="330" text-anchor="end">Q2</text>
+  <text class="lbl purple" x="875" y="330">Q2</text>
+  <text class="pinno" x="812" y="330" text-anchor="end">6</text>
 
   <line class="thin" x1="830" y1="374" x2="870" y2="374"/>
-  <text class="pinno" x="875" y="378">7</text>
-  <text class="lbl purple" x="818" y="378" text-anchor="end">Q3</text>
+  <text class="lbl purple" x="875" y="378">Q3</text>
+  <text class="pinno" x="812" y="378" text-anchor="end">7</text>
 
   <line class="thin" x1="830" y1="422" x2="870" y2="422"/>
-  <text class="pinno" x="875" y="426">12</text>
-  <text class="lbl purple" x="818" y="426" text-anchor="end">MAX/MIN</text>
+  <text class="lbl purple" x="875" y="426">MAX/MIN</text>
+  <text class="pinno" x="812" y="426" text-anchor="end">12</text>
 
-  <!-- /RCO (bubble) -->
+  <!-- RCO (bubble = active-low) -->
   <line class="thin" x1="842" y1="470" x2="870" y2="470"/>
   <circle cx="836" cy="470" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
-  <text class="pinno" x="875" y="474">13</text>
-  <text class="lbl purple" x="818" y="474" text-anchor="end">R&#x305;C&#x305;O&#x305;</text>
+  <text class="lbl purple" x="875" y="474">R&#x305;C&#x305;O&#x305;</text>
+  <text class="pinno" x="812" y="474" text-anchor="end">13</text>
 
   <!-- body label -->
   <text class="lbl" x="730" y="350" text-anchor="middle">4-BIT SYNC</text>
@@ -211,28 +211,24 @@
   <text class="tblh orange" x="603" y="640" text-anchor="middle">CLK</text>
   <text class="tblh" x="714" y="640" text-anchor="middle">Operation</text>
 
-  <!-- row 1: load -->
   <text class="tbl" x="422" y="671" text-anchor="middle">L</text>
   <text class="tbl" x="484" y="671" text-anchor="middle">X</text>
   <text class="tbl" x="548" y="671" text-anchor="middle">X</text>
   <text class="tbl" x="603" y="671" text-anchor="middle">X</text>
   <text class="tbl" x="714" y="671" text-anchor="middle">Load <tspan class="purple">Q</tspan>&#8592;<tspan class="green">D0&#8211;D3</tspan></text>
 
-  <!-- row 2: up -->
   <text class="tbl" x="422" y="703" text-anchor="middle">H</text>
   <text class="tbl" x="484" y="703" text-anchor="middle">L</text>
   <text class="tbl" x="548" y="703" text-anchor="middle">L</text>
   <text class="tbl" x="603" y="703" text-anchor="middle">&#8593;</text>
   <text class="tbl" x="714" y="703" text-anchor="middle">Count up</text>
 
-  <!-- row 3: down -->
   <text class="tbl" x="422" y="735" text-anchor="middle">H</text>
   <text class="tbl" x="484" y="735" text-anchor="middle">L</text>
   <text class="tbl" x="548" y="735" text-anchor="middle">H</text>
   <text class="tbl" x="603" y="735" text-anchor="middle">&#8593;</text>
   <text class="tbl" x="714" y="735" text-anchor="middle">Count down</text>
 
-  <!-- row 4: hold -->
   <text class="tbl" x="422" y="767" text-anchor="middle">H</text>
   <text class="tbl" x="484" y="767" text-anchor="middle">H</text>
   <text class="tbl" x="548" y="767" text-anchor="middle">X</text>

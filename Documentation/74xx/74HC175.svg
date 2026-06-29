@@ -30,7 +30,7 @@
   <text class="sub" x="40" y="74">Quad D-Type Flip-Flop with Async Reset  &#183;  DIP-16  &#183;  common clock, true &amp; complement outputs</text>
   <line class="thin" x1="40" y1="88" x2="1000" y2="88"/>
 
-  <!-- ============ PINOUT ============ -->
+  <!-- ============ PINOUT (name inside, number outside) ============ -->
   <text class="panel" x="185" y="116">PINOUT &#183; top view</text>
 
   <rect class="body" x="185" y="130" width="110" height="380"/>
@@ -102,76 +102,76 @@
   <text class="pinno" x="330" y="478">9</text>
   <text class="sig orange" x="288" y="478" text-anchor="end">CP</text>
 
-  <!-- ============ SCHEMATIC SYMBOL ============ -->
+  <!-- ============ SCHEMATIC SYMBOL (name outside, number inside) ============ -->
   <text class="panel" x="630" y="120">SCHEMATIC SYMBOL</text>
 
   <rect class="body" x="630" y="170" width="200" height="400"/>
 
-  <!-- top control: /MR -->
+  <!-- top control: MR (bubble = active-low) -->
   <line class="thin" x1="730" y1="138" x2="730" y2="170"/>
   <circle cx="730" cy="176" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
-  <text class="pinno" x="738" y="152">1</text>
-  <text class="sig orange" x="730" y="130" text-anchor="middle">M&#x305;R&#x305;</text>
+  <text class="lbl orange" x="730" y="130" text-anchor="middle">M&#x305;R&#x305;</text>
+  <text class="pinno" x="730" y="198" text-anchor="middle">1</text>
 
   <!-- left pins -->
   <!-- CP (clock, dynamic triangle) -->
   <line class="thin" x1="590" y1="230" x2="630" y2="230"/>
   <polyline class="thin" points="630,223 643,230 630,237"/>
-  <text class="pinno" x="585" y="234" text-anchor="end">9</text>
-  <text class="lbl orange" x="648" y="234">CP</text>
+  <text class="lbl orange" x="585" y="234" text-anchor="end">CP</text>
+  <text class="pinno" x="650" y="234">9</text>
 
   <line class="thin" x1="590" y1="300" x2="630" y2="300"/>
-  <text class="pinno" x="585" y="304" text-anchor="end">4</text>
-  <text class="lbl green" x="642" y="304">D0</text>
+  <text class="lbl green" x="585" y="304" text-anchor="end">D0</text>
+  <text class="pinno" x="648" y="304">4</text>
 
   <line class="thin" x1="590" y1="355" x2="630" y2="355"/>
-  <text class="pinno" x="585" y="359" text-anchor="end">5</text>
-  <text class="lbl green" x="642" y="359">D1</text>
+  <text class="lbl green" x="585" y="359" text-anchor="end">D1</text>
+  <text class="pinno" x="648" y="359">5</text>
 
   <line class="thin" x1="590" y1="410" x2="630" y2="410"/>
-  <text class="pinno" x="585" y="414" text-anchor="end">12</text>
-  <text class="lbl green" x="642" y="414">D2</text>
+  <text class="lbl green" x="585" y="414" text-anchor="end">D2</text>
+  <text class="pinno" x="648" y="414">12</text>
 
   <line class="thin" x1="590" y1="465" x2="630" y2="465"/>
-  <text class="pinno" x="585" y="469" text-anchor="end">13</text>
-  <text class="lbl green" x="642" y="469">D3</text>
+  <text class="lbl green" x="585" y="469" text-anchor="end">D3</text>
+  <text class="pinno" x="648" y="469">13</text>
 
-  <!-- right pins: Q / /Q pairs -->
+  <!-- right pins: Q (true) and Q (bubble = complement) -->
   <line class="thin" x1="830" y1="210" x2="870" y2="210"/>
-  <text class="pinno" x="875" y="214">2</text>
-  <text class="lbl purple" x="818" y="214" text-anchor="end">Q0</text>
+  <text class="lbl purple" x="875" y="214">Q0</text>
+  <text class="pinno" x="812" y="214" text-anchor="end">2</text>
 
   <line class="thin" x1="842" y1="255" x2="870" y2="255"/>
   <circle cx="836" cy="255" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
-  <text class="pinno" x="875" y="259">3</text>
-  <text class="lbl purple" x="818" y="259" text-anchor="end">Q&#x305;0&#x305;</text>
+  <text class="lbl purple" x="875" y="259">Q&#x305;0&#x305;</text>
+  <text class="pinno" x="812" y="259" text-anchor="end">3</text>
 
   <line class="thin" x1="830" y1="300" x2="870" y2="300"/>
-  <text class="pinno" x="875" y="304">7</text>
-  <text class="lbl purple" x="818" y="304" text-anchor="end">Q1</text>
+  <text class="lbl purple" x="875" y="304">Q1</text>
+  <text class="pinno" x="812" y="304" text-anchor="end">7</text>
 
   <line class="thin" x1="842" y1="345" x2="870" y2="345"/>
   <circle cx="836" cy="345" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
-  <text class="pinno" x="875" y="349">6</text>
-  <text class="lbl purple" x="818" y="349" text-anchor="end">Q&#x305;1&#x305;</text>
+  <text class="lbl purple" x="875" y="349">Q&#x305;1&#x305;</text>
+  <text class="pinno" x="812" y="349" text-anchor="end">6</text>
 
   <line class="thin" x1="830" y1="390" x2="870" y2="390"/>
-  <text class="pinno" x="875" y="394">10</text>
-  <text class="lbl purple" x="818" y="394" text-anchor="end">Q2</text>
+  <text class="lbl purple" x="875" y="394">Q2</text>
+  <text class="pinno" x="812" y="394" text-anchor="end">10</text>
 
   <line class="thin" x1="842" y1="435" x2="870" y2="435"/>
   <circle cx="836" cy="435" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
-  <text class="pinno" x="875" y="439">11</text>
-  <text class="lbl purple" x="818" y="439" text-anchor="end">Q&#x305;2&#x305;</text>
+  <text class="lbl purple" x="875" y="439">Q&#x305;2&#x305;</text>
+  <text class="pinno" x="812" y="439" text-anchor="end">11</text>
 
   <line class="thin" x1="830" y1="480" x2="870" y2="480"/>
-  <text class="pinno" x="875" y="484">15</text>
-  <text class="lbl purple" x="818" y="484" text-anchor="end">Q3</text>
+  <text class="lbl purple" x="875" y="484">Q3</text>
+  <text class="pinno" x="812" y="484" text-anchor="end">15</text>
 
   <line class="thin" x1="842" y1="525" x2="870" y2="525"/>
   <circle cx="836" cy="525" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
-  <text class="pinno" x="875" y="529">14</text>
-  <text class="lbl purple" x="818" y="529" text-anchor="end">Q&#x305;3&#x305;</text>
+  <text class="lbl purple" x="875" y="529">Q&#x305;3&#x305;</text>
+  <text class="pinno" x="812" y="529" text-anchor="end">14</text>
 
   <!-- body label -->
   <text class="lbl" x="725" y="345" text-anchor="middle">QUAD D</text>
@@ -209,28 +209,24 @@
   <text class="tblh purple" x="679" y="640" text-anchor="middle">Q</text>
   <text class="tblh purple" x="760" y="640" text-anchor="middle">Q&#x305;</text>
 
-  <!-- row 1: reset -->
   <text class="tbl" x="436" y="671" text-anchor="middle">L</text>
   <text class="tbl" x="517" y="671" text-anchor="middle">X</text>
   <text class="tbl" x="598" y="671" text-anchor="middle">X</text>
   <text class="tbl" x="679" y="671" text-anchor="middle">L</text>
   <text class="tbl" x="760" y="671" text-anchor="middle">H</text>
 
-  <!-- row 2: load 1 -->
   <text class="tbl" x="436" y="703" text-anchor="middle">H</text>
   <text class="tbl" x="517" y="703" text-anchor="middle">&#8593;</text>
   <text class="tbl" x="598" y="703" text-anchor="middle">H</text>
   <text class="tbl" x="679" y="703" text-anchor="middle">H</text>
   <text class="tbl" x="760" y="703" text-anchor="middle">L</text>
 
-  <!-- row 3: load 0 -->
   <text class="tbl" x="436" y="735" text-anchor="middle">H</text>
   <text class="tbl" x="517" y="735" text-anchor="middle">&#8593;</text>
   <text class="tbl" x="598" y="735" text-anchor="middle">L</text>
   <text class="tbl" x="679" y="735" text-anchor="middle">L</text>
   <text class="tbl" x="760" y="735" text-anchor="middle">H</text>
 
-  <!-- row 4: hold -->
   <text class="tbl" x="436" y="767" text-anchor="middle">H</text>
   <text class="tbl" x="517" y="767" text-anchor="middle">&#8212;</text>
   <text class="tbl" x="598" y="767" text-anchor="middle">X</text>

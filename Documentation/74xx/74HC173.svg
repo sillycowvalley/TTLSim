@@ -1,0 +1,258 @@
+<svg viewBox="0 0 1040 850" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <style>
+    .bg     { fill:#fafaf7; }
+    .thin   { stroke:#1f2933; stroke-width:1.2; fill:none; }
+    .body   { fill:#ffffff; stroke:#1f2933; stroke-width:2; }
+    .title  { fill:#1f2933; font-size:32px; font-weight:700; }
+    .sub    { fill:#52606d; font-size:15px; }
+    .panel  { fill:#3e4c59; font-size:14px; font-weight:600; letter-spacing:.4px; }
+    .pinno  { fill:#7b8794; font-size:11px; font-weight:600; }
+    .sig    { font-size:13px; font-weight:700; }
+    .green  { fill:#2e7d32 !important; }
+    .blue   { fill:#1565c0 !important; }
+    .orange { fill:#e65100 !important; }
+    .purple { fill:#7b1fa2 !important; }
+    .red    { fill:#c62828 !important; }
+    .slate  { fill:#37474f !important; }
+    .lbl    { fill:#1f2933; font-size:13px; font-weight:700; }
+    .small  { fill:#52606d; font-size:11px; }
+    .tbl    { fill:#1f2933; font-size:13px; }
+    .tblh   { fill:#1f2933; font-size:13px; font-weight:700; }
+    .note   { fill:#3e4c59; font-size:13px; }
+    .noteh  { fill:#1f2933; font-size:14px; font-weight:700; }
+    .grid   { stroke:#cbd2d9; stroke-width:1; }
+  </style>
+
+  <rect class="bg" x="0" y="0" width="1040" height="850"/>
+
+  <!-- ============ TITLE BLOCK ============ -->
+  <text class="title" x="40" y="48">74HC173</text>
+  <text class="sub" x="40" y="74">4-Bit D Register with 3-State Outputs  &#183;  DIP-16  &#183;  gated load, active-HIGH clear</text>
+  <line class="thin" x1="40" y1="88" x2="1000" y2="88"/>
+
+  <!-- ============ PINOUT (name inside, number outside) ============ -->
+  <text class="panel" x="185" y="116">PINOUT &#183; top view</text>
+
+  <rect class="body" x="185" y="130" width="110" height="380"/>
+  <path class="thin" d="M 223 130 A 17 17 0 0 0 257 130"/>
+
+  <!-- left pins 1-8 -->
+  <line class="thin" x1="155" y1="166" x2="185" y2="166"/>
+  <text class="pinno" x="150" y="170" text-anchor="end">1</text>
+  <text class="sig orange" x="192" y="170">M</text>
+
+  <line class="thin" x1="155" y1="210" x2="185" y2="210"/>
+  <text class="pinno" x="150" y="214" text-anchor="end">2</text>
+  <text class="sig orange" x="192" y="214">N</text>
+
+  <line class="thin" x1="155" y1="254" x2="185" y2="254"/>
+  <text class="pinno" x="150" y="258" text-anchor="end">3</text>
+  <text class="sig purple" x="192" y="258">1Q</text>
+
+  <line class="thin" x1="155" y1="298" x2="185" y2="298"/>
+  <text class="pinno" x="150" y="302" text-anchor="end">4</text>
+  <text class="sig purple" x="192" y="302">2Q</text>
+
+  <line class="thin" x1="155" y1="342" x2="185" y2="342"/>
+  <text class="pinno" x="150" y="346" text-anchor="end">5</text>
+  <text class="sig purple" x="192" y="346">3Q</text>
+
+  <line class="thin" x1="155" y1="386" x2="185" y2="386"/>
+  <text class="pinno" x="150" y="390" text-anchor="end">6</text>
+  <text class="sig purple" x="192" y="390">4Q</text>
+
+  <line class="thin" x1="155" y1="430" x2="185" y2="430"/>
+  <text class="pinno" x="150" y="434" text-anchor="end">7</text>
+  <text class="sig orange" x="192" y="434">CLK</text>
+
+  <line class="thin" x1="155" y1="474" x2="185" y2="474"/>
+  <text class="pinno" x="150" y="478" text-anchor="end">8</text>
+  <text class="sig slate" x="192" y="478">GND</text>
+
+  <!-- right pins 16-9 -->
+  <line class="thin" x1="295" y1="166" x2="325" y2="166"/>
+  <text class="pinno" x="330" y="170">16</text>
+  <text class="sig red" x="288" y="170" text-anchor="end">VCC</text>
+
+  <line class="thin" x1="295" y1="210" x2="325" y2="210"/>
+  <text class="pinno" x="330" y="214">15</text>
+  <text class="sig orange" x="288" y="214" text-anchor="end">CLR</text>
+
+  <line class="thin" x1="295" y1="254" x2="325" y2="254"/>
+  <text class="pinno" x="330" y="258">14</text>
+  <text class="sig green" x="288" y="258" text-anchor="end">1D</text>
+
+  <line class="thin" x1="295" y1="298" x2="325" y2="298"/>
+  <text class="pinno" x="330" y="302">13</text>
+  <text class="sig green" x="288" y="302" text-anchor="end">2D</text>
+
+  <line class="thin" x1="295" y1="342" x2="325" y2="342"/>
+  <text class="pinno" x="330" y="346">12</text>
+  <text class="sig green" x="288" y="346" text-anchor="end">3D</text>
+
+  <line class="thin" x1="295" y1="386" x2="325" y2="386"/>
+  <text class="pinno" x="330" y="390">11</text>
+  <text class="sig green" x="288" y="390" text-anchor="end">4D</text>
+
+  <line class="thin" x1="295" y1="430" x2="325" y2="430"/>
+  <text class="pinno" x="330" y="434">10</text>
+  <text class="sig orange" x="288" y="434" text-anchor="end">G2</text>
+
+  <line class="thin" x1="295" y1="474" x2="325" y2="474"/>
+  <text class="pinno" x="330" y="478">9</text>
+  <text class="sig orange" x="288" y="478" text-anchor="end">G1</text>
+
+  <!-- ============ SCHEMATIC SYMBOL (name outside, number inside) ============ -->
+  <text class="panel" x="630" y="120">SCHEMATIC SYMBOL</text>
+
+  <rect class="body" x="640" y="180" width="200" height="380"/>
+
+  <!-- top controls: CLR (active-HIGH, no bubble), M, N (active-low, bubble) -->
+  <line class="thin" x1="695" y1="148" x2="695" y2="180"/>
+  <text class="lbl orange" x="695" y="140" text-anchor="middle">CLR</text>
+  <text class="pinno" x="695" y="198" text-anchor="middle">15</text>
+
+  <line class="thin" x1="745" y1="148" x2="745" y2="168"/>
+  <circle cx="745" cy="174" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
+  <text class="lbl orange" x="745" y="140" text-anchor="middle">M</text>
+  <text class="pinno" x="745" y="198" text-anchor="middle">1</text>
+
+  <line class="thin" x1="790" y1="148" x2="790" y2="168"/>
+  <circle cx="790" cy="174" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
+  <text class="lbl orange" x="790" y="140" text-anchor="middle">N</text>
+  <text class="pinno" x="790" y="198" text-anchor="middle">2</text>
+
+  <!-- left pins -->
+  <!-- CLK (clock, dynamic triangle) -->
+  <line class="thin" x1="600" y1="235" x2="640" y2="235"/>
+  <polyline class="thin" points="640,228 653,235 640,242"/>
+  <text class="lbl orange" x="595" y="239" text-anchor="end">CLK</text>
+  <text class="pinno" x="658" y="239">7</text>
+
+  <!-- G1 (active-low, bubble) -->
+  <line class="thin" x1="600" y1="285" x2="628" y2="285"/>
+  <circle cx="634" cy="285" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
+  <text class="lbl orange" x="595" y="289" text-anchor="end">G1</text>
+  <text class="pinno" x="648" y="289">9</text>
+
+  <!-- G2 (active-low, bubble) -->
+  <line class="thin" x1="600" y1="335" x2="628" y2="335"/>
+  <circle cx="634" cy="335" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
+  <text class="lbl orange" x="595" y="339" text-anchor="end">G2</text>
+  <text class="pinno" x="648" y="339">10</text>
+
+  <!-- data inputs 1D..4D -->
+  <line class="thin" x1="600" y1="385" x2="640" y2="385"/>
+  <text class="lbl green" x="595" y="389" text-anchor="end">1D</text>
+  <text class="pinno" x="648" y="389">14</text>
+
+  <line class="thin" x1="600" y1="435" x2="640" y2="435"/>
+  <text class="lbl green" x="595" y="439" text-anchor="end">2D</text>
+  <text class="pinno" x="648" y="439">13</text>
+
+  <line class="thin" x1="600" y1="485" x2="640" y2="485"/>
+  <text class="lbl green" x="595" y="489" text-anchor="end">3D</text>
+  <text class="pinno" x="648" y="489">12</text>
+
+  <line class="thin" x1="600" y1="535" x2="640" y2="535"/>
+  <text class="lbl green" x="595" y="539" text-anchor="end">4D</text>
+  <text class="pinno" x="648" y="539">11</text>
+
+  <!-- outputs 1Q..4Q -->
+  <line class="thin" x1="840" y1="260" x2="880" y2="260"/>
+  <text class="lbl purple" x="885" y="264">1Q</text>
+  <text class="pinno" x="832" y="264" text-anchor="end">3</text>
+
+  <line class="thin" x1="840" y1="340" x2="880" y2="340"/>
+  <text class="lbl purple" x="885" y="344">2Q</text>
+  <text class="pinno" x="832" y="344" text-anchor="end">4</text>
+
+  <line class="thin" x1="840" y1="420" x2="880" y2="420"/>
+  <text class="lbl purple" x="885" y="424">3Q</text>
+  <text class="pinno" x="832" y="424" text-anchor="end">5</text>
+
+  <line class="thin" x1="840" y1="500" x2="880" y2="500"/>
+  <text class="lbl purple" x="885" y="504">4Q</text>
+  <text class="pinno" x="832" y="504" text-anchor="end">6</text>
+
+  <!-- body label -->
+  <text class="lbl" x="740" y="355" text-anchor="middle">4-BIT REG</text>
+  <text class="small" x="740" y="377" text-anchor="middle">3-state out</text>
+
+  <text class="small" x="640" y="590"><tspan class="red">VCC</tspan> = pin 16   &#183;   <tspan class="slate">GND</tspan> = pin 8</text>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <text class="noteh" x="40" y="612">HOW IT WORKS</text>
+  <text class="note" x="40" y="636">A 4-bit D register with 3-state outputs.</text>
+  <text class="note" x="40" y="656">On a rising <tspan class="orange">CLK</tspan> edge, if both load-enables <tspan class="orange">G1</tspan></text>
+  <text class="note" x="40" y="676">and <tspan class="orange">G2</tspan> are LOW, the four <tspan class="green">D</tspan> inputs are captured;</text>
+  <text class="note" x="40" y="696">otherwise the register holds its value.</text>
+  <text class="note" x="40" y="716">Output-controls <tspan class="orange">M</tspan> and <tspan class="orange">N</tspan> gate the bus: both LOW</text>
+  <text class="note" x="40" y="736">drive <tspan class="purple">1Q&#8211;4Q</tspan>; either HIGH puts them in high-Z.</text>
+  <text class="note" x="40" y="756"><tspan class="orange">CLR</tspan> is asynchronous and ACTIVE-HIGH (unusual</text>
+  <text class="note" x="40" y="776">for the family) &#8212; <tspan class="orange">CLR</tspan> HIGH zeroes the register.</text>
+  <text class="note" x="40" y="796">Ben Eater&#39;s workhorse CPU register &#8212; used for</text>
+  <text class="note" x="40" y="816">A, B, IR, MAR and the output register.</text>
+
+  <!-- ============ FUNCTION TABLE ============ -->
+  <rect x="395" y="620" width="405" height="30" fill="#eef1f4" stroke="#9aa5b1"/>
+  <rect x="395" y="650" width="405" height="128" fill="none" stroke="#9aa5b1"/>
+  <line class="grid" x1="450" y1="620" x2="450" y2="778"/>
+  <line class="grid" x1="518" y1="620" x2="518" y2="778"/>
+  <line class="grid" x1="578" y1="620" x2="578" y2="778"/>
+  <line class="grid" x1="628" y1="620" x2="628" y2="778"/>
+  <line class="grid" x1="395" y1="682" x2="800" y2="682"/>
+  <line class="grid" x1="395" y1="714" x2="800" y2="714"/>
+  <line class="grid" x1="395" y1="746" x2="800" y2="746"/>
+
+  <text class="tblh orange" x="422" y="640" text-anchor="middle">CLR</text>
+  <text class="tblh orange" x="484" y="640" text-anchor="middle">G1</text>
+  <text class="tblh orange" x="548" y="640" text-anchor="middle">G2</text>
+  <text class="tblh orange" x="603" y="640" text-anchor="middle">CLK</text>
+  <text class="tblh" x="714" y="640" text-anchor="middle">Operation</text>
+
+  <text class="tbl" x="422" y="671" text-anchor="middle">H</text>
+  <text class="tbl" x="484" y="671" text-anchor="middle">X</text>
+  <text class="tbl" x="548" y="671" text-anchor="middle">X</text>
+  <text class="tbl" x="603" y="671" text-anchor="middle">X</text>
+  <text class="tbl" x="714" y="671" text-anchor="middle"><tspan class="purple">Q</tspan> &#8592; 0  (clear)</text>
+
+  <text class="tbl" x="422" y="703" text-anchor="middle">L</text>
+  <text class="tbl" x="484" y="703" text-anchor="middle">L</text>
+  <text class="tbl" x="548" y="703" text-anchor="middle">L</text>
+  <text class="tbl" x="603" y="703" text-anchor="middle">&#8593;</text>
+  <text class="tbl" x="714" y="703" text-anchor="middle"><tspan class="purple">Q</tspan> &#8592; <tspan class="green">D</tspan>  (load)</text>
+
+  <text class="tbl" x="422" y="735" text-anchor="middle">L</text>
+  <text class="tbl" x="484" y="735" text-anchor="middle">H</text>
+  <text class="tbl" x="548" y="735" text-anchor="middle">X</text>
+  <text class="tbl" x="603" y="735" text-anchor="middle">&#8593;</text>
+  <text class="tbl" x="714" y="735" text-anchor="middle">hold</text>
+
+  <text class="tbl" x="422" y="767" text-anchor="middle">L</text>
+  <text class="tbl" x="484" y="767" text-anchor="middle">X</text>
+  <text class="tbl" x="548" y="767" text-anchor="middle">H</text>
+  <text class="tbl" x="603" y="767" text-anchor="middle">&#8593;</text>
+  <text class="tbl" x="714" y="767" text-anchor="middle">hold</text>
+
+  <text class="small" x="395" y="798">&#8593; rising edge &#183; X don&#39;t-care &#183; load needs G1 = G2 = L. CLR is async, active-HIGH.</text>
+  <text class="small" x="395" y="814">Outputs drive only when M = L and N = L; otherwise <tspan class="purple">1Q&#8211;4Q</tspan> go high-Z.</text>
+
+  <!-- ============ COLOUR KEY ============ -->
+  <text class="noteh" x="830" y="612">COLOUR KEY</text>
+
+  <rect x="830" y="626" width="16" height="16" fill="#2e7d32"/>
+  <text class="small" x="854" y="638">Data inputs &#8212; <tspan class="green">1D&#8230;4D</tspan></text>
+
+  <rect x="830" y="658" width="16" height="16" fill="#7b1fa2"/>
+  <text class="small" x="854" y="670">Outputs &#8212; <tspan class="purple">1Q&#8230;4Q</tspan></text>
+
+  <rect x="830" y="690" width="16" height="16" fill="#e65100"/>
+  <text class="small" x="854" y="702">Controls &#8212; <tspan class="orange">CLK G1 G2 M N CLR</tspan></text>
+
+  <rect x="830" y="722" width="16" height="16" fill="#c62828"/>
+  <text class="small" x="854" y="734"><tspan class="red">VCC</tspan> &#8212; pin 16</text>
+
+  <rect x="830" y="754" width="16" height="16" fill="#37474f"/>
+  <text class="small" x="854" y="766"><tspan class="slate">GND</tspan> &#8212; pin 8</text>
+</svg>

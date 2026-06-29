@@ -136,6 +136,19 @@ Inline example:
   transceiver/buffer/register, standard gate bodies for gates.
 - Inputs left, outputs right, controls top, selects/address bottom — where the function allows.
 - Pin **names** in `.lbl` + role colour; pin **numbers** alongside in `.pinno`.
+- **Pin-label placement — the exact mirror of the pinout.** On the symbol the pin **name** is
+  the *primary* label and goes **OUTSIDE** the body, beyond the end of the pin stub. The pin
+  **number** is *secondary* and goes **INSIDE** the body, in `.pinno` grey, set just inside
+  each pin's entry point. This is the precise opposite of the pinout (§5), where the **name
+  goes inside** the body and the **number outside**:
+
+  | Diagram | Name | Number |
+  |---|---|---|
+  | Pinout (§5) | inside the body | outside the body |
+  | Schematic symbol (§6) | outside the body | inside the body |
+
+  Keep the inside number small (`.pinno`, 11 px) and offset clear of the function label and
+  any inversion bubbles, which share the body interior.
 - Label the function inside the body (`MUX`, `8:1`, `× 8 lines`, etc.) in ink.
 - Include a small `VCC = pin n · GND = pin n` note in the symbol area, VCC/GND coloured.
 
@@ -225,6 +238,8 @@ Shared arrowhead marker:
 - [ ] Colour classes carry `!important`.
 - [ ] Every pin name — pinout, symbol, table, prose, legend — is in its role colour.
 - [ ] Pin numbers are grey, never coloured.
+- [ ] Pinout: name **inside** the body, number **outside**. Schematic symbol: name **outside**
+      the body (primary), number **inside** the body (secondary). The two are exact mirror images.
 - [ ] Bidirectional buses share the data colour; letters carry the distinction.
 - [ ] Notch only for orientation; no pin-1 dot.
 - [ ] Active-low names overbarred and bubbled on the symbol.

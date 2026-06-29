@@ -1,0 +1,239 @@
+<svg viewBox="0 0 1040 850" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <style>
+    .bg     { fill:#fafaf7; }
+    .thin   { stroke:#1f2933; stroke-width:1.2; fill:none; }
+    .body   { fill:#ffffff; stroke:#1f2933; stroke-width:2; }
+    .title  { fill:#1f2933; font-size:32px; font-weight:700; }
+    .sub    { fill:#52606d; font-size:15px; }
+    .panel  { fill:#3e4c59; font-size:14px; font-weight:600; letter-spacing:.4px; }
+    .pinno  { fill:#7b8794; font-size:11px; font-weight:600; }
+    .sig    { font-size:13px; font-weight:700; }
+    .green  { fill:#2e7d32 !important; }
+    .blue   { fill:#1565c0 !important; }
+    .orange { fill:#e65100 !important; }
+    .purple { fill:#7b1fa2 !important; }
+    .red    { fill:#c62828 !important; }
+    .slate  { fill:#37474f !important; }
+    .lbl    { fill:#1f2933; font-size:13px; font-weight:700; }
+    .small  { fill:#52606d; font-size:11px; }
+    .tbl    { fill:#1f2933; font-size:13px; }
+    .tblh   { fill:#1f2933; font-size:13px; font-weight:700; }
+    .note   { fill:#3e4c59; font-size:13px; }
+    .noteh  { fill:#1f2933; font-size:14px; font-weight:700; }
+    .grid   { stroke:#cbd2d9; stroke-width:1; }
+  </style>
+
+  <rect class="bg" x="0" y="0" width="1040" height="850"/>
+
+  <!-- ============ TITLE BLOCK ============ -->
+  <text class="title" x="40" y="48">74HC157</text>
+  <text class="sub" x="40" y="74">Quad 2-to-1 Multiplexer / Data Selector  &#183;  DIP-16  &#183;  common select, E&#x305; forces outputs LOW</text>
+  <line class="thin" x1="40" y1="88" x2="1000" y2="88"/>
+
+  <!-- ============ PINOUT (name inside, number outside) ============ -->
+  <text class="panel" x="185" y="116">PINOUT &#183; top view</text>
+
+  <rect class="body" x="185" y="130" width="110" height="380"/>
+  <path class="thin" d="M 223 130 A 17 17 0 0 0 257 130"/>
+
+  <!-- left pins 1-8 -->
+  <line class="thin" x1="155" y1="166" x2="185" y2="166"/>
+  <text class="pinno" x="150" y="170" text-anchor="end">1</text>
+  <text class="sig blue" x="192" y="170">S</text>
+
+  <line class="thin" x1="155" y1="210" x2="185" y2="210"/>
+  <text class="pinno" x="150" y="214" text-anchor="end">2</text>
+  <text class="sig green" x="192" y="214">1I0</text>
+
+  <line class="thin" x1="155" y1="254" x2="185" y2="254"/>
+  <text class="pinno" x="150" y="258" text-anchor="end">3</text>
+  <text class="sig green" x="192" y="258">1I1</text>
+
+  <line class="thin" x1="155" y1="298" x2="185" y2="298"/>
+  <text class="pinno" x="150" y="302" text-anchor="end">4</text>
+  <text class="sig purple" x="192" y="302">1Y</text>
+
+  <line class="thin" x1="155" y1="342" x2="185" y2="342"/>
+  <text class="pinno" x="150" y="346" text-anchor="end">5</text>
+  <text class="sig green" x="192" y="346">2I0</text>
+
+  <line class="thin" x1="155" y1="386" x2="185" y2="386"/>
+  <text class="pinno" x="150" y="390" text-anchor="end">6</text>
+  <text class="sig green" x="192" y="390">2I1</text>
+
+  <line class="thin" x1="155" y1="430" x2="185" y2="430"/>
+  <text class="pinno" x="150" y="434" text-anchor="end">7</text>
+  <text class="sig purple" x="192" y="434">2Y</text>
+
+  <line class="thin" x1="155" y1="474" x2="185" y2="474"/>
+  <text class="pinno" x="150" y="478" text-anchor="end">8</text>
+  <text class="sig slate" x="192" y="478">GND</text>
+
+  <!-- right pins 16-9 -->
+  <line class="thin" x1="295" y1="166" x2="325" y2="166"/>
+  <text class="pinno" x="330" y="170">16</text>
+  <text class="sig red" x="288" y="170" text-anchor="end">VCC</text>
+
+  <line class="thin" x1="295" y1="210" x2="325" y2="210"/>
+  <text class="pinno" x="330" y="214">15</text>
+  <text class="sig orange" x="288" y="214" text-anchor="end">E&#x305;</text>
+
+  <line class="thin" x1="295" y1="254" x2="325" y2="254"/>
+  <text class="pinno" x="330" y="258">14</text>
+  <text class="sig green" x="288" y="258" text-anchor="end">4I0</text>
+
+  <line class="thin" x1="295" y1="298" x2="325" y2="298"/>
+  <text class="pinno" x="330" y="302">13</text>
+  <text class="sig green" x="288" y="302" text-anchor="end">4I1</text>
+
+  <line class="thin" x1="295" y1="342" x2="325" y2="342"/>
+  <text class="pinno" x="330" y="346">12</text>
+  <text class="sig purple" x="288" y="346" text-anchor="end">4Y</text>
+
+  <line class="thin" x1="295" y1="386" x2="325" y2="386"/>
+  <text class="pinno" x="330" y="390">11</text>
+  <text class="sig green" x="288" y="390" text-anchor="end">3I0</text>
+
+  <line class="thin" x1="295" y1="430" x2="325" y2="430"/>
+  <text class="pinno" x="330" y="434">10</text>
+  <text class="sig green" x="288" y="434" text-anchor="end">3I1</text>
+
+  <line class="thin" x1="295" y1="474" x2="325" y2="474"/>
+  <text class="pinno" x="330" y="478">9</text>
+  <text class="sig purple" x="288" y="478" text-anchor="end">3Y</text>
+
+  <!-- ============ SCHEMATIC SYMBOL (name outside, number inside) ============ -->
+  <text class="panel" x="600" y="120">SCHEMATIC SYMBOL</text>
+
+  <!-- mux trapezoid: wide input side (left), narrow output side (right) -->
+  <path class="body" d="M 645 195 L 815 255 L 815 485 L 645 545 Z"/>
+
+  <!-- data inputs (left edge) -->
+  <line class="thin" x1="605" y1="225" x2="645" y2="225"/>
+  <text class="lbl green" x="600" y="229" text-anchor="end">1I0</text>
+  <text class="pinno" x="653" y="229">2</text>
+
+  <line class="thin" x1="605" y1="255" x2="645" y2="255"/>
+  <text class="lbl green" x="600" y="259" text-anchor="end">1I1</text>
+  <text class="pinno" x="653" y="259">3</text>
+
+  <line class="thin" x1="605" y1="305" x2="645" y2="305"/>
+  <text class="lbl green" x="600" y="309" text-anchor="end">2I0</text>
+  <text class="pinno" x="653" y="309">5</text>
+
+  <line class="thin" x1="605" y1="335" x2="645" y2="335"/>
+  <text class="lbl green" x="600" y="339" text-anchor="end">2I1</text>
+  <text class="pinno" x="653" y="339">6</text>
+
+  <line class="thin" x1="605" y1="385" x2="645" y2="385"/>
+  <text class="lbl green" x="600" y="389" text-anchor="end">3I0</text>
+  <text class="pinno" x="653" y="389">11</text>
+
+  <line class="thin" x1="605" y1="415" x2="645" y2="415"/>
+  <text class="lbl green" x="600" y="419" text-anchor="end">3I1</text>
+  <text class="pinno" x="653" y="419">10</text>
+
+  <line class="thin" x1="605" y1="465" x2="645" y2="465"/>
+  <text class="lbl green" x="600" y="469" text-anchor="end">4I0</text>
+  <text class="pinno" x="653" y="469">14</text>
+
+  <line class="thin" x1="605" y1="495" x2="645" y2="495"/>
+  <text class="lbl green" x="600" y="499" text-anchor="end">4I1</text>
+  <text class="pinno" x="653" y="499">13</text>
+
+  <!-- outputs (right edge) -->
+  <line class="thin" x1="815" y1="285" x2="855" y2="285"/>
+  <text class="lbl purple" x="860" y="289">1Y</text>
+  <text class="pinno" x="807" y="289" text-anchor="end">4</text>
+
+  <line class="thin" x1="815" y1="343" x2="855" y2="343"/>
+  <text class="lbl purple" x="860" y="347">2Y</text>
+  <text class="pinno" x="807" y="347" text-anchor="end">7</text>
+
+  <line class="thin" x1="815" y1="401" x2="855" y2="401"/>
+  <text class="lbl purple" x="860" y="405">3Y</text>
+  <text class="pinno" x="807" y="405" text-anchor="end">9</text>
+
+  <line class="thin" x1="815" y1="459" x2="855" y2="459"/>
+  <text class="lbl purple" x="860" y="463">4Y</text>
+  <text class="pinno" x="807" y="463" text-anchor="end">12</text>
+
+  <!-- select S (bottom edge) -->
+  <line class="thin" x1="730" y1="515" x2="730" y2="548"/>
+  <text class="lbl blue" x="730" y="563" text-anchor="middle">S</text>
+  <text class="pinno" x="730" y="507" text-anchor="middle">1</text>
+
+  <!-- enable /E (top edge, bubble) -->
+  <line class="thin" x1="730" y1="192" x2="730" y2="213"/>
+  <circle cx="730" cy="219" r="6" fill="#fafaf7" stroke="#1f2933" stroke-width="1.2"/>
+  <text class="lbl orange" x="730" y="186" text-anchor="middle">E&#x305;</text>
+  <text class="pinno" x="730" y="240" text-anchor="middle">15</text>
+
+  <!-- body label -->
+  <text class="lbl" x="725" y="358" text-anchor="middle">QUAD</text>
+  <text class="lbl" x="725" y="380" text-anchor="middle">2:1 MUX</text>
+  <text class="small" x="725" y="400" text-anchor="middle">S: L&#8594;I0  H&#8594;I1</text>
+
+  <text class="small" x="600" y="585"><tspan class="red">VCC</tspan> = pin 16   &#183;   <tspan class="slate">GND</tspan> = pin 8</text>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <text class="noteh" x="40" y="612">HOW IT WORKS</text>
+  <text class="note" x="40" y="636">Four independent 2-to-1 multiplexers in one chip.</text>
+  <text class="note" x="40" y="656">A single select <tspan class="blue">S</tspan> steers every channel together:</text>
+  <text class="note" x="40" y="676"><tspan class="blue">S</tspan> LOW passes the I0 inputs to the outputs,</text>
+  <text class="note" x="40" y="696"><tspan class="blue">S</tspan> HIGH passes the I1 inputs.</text>
+  <text class="note" x="40" y="716">Each output <tspan class="purple">nY</tspan> follows only its own pair</text>
+  <text class="note" x="40" y="736">(<tspan class="green">nI0</tspan>, <tspan class="green">nI1</tspan>).</text>
+  <text class="note" x="40" y="756">The common enable <tspan class="orange">E&#x305;</tspan> gates all four: <tspan class="orange">E&#x305;</tspan> HIGH</text>
+  <text class="note" x="40" y="776">forces every <tspan class="purple">Y</tspan> output LOW (no tri-state &#8212; the</text>
+  <text class="note" x="40" y="796">outputs are always driven). Hold <tspan class="orange">E&#x305;</tspan> LOW to run.</text>
+  <text class="note" x="40" y="816">Handy for swapping between two 4-bit sources.</text>
+
+  <!-- ============ FUNCTION TABLE ============ -->
+  <rect x="410" y="620" width="350" height="30" fill="#eef1f4" stroke="#9aa5b1"/>
+  <rect x="410" y="650" width="350" height="96" fill="none" stroke="#9aa5b1"/>
+  <line class="grid" x1="490" y1="620" x2="490" y2="746"/>
+  <line class="grid" x1="555" y1="620" x2="555" y2="746"/>
+  <line class="grid" x1="410" y1="682" x2="760" y2="682"/>
+  <line class="grid" x1="410" y1="714" x2="760" y2="714"/>
+
+  <text class="tblh orange" x="450" y="640" text-anchor="middle">E&#x305;</text>
+  <text class="tblh blue"   x="522" y="640" text-anchor="middle">S</text>
+  <text class="tblh purple" x="657" y="640" text-anchor="middle">Y  (each channel)</text>
+
+  <text class="tbl" x="450" y="671" text-anchor="middle">H</text>
+  <text class="tbl" x="522" y="671" text-anchor="middle">X</text>
+  <text class="tbl" x="657" y="671" text-anchor="middle">all <tspan class="purple">Y</tspan> = L</text>
+
+  <text class="tbl" x="450" y="703" text-anchor="middle">L</text>
+  <text class="tbl" x="522" y="703" text-anchor="middle">L</text>
+  <text class="tbl" x="657" y="703" text-anchor="middle"><tspan class="purple">nY</tspan> = <tspan class="green">nI0</tspan></text>
+
+  <text class="tbl" x="450" y="735" text-anchor="middle">L</text>
+  <text class="tbl" x="522" y="735" text-anchor="middle">H</text>
+  <text class="tbl" x="657" y="735" text-anchor="middle"><tspan class="purple">nY</tspan> = <tspan class="green">nI1</tspan></text>
+
+  <text class="small" x="410" y="766"><tspan class="blue">S</tspan> selects I0 (S=L) or I1 (S=H) on all four channels.</text>
+  <text class="small" x="410" y="782"><tspan class="orange">E&#x305;</tspan> HIGH forces every output LOW (no high-Z). X = don&#39;t-care.</text>
+
+  <!-- ============ COLOUR KEY ============ -->
+  <text class="noteh" x="800" y="612">COLOUR KEY</text>
+
+  <rect x="800" y="626" width="16" height="16" fill="#2e7d32"/>
+  <text class="small" x="824" y="638">Data inputs &#8212; <tspan class="green">1I0&#8230;4I1</tspan></text>
+
+  <rect x="800" y="654" width="16" height="16" fill="#1565c0"/>
+  <text class="small" x="824" y="666">Select &#8212; <tspan class="blue">S</tspan></text>
+
+  <rect x="800" y="682" width="16" height="16" fill="#e65100"/>
+  <text class="small" x="824" y="694">Enable &#8212; <tspan class="orange">E&#x305;</tspan></text>
+
+  <rect x="800" y="710" width="16" height="16" fill="#7b1fa2"/>
+  <text class="small" x="824" y="722">Outputs &#8212; <tspan class="purple">1Y&#8230;4Y</tspan></text>
+
+  <rect x="800" y="738" width="16" height="16" fill="#c62828"/>
+  <text class="small" x="824" y="750"><tspan class="red">VCC</tspan> &#8212; pin 16</text>
+
+  <rect x="800" y="766" width="16" height="16" fill="#37474f"/>
+  <text class="small" x="824" y="778"><tspan class="slate">GND</tspan> &#8212; pin 8</text>
+</svg>
