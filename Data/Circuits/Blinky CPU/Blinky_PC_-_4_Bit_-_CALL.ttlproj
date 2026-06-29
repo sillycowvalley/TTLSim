@@ -148,7 +148,7 @@
         "partIdentifier": "28C16",
         "family": null,
         "value": null,
-        "program": ":100000000000000000000000000000000000007878\r\n:00000001FF\r\n",
+        "program": ":0C0000000000B6007200BA00020000020E\n:00000001FF\n",
         "propagationDelayNs": 150,
         "function1": null,
         "function2": null,
@@ -388,7 +388,7 @@
           "x": 15,
           "y": 7
         },
-        "label": "+1",
+        "label": "\u002B1",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null
@@ -516,7 +516,7 @@
         "unitLetter": "",
         "position": {
           "x": 40,
-          "y": -52
+          "y": -46
         },
         "label": "",
         "rotation": 90,
@@ -529,7 +529,7 @@
         "unitLetter": "",
         "position": {
           "x": 35,
-          "y": -52
+          "y": -46
         },
         "label": "",
         "rotation": 90,
@@ -542,7 +542,7 @@
         "unitLetter": "",
         "position": {
           "x": 30,
-          "y": -52
+          "y": -46
         },
         "label": "",
         "rotation": 90,
@@ -555,7 +555,7 @@
         "unitLetter": "",
         "position": {
           "x": 25,
-          "y": -52
+          "y": -46
         },
         "label": "",
         "rotation": 90,
@@ -568,7 +568,7 @@
         "unitLetter": "",
         "position": {
           "x": 20,
-          "y": -52
+          "y": -46
         },
         "label": "",
         "rotation": 90,
@@ -581,7 +581,7 @@
         "unitLetter": "",
         "position": {
           "x": 15,
-          "y": -52
+          "y": -46
         },
         "label": "",
         "rotation": 90,
@@ -594,7 +594,7 @@
         "unitLetter": "",
         "position": {
           "x": 10,
-          "y": -52
+          "y": -46
         },
         "label": "",
         "rotation": 90,
@@ -607,7 +607,7 @@
         "unitLetter": "",
         "position": {
           "x": 5,
-          "y": -52
+          "y": -46
         },
         "label": "",
         "rotation": 90,
@@ -620,7 +620,7 @@
         "unitLetter": "",
         "position": {
           "x": 18,
-          "y": -81
+          "y": -79
         },
         "label": "IR",
         "rotation": 90,
@@ -658,7 +658,7 @@
         "deviceId": "dev-u12-00",
         "unitLetter": "",
         "position": {
-          "x": 170,
+          "x": 168,
           "y": -120
         },
         "label": "glue",
@@ -671,7 +671,7 @@
         "deviceId": "dev-u9-191",
         "unitLetter": "",
         "position": {
-          "x": 192,
+          "x": 190,
           "y": -120
         },
         "label": "RSP",
@@ -684,8 +684,8 @@
         "deviceId": "dev-u10-2114",
         "unitLetter": "",
         "position": {
-          "x": 216,
-          "y": -120
+          "x": 234,
+          "y": -105
         },
         "label": "Ret Stack",
         "rotation": 0,
@@ -697,7 +697,7 @@
         "deviceId": "dev-u11-257",
         "unitLetter": "",
         "position": {
-          "x": 192,
+          "x": 190,
           "y": -82
         },
         "label": "RDIN",
@@ -779,7 +779,7 @@
         "label": "",
         "position": {
           "x": 0,
-          "y": -47
+          "y": -41
         },
         "rotation": 0,
         "layer": 0,
@@ -888,7 +888,7 @@
         "id": "8b4837c41ec9463181a2718e71379fdf",
         "label": "VCC",
         "position": {
-          "x": 157,
+          "x": 146,
           "y": -126
         },
         "rotation": 0,
@@ -976,11 +976,22 @@
         "id": "vccRS",
         "label": "",
         "position": {
-          "x": 208,
+          "x": 248,
           "y": -132
         },
         "rotation": 0,
-        "layer": 0
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "fontSize": null,
+        "textColor": null
       },
       {
         "type": "gnd",
@@ -988,10 +999,65 @@
         "label": "",
         "position": {
           "x": 208,
-          "y": -56
+          "y": -63
         },
         "rotation": 0,
-        "layer": 0
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "rect",
+        "id": "5216cff1f933433ab2113ff84d4d98f6",
+        "label": "",
+        "position": {
+          "x": 154,
+          "y": -137
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 100,
+        "height": 80,
+        "filled": true,
+        "fillColor": "Grey",
+        "borderColor": "Grey",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "text",
+        "id": "92a7313c8df74f29a1c5a6619b9d9dde",
+        "label": "Return Stack",
+        "position": {
+          "x": 218,
+          "y": -134
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "fontSize": 18,
+        "textColor": "Grey"
       }
     ],
     "connections": [
@@ -2449,7 +2515,7 @@
           "pinNumber": 1,
           "external": false
         },
-        "color": "Orange"
+        "color": "Brown"
       },
       {
         "id": "c900006",
@@ -2477,7 +2543,7 @@
           "pinNumber": 7,
           "external": false
         },
-        "color": "Yellow"
+        "color": "Orange"
       },
       {
         "id": "b6a5fc44bc7648a49fa6323bb3f4b6f5",
@@ -2757,17 +2823,19 @@
           "pinNumber": 15,
           "external": false
         },
-        "color": "Orange"
+        "color": "Brown"
       },
       {
         "id": "rs_1",
         "a": {
           "itemId": "uU9_rsp",
-          "pinNumber": 16
+          "pinNumber": 16,
+          "external": false
         },
         "b": {
           "itemId": "vccRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
         "color": "Red"
       },
@@ -2775,23 +2843,27 @@
         "id": "rs_2",
         "a": {
           "itemId": "uU9_rsp",
-          "pinNumber": 8
+          "pinNumber": 8,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": "Blue"
       },
       {
         "id": "rs_3",
         "a": {
           "itemId": "uU10_ram",
-          "pinNumber": 18
+          "pinNumber": 18,
+          "external": false
         },
         "b": {
           "itemId": "vccRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
         "color": "Red"
       },
@@ -2799,23 +2871,27 @@
         "id": "rs_4",
         "a": {
           "itemId": "uU10_ram",
-          "pinNumber": 9
+          "pinNumber": 9,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": "Blue"
       },
       {
         "id": "rs_5",
         "a": {
           "itemId": "uU11_rdin",
-          "pinNumber": 16
+          "pinNumber": 16,
+          "external": false
         },
         "b": {
           "itemId": "vccRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
         "color": "Red"
       },
@@ -2823,23 +2899,27 @@
         "id": "rs_6",
         "a": {
           "itemId": "uU11_rdin",
-          "pinNumber": 8
+          "pinNumber": 8,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": "Blue"
       },
       {
         "id": "rs_7",
         "a": {
           "itemId": "uU12_glue",
-          "pinNumber": 14
+          "pinNumber": 14,
+          "external": false
         },
         "b": {
           "itemId": "vccRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
         "color": "Red"
       },
@@ -2847,535 +2927,659 @@
         "id": "rs_8",
         "a": {
           "itemId": "uU12_glue",
-          "pinNumber": 7
+          "pinNumber": 7,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": "Blue"
       },
       {
         "id": "rs_9",
         "a": {
           "itemId": "83d8d11c1b9a4f39a47f48c1f28a114a",
-          "pinNumber": 17
+          "pinNumber": 17,
+          "external": false
         },
         "b": {
           "itemId": "uU9_rsp",
-          "pinNumber": 4
-        }
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": "Yellow"
       },
       {
         "id": "rs_10",
         "a": {
           "itemId": "83d8d11c1b9a4f39a47f48c1f28a114a",
-          "pinNumber": 17
+          "pinNumber": 17,
+          "external": false
         },
         "b": {
           "itemId": "uU10_ram",
-          "pinNumber": 8
-        }
+          "pinNumber": 8,
+          "external": false
+        },
+        "color": "Yellow"
       },
       {
         "id": "rs_11",
         "a": {
           "itemId": "83d8d11c1b9a4f39a47f48c1f28a114a",
-          "pinNumber": 16
+          "pinNumber": 16,
+          "external": false
         },
         "b": {
           "itemId": "uU12_glue",
-          "pinNumber": 1
-        }
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
       },
       {
         "id": "rs_12",
         "a": {
           "itemId": "83d8d11c1b9a4f39a47f48c1f28a114a",
-          "pinNumber": 16
+          "pinNumber": 16,
+          "external": false
         },
         "b": {
           "itemId": "uU12_glue",
-          "pinNumber": 9
-        }
+          "pinNumber": 9,
+          "external": false
+        },
+        "color": "Yellow"
       },
       {
         "id": "rs_13",
         "a": {
           "itemId": "83d8d11c1b9a4f39a47f48c1f28a114a",
-          "pinNumber": 16
+          "pinNumber": 16,
+          "external": false
         },
         "b": {
           "itemId": "uU12_glue",
-          "pinNumber": 10
-        }
+          "pinNumber": 10,
+          "external": false
+        },
+        "color": "Yellow"
       },
       {
         "id": "rs_14",
         "a": {
           "itemId": "83d8d11c1b9a4f39a47f48c1f28a114a",
-          "pinNumber": 15
+          "pinNumber": 15,
+          "external": false
         },
         "b": {
           "itemId": "uU11_rdin",
-          "pinNumber": 1
-        }
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
       },
       {
         "id": "rs_15",
         "a": {
           "itemId": "clk1",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
         "b": {
           "itemId": "uU12_glue",
-          "pinNumber": 2
-        }
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Orange"
       },
       {
         "id": "rs_16",
         "a": {
           "itemId": "uU12_glue",
-          "pinNumber": 3
+          "pinNumber": 3,
+          "external": false
         },
         "b": {
           "itemId": "uU10_ram",
-          "pinNumber": 10
-        }
+          "pinNumber": 10,
+          "external": false
+        },
+        "color": "Orange"
       },
       {
         "id": "rs_17",
         "a": {
           "itemId": "uU12_glue",
-          "pinNumber": 3
+          "pinNumber": 3,
+          "external": false
         },
         "b": {
           "itemId": "uU11_rdin",
-          "pinNumber": 15
-        }
+          "pinNumber": 15,
+          "external": false
+        },
+        "color": "Orange"
       },
       {
         "id": "rs_18",
         "a": {
           "itemId": "ce770cf8cdeb4d5b99486efa5173d16f",
-          "pinNumber": 1
+          "pinNumber": 1,
+          "external": false
         },
         "b": {
           "itemId": "uU12_glue",
-          "pinNumber": 4
-        }
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": "Brown"
       },
       {
         "id": "rs_19",
         "a": {
           "itemId": "ce770cf8cdeb4d5b99486efa5173d16f",
-          "pinNumber": 1
+          "pinNumber": 1,
+          "external": false
         },
         "b": {
           "itemId": "uU12_glue",
-          "pinNumber": 5
-        }
+          "pinNumber": 5,
+          "external": false
+        },
+        "color": "Brown"
       },
       {
         "id": "rs_20",
         "a": {
           "itemId": "uU12_glue",
-          "pinNumber": 6
+          "pinNumber": 6,
+          "external": false
         },
         "b": {
           "itemId": "uU9_rsp",
-          "pinNumber": 11
-        }
+          "pinNumber": 11,
+          "external": false
+        },
+        "color": "Brown"
       },
       {
         "id": "rs_21",
         "a": {
           "itemId": "uU12_glue",
-          "pinNumber": 8
+          "pinNumber": 8,
+          "external": false
         },
         "b": {
           "itemId": "uU9_rsp",
-          "pinNumber": 5
-        }
+          "pinNumber": 5,
+          "external": false
+        },
+        "color": null
       },
       {
         "id": "rs_22",
         "a": {
           "itemId": "uU12_glue",
-          "pinNumber": 12
+          "pinNumber": 12,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": "Blue"
       },
       {
         "id": "rs_23",
         "a": {
           "itemId": "uU12_glue",
-          "pinNumber": 13
+          "pinNumber": 13,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": "Blue"
       },
       {
         "id": "rs_24",
         "a": {
           "itemId": "clk1",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
         "b": {
           "itemId": "uU9_rsp",
-          "pinNumber": 14
-        }
+          "pinNumber": 14,
+          "external": false
+        },
+        "color": "Orange"
       },
       {
         "id": "rs_25",
         "a": {
           "itemId": "uU9_rsp",
-          "pinNumber": 15
+          "pinNumber": 15,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": "Blue"
       },
       {
         "id": "rs_26",
         "a": {
           "itemId": "uU9_rsp",
-          "pinNumber": 1
+          "pinNumber": 1,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": "Blue"
       },
       {
         "id": "rs_27",
         "a": {
           "itemId": "uU9_rsp",
-          "pinNumber": 10
+          "pinNumber": 10,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": "Blue"
       },
       {
         "id": "rs_28",
         "a": {
           "itemId": "uU9_rsp",
-          "pinNumber": 9
+          "pinNumber": 9,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": "Blue"
       },
       {
         "id": "rs_29",
         "a": {
           "itemId": "uU9_rsp",
-          "pinNumber": 3
+          "pinNumber": 3,
+          "external": false
         },
         "b": {
           "itemId": "uU10_ram",
-          "pinNumber": 5
-        }
+          "pinNumber": 5,
+          "external": false
+        },
+        "color": "Green"
       },
       {
         "id": "rs_30",
         "a": {
           "itemId": "uU9_rsp",
-          "pinNumber": 2
+          "pinNumber": 2,
+          "external": false
         },
         "b": {
           "itemId": "uU10_ram",
-          "pinNumber": 6
-        }
+          "pinNumber": 6,
+          "external": false
+        },
+        "color": "Green"
       },
       {
         "id": "rs_31",
         "a": {
           "itemId": "uU9_rsp",
-          "pinNumber": 6
+          "pinNumber": 6,
+          "external": false
         },
         "b": {
           "itemId": "uU10_ram",
-          "pinNumber": 7
-        }
+          "pinNumber": 7,
+          "external": false
+        },
+        "color": "Green"
       },
       {
         "id": "rs_32",
         "a": {
           "itemId": "uU9_rsp",
-          "pinNumber": 7
+          "pinNumber": 7,
+          "external": false
         },
         "b": {
           "itemId": "uU10_ram",
-          "pinNumber": 4
-        }
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": "Green"
       },
       {
         "id": "rs_33",
         "a": {
           "itemId": "uU10_ram",
-          "pinNumber": 3
+          "pinNumber": 3,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": "Blue"
       },
       {
         "id": "rs_34",
         "a": {
           "itemId": "uU10_ram",
-          "pinNumber": 2
+          "pinNumber": 2,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": "Blue"
       },
       {
         "id": "rs_35",
         "a": {
           "itemId": "uU10_ram",
-          "pinNumber": 1
+          "pinNumber": 1,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": "Blue"
       },
       {
         "id": "rs_36",
         "a": {
           "itemId": "uU10_ram",
-          "pinNumber": 17
+          "pinNumber": 17,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": "Blue"
       },
       {
         "id": "rs_37",
         "a": {
           "itemId": "uU10_ram",
-          "pinNumber": 16
+          "pinNumber": 16,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": null
       },
       {
         "id": "rs_38",
         "a": {
           "itemId": "uU10_ram",
-          "pinNumber": 15
+          "pinNumber": 15,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": null
       },
       {
         "id": "rs_39",
         "a": {
           "itemId": "uU10_ram",
-          "pinNumber": 14
+          "pinNumber": 14,
+          "external": false
         },
         "b": {
           "itemId": "uU5",
-          "pinNumber": 4
-        }
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": "Teal"
       },
       {
         "id": "rs_40",
         "a": {
           "itemId": "uU10_ram",
-          "pinNumber": 13
+          "pinNumber": 13,
+          "external": false
         },
         "b": {
           "itemId": "uU5",
-          "pinNumber": 12
-        }
+          "pinNumber": 12,
+          "external": false
+        },
+        "color": "Teal"
       },
       {
         "id": "rs_41",
         "a": {
           "itemId": "uU10_ram",
-          "pinNumber": 12
+          "pinNumber": 12,
+          "external": false
         },
         "b": {
           "itemId": "uU6",
-          "pinNumber": 4
-        }
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": "Teal"
       },
       {
         "id": "rs_42",
         "a": {
           "itemId": "uU10_ram",
-          "pinNumber": 11
+          "pinNumber": 11,
+          "external": false
         },
         "b": {
           "itemId": "uU6",
-          "pinNumber": 12
-        }
+          "pinNumber": 12,
+          "external": false
+        },
+        "color": "Teal"
       },
       {
         "id": "rs_43",
         "a": {
           "itemId": "uU10_ram",
-          "pinNumber": 14
+          "pinNumber": 14,
+          "external": false
         },
         "b": {
           "itemId": "uU11_rdin",
-          "pinNumber": 4
-        }
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": "Teal"
       },
       {
         "id": "rs_44",
         "a": {
           "itemId": "uU10_ram",
-          "pinNumber": 13
+          "pinNumber": 13,
+          "external": false
         },
         "b": {
           "itemId": "uU11_rdin",
-          "pinNumber": 7
-        }
+          "pinNumber": 7,
+          "external": false
+        },
+        "color": "Teal"
       },
       {
         "id": "rs_45",
         "a": {
           "itemId": "uU10_ram",
-          "pinNumber": 12
+          "pinNumber": 12,
+          "external": false
         },
         "b": {
           "itemId": "uU11_rdin",
-          "pinNumber": 9
-        }
+          "pinNumber": 9,
+          "external": false
+        },
+        "color": "Teal"
       },
       {
         "id": "rs_46",
         "a": {
           "itemId": "uU10_ram",
-          "pinNumber": 11
+          "pinNumber": 11,
+          "external": false
         },
         "b": {
           "itemId": "uU11_rdin",
-          "pinNumber": 12
-        }
+          "pinNumber": 12,
+          "external": false
+        },
+        "color": "Teal"
       },
       {
         "id": "rs_47",
         "a": {
           "itemId": "uU11_rdin",
-          "pinNumber": 3
+          "pinNumber": 3,
+          "external": false
         },
         "b": {
           "itemId": "uU3",
-          "pinNumber": 4
-        }
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": "Teal"
       },
       {
         "id": "rs_48",
         "a": {
           "itemId": "uU11_rdin",
-          "pinNumber": 6
+          "pinNumber": 6,
+          "external": false
         },
         "b": {
           "itemId": "uU3",
-          "pinNumber": 1
-        }
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Teal"
       },
       {
         "id": "rs_49",
         "a": {
           "itemId": "uU11_rdin",
-          "pinNumber": 10
+          "pinNumber": 10,
+          "external": false
         },
         "b": {
           "itemId": "uU3",
-          "pinNumber": 13
-        }
+          "pinNumber": 13,
+          "external": false
+        },
+        "color": "Teal"
       },
       {
         "id": "rs_50",
         "a": {
           "itemId": "uU11_rdin",
-          "pinNumber": 13
+          "pinNumber": 13,
+          "external": false
         },
         "b": {
           "itemId": "uU3",
-          "pinNumber": 10
-        }
+          "pinNumber": 10,
+          "external": false
+        },
+        "color": "Teal"
       },
       {
         "id": "rs_51",
         "a": {
           "itemId": "uU11_rdin",
-          "pinNumber": 2
+          "pinNumber": 2,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": "Blue"
       },
       {
         "id": "rs_52",
         "a": {
           "itemId": "uU11_rdin",
-          "pinNumber": 5
+          "pinNumber": 5,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": "Blue"
       },
       {
         "id": "rs_53",
         "a": {
           "itemId": "uU11_rdin",
-          "pinNumber": 11
+          "pinNumber": 11,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": "Blue"
       },
       {
         "id": "rs_54",
         "a": {
           "itemId": "uU11_rdin",
-          "pinNumber": 14
+          "pinNumber": 14,
+          "external": false
         },
         "b": {
           "itemId": "gndRS",
-          "pinNumber": 0
+          "pinNumber": 0,
+          "external": false
         },
-        "color": "Black"
+        "color": "Blue"
       }
     ],
     "links": [],
@@ -3388,10 +3592,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 0.80361193,
+    "zoom": 2.458271,
     "pan": {
-      "x": 377,
-      "y": 483
+      "x": -1618,
+      "y": 1666
     }
   }
 }
