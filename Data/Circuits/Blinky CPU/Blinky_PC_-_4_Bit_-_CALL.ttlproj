@@ -863,8 +863,8 @@
           "x": 81,
           "y": -46
         },
-        "label": "PSH",
-        "rotation": 90,
+        "label": "/WSP",
+        "rotation": 270,
         "layer": 0,
         "switchClosed": null
       },
@@ -876,7 +876,7 @@
           "x": 87,
           "y": -46
         },
-        "label": "P/P",
+        "label": "SAS",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null
@@ -889,7 +889,7 @@
           "x": 93,
           "y": -46
         },
-        "label": "RDS",
+        "label": "RDI",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null
@@ -1335,6 +1335,28 @@
         "borderColor": null,
         "fontSize": 14,
         "textColor": "Grey"
+      },
+      {
+        "type": "vcc",
+        "id": "df916c85bccd4c3585c3ecc9236bbe63",
+        "label": "VCC",
+        "position": {
+          "x": 110,
+          "y": -45
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "fontSize": null,
+        "textColor": null
       }
     ],
     "connections": [
@@ -4237,34 +4259,6 @@
         "color": "Yellow"
       },
       {
-        "id": "f44b08c8161e4a17bd645ed8bc932f81",
-        "a": {
-          "itemId": "4ce2c1f1b3cc4721acb7d4e5a3f46695",
-          "pinNumber": 2,
-          "external": false
-        },
-        "b": {
-          "itemId": "c16f0615d32746f984eb3de8a5010359",
-          "pinNumber": 2,
-          "external": false
-        },
-        "color": "Blue"
-      },
-      {
-        "id": "2b50ff1106b344778376a94d60023951",
-        "a": {
-          "itemId": "c16f0615d32746f984eb3de8a5010359",
-          "pinNumber": 2,
-          "external": false
-        },
-        "b": {
-          "itemId": "0000c0377174421891bb7914102c4957",
-          "pinNumber": 2,
-          "external": false
-        },
-        "color": "Blue"
-      },
-      {
         "id": "020e97b4c7e8422281d6d24c74501dd6",
         "a": {
           "itemId": "0000c0377174421891bb7914102c4957",
@@ -4277,20 +4271,6 @@
           "external": false
         },
         "color": "Blue"
-      },
-      {
-        "id": "37d717f26ffc481aa147f43fed34bbd3",
-        "a": {
-          "itemId": "c16f0615d32746f984eb3de8a5010359",
-          "pinNumber": 1,
-          "external": false
-        },
-        "b": {
-          "itemId": "83d8d11c1b9a4f39a47f48c1f28a114a",
-          "pinNumber": 17,
-          "external": false
-        },
-        "color": "Yellow"
       },
       {
         "id": "8ab23a68d195403a9f1a827eaee07028",
@@ -4319,6 +4299,48 @@
           "external": false
         },
         "color": "Yellow"
+      },
+      {
+        "id": "ad4f8aaf28b143099b635e6ec8ab256c",
+        "a": {
+          "itemId": "4ce2c1f1b3cc4721acb7d4e5a3f46695",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "0000c0377174421891bb7914102c4957",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "ef7881a005bf49fcbaa4ce885b06a189",
+        "a": {
+          "itemId": "c16f0615d32746f984eb3de8a5010359",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "df916c85bccd4c3585c3ecc9236bbe63",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "67e94d3fe2e5408c81716a065f7b350b",
+        "a": {
+          "itemId": "83d8d11c1b9a4f39a47f48c1f28a114a",
+          "pinNumber": 17,
+          "external": false
+        },
+        "b": {
+          "itemId": "c16f0615d32746f984eb3de8a5010359",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Yellow"
       }
     ],
     "links": [],
@@ -4331,10 +4353,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 1.1524062,
+    "zoom": 0.84822536,
     "pan": {
-      "x": 238,
-      "y": 949
+      "x": 233,
+      "y": 710
     }
   }
 }
