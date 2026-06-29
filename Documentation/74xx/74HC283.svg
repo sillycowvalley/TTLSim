@@ -1,0 +1,274 @@
+<svg viewBox="0 0 1040 850" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <style>
+    .bg     { fill:#fafaf7; }
+    .thin   { stroke:#1f2933; stroke-width:1.2; fill:none; }
+    .body   { fill:#ffffff; stroke:#1f2933; stroke-width:2; }
+    .title  { fill:#1f2933; font-size:32px; font-weight:700; }
+    .sub    { fill:#52606d; font-size:15px; }
+    .panel  { fill:#3e4c59; font-size:14px; font-weight:600; letter-spacing:.4px; }
+    .pinno  { fill:#7b8794; font-size:11px; font-weight:600; }
+    .sig    { font-size:13px; font-weight:700; }
+    .green  { fill:#2e7d32 !important; }
+    .blue   { fill:#1565c0 !important; }
+    .orange { fill:#e65100 !important; }
+    .purple { fill:#7b1fa2 !important; }
+    .red    { fill:#c62828 !important; }
+    .slate  { fill:#37474f !important; }
+    .lbl    { fill:#1f2933; font-size:13px; font-weight:700; }
+    .small  { fill:#52606d; font-size:11px; }
+    .tbl    { fill:#1f2933; font-size:13px; }
+    .tblh   { fill:#1f2933; font-size:13px; font-weight:700; }
+    .note   { fill:#3e4c59; font-size:13px; }
+    .noteh  { fill:#1f2933; font-size:14px; font-weight:700; }
+    .grid   { stroke:#cbd2d9; stroke-width:1; }
+  </style>
+
+  <rect class="bg" x="0" y="0" width="1040" height="850"/>
+
+  <!-- ============ TITLE BLOCK ============ -->
+  <text class="title" x="40" y="48">74HC283</text>
+  <text class="sub" x="40" y="74">4-Bit Binary Full Adder with Fast Carry  &#183;  DIP-16  &#183;  combinational (no clock)</text>
+  <line class="thin" x1="40" y1="88" x2="1000" y2="88"/>
+
+  <!-- ============ PINOUT ============ -->
+  <text class="panel" x="185" y="116">PINOUT &#183; top view</text>
+
+  <rect class="body" x="185" y="130" width="110" height="380"/>
+  <path class="thin" d="M 223 130 A 17 17 0 0 0 257 130"/>
+
+  <!-- left pins 1-8 -->
+  <line class="thin" x1="155" y1="166" x2="185" y2="166"/>
+  <text class="pinno" x="150" y="170" text-anchor="end">1</text>
+  <text class="sig purple" x="192" y="170">S2</text>
+
+  <line class="thin" x1="155" y1="210" x2="185" y2="210"/>
+  <text class="pinno" x="150" y="214" text-anchor="end">2</text>
+  <text class="sig green" x="192" y="214">B2</text>
+
+  <line class="thin" x1="155" y1="254" x2="185" y2="254"/>
+  <text class="pinno" x="150" y="258" text-anchor="end">3</text>
+  <text class="sig green" x="192" y="258">A2</text>
+
+  <line class="thin" x1="155" y1="298" x2="185" y2="298"/>
+  <text class="pinno" x="150" y="302" text-anchor="end">4</text>
+  <text class="sig purple" x="192" y="302">S1</text>
+
+  <line class="thin" x1="155" y1="342" x2="185" y2="342"/>
+  <text class="pinno" x="150" y="346" text-anchor="end">5</text>
+  <text class="sig green" x="192" y="346">A1</text>
+
+  <line class="thin" x1="155" y1="386" x2="185" y2="386"/>
+  <text class="pinno" x="150" y="390" text-anchor="end">6</text>
+  <text class="sig green" x="192" y="390">B1</text>
+
+  <line class="thin" x1="155" y1="430" x2="185" y2="430"/>
+  <text class="pinno" x="150" y="434" text-anchor="end">7</text>
+  <text class="sig green" x="192" y="434">C0</text>
+
+  <line class="thin" x1="155" y1="474" x2="185" y2="474"/>
+  <text class="pinno" x="150" y="478" text-anchor="end">8</text>
+  <text class="sig slate" x="192" y="478">GND</text>
+
+  <!-- right pins 16-9 -->
+  <line class="thin" x1="295" y1="166" x2="325" y2="166"/>
+  <text class="pinno" x="330" y="170">16</text>
+  <text class="sig red" x="288" y="170" text-anchor="end">VCC</text>
+
+  <line class="thin" x1="295" y1="210" x2="325" y2="210"/>
+  <text class="pinno" x="330" y="214">15</text>
+  <text class="sig green" x="288" y="214" text-anchor="end">B3</text>
+
+  <line class="thin" x1="295" y1="254" x2="325" y2="254"/>
+  <text class="pinno" x="330" y="258">14</text>
+  <text class="sig green" x="288" y="258" text-anchor="end">A3</text>
+
+  <line class="thin" x1="295" y1="298" x2="325" y2="298"/>
+  <text class="pinno" x="330" y="302">13</text>
+  <text class="sig purple" x="288" y="302" text-anchor="end">S3</text>
+
+  <line class="thin" x1="295" y1="342" x2="325" y2="342"/>
+  <text class="pinno" x="330" y="346">12</text>
+  <text class="sig green" x="288" y="346" text-anchor="end">A4</text>
+
+  <line class="thin" x1="295" y1="386" x2="325" y2="386"/>
+  <text class="pinno" x="330" y="390">11</text>
+  <text class="sig green" x="288" y="390" text-anchor="end">B4</text>
+
+  <line class="thin" x1="295" y1="430" x2="325" y2="430"/>
+  <text class="pinno" x="330" y="434">10</text>
+  <text class="sig purple" x="288" y="434" text-anchor="end">S4</text>
+
+  <line class="thin" x1="295" y1="474" x2="325" y2="474"/>
+  <text class="pinno" x="330" y="478">9</text>
+  <text class="sig purple" x="288" y="478" text-anchor="end">C4</text>
+
+  <!-- ============ SCHEMATIC SYMBOL ============ -->
+  <text class="panel" x="620" y="120">SCHEMATIC SYMBOL</text>
+
+  <rect class="body" x="620" y="175" width="210" height="400"/>
+
+  <!-- left pins -->
+  <line class="thin" x1="580" y1="210" x2="620" y2="210"/>
+  <text class="pinno" x="575" y="214" text-anchor="end">5</text>
+  <text class="lbl green" x="632" y="214">A1</text>
+
+  <line class="thin" x1="580" y1="252" x2="620" y2="252"/>
+  <text class="pinno" x="575" y="256" text-anchor="end">3</text>
+  <text class="lbl green" x="632" y="256">A2</text>
+
+  <line class="thin" x1="580" y1="294" x2="620" y2="294"/>
+  <text class="pinno" x="575" y="298" text-anchor="end">14</text>
+  <text class="lbl green" x="632" y="298">A3</text>
+
+  <line class="thin" x1="580" y1="336" x2="620" y2="336"/>
+  <text class="pinno" x="575" y="340" text-anchor="end">12</text>
+  <text class="lbl green" x="632" y="340">A4</text>
+
+  <line class="thin" x1="580" y1="378" x2="620" y2="378"/>
+  <text class="pinno" x="575" y="382" text-anchor="end">6</text>
+  <text class="lbl green" x="632" y="382">B1</text>
+
+  <line class="thin" x1="580" y1="420" x2="620" y2="420"/>
+  <text class="pinno" x="575" y="424" text-anchor="end">2</text>
+  <text class="lbl green" x="632" y="424">B2</text>
+
+  <line class="thin" x1="580" y1="462" x2="620" y2="462"/>
+  <text class="pinno" x="575" y="466" text-anchor="end">15</text>
+  <text class="lbl green" x="632" y="466">B3</text>
+
+  <line class="thin" x1="580" y1="504" x2="620" y2="504"/>
+  <text class="pinno" x="575" y="508" text-anchor="end">11</text>
+  <text class="lbl green" x="632" y="508">B4</text>
+
+  <line class="thin" x1="580" y1="546" x2="620" y2="546"/>
+  <text class="pinno" x="575" y="550" text-anchor="end">7</text>
+  <text class="lbl green" x="632" y="550">C0</text>
+
+  <!-- right pins -->
+  <line class="thin" x1="830" y1="250" x2="870" y2="250"/>
+  <text class="pinno" x="875" y="254">4</text>
+  <text class="lbl purple" x="818" y="254" text-anchor="end">S1</text>
+
+  <line class="thin" x1="830" y1="320" x2="870" y2="320"/>
+  <text class="pinno" x="875" y="324">1</text>
+  <text class="lbl purple" x="818" y="324" text-anchor="end">S2</text>
+
+  <line class="thin" x1="830" y1="390" x2="870" y2="390"/>
+  <text class="pinno" x="875" y="394">13</text>
+  <text class="lbl purple" x="818" y="394" text-anchor="end">S3</text>
+
+  <line class="thin" x1="830" y1="460" x2="870" y2="460"/>
+  <text class="pinno" x="875" y="464">10</text>
+  <text class="lbl purple" x="818" y="464" text-anchor="end">S4</text>
+
+  <line class="thin" x1="830" y1="546" x2="870" y2="546"/>
+  <text class="pinno" x="875" y="550">9</text>
+  <text class="lbl purple" x="818" y="550" text-anchor="end">C4</text>
+
+  <!-- body label -->
+  <text class="lbl" x="725" y="355" text-anchor="middle">4-BIT</text>
+  <text class="lbl" x="725" y="377" text-anchor="middle">FULL ADDER</text>
+  <text class="small" x="725" y="399" text-anchor="middle">fast carry</text>
+
+  <text class="small" x="620" y="600"><tspan class="red">VCC</tspan> = pin 16   &#183;   <tspan class="slate">GND</tspan> = pin 8</text>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <text class="noteh" x="40" y="608">HOW IT WORKS</text>
+  <text class="note" x="40" y="632">Adds two 4-bit numbers <tspan class="green">A1&#8211;A4</tspan> and <tspan class="green">B1&#8211;B4</tspan></text>
+  <text class="note" x="40" y="652">plus a carry-in <tspan class="green">C0</tspan>, giving sum <tspan class="purple">S1&#8211;S4</tspan></text>
+  <text class="note" x="40" y="672">and carry-out <tspan class="purple">C4</tspan>.</text>
+  <text class="note" x="40" y="692">Purely combinational &#8212; no clock; the result settles</text>
+  <text class="note" x="40" y="712">after the propagation delay.</text>
+  <text class="note" x="40" y="732">Each bit is a full adder: <tspan class="purple">S</tspan> = <tspan class="green">A</tspan> &#8853; <tspan class="green">B</tspan> &#8853; carry.</text>
+  <text class="note" x="40" y="752">Fast carry uses internal look-ahead across all four</text>
+  <text class="note" x="40" y="772">bits, not a slow ripple chain.</text>
+  <text class="note" x="40" y="792">Cascade by wiring <tspan class="purple">C4</tspan> of one stage to <tspan class="green">C0</tspan> of</text>
+  <text class="note" x="40" y="812">the next &#8212; build 8-, 12-, 16-bit adders.</text>
+
+  <!-- ============ FUNCTION TABLE ============ -->
+  <rect x="420" y="615" width="300" height="28" fill="#eef1f4" stroke="#9aa5b1"/>
+  <rect x="420" y="643" width="300" height="168" fill="none" stroke="#9aa5b1"/>
+  <line class="grid" x1="480" y1="615" x2="480" y2="811"/>
+  <line class="grid" x1="540" y1="615" x2="540" y2="811"/>
+  <line class="grid" x1="600" y1="615" x2="600" y2="811"/>
+  <line class="grid" x1="660" y1="615" x2="660" y2="811"/>
+  <line class="grid" x1="420" y1="664" x2="720" y2="664"/>
+  <line class="grid" x1="420" y1="685" x2="720" y2="685"/>
+  <line class="grid" x1="420" y1="706" x2="720" y2="706"/>
+  <line class="grid" x1="420" y1="727" x2="720" y2="727"/>
+  <line class="grid" x1="420" y1="748" x2="720" y2="748"/>
+  <line class="grid" x1="420" y1="769" x2="720" y2="769"/>
+  <line class="grid" x1="420" y1="790" x2="720" y2="790"/>
+
+  <text class="tblh green"  x="450" y="634" text-anchor="middle">A</text>
+  <text class="tblh green"  x="510" y="634" text-anchor="middle">B</text>
+  <text class="tblh green"  x="570" y="634" text-anchor="middle">Cin</text>
+  <text class="tblh purple" x="630" y="634" text-anchor="middle">S</text>
+  <text class="tblh purple" x="690" y="634" text-anchor="middle">Cout</text>
+
+  <!-- 0 0 0 -->
+  <text class="tbl" x="450" y="658" text-anchor="middle">0</text>
+  <text class="tbl" x="510" y="658" text-anchor="middle">0</text>
+  <text class="tbl" x="570" y="658" text-anchor="middle">0</text>
+  <text class="tbl" x="630" y="658" text-anchor="middle">0</text>
+  <text class="tbl" x="690" y="658" text-anchor="middle">0</text>
+  <!-- 0 0 1 -->
+  <text class="tbl" x="450" y="679" text-anchor="middle">0</text>
+  <text class="tbl" x="510" y="679" text-anchor="middle">0</text>
+  <text class="tbl" x="570" y="679" text-anchor="middle">1</text>
+  <text class="tbl" x="630" y="679" text-anchor="middle">1</text>
+  <text class="tbl" x="690" y="679" text-anchor="middle">0</text>
+  <!-- 0 1 0 -->
+  <text class="tbl" x="450" y="700" text-anchor="middle">0</text>
+  <text class="tbl" x="510" y="700" text-anchor="middle">1</text>
+  <text class="tbl" x="570" y="700" text-anchor="middle">0</text>
+  <text class="tbl" x="630" y="700" text-anchor="middle">1</text>
+  <text class="tbl" x="690" y="700" text-anchor="middle">0</text>
+  <!-- 0 1 1 -->
+  <text class="tbl" x="450" y="721" text-anchor="middle">0</text>
+  <text class="tbl" x="510" y="721" text-anchor="middle">1</text>
+  <text class="tbl" x="570" y="721" text-anchor="middle">1</text>
+  <text class="tbl" x="630" y="721" text-anchor="middle">0</text>
+  <text class="tbl" x="690" y="721" text-anchor="middle">1</text>
+  <!-- 1 0 0 -->
+  <text class="tbl" x="450" y="742" text-anchor="middle">1</text>
+  <text class="tbl" x="510" y="742" text-anchor="middle">0</text>
+  <text class="tbl" x="570" y="742" text-anchor="middle">0</text>
+  <text class="tbl" x="630" y="742" text-anchor="middle">1</text>
+  <text class="tbl" x="690" y="742" text-anchor="middle">0</text>
+  <!-- 1 0 1 -->
+  <text class="tbl" x="450" y="763" text-anchor="middle">1</text>
+  <text class="tbl" x="510" y="763" text-anchor="middle">0</text>
+  <text class="tbl" x="570" y="763" text-anchor="middle">1</text>
+  <text class="tbl" x="630" y="763" text-anchor="middle">0</text>
+  <text class="tbl" x="690" y="763" text-anchor="middle">1</text>
+  <!-- 1 1 0 -->
+  <text class="tbl" x="450" y="784" text-anchor="middle">1</text>
+  <text class="tbl" x="510" y="784" text-anchor="middle">1</text>
+  <text class="tbl" x="570" y="784" text-anchor="middle">0</text>
+  <text class="tbl" x="630" y="784" text-anchor="middle">0</text>
+  <text class="tbl" x="690" y="784" text-anchor="middle">1</text>
+  <!-- 1 1 1 -->
+  <text class="tbl" x="450" y="805" text-anchor="middle">1</text>
+  <text class="tbl" x="510" y="805" text-anchor="middle">1</text>
+  <text class="tbl" x="570" y="805" text-anchor="middle">1</text>
+  <text class="tbl" x="630" y="805" text-anchor="middle">1</text>
+  <text class="tbl" x="690" y="805" text-anchor="middle">1</text>
+
+  <text class="small" x="420" y="828">0 = L &#183; 1 = H. One full-adder stage shown; the &#39;283 chains four bits with internal fast-carry.</text>
+
+  <!-- ============ COLOUR KEY ============ -->
+  <text class="noteh" x="750" y="608">COLOUR KEY</text>
+
+  <rect x="750" y="622" width="16" height="16" fill="#2e7d32"/>
+  <text class="small" x="774" y="634">Inputs &#8212; <tspan class="green">A1&#8211;A4, B1&#8211;B4, C0</tspan></text>
+
+  <rect x="750" y="654" width="16" height="16" fill="#7b1fa2"/>
+  <text class="small" x="774" y="666">Outputs &#8212; <tspan class="purple">S1&#8211;S4, C4</tspan></text>
+
+  <rect x="750" y="686" width="16" height="16" fill="#c62828"/>
+  <text class="small" x="774" y="698"><tspan class="red">VCC</tspan> &#8212; pin 16</text>
+
+  <rect x="750" y="718" width="16" height="16" fill="#37474f"/>
+  <text class="small" x="774" y="730"><tspan class="slate">GND</tspan> &#8212; pin 8</text>
+</svg>
