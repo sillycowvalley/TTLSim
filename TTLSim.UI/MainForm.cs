@@ -766,6 +766,7 @@ public sealed class MainForm : Form
             UpdateTitle();
             propertyGrid.Refresh();
             UpdateGalMenuItems();
+            canvas.Invalidate();   // pins follow the new fuse map -- redraw the symbol
             MessageBox.Show(this,
                 $"Imported {System.IO.Path.GetFileName(dlg.FileName)} into {dev.Designator}.",
                 "Import JEDEC", MessageBoxButtons.OK, MessageBoxIcon.Information);

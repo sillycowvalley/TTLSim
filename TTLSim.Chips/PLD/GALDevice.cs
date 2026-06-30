@@ -28,6 +28,10 @@
 ///   SYN=1 AC0=1 -> complex   (MODE2)
 ///   SYN=0 AC0=1 -> registered(MODE3)  (registered OLMCs evaluate combinationally
 ///                                       here; clocked behaviour is not modelled)
+///
+/// The pin-presentation metadata below (<see cref="Ac1FuseBase"/> and friends)
+/// is consumed by <see cref="GalPinModel"/> to derive each pin's role and label
+/// from the loaded fuses; the evaluator itself does not use it.
 /// </summary>
 public sealed record GalDevice(
     string PartNumber,
@@ -46,6 +50,30 @@ public sealed record GalDevice(
     public int ProductTermsPerOlmc => Rows / OlmcCount;
     public int TrueColumn(int line) => 2 * line;
     public int ComplementColumn(int line) => 2 * line + 1;
+
+    // ---- Pin-presentation metadata (used by GalPinModel, not the evaluator) ----
+
+    /// <summary>JEDEC fuse number of the first AC1 bit (per-OLMC direction).
+    /// AC1 for an OLMC on pin P is at Ac1FuseBase + (7 - (P - FirstOlmcPin)).</summary>
+    public int Ac1FuseBase { get; init; }
+
+    /// <summary>Lowest-numbered OLMC pin (16V8 = 12, 20V8 = 15). Used to map a
+    /// pin number to its AC1 bit.</summary>
+    public int FirstOlmcPin { get; init; }
+
+    /// <summary>The pin that is CLK in registered mode, a plain input otherwise.</summary>
+    public int ClockPin { get; init; }
+
+    /// <summary>The pin that is /OE in registered mode, a plain input otherwise.</summary>
+    public int OePin { get; init; }
+
+    /// <summary>OLMC pins that force mode 2 and so can never be configured as
+    /// inputs (16V8 = 15,16 ; 20V8 = 18,19).</summary>
+    public int[] SpecialPins { get; init; } = System.Array.Empty<int>();
+
+    /// <summary>Non-OLMC signal pins that are always array inputs (excludes
+    /// power/ground and the clock/OE pins).</summary>
+    public int[] DedicatedInputPins { get; init; } = System.Array.Empty<int>();
 
     /// <summary>Line-&gt;pin routing for the mode encoded by the SYN/AC0 fuses.
     /// A value of 0 marks a line not used as an array input in that mode.</summary>
@@ -72,7 +100,15 @@ public sealed record GalDevice(
         Ac0Fuse: 2193,
         ColumnMapMode1: new[] { 2, 1, 3, 19, 4, 18, 5, 17, 6, 14, 7, 13, 8, 12, 9, 11 },
         ColumnMapMode2: new[] { 2, 1, 3, 18, 4, 17, 5, 16, 6, 15, 7, 14, 8, 13, 9, 11 },
-        ColumnMapMode3: new[] { 2, 19, 3, 18, 4, 17, 5, 16, 6, 15, 7, 14, 8, 13, 9, 12 });
+        ColumnMapMode3: new[] { 2, 19, 3, 18, 4, 17, 5, 16, 6, 15, 7, 14, 8, 13, 9, 12 })
+    {
+        Ac1FuseBase = 2120,
+        FirstOlmcPin = 12,
+        ClockPin = 1,
+        OePin = 11,
+        SpecialPins = new[] { 15, 16 },
+        DedicatedInputPins = new[] { 2, 3, 4, 5, 6, 7, 8, 9 },
+    };
 
     // ---- GAL20V8: DIP-24, OLMCs on pins 22..15, 64x40 array, 2706 fuses ----
     public static readonly GalDevice Gal20V8 = new(
@@ -87,7 +123,15 @@ public sealed record GalDevice(
         Ac0Fuse: 2705,
         ColumnMapMode1: new[] { 2, 1, 3, 23, 4, 22, 5, 21, 6, 20, 7, 17, 8, 16, 9, 15, 10, 14, 11, 13 },
         ColumnMapMode2: new[] { 2, 1, 3, 23, 4, 21, 5, 20, 6, 19, 7, 18, 8, 17, 9, 16, 10, 14, 11, 13 },
-        ColumnMapMode3: new[] { 2, 23, 3, 22, 4, 21, 5, 20, 6, 19, 7, 18, 8, 17, 9, 16, 10, 15, 11, 14 });
+        ColumnMapMode3: new[] { 2, 23, 3, 22, 4, 21, 5, 20, 6, 19, 7, 18, 8, 17, 9, 16, 10, 15, 11, 14 })
+    {
+        Ac1FuseBase = 2632,
+        FirstOlmcPin = 15,
+        ClockPin = 1,
+        OePin = 13,
+        SpecialPins = new[] { 18, 19 },
+        DedicatedInputPins = new[] { 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 23 },
+    };
 
     public static GalDevice? ForPartNumber(string partNumber) => partNumber switch
     {

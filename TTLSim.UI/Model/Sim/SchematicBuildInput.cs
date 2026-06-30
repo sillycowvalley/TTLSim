@@ -89,10 +89,13 @@ public sealed class SchematicBuildInput : IBuildInput
                     }
                     else if (dev.Definition is ChipPartDefinition cp)
                     {
-                        // ChipUnit (box-shaped IC): use ChipPin.Role to separate
-                        // inputs from outputs for diagnostics. Both lists feed into
-                        // the net map so the chip model can drive its outputs.
-                        var roles = cp.Pins.ToDictionary(p => p.Number, p => p.Role);
+                        // ChipUnit (box-shaped IC): separate inputs from outputs
+                        // for diagnostics. Both lists feed into the net map so the
+                        // chip model can drive its outputs. A GAL's roles follow
+                        // its loaded fuse map (a pin is whatever the program makes
+                        // it); every other chip uses its static ChipPin.Role.
+                        var roles = GalRoles(dev, cp)
+                            ?? cp.Pins.ToDictionary(p => p.Number, p => p.Role);
                         var inputList = new List<int>();
                         var outputList = new List<int>();
                         foreach (Pin p in u.Pins)
@@ -148,6 +151,32 @@ public sealed class SchematicBuildInput : IBuildInput
                     IsPassive: dev.Definition is PassivePartDefinition);
             }
         }
+    }
+
+    /// <summary>
+    /// Pin roles for a GAL derived from its loaded JEDEC fuse map, or null when
+    /// the device isn't a programmed GAL (the caller then falls back to the
+    /// static ChipPin.Role). An array input, clock, or output-enable pin is an
+    /// Input (floating-checked); a driving or unconfigured output-capable pin is
+    /// an Output.
+    /// </summary>
+    private static Dictionary<int, ChipPinRole>? GalRoles(Device dev, ChipPartDefinition cp)
+    {
+        var derived = TTLSim.Chips.Pld.GalPinModel.TryDerive(cp.PartNumber, dev.Program);
+        if (derived is null) return null;
+
+        var roles = new Dictionary<int, ChipPinRole>();
+        foreach (var gp in derived)
+        {
+            roles[gp.Number] = gp.Role switch
+            {
+                TTLSim.Chips.Pld.GalPinRole.Input => ChipPinRole.Input,
+                TTLSim.Chips.Pld.GalPinRole.Clock => ChipPinRole.Input,
+                TTLSim.Chips.Pld.GalPinRole.OutputEnable => ChipPinRole.Input,
+                _ => ChipPinRole.Output,   // Output, Unused -- legitimately open
+            };
+        }
+        return roles;
     }
 
     public IEnumerable<BuildItem> Items

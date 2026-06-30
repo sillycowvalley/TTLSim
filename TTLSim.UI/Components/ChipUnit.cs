@@ -187,7 +187,7 @@ public sealed class ChipUnit : Unit
             int py = (Position.Y + pin.LocalPosition.Y) * p;
             int innerX = pin.LocalDirection == PinDirection.Left ? bodyLeftX : bodyRightX;
 
-            (string displayName, int barLetterCount) = ParseBarredName(pin.Name);
+            (string displayName, int barLetterCount) = ParseBarredName(EffectiveName(pin));
             // Measure and draw with the same tight format so the bar -- which
             // is measured tight -- aligns to the visible glyph extent.
             var nameSize = g.MeasureString(displayName, ctx.PinFont, int.MaxValue, tightFormat);
@@ -299,6 +299,14 @@ public sealed class ChipUnit : Unit
     // always current by the time they fire.
     private int currentGridPitch = 5;
 
+    // Per-instance GAL pin labels, derived from the device's loaded JEDEC fuse
+    // map. A GAL is whatever its program makes it, so the symbol's pin names
+    // follow the fuses rather than the (generic) static definition. Cached and
+    // re-derived only when Device.Program changes; null for a non-GAL part or
+    // an unprogrammed GAL (which then shows its static names).
+    private string? galProgramSnapshot;
+    private System.Collections.Generic.Dictionary<int, string>? galPinLabels;
+
     private bool ShouldShowName(Pin pin)
     {
         if (definition.ShowPinName is null) return true;
@@ -326,6 +334,53 @@ public sealed class ChipUnit : Unit
 
         string display = name.Substring(1);
         return (display, display.Length);
+    }
+
+    /// <summary>
+    /// The name to display for a pin: the JEDEC-derived role label for a
+    /// programmed GAL, otherwise the static definition name.
+    /// </summary>
+    private string EffectiveName(Pin pin)
+    {
+        var labels = GalLabels();
+        if (labels is not null && labels.TryGetValue(pin.Number, out string? label))
+            return label;
+        return pin.Name;
+    }
+
+    /// <summary>
+    /// Pin-number -&gt; derived label for this instance's loaded fuse map, or
+    /// null when there's no GAL program to follow. Re-derived only when
+    /// Device.Program changes (import replaces the string, so a reference check
+    /// catches it); a malformed or non-GAL program caches as null and falls
+    /// back to the static names.
+    /// </summary>
+    private System.Collections.Generic.Dictionary<int, string>? GalLabels()
+    {
+        string? program = Device.Program;
+        if (string.IsNullOrWhiteSpace(program))
+        {
+            galProgramSnapshot = null;
+            galPinLabels = null;
+            return null;
+        }
+
+        if (!ReferenceEquals(program, galProgramSnapshot))
+        {
+            galProgramSnapshot = program;
+            galPinLabels = null;
+
+            var derived = TTLSim.Chips.Pld.GalPinModel.TryDerive(definition.PartNumber, program);
+            if (derived is not null)
+            {
+                var map = new System.Collections.Generic.Dictionary<int, string>();
+                foreach (var gp in derived)
+                    map[gp.Number] = gp.Label;
+                galPinLabels = map;
+            }
+        }
+
+        return galPinLabels;
     }
 
     protected override void DrawLabels(Graphics g, RenderContext ctx)
