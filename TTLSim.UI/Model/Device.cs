@@ -249,7 +249,7 @@ public sealed class Device
         /// <summary>Parallel SRAM parts (power up blank; carry no program).</summary>
         public static readonly HashSet<string> Sram = new(System.StringComparer.Ordinal)
         {
-            "62256", "6116", "2114",
+            "62256", "CY7C199", "6116", "2114",
         };
 
         /// <summary>GAL / PLD parts (carry a JEDEC fuse map).</summary>

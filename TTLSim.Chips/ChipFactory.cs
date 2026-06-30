@@ -833,7 +833,7 @@ public sealed class ChipFactory : IChipFactory
         // Parallel memory family (28C-series EEPROM + pin-compatible SRAM),
         // special-cased in CreateForUnits because contents are per-device.
         "28C256" or "28C128" or "28C64" or "28C16" or "62256"
-            or "6116" or "2114"
+            or "CY7C199" or "6116" or "2114"
             => true,
         // Gate ICs -- all single-part boxes, special-cased at the top of
         // CreateForUnits (CreateGateChip). Plus the dual counters.
@@ -869,6 +869,13 @@ public sealed class ChipFactory : IChipFactory
                 ce = 20; oe = 22; we = 27;
                 writable = device.PartIdentifier == "62256";
                 access = writable ? 55_000 : 250_000;
+                break;
+            case "CY7C199":
+                // 28-pin 32K x 8 SRAM, identical JEDEC pinout to the 62256;
+                // the -15 grade is a 15 ns part. Always writable.
+                addr = new[] { 10, 9, 8, 7, 6, 5, 4, 3, 25, 24, 21, 23, 2, 26, 1 };
+                data = new[] { 11, 12, 13, 15, 16, 17, 18, 19 };
+                ce = 20; oe = 22; we = 27; writable = true; access = 15_000;
                 break;
             case "28C128":
                 addr = new[] { 10, 9, 8, 7, 6, 5, 4, 3, 25, 24, 21, 23, 2, 26 };
@@ -1052,7 +1059,7 @@ public sealed class ChipFactory : IChipFactory
 
     private static bool IsMemoryPart(string id) =>
         id is "28C256" or "28C128" or "28C64" or "28C16" or "62256"
-           or "6116" or "2114";
+           or "CY7C199" or "6116" or "2114";
 
 
 

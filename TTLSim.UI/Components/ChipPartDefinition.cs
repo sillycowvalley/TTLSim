@@ -125,6 +125,16 @@ public sealed record ChipPartDefinition(
         PartNumber: "62256", PinCount: 28, PowerPin: 28, GroundPin: 14,
         BodyWidth: 12, Pins: Build28PinMemoryPinout(addressLines: 15));
 
+    /// <summary>CY7C199 32K x 8 Static RAM, 28-pin DIP. Cypress (now Infineon)
+    /// high-speed CMOS SRAM; the -15 grade is a 15 ns part. Pin-compatible with
+    /// the 62256 / 28C256 (standard JEDEC 28-pin 32K x 8 layout), so it rides the
+    /// same ParallelMemory engine and Build28PinMemoryPinout, differing only in
+    /// access time. Bidirectional I/O pins are declared as outputs (they drive on
+    /// read), so the floating-input diagnostic does not apply to them.</summary>
+    public static readonly ChipPartDefinition Ic7C199 = new(
+        PartNumber: "CY7C199", PinCount: 28, PowerPin: 28, GroundPin: 14,
+        BodyWidth: 12, Pins: Build28PinMemoryPinout(addressLines: 15));
+
     /// <summary>2114 1K x 4 Static RAM, 18-pin DIP. Classic late-1970s NMOS SRAM
     /// (Intel, AMD, Mostek, NEC, etc.); pair two for a byte-wide 1Kx8. Single
     /// +5V supply with the unusual VCC-on-18 / GND-on-9 placement (not the

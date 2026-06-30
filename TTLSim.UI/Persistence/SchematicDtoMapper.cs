@@ -56,6 +56,7 @@ public static class SchematicDtoMapper
             [ChipPartDefinition.Ic28C64.PartNumber] = ChipPartDefinition.Ic28C64,
             [ChipPartDefinition.Ic28C16.PartNumber] = ChipPartDefinition.Ic28C16,
             [ChipPartDefinition.Ic62256.PartNumber] = ChipPartDefinition.Ic62256,
+            [ChipPartDefinition.Ic7C199.PartNumber] = ChipPartDefinition.Ic7C199,
             [ChipPartDefinition.Ic6116.PartNumber] = ChipPartDefinition.Ic6116,
             [ChipPartDefinition.Ic2114.PartNumber] = ChipPartDefinition.Ic2114,
 
