@@ -600,8 +600,8 @@
         "deviceId": "87e3cd216f8a44ed96a28d710b65e0b6",
         "unitLetter": "",
         "position": {
-          "x": 18,
-          "y": -141
+          "x": 13,
+          "y": -142
         },
         "label": "Program",
         "rotation": 90,
@@ -717,8 +717,8 @@
         "deviceId": "8b983778362b4be1b99daaad169f6cb8",
         "unitLetter": "",
         "position": {
-          "x": 21,
-          "y": -105
+          "x": 26,
+          "y": -109
         },
         "label": "IR",
         "rotation": 90,
@@ -783,7 +783,7 @@
         "unitLetter": "",
         "position": {
           "x": 224,
-          "y": -107
+          "y": -108
         },
         "label": "Ret Stack",
         "rotation": 0,
@@ -796,7 +796,7 @@
         "unitLetter": "",
         "position": {
           "x": 191,
-          "y": -108
+          "y": -109
         },
         "label": "RDIN",
         "rotation": 0,
@@ -1143,7 +1143,7 @@
         "id": "8c2b6749037a4cf2b56292890da0f79e",
         "label": "4 Bit PC",
         "position": {
-          "x": -19,
+          "x": -26,
           "y": 41
         },
         "rotation": 0,
@@ -1188,7 +1188,7 @@
         "label": "",
         "position": {
           "x": 209,
-          "y": -80
+          "y": -88
         },
         "rotation": 0,
         "layer": 0,
@@ -1229,9 +1229,9 @@
       {
         "type": "text",
         "id": "92a7313c8df74f29a1c5a6619b9d9dde",
-        "label": "Return Stack",
+        "label": "4 Bit Return Stack",
         "position": {
-          "x": 219,
+          "x": 215,
           "y": -162
         },
         "rotation": 0,
@@ -3441,20 +3441,6 @@
         "color": "Teal"
       },
       {
-        "id": "rs_43",
-        "a": {
-          "itemId": "uU10_ram",
-          "pinNumber": 14,
-          "external": false
-        },
-        "b": {
-          "itemId": "uU11_rdin",
-          "pinNumber": 4,
-          "external": false
-        },
-        "color": "Teal"
-      },
-      {
         "id": "rs_44",
         "a": {
           "itemId": "uU10_ram",
@@ -3508,7 +3494,7 @@
           "pinNumber": 4,
           "external": false
         },
-        "color": "Teal"
+        "color": "Purple"
       },
       {
         "id": "rs_48",
@@ -3522,7 +3508,7 @@
           "pinNumber": 1,
           "external": false
         },
-        "color": "Teal"
+        "color": "Purple"
       },
       {
         "id": "rs_49",
@@ -3536,7 +3522,7 @@
           "pinNumber": 13,
           "external": false
         },
-        "color": "Teal"
+        "color": "Purple"
       },
       {
         "id": "rs_50",
@@ -3550,7 +3536,7 @@
           "pinNumber": 10,
           "external": false
         },
-        "color": "Teal"
+        "color": "Purple"
       },
       {
         "id": "rs_51",
@@ -3844,7 +3830,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Green"
+        "color": "Purple"
       },
       {
         "id": "dc_18",
@@ -3886,7 +3872,7 @@
           "pinNumber": 5,
           "external": false
         },
-        "color": "Green"
+        "color": "Purple"
       },
       {
         "id": "dc_21",
@@ -3928,7 +3914,7 @@
           "pinNumber": 11,
           "external": false
         },
-        "color": "Green"
+        "color": "Purple"
       },
       {
         "id": "dc_24",
@@ -3970,7 +3956,7 @@
           "pinNumber": 14,
           "external": false
         },
-        "color": "Green"
+        "color": "Purple"
       },
       {
         "id": "dc_27",
@@ -4363,6 +4349,20 @@
           "external": false
         },
         "color": "Blue"
+      },
+      {
+        "id": "rs_43",
+        "a": {
+          "itemId": "uU10_ram",
+          "pinNumber": 14,
+          "external": false
+        },
+        "b": {
+          "itemId": "uU11_rdin",
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": "Teal"
       }
     ],
     "links": [],
@@ -4375,10 +4375,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 0.8482255,
+    "zoom": 0.9754597,
     "pan": {
-      "x": 454,
-      "y": 705
+      "x": 275,
+      "y": 926
     }
   }
 }
