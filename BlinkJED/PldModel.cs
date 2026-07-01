@@ -47,14 +47,21 @@ internal sealed class ProductTerm
 /// Scope (matches the surface of the Mini Blinky decode .pld files):
 ///   - header properties (Name / PartNo / ... / Device);
 ///   - PIN declarations, with optional leading '!' for active-low;
-///   - combinational equations: a sum '#' of products '&' of literals '[!]name',
-///     optional parentheses around a product term;
+///   - combinational equations: any expression over NOT '!', AND '&', OR '#',
+///     XOR '$' and parentheses, with CUPL precedence (highest to lowest):
+///     ! , & , # , $. The expression is flattened to a sum-of-products here
+///     (XOR expanded, De Morgan applied to negated products) so the fuse
+///     mapper downstream only ever sees an OR of AND-of-literals -- exactly
+///     what it handled before this change. Flat SOP inputs are unaffected and
+///     compile bit-for-bit as before.
 ///   - comments: '//' to end of line, and '/* ... */' NON-NESTING (CUPL rule:
 ///     the first '*/' closes the block).
 ///
 /// Not yet handled (deferred, each will register an error if encountered):
 ///   - output extensions (.D / .R / .OE / ...);
-///   - set/range/index notation, function calls, $-directives.
+///   - set/range/index notation, function calls;
+///   - '$' PREPROCESSOR directives ($DEFINE / $REPEAT / $MACRO ...). Note this
+///     is distinct from the '$' XOR operator, which IS supported above.
 /// </summary>
 internal static class PldParser
 {
@@ -156,32 +163,34 @@ internal static class PldParser
             return;
         }
 
-        var equation = new Equation { Target = target, ActiveLow = activeLow, Registered = false };
+        // Flatten the whole right-hand side (with !, &, #, $ and parentheses)
+        // into a sum-of-products. Each product term is a name->polarity map.
+        List<Dictionary<string, bool>>? sop =
+            ExprParser.ParseToSop(rhs, errors, Shorten(st));
+        if (sop == null) return;
 
-        foreach (string termText in rhs.Split('#'))
+        // Degenerate results have no fuse-array representation as a plain SOP:
+        // an empty sum is constant 0; a term with no literals is constant 1.
+        if (sop.Count == 0)
         {
-            string t = termText.Trim();
-            if (t.StartsWith("(") && t.EndsWith(")"))
-                t = t.Substring(1, t.Length - 2).Trim();
-            if (t.Length == 0)
+            errors.Add($"Expression reduces to constant 0 (no product terms): \"{Shorten(st)}\".");
+            return;
+        }
+        foreach (var termLits in sop)
+        {
+            if (termLits.Count == 0)
             {
-                errors.Add($"Empty product term in \"{Shorten(st)}\".");
-                continue;
+                errors.Add($"Expression reduces to a constant (always true): \"{Shorten(st)}\".");
+                return;
             }
+        }
 
+        var equation = new Equation { Target = target, ActiveLow = activeLow, Registered = false };
+        foreach (var termLits in sop)
+        {
             var term = new ProductTerm();
-            foreach (string litText in t.Split('&'))
-            {
-                string lit = litText.Trim();
-                bool negated = lit.StartsWith("!");
-                string name = (negated ? lit.Substring(1) : lit).Trim();
-                if (!IsName(name))
-                {
-                    errors.Add($"Bad literal \"{Shorten(lit)}\" in \"{Shorten(st)}\".");
-                    continue;
-                }
-                term.Literals[name] = !negated;   // true = asserted, false = negated
-            }
+            foreach (var kv in termLits)
+                term.Literals[kv.Key] = kv.Value;   // true = asserted, false = negated
             equation.Terms.Add(term);
         }
 
@@ -221,4 +230,204 @@ internal static class PldParser
 
     private static string Shorten(string s) =>
         s.Length > 44 ? s.Substring(0, 44) + "..." : s;
+
+    /// <summary>
+    /// Recursive-descent parser for a CUPL right-hand-side expression, producing
+    /// a flattened sum-of-products. Grammar (loosest to tightest binding, which
+    /// is CUPL precedence highest-to-lowest reversed): XOR '$', OR '#', AND '&',
+    /// unary NOT '!', then a NAME or a parenthesised sub-expression.
+    ///
+    /// A product term is a Dictionary&lt;name,bool&gt; (true = asserted literal,
+    /// false = negated). A sum-of-products is a List of those (an OR of ANDs).
+    ///   - OR  concatenates the two lists (source order preserved, so existing
+    ///         flat-SOP files keep their exact term ordering and fuse output).
+    ///   - AND is a cartesian merge of terms; a term that would contain both a
+    ///         literal and its complement (x &amp; !x) is dropped as constant 0.
+    ///   - NOT is De Morgan: !(t1 # t2 # ...) = !t1 &amp; !t2 &amp; ...
+    ///   - XOR(a,b) = (a &amp; !b) # (!a &amp; b).
+    /// </summary>
+    private sealed class ExprParser
+    {
+        private const string Ops = "!&#$()";
+
+        private readonly List<string> toks;
+        private readonly List<string> errors;
+        private readonly string ctx;
+        private int pos;
+        private bool failed;
+
+        private ExprParser(List<string> toks, List<string> errors, string ctx)
+        {
+            this.toks = toks;
+            this.errors = errors;
+            this.ctx = ctx;
+        }
+
+        public static List<Dictionary<string, bool>>? ParseToSop(
+            string rhs, List<string> errors, string ctx)
+        {
+            List<string>? toks = Tokenize(rhs, errors, ctx);
+            if (toks == null) return null;
+
+            var p = new ExprParser(toks, errors, ctx);
+            var sop = p.ParseXor();
+            if (p.failed) return null;
+            if (p.pos != toks.Count)
+            {
+                errors.Add($"Unexpected '{toks[p.pos]}' in \"{ctx}\".");
+                return null;
+            }
+            return sop;
+        }
+
+        // ---- tokenizer: names and the single-char operators ! & # $ ( ) ----
+        private static List<string>? Tokenize(string s, List<string> errors, string ctx)
+        {
+            var toks = new List<string>();
+            int i = 0;
+            while (i < s.Length)
+            {
+                char c = s[i];
+                if (char.IsWhiteSpace(c)) { i++; continue; }
+                if (Ops.IndexOf(c) >= 0) { toks.Add(c.ToString()); i++; continue; }
+                if (c == '_' || char.IsLetter(c))
+                {
+                    int start = i++;
+                    while (i < s.Length && (s[i] == '_' || char.IsLetterOrDigit(s[i]))) i++;
+                    toks.Add(s.Substring(start, i - start));
+                    continue;
+                }
+                errors.Add($"Bad character '{c}' in \"{ctx}\".");
+                return null;
+            }
+            if (toks.Count == 0)
+            {
+                errors.Add($"Empty expression in \"{ctx}\".");
+                return null;
+            }
+            return toks;
+        }
+
+        private string? Peek() => pos < toks.Count ? toks[pos] : null;
+
+        // A token is a name (operand) if its first char is not an operator glyph.
+        private static bool IsNameTok(string t) => Ops.IndexOf(t[0]) < 0;
+
+        // xor := or ( '$' or )*
+        private List<Dictionary<string, bool>> ParseXor()
+        {
+            var left = ParseOr();
+            while (Peek() == "$") { pos++; left = Xor(left, ParseOr()); }
+            return left;
+        }
+
+        // or := and ( '#' and )*
+        private List<Dictionary<string, bool>> ParseOr()
+        {
+            var left = ParseAnd();
+            while (Peek() == "#") { pos++; left = Or(left, ParseAnd()); }
+            return left;
+        }
+
+        // and := not ( '&' not )*
+        private List<Dictionary<string, bool>> ParseAnd()
+        {
+            var left = ParseNot();
+            while (Peek() == "&") { pos++; left = And(left, ParseNot()); }
+            return left;
+        }
+
+        // not := '!' not | primary
+        private List<Dictionary<string, bool>> ParseNot()
+        {
+            if (Peek() == "!") { pos++; return Not(ParseNot()); }
+            return ParsePrimary();
+        }
+
+        // primary := NAME | '(' xor ')'
+        private List<Dictionary<string, bool>> ParsePrimary()
+        {
+            string? t = Peek();
+            if (t == null) { Fail("expected an operand"); return Zero(); }
+            if (t == "(")
+            {
+                pos++;
+                var inner = ParseXor();
+                if (Peek() != ")") { Fail("missing ')'"); return Zero(); }
+                pos++;
+                return inner;
+            }
+            if (IsNameTok(t)) { pos++; return Lit(t, true); }
+            Fail($"unexpected '{t}'");
+            return Zero();
+        }
+
+        private void Fail(string why)
+        {
+            if (!failed) errors.Add($"Malformed expression ({why}) in \"{ctx}\".");
+            failed = true;
+            pos = toks.Count;   // halt the recursion
+        }
+
+        // ---- sum-of-products primitives ----
+        private static List<Dictionary<string, bool>> Zero() => new();      // empty OR = const 0
+        private static List<Dictionary<string, bool>> One() =>              // one empty AND = const 1
+            new() { new Dictionary<string, bool>() };
+        private static List<Dictionary<string, bool>> Lit(string name, bool asserted) =>
+            new() { new Dictionary<string, bool> { [name] = asserted } };
+
+        private static List<Dictionary<string, bool>> Or(
+            List<Dictionary<string, bool>> a, List<Dictionary<string, bool>> b)
+        {
+            var r = new List<Dictionary<string, bool>>(a);
+            r.AddRange(b);
+            return r;
+        }
+
+        private static List<Dictionary<string, bool>> And(
+            List<Dictionary<string, bool>> a, List<Dictionary<string, bool>> b)
+        {
+            var r = new List<Dictionary<string, bool>>();
+            foreach (var ta in a)
+            {
+                foreach (var tb in b)
+                {
+                    var merged = new Dictionary<string, bool>(ta);
+                    bool contradiction = false;
+                    foreach (var kv in tb)
+                    {
+                        if (merged.TryGetValue(kv.Key, out bool existing))
+                        {
+                            if (existing != kv.Value) { contradiction = true; break; }
+                        }
+                        else merged[kv.Key] = kv.Value;
+                    }
+                    if (!contradiction) r.Add(merged);
+                }
+            }
+            return r;
+        }
+
+        private static List<Dictionary<string, bool>> Not(List<Dictionary<string, bool>> a)
+        {
+            // !(t1 # t2 # ...) = !t1 & !t2 & ...  where !term = OR of negated literals.
+            var acc = One();
+            foreach (var term in a)
+            {
+                if (term.Count == 0) return Zero();   // !(constant 1) = constant 0
+                var negTerm = new List<Dictionary<string, bool>>();
+                foreach (var kv in term)
+                    negTerm.Add(new Dictionary<string, bool> { [kv.Key] = !kv.Value });
+                acc = And(acc, negTerm);
+            }
+            return acc;
+        }
+
+        private static List<Dictionary<string, bool>> Xor(
+            List<Dictionary<string, bool>> a, List<Dictionary<string, bool>> b)
+        {
+            // a $ b = (a & !b) # (!a & b)
+            return Or(And(a, Not(b)), And(Not(a), b));
+        }
+    }
 }

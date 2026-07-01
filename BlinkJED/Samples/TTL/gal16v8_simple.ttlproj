@@ -1,0 +1,126 @@
+{
+  "schematic": {
+    "devices": [
+      {
+        "id": "94839795ca4e4c1283c625c0ffc6f9b9",
+        "designator": "U1",
+        "partKind": "chip",
+        "partIdentifier": "GAL16V8",
+        "family": null,
+        "value": null,
+        "program": "\u0002\r\nUsed Program:   BlinkyJED\r\nName:           gal16v8_simple\r\nDevice:         GAL16V8\r\n\r\n*QP20 \r\n*QF2194 \r\n*G0 \r\n*F0 \r\n*L00000 01110111011101111111111111111111\r\n*L00256 01111111111111111111111111111111\r\n*L00288 11110111111111111111111111111111\r\n*L00320 11111111011111111111111111111111\r\n*L00352 11111111111101111111111111111111\r\n*L00512 01111011111111111111111111111111\r\n*L00544 10110111111111111111111111111111\r\n*L01280 11011111111111111111111111111101\r\n*L02048 11100100111111111111111111111111\r\n*L02080 11111111111111111111111111111111\r\n*L02112 11111111000110111111111111111111\r\n*L02144 11111111111111111111111111111111\r\n*L02176 111111111111111110\r\n*C3015\r\n*\u00037F44\n",
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      }
+    ],
+    "units": [
+      {
+        "id": "de52960c0c1440dcabbc8ca434e8aa90",
+        "deviceId": "94839795ca4e4c1283c625c0ffc6f9b9",
+        "unitLetter": "",
+        "position": {
+          "x": 24,
+          "y": 12
+        },
+        "label": "",
+        "rotation": 0,
+        "layer": 0,
+        "switchClosed": null
+      }
+    ],
+    "items": [
+      {
+        "type": "vcc",
+        "id": "70b9a170f5d6470c9d7af9447ab27358",
+        "label": "VCC",
+        "position": {
+          "x": 40,
+          "y": 7
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "gnd",
+        "id": "ccbe72cab297446e9984e1c61923df72",
+        "label": "",
+        "position": {
+          "x": 13,
+          "y": 38
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "fontSize": null,
+        "textColor": null
+      }
+    ],
+    "connections": [
+      {
+        "id": "e09ffe056a954bc9ad180154ae0c5be7",
+        "a": {
+          "itemId": "70b9a170f5d6470c9d7af9447ab27358",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "de52960c0c1440dcabbc8ca434e8aa90",
+          "pinNumber": 20,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "430a78d55d3a43209b2a6adfb1a1e653",
+        "a": {
+          "itemId": "ccbe72cab297446e9984e1c61923df72",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "de52960c0c1440dcabbc8ca434e8aa90",
+          "pinNumber": 10,
+          "external": false
+        },
+        "color": null
+      }
+    ],
+    "links": [],
+    "layers": [
+      {
+        "name": "Default",
+        "visible": true
+      }
+    ],
+    "wires": []
+  },
+  "view": {
+    "zoom": 4,
+    "pan": {
+      "x": 40,
+      "y": 40
+    }
+  }
+}
