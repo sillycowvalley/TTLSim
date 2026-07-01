@@ -29,13 +29,15 @@ public static class PartDelayDefaults
     /// part identifier, or null if it has no known default delay.</summary>
     public static int? DefaultDelayNs(string partIdentifier) => partIdentifier switch
     {
-        // 28C-series EEPROM family -- programmed out of band; 250 ns read grade.
-        "28C256" or "28C128" or "28C64" or "28C16" => 250,
+        // 28C-series EEPROM family -- programmed out of band; 150 ns read grade.
+        "28C256" or "28C128" or "28C64" or "28C16" => 150,
         // SRAM, by speed grade.
         "62256" => 55,
-        "CY7C199" => 15,   // CY7C199-15: 15 ns
+        "CY7C199" => 35,   // CY7C199-35PC: 35 ns
         "6116" => 70,   // 6116P-70:  70 ns
         "2114" => 200,  // representative 2114 grade
+        "6264" => 20,   // e.g. IDT7164-20 / fast 6264 grade
+        "W24512" => 15,   // W24512AK-15: 15 ns
         // GAL/PLD -- nominal ~10 ns tPD (see GalDefaultDelayNs).
         "GAL16V8" or "GAL20V8" => GalDefaultDelayNs,
         _ => null

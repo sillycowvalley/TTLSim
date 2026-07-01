@@ -833,7 +833,7 @@ public sealed class ChipFactory : IChipFactory
         // Parallel memory family (28C-series EEPROM + pin-compatible SRAM),
         // special-cased in CreateForUnits because contents are per-device.
         "28C256" or "28C128" or "28C64" or "28C16" or "62256"
-            or "CY7C199" or "6116" or "2114"
+            or "CY7C199" or "6116" or "2114" or "6264" or "W24512"
             => true,
         // Gate ICs -- all single-part boxes, special-cased at the top of
         // CreateForUnits (CreateGateChip). Plus the dual counters.
@@ -862,7 +862,7 @@ public sealed class ChipFactory : IChipFactory
         // The default access time (speed grade) is NOT set per-case here -- it
         // comes from PartDelayDefaults after the switch, the single table the
         // property grid also reads, so the simulator and the grid cannot drift.
-        int[] addr, data; int ce, oe, we; bool writable;
+        int[] addr, data; int ce, oe, we, cs2 = -1; bool writable;
         switch (device.PartIdentifier)
         {
             case "28C256":
@@ -878,6 +878,23 @@ public sealed class ChipFactory : IChipFactory
                 addr = new[] { 10, 9, 8, 7, 6, 5, 4, 3, 25, 24, 21, 23, 2, 26, 1 };
                 data = new[] { 11, 12, 13, 15, 16, 17, 18, 19 };
                 ce = 20; oe = 22; we = 27; writable = true;
+                break;
+            case "6264":
+                // 28-pin 8K x 8 SRAM (also IDT7164 / HM6264). Same A0..A12 and
+                // data map as the 28C64, but with a second, active-HIGH chip
+                // enable CS2 on pin 26 (where the 62256 carries A13). /CS1 on 20,
+                // /OE 22, /WE 27. Selected only when /CS1 LOW and CS2 HIGH.
+                addr = new[] { 10, 9, 8, 7, 6, 5, 4, 3, 25, 24, 21, 23, 2 }; // A0..A12
+                data = new[] { 11, 12, 13, 15, 16, 17, 18, 19 };
+                ce = 20; oe = 22; we = 27; cs2 = 26; writable = true;
+                break;
+            case "W24512":
+                // 32-pin 64K x 8 SRAM (also IS61C512 / UM61512). 16 address lines;
+                // active-LOW /CS1 on 22 and active-HIGH CS2 on 30; /OE 24, /WE 29.
+                // Selected only when /CS1 LOW and CS2 HIGH.
+                addr = new[] { 12, 11, 10, 9, 8, 7, 6, 5, 27, 26, 23, 25, 4, 28, 3, 31 }; // A0..A15
+                data = new[] { 13, 14, 15, 17, 18, 19, 20, 21 };
+                ce = 22; oe = 24; we = 29; cs2 = 30; writable = true;
                 break;
             case "28C128":
                 addr = new[] { 10, 9, 8, 7, 6, 5, 4, 3, 25, 24, 21, 23, 2, 26 };
@@ -933,6 +950,7 @@ public sealed class ChipFactory : IChipFactory
         Net[] dataNets = Array.ConvertAll(data, Opt);
         Net ceNet = Opt(ce), weNet = Opt(we);
         Net? oeNet = oe >= 1 ? Opt(oe) : null;   // 2114 has no /OE pin
+        Net? cs2Net = cs2 >= 1 ? Opt(cs2) : null; // active-HIGH CS2 (6264/7164, W24512A)
 
         // EEPROM parts take their program from the embedded Intel HEX; SRAM
         // powers up blank. A malformed image is logged and treated as blank
@@ -950,18 +968,20 @@ public sealed class ChipFactory : IChipFactory
         }
 
         bool hasOe = oe >= 1;
-        int[] pins = new int[addr.Length + data.Length + (hasOe ? 3 : 2)];
+        bool hasCs2 = cs2 >= 1;
+        int[] pins = new int[addr.Length + data.Length + (hasOe ? 3 : 2) + (hasCs2 ? 1 : 0)];
         Array.Copy(addr, 0, pins, 0, addr.Length);
         Array.Copy(data, 0, pins, addr.Length, data.Length);
         int p = addr.Length + data.Length;
         pins[p++] = ce;
         if (hasOe) pins[p++] = oe;
-        pins[p] = we;
+        pins[p++] = we;
+        if (hasCs2) pins[p] = cs2;
 
         return new ParallelMemory(
             addrNets, dataNets, ceNet, oeNet, weNet,
             writable, contents, access, pins,
-            label: device.PartIdentifier, logger: logger);
+            label: device.PartIdentifier, logger: logger, cs2N: cs2Net);
     }
 
     /// <summary>
@@ -1063,7 +1083,7 @@ public sealed class ChipFactory : IChipFactory
 
     private static bool IsMemoryPart(string id) =>
         id is "28C256" or "28C128" or "28C64" or "28C16" or "62256"
-           or "CY7C199" or "6116" or "2114";
+           or "CY7C199" or "6116" or "2114" or "6264" or "W24512";
 
 
 

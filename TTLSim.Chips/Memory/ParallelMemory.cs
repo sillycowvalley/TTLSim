@@ -18,19 +18,24 @@ namespace TTLSim.Chips.Memory;
 ///   • /OE present?    -- some parts (the 2114) have no output-enable pin; pass
 ///                         a null /OE net and outputs drive whenever /CE is LOW
 ///                         and /WE is HIGH
+///   • CS2 present?    -- some parts (6264/7164, W24512A) have a second, active-
+///                         HIGH chip-enable; pass its net as cs2N and the chip is
+///                         selected only when /CE is LOW and CS2 is HIGH. Null for
+///                         the single-enable parts.
 ///   • initialContents -- the program image for an EEPROM; null (blank) for SRAM
 ///   • accessTimePs    -- address/enable-valid to data-valid, per speed grade
 ///   • pinNumbers      -- physical pins parallel to the net order below, so every
 ///                         family shares this class with only a different pin list
 ///
 /// Net order (built by the factory, matched by pinNumbers):
-///   address A0(LSB)..A(n-1), data I/O0..I/O(w-1), then /CE, [/OE], /WE.
-///   The /OE slot is present only when the part has an output-enable pin.
+///   address A0(LSB)..A(n-1), data I/O0..I/O(w-1), then /CE, [/OE], /WE, [CS2].
+///   The /OE and CS2 slots are present only when the part has those pins.
 ///
-/// Three-state I/O: the bus is driven only when /CE LOW, /OE LOW (or absent),
-/// /WE HIGH (read). During a write (/CE LOW, /WE LOW) the outputs float so the
-/// external writer owns the bus; the addressed cell is captured on the /WE rising
-/// edge. Deselected (/CE HIGH) the outputs float. Inputs map Unknown/HighZ to 0.
+/// Three-state I/O: the bus is driven only when selected (/CE LOW, and CS2 HIGH
+/// where present), /OE LOW (or absent), /WE HIGH (read). During a write (selected,
+/// /WE LOW) the outputs float so the external writer owns the bus; the addressed
+/// cell is captured on the /WE rising edge. Deselected the outputs float. Inputs
+/// map Unknown/HighZ to 0.
 /// </summary>
 public sealed class ParallelMemory : IChip
 {
@@ -41,7 +46,9 @@ public sealed class ParallelMemory : IChip
     private readonly int ceIdx;
     private readonly int oeIdx;       // -1 when the part has no /OE pin
     private readonly int weIdx;
+    private readonly int cs2Idx;      // -1 when the part has no CS2 (active-HIGH enable) pin
     private readonly bool hasOe;
+    private readonly bool hasCs2;
 
     private readonly bool writable;
     private readonly long accessTimePs;
@@ -62,7 +69,8 @@ public sealed class ParallelMemory : IChip
         long accessTimePs,
         int[] pinNumbers,
         string label,
-        ILogger? logger = null)
+        ILogger? logger = null,
+        Net? cs2N = null)   // optional active-HIGH second chip-enable (CS2/CE2): 6264/7164, W24512A
     {
         if (data.Length is < 1 or > 8)
             throw new ArgumentException("data width must be 1..8", nameof(data));
@@ -72,12 +80,14 @@ public sealed class ParallelMemory : IChip
         addressLines = address.Length;
         dataWidth = data.Length;
         hasOe = oeN is not null;
+        hasCs2 = cs2N is not null;
 
         addrBase = 0;
         dataBase = addressLines;
         ceIdx = addressLines + dataWidth;
         oeIdx = hasOe ? ceIdx + 1 : -1;
         weIdx = hasOe ? ceIdx + 2 : ceIdx + 1;
+        cs2Idx = hasCs2 ? weIdx + 1 : -1;
 
         this.writable = writable;
         this.accessTimePs = accessTimePs;
@@ -87,13 +97,14 @@ public sealed class ParallelMemory : IChip
         if (initialContents is not null)
             Array.Copy(initialContents, contents, Math.Min(initialContents.Length, size));
 
-        int netCount = addressLines + dataWidth + (hasOe ? 3 : 2);
+        int netCount = addressLines + dataWidth + (hasOe ? 3 : 2) + (hasCs2 ? 1 : 0);
         nets = new Net[netCount];
         Array.Copy(address, 0, nets, addrBase, addressLines);
         Array.Copy(data, 0, nets, dataBase, dataWidth);
         nets[ceIdx] = ceN;
         if (hasOe) nets[oeIdx] = oeN!;
         nets[weIdx] = weN;
+        if (hasCs2) nets[cs2Idx] = cs2N!;
 
         dataDrivers = new Driver[dataWidth];
         for (int i = 0; i < dataWidth; i++)
@@ -128,6 +139,13 @@ public sealed class ParallelMemory : IChip
         DriveOutputs(scheduler);
     }
 
+    /// <summary>Chip is selected when /CE (CE1) is LOW and, if the part has an
+    /// active-HIGH CS2/CE2 pin, that pin is HIGH. Parts without CS2 select on /CE
+    /// alone.</summary>
+    private bool IsSelected() =>
+        nets[ceIdx].Value == Signal.Low
+        && (!hasCs2 || nets[cs2Idx].Value == Signal.High);
+
     private void HandleWeChange(IScheduler scheduler)
     {
         Signal we = nets[weIdx].Value;
@@ -136,7 +154,7 @@ public sealed class ParallelMemory : IChip
 
         // Capture the bus on the /WE rising edge (write-cycle end), SRAM-style,
         // provided the chip is selected and this part is writable.
-        if (writable && rising && nets[ceIdx].Value == Signal.Low)
+        if (writable && rising && IsSelected())
         {
             int addr = ReadAddress();
             byte v = ReadDataBus();
@@ -147,7 +165,7 @@ public sealed class ParallelMemory : IChip
 
     private void DriveOutputs(IScheduler scheduler)
     {
-        bool selected = nets[ceIdx].Value == Signal.Low;
+        bool selected = IsSelected();
         bool oeAsserted = !hasOe || nets[oeIdx].Value == Signal.Low;
         bool reading = selected
             && oeAsserted

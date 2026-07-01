@@ -59,6 +59,8 @@ public static class SchematicDtoMapper
             [ChipPartDefinition.Ic7C199.PartNumber] = ChipPartDefinition.Ic7C199,
             [ChipPartDefinition.Ic6116.PartNumber] = ChipPartDefinition.Ic6116,
             [ChipPartDefinition.Ic2114.PartNumber] = ChipPartDefinition.Ic2114,
+            [ChipPartDefinition.Ic6264.PartNumber] = ChipPartDefinition.Ic6264,
+            [ChipPartDefinition.IcW24512.PartNumber] = ChipPartDefinition.IcW24512,
 
             // Timers
             [ChipPartDefinition.IcNe555.PartNumber] = ChipPartDefinition.IcNe555,
@@ -722,9 +724,15 @@ public static class SchematicDtoMapper
         {
             Id = dto.Id,
             Designator = dto.Designator,
-            Program = dto.Program,     // EEPROM/ROM Intel HEX image; null for other parts
-            PropagationDelayNs = dto.PropagationDelayNs   // memory/PLD only; null otherwise
+            Program = dto.Program     // EEPROM/ROM Intel HEX image; null for other parts
         };
+
+        // A file value overrides the constructor-seeded default speed grade; a
+        // null in the file (an older file, or a memory part the user never
+        // overrode) leaves the seeded default in place so the grid still shows
+        // it. Assigning null here unconditionally would blank out that default.
+        if (dto.PropagationDelayNs is int delayNs)
+            device.PropagationDelayNs = delayNs;
 
         bool isFamilyBearer = definition is IcPartDefinition
             || (definition is ChipPartDefinition cp && cp.IsSeries74);

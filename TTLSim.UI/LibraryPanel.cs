@@ -47,7 +47,7 @@ public sealed class LibraryPanel : UserControl
         "DS1813",
         "7seg-ca",
         "NE555", "NE556",
-        "28C256", "28C128", "28C64", "28C16", "62256", "CY7C199", "6116", "2114",
+        "28C256", "28C128", "28C64", "28C16", "62256", "CY7C199", "6116", "2114", "6264", "W24512",
         "GAL16V8", "GAL20V8"
     };
 
@@ -91,6 +91,8 @@ public sealed class LibraryPanel : UserControl
         AddPart(sram, "6116 - 2K x 8 SRAM", ChipPartDefinition.Ic6116);
         AddPart(sram, "62256 - 32K x 8 SRAM", ChipPartDefinition.Ic62256);
         AddPart(sram, "CY7C199 - 32K x 8 SRAM", ChipPartDefinition.Ic7C199);
+        AddPart(sram, "6264 - 8K x 8 SRAM (dual CS)", ChipPartDefinition.Ic6264);
+        AddPart(sram, "W24512 - 64K x 8 SRAM (dual CS)", ChipPartDefinition.IcW24512);
         sram.Expand();
 
         var eepromGal = tree.Nodes.Add("EEPROMs and GALs");

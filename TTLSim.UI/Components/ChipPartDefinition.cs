@@ -187,6 +187,65 @@ public sealed record ChipPartDefinition(
             new("GND",  12),              new("I/O3", 13, Out),
         });
 
+    /// <summary>8K x 8 Static RAM, 28-pin DIP (6264 / IDT7164 / HM6264). Same
+    /// A0..A12 and data pinout as the 28C64 EEPROM, but pin 26 is a second,
+    /// active-HIGH chip-select CS2 (not A13) and pin 20 is the active-LOW /CS1;
+    /// the chip is selected only when /CS1 is LOW and CS2 is HIGH. Rides the same
+    /// ParallelMemory engine using its optional CS2 enable. Bidirectional I/O
+    /// pins are declared as outputs (they drive on read), so the floating-input
+    /// diagnostic does not apply to them.</summary>
+    public static readonly ChipPartDefinition Ic6264 = new(
+        PartNumber: "6264", PinCount: 28, PowerPin: 28, GroundPin: 14,
+        BodyWidth: 12,
+        Pins: new ChipPin[]
+        {
+            new("NC",   1),              new("VCC",  28),
+            new("A12",  2),              new("/WE",  27),
+            new("A7",   3),              new("CS2",  26),
+            new("A6",   4),              new("A8",   25),
+            new("A5",   5),              new("A9",   24),
+            new("A4",   6),              new("A11",  23),
+            new("A3",   7),              new("/OE",  22),
+            new("A2",   8),              new("A10",  21),
+            new("A1",   9),              new("/CS1", 20),
+            new("A0",  10),              new("I/O7", 19, Out),
+            new("I/O0", 11, Out),        new("I/O6", 18, Out),
+            new("I/O1", 12, Out),        new("I/O5", 17, Out),
+            new("I/O2", 13, Out),        new("I/O4", 16, Out),
+            new("GND",  14),             new("I/O3", 15, Out),
+        });
+
+    /// <summary>64K x 8 Static RAM, 32-pin DIP (W24512A / IS61C512 / UM61512).
+    /// 16 address lines. Active-LOW /CS1 on pin 22 and active-HIGH CS2 on pin 30;
+    /// separate /OE (24) and /WE (29). Selected only when /CS1 is LOW and CS2 is
+    /// HIGH. This is the standard 32-pin byte-wide layout (pin-compatible with the
+    /// 128K x 8 parts, whose A16 pin is NC here). Rides the same ParallelMemory
+    /// engine using its optional CS2 enable. Bidirectional I/O pins are declared
+    /// as outputs (they drive on read), so the floating-input diagnostic does not
+    /// apply to them.</summary>
+    public static readonly ChipPartDefinition IcW24512 = new(
+        PartNumber: "W24512", PinCount: 32, PowerPin: 32, GroundPin: 16,
+        BodyWidth: 12,
+        Pins: new ChipPin[]
+        {
+            new("NC",   1),              new("VCC",  32),
+            new("NC",   2),              new("A15",  31),
+            new("A14",  3),              new("CS2",  30),
+            new("A12",  4),              new("/WE",  29),
+            new("A7",   5),              new("A13",  28),
+            new("A6",   6),              new("A8",   27),
+            new("A5",   7),              new("A9",   26),
+            new("A4",   8),              new("A11",  25),
+            new("A3",   9),              new("/OE",  24),
+            new("A2",  10),              new("A10",  23),
+            new("A1",  11),              new("/CS1", 22),
+            new("A0",  12),              new("I/O7", 21, Out),
+            new("I/O0", 13, Out),        new("I/O6", 20, Out),
+            new("I/O1", 14, Out),        new("I/O5", 19, Out),
+            new("I/O2", 15, Out),        new("I/O4", 18, Out),
+            new("GND",  16),             new("I/O3", 17, Out),
+        });
+
     /// <summary>NE555 single precision timer, 8-pin DIP. Active-low pins
     /// (RESET, TRIG) use a leading '/' which the renderer converts to a
     /// bar over the leading letters.</summary>
