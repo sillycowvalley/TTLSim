@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
+using TTLSim.Chips;
 using TTLSim.Core;
 using TTLSim.UI.Components;
 
@@ -100,6 +101,22 @@ public sealed class Device
     public int? PropagationDelayNs { get; set; }
 
     /// <summary>
+    /// Read-only display of the part's default propagation/access delay (speed
+    /// grade) in nanoseconds, sourced from <see cref="PartDelayDefaults"/> -- the
+    /// same table the simulator reads. Shown so the grid always reveals the
+    /// default in effect even when <see cref="PropagationDelayNs"/> is left blank.
+    /// Memory and GAL parts (see DevicePropertyFilter); null for parts with no
+    /// known default.
+    /// </summary>
+    [Category("Identity")]
+    [DisplayName("Default Delay (ns)")]
+    [Description("The part's default speed grade in nanoseconds. " +
+                 "Leave Propagation Delay (ns) blank to use this value.")]
+    [ReadOnly(true)]
+    public int? DefaultDelayNs =>
+        Definition is ChipPartDefinition cp ? PartDelayDefaults.DefaultDelayNs(cp.PartNumber) : null;
+
+    /// <summary>
     /// Operating role of a 555/556 timer core (timer 1 on the 556). The
     /// simulator has no analog model, so the RC network is invisible and the
     /// role must be set here: Schmitt (debounce inverter) or Astable
@@ -177,6 +194,13 @@ public sealed class Device
     public bool UsesExplicitDelay =>
         Definition is ChipPartDefinition cp && !cp.IsSeries74
         && Identifiers.DelayBearing.Contains(cp.PartNumber);
+
+    /// <summary>True for parts with a known default speed grade in
+    /// <see cref="PartDelayDefaults"/> (memory and GAL parts). Shows
+    /// <see cref="DefaultDelayNs"/>.</summary>
+    [Browsable(false)]
+    public bool ShowsDefaultDelay =>
+        Definition is ChipPartDefinition cp && PartDelayDefaults.DefaultDelayNs(cp.PartNumber) is not null;
 
     /// <summary>True for passive parts (resistor, capacitor, LED, ...). Shows
     /// <see cref="Value"/>.</summary>
@@ -308,6 +332,7 @@ public sealed class DevicePropertyFilter : ExpandableObjectConverter
         {
             if (pd.Name == nameof(Device.Family) && !device.IsFamilyBearer) continue;
             if (pd.Name == nameof(Device.PropagationDelayNs) && !device.UsesExplicitDelay) continue;
+            if (pd.Name == nameof(Device.DefaultDelayNs) && !device.ShowsDefaultDelay) continue;
             if (pd.Name == nameof(Device.Value) && !device.IsPassive) continue;
             if (pd.Name == nameof(Device.Program) && !device.CarriesProgram) continue;
             if (pd.Name == nameof(Device.ProgramContents) && !device.ShowsProgramContents) continue;

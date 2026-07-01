@@ -859,7 +859,10 @@ public sealed class ChipFactory : IChipFactory
         // I/O0..I/O7. The 28-pin family (28C256/128/64 EEPROM and pin-compatible
         // 62256 SRAM) shares one layout differing only in address-line count;
         // the 24-pin 28C16 has its own.
-        int[] addr, data; int ce, oe, we; bool writable; long access;
+        // The default access time (speed grade) is NOT set per-case here -- it
+        // comes from PartDelayDefaults after the switch, the single table the
+        // property grid also reads, so the simulator and the grid cannot drift.
+        int[] addr, data; int ce, oe, we; bool writable;
         switch (device.PartIdentifier)
         {
             case "28C256":
@@ -868,54 +871,53 @@ public sealed class ChipFactory : IChipFactory
                 data = new[] { 11, 12, 13, 15, 16, 17, 18, 19 };
                 ce = 20; oe = 22; we = 27;
                 writable = device.PartIdentifier == "62256";
-                access = writable ? 55_000 : 250_000;
                 break;
             case "CY7C199":
                 // 28-pin 32K x 8 SRAM, identical JEDEC pinout to the 62256;
-                // the -15 grade is a 15 ns part. Always writable.
+                // the -15 grade is a 15 ns part (see PartDelayDefaults). Always writable.
                 addr = new[] { 10, 9, 8, 7, 6, 5, 4, 3, 25, 24, 21, 23, 2, 26, 1 };
                 data = new[] { 11, 12, 13, 15, 16, 17, 18, 19 };
-                ce = 20; oe = 22; we = 27; writable = true; access = 15_000;
+                ce = 20; oe = 22; we = 27; writable = true;
                 break;
             case "28C128":
                 addr = new[] { 10, 9, 8, 7, 6, 5, 4, 3, 25, 24, 21, 23, 2, 26 };
                 data = new[] { 11, 12, 13, 15, 16, 17, 18, 19 };
-                ce = 20; oe = 22; we = 27; writable = false; access = 250_000;
+                ce = 20; oe = 22; we = 27; writable = false;
                 break;
             case "28C64":
                 addr = new[] { 10, 9, 8, 7, 6, 5, 4, 3, 25, 24, 21, 23, 2 };
                 data = new[] { 11, 12, 13, 15, 16, 17, 18, 19 };
-                ce = 20; oe = 22; we = 27; writable = false; access = 250_000;
+                ce = 20; oe = 22; we = 27; writable = false;
                 break;
             case "28C16":
                 addr = new[] { 8, 7, 6, 5, 4, 3, 2, 1, 23, 22, 19 };
                 data = new[] { 9, 10, 11, 13, 14, 15, 16, 17 };
-                ce = 18; oe = 20; we = 21; writable = false; access = 250_000;
+                ce = 18; oe = 20; we = 21; writable = false;
                 break;
             case "6116":
                 // 24-pin 2K x 8 SRAM, same JEDEC pinout as the 28C16; the
                 // 6116P-70 is the 70 ns grade.
                 addr = new[] { 8, 7, 6, 5, 4, 3, 2, 1, 23, 22, 19 };
                 data = new[] { 9, 10, 11, 13, 14, 15, 16, 17 };
-                ce = 18; oe = 20; we = 21; writable = true; access = 70_000;
+                ce = 18; oe = 20; we = 21; writable = true;
                 break;
             case "2114":
                 // 18-pin 1K x 4 SRAM. Nibble-wide, and it has NO output-enable
                 // pin (oe = -1): outputs drive whenever /CS is LOW and /WE HIGH.
-                // 200 ns is a representative grade; it only sets the sim delay.
                 addr = new[] { 5, 6, 7, 4, 3, 2, 1, 17, 16, 15 }; // A0..A9
                 data = new[] { 14, 13, 12, 11 };                  // I/O1..I/O4
-                ce = 8; oe = -1; we = 10; writable = true; access = 200_000;
+                ce = 8; oe = -1; we = 10; writable = true;
                 break;
             default:
                 return null;
         }
 
-        // Honour an explicit per-part "Propagation Delay (ns)" from the property
-        // grid; fall back to the per-part default speed grade set above when it
-        // is unset. Nanoseconds -> picoseconds (the engine's tick unit).
-        if (device.PropagationDelayNs is int ns && ns > 0)
-            access = ns * 1000L;
+        // Resolve the access time (picoseconds). An explicit per-part
+        // "Propagation Delay (ns)" from the property grid wins; otherwise use the
+        // part's default speed grade from PartDelayDefaults -- the same table the
+        // property grid displays, so the simulator and the grid never disagree.
+        long defaultNs = PartDelayDefaults.DefaultDelayNs(device.PartIdentifier) ?? 250;
+        long access = (device.PropagationDelayNs is int ns && ns > 0 ? ns : defaultNs) * 1000L;
 
         // All signal pins are optional: an unconnected pin gets a local stand-in
         // net (reads as 0, never drives) so partial wiring -- e.g. only the low
@@ -989,11 +991,13 @@ public sealed class ChipFactory : IChipFactory
         }
 
         // Honour an explicit per-part "Propagation Delay (ns)" from the property
-        // grid; fall back to the model's nominal grade when it is unset.
+        // grid; otherwise use the part's nominal grade from PartDelayDefaults --
+        // the one table the memory path and the property grid also read.
         // Nanoseconds -> picoseconds.
         long delayPs = device.PropagationDelayNs is int ns && ns > 0
             ? ns * 1000L
-            : Gal.PropagationDelayPs;
+            : (PartDelayDefaults.DefaultDelayNs(device.PartIdentifier)
+               ?? PartDelayDefaults.GalDefaultDelayNs) * 1000L;
 
         return new Gal(gd, fuses, pinToNet, delayPs);
     }
