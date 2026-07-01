@@ -629,46 +629,58 @@ public sealed class ChipFactory : IChipFactory
 
     private IChip? TryCreateHc161(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
     {
-        // Same pinout as the '163. RCO (pin 15) is an optional cascade output.
-        int[] needed = { 1, 2, 3, 4, 5, 6, 7, 9, 10, 14, 13, 12, 11 };
+        // Same pinout as the '163. Required pins are the INPUTS only:
+        // 1 /CLR, 2 CLK, 3..6 D0..D3, 7 CEP, 9 /LD, 10 CET. The four Q
+        // outputs (14,13,12,11 = Q0..Q3) and RCO (pin 15) are OPTIONAL --
+        // an open output drives nothing and must never block instantiation
+        // (cf. the '74/'273 outputs and the '283 carry-out). A counter that
+        // uses only its low bits leaves the upper Q's open. TTL011 still
+        // flags genuinely unwired INPUTS at design time.
+        int[] needed = { 1, 2, 3, 4, 5, 6, 7, 9, 10 };
         foreach (int p in needed)
             if (!pinToNet.TryGetValue(p, out Net? n) || n is null) return null;
 
         Net Get(int pin) => pinToNet[pin];
-        Net rcoNet = pinToNet.TryGetValue(15, out Net? rco) && rco is not null
-            ? rco
-            : new Net(-1, "rco-unconnected");
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);   // local stand-in, drives nothing
 
         return new Hc161(
             clrN: Get(1), clkN: Get(2),
             d0: Get(3), d1: Get(4), d2: Get(5), d3: Get(6),
             cepN: Get(7), ldN: Get(9), cetN: Get(10),
-            q0: Get(14), q1: Get(13), q2: Get(12), q3: Get(11),
-            rcoN: rcoNet,
+            q0: Opt(14, "q0-nc"), q1: Opt(13, "q1-nc"),
+            q2: Opt(12, "q2-nc"), q3: Opt(11, "q3-nc"),
+            rcoN: Opt(15, "rco-nc"),
             label: "161", logger: logger,
             delayPs: TtlTiming.ResolvePs(device));
     }
 
     private IChip? TryCreateHc163(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
     {
-        // Required pins: 1 /CLR, 2 CLK, 3..6 D0..D3, 7 CEP, 9 /LD, 10 CET,
-        // 14,13,12,11 Q0..Q3. RCO (pin 15) is an optional cascade output --
-        // a single counter leaves it unconnected.
-        int[] needed = { 1, 2, 3, 4, 5, 6, 7, 9, 10, 14, 13, 12, 11 };
+        // Required pins are the INPUTS only: 1 /CLR, 2 CLK, 3..6 D0..D3,
+        // 7 CEP, 9 /LD, 10 CET. The four Q outputs (14,13,12,11 = Q0..Q3)
+        // and RCO (pin 15) are OPTIONAL -- an open output drives nothing and
+        // must never block instantiation (cf. the '74/'273 outputs and the
+        // '283 carry-out). A single counter that uses only its low bits
+        // leaves the upper Q's open. TTL011 still flags genuinely unwired
+        // INPUTS at design time.
+        int[] needed = { 1, 2, 3, 4, 5, 6, 7, 9, 10 };
         foreach (int p in needed)
             if (!pinToNet.TryGetValue(p, out Net? n) || n is null) return null;
 
         Net Get(int pin) => pinToNet[pin];
-        Net rcoNet = pinToNet.TryGetValue(15, out Net? rco) && rco is not null
-            ? rco
-            : new Net(-1, "rco-unconnected");  // local stand-in, drives nothing
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);   // local stand-in, drives nothing
 
         return new Hc163(
             clrN: Get(1), clkN: Get(2),
             d0: Get(3), d1: Get(4), d2: Get(5), d3: Get(6),
             cepN: Get(7), ldN: Get(9), cetN: Get(10),
-            q0: Get(14), q1: Get(13), q2: Get(12), q3: Get(11),
-            rcoN: rcoNet,
+            q0: Opt(14, "q0-nc"), q1: Opt(13, "q1-nc"),
+            q2: Opt(12, "q2-nc"), q3: Opt(11, "q3-nc"),
+            rcoN: Opt(15, "rco-nc"),
             label: "163", logger: logger,
             delayPs: TtlTiming.ResolvePs(device));
     }
