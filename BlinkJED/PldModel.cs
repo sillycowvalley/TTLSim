@@ -26,11 +26,14 @@ internal sealed class PinDeclaration
 /// <summary>
 /// One output equation: a sum (OR) of product terms (AND of literals).
 /// Registered vs combinational and output polarity drive OLMC config fuses.
+/// A .oe equation carries the target's output-enable product term instead of
+/// its logic; the compiler pairs it with the target's output equation.
 /// </summary>
 internal sealed class Equation
 {
     public string Target = "";              // output signal name
-    public bool Registered;                 // .D / .R (registered) vs combinational
+    public bool Registered;                 // .d suffix (registered) vs combinational
+    public bool OutputEnable;               // .oe suffix (per-macrocell output enable)
     public bool ActiveLow;                  // complemented output (leading !)
     public List<ProductTerm> Terms = new(); // OR of these
 }
@@ -44,24 +47,24 @@ internal sealed class ProductTerm
 /// <summary>
 /// Stage 1: parse CUPL/PLD source into a <see cref="PldDocument"/>.
 ///
-/// Scope (matches the surface of the Mini Blinky decode .pld files):
+/// Scope:
 ///   - header properties (Name / PartNo / ... / Device);
 ///   - PIN declarations, with optional leading '!' for active-low;
-///   - equations: any expression over NOT '!', AND '&', OR '#', XOR '$' and
-///     parentheses, with CUPL precedence (highest to lowest): ! , & , # , $.
-///     The expression is flattened to a sum-of-products here (XOR expanded,
-///     De Morgan applied to negated products) so the fuse mapper downstream
-///     only ever sees an OR of AND-of-literals. Flat SOP inputs are unaffected
-///     and compile bit-for-bit as before.
-///   - the '.D' / '.R' output extension marks a REGISTERED output (mode 3);
-///     a plain target is combinational.
+///   - equations: any expression over NOT '!', AND '&', OR '#',
+///     XOR '$' and parentheses, with CUPL precedence (highest to lowest):
+///     ! , & , # , $. The expression is flattened to a sum-of-products here
+///     (XOR expanded, De Morgan applied to negated products) so the fuse
+///     mapper downstream only ever sees an OR of AND-of-literals. Flat SOP
+///     inputs compile bit-for-bit as before.
+///   - output extensions: '.d' marks a registered output, '.oe' gives an
+///     output its per-macrocell output-enable term. Which GAL mode these
+///     select, and their constraints, are the compiler's business; the parser
+///     just records them. Any other extension is rejected.
 ///   - comments: '//' to end of line, and '/* ... */' NON-NESTING (CUPL rule:
 ///     the first '*/' closes the block).
 ///
 /// Not yet handled (deferred, each will register an error if encountered):
-///   - the '.OE' tristate expression (complex-mode outputs default to always
-///     enabled; an explicit .OE is reported as not emitted yet);
-///   - other output extensions;
+///   - output extensions other than .d / .oe;
 ///   - set/range/index notation, function calls;
 ///   - '$' PREPROCESSOR directives ($DEFINE / $REPEAT / $MACRO ...). Note this
 ///     is distinct from the '$' XOR operator, which IS supported above.
@@ -152,27 +155,23 @@ internal static class PldParser
         string lhs = st.Substring(0, eq).Trim();
         string rhs = st.Substring(eq + 1).Trim();
 
-        // Output extension: a trailing '.d' / '.r' / '.oe' on the target name.
-        //   .d / .r -> REGISTERED output (mode 3); a plain target is combinational.
-        //   .oe     -> tristate control; a distinct feature, not emitted yet.
+        // Optional output extension: '.d' (registered output) or '.oe'
+        // (per-macrocell output enable). Anything else is still rejected.
         bool registered = false;
+        bool outputEnable = false;
         int dot = lhs.IndexOf('.');
         if (dot >= 0)
         {
-            string ext = lhs.Substring(dot + 1).Trim().ToLowerInvariant();
+            string suffix = lhs.Substring(dot + 1).Trim();
             lhs = lhs.Substring(0, dot).Trim();
-            switch (ext)
+            if (suffix.Equals("d", StringComparison.OrdinalIgnoreCase))
+                registered = true;
+            else if (suffix.Equals("oe", StringComparison.OrdinalIgnoreCase))
+                outputEnable = true;
+            else
             {
-                case "d":
-                case "r":
-                    registered = true;
-                    break;
-                case "oe":
-                    errors.Add($"Output-enable (.OE) control is not emitted yet: \"{Shorten(st)}\".");
-                    return;
-                default:
-                    errors.Add($"Unknown output extension '.{ext}': \"{Shorten(st)}\".");
-                    return;
+                errors.Add($"Output extension '.{suffix}' not supported (only .d and .oe): \"{Shorten(st)}\".");
+                return;
             }
         }
 
@@ -181,6 +180,11 @@ internal static class PldParser
         if (!IsName(target))
         {
             errors.Add($"Bad equation target: \"{Shorten(lhs)}\".");
+            return;
+        }
+        if (outputEnable && activeLow)
+        {
+            errors.Add($"Output '{target}': '!' is not valid on a .oe equation.");
             return;
         }
 
@@ -206,7 +210,13 @@ internal static class PldParser
             }
         }
 
-        var equation = new Equation { Target = target, ActiveLow = activeLow, Registered = registered };
+        var equation = new Equation
+        {
+            Target = target,
+            ActiveLow = activeLow,
+            Registered = registered,
+            OutputEnable = outputEnable,
+        };
         foreach (var termLits in sop)
         {
             var term = new ProductTerm();
@@ -435,11 +445,11 @@ internal static class PldParser
             var acc = One();
             foreach (var term in a)
             {
-                if (term.Count == 0) return Zero();   // !(const 1) = const 0
-                var negatedTerm = new List<Dictionary<string, bool>>();
+                if (term.Count == 0) return Zero();   // !(constant 1) = constant 0
+                var negTerm = new List<Dictionary<string, bool>>();
                 foreach (var kv in term)
-                    negatedTerm.Add(new Dictionary<string, bool> { [kv.Key] = !kv.Value });
-                acc = And(acc, negatedTerm);
+                    negTerm.Add(new Dictionary<string, bool> { [kv.Key] = !kv.Value });
+                acc = And(acc, negTerm);
             }
             return acc;
         }

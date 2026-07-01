@@ -4,66 +4,61 @@ using System.Collections.Generic;
 namespace BlinkyJed;
 
 /// <summary>
-/// GAL OLMC configuration mode for the whole device. The 16V8/20V8 pick ONE
-/// mode for all eight macrocells, encoded by the SYN and AC0 architecture bits:
-///   Simple      SYN=1 AC0=0   combinational, 8 terms, no tristate control
-///   Complex     SYN=1 AC0=1   combinational I/O with own-pin feedback + a
-///                             tristate (OE) term; 7 sum terms per cell
-///   Registered  SYN=0 AC0=1   registered outputs (D-FF, /Q feedback, common
-///                             CLK on pin 1 and /OE on pin 11/13); each cell is
-///                             individually registered (8 terms) or combinational
-///                             (7 terms + OE), chosen by that cell's AC1 bit.
-/// </summary>
-internal enum GalMode { Simple, Complex, Registered }
-
-/// <summary>
 /// Stage 3: map parsed equations onto a device fuse map for the 16V8 / 20V8,
-/// covering all three OLMC modes (simple / complex / registered). Mirrors GALasm.
+/// covering all three GAL configurations. Mirrors GALasm:
 ///
-/// Array building (shared by every mode):
-///   - A used product-term row starts all-1; each connected input column is
-///     cleared to 0 (true line at PinToFuse[pin-1], complement at col+1). Rows
-///     with no term stay all-0 and the writer omits them.
-///   - output pin -> OLMC index (pin - first OLMC pin); the eight rows of an
-///     OLMC begin at ToOlmc[olmc].
+///   - Logic starts all-1; a used product-term row keeps its 1s except the
+///     connected input columns, which are cleared to 0. Every other row stays 0
+///     (the writer omits all-zero rows).
+///   - output pin -> OLMC index (pin - first OLMC pin); product term t -> row
+///     ToOlmc[olmc] + t; literal -> column PinToFuse[pin-1], true line at col,
+///     complement at col+1. The PinToFuse table is per-mode, because the GAL
+///     re-routes feedback differently in each configuration.
+///   - XOR[7-olmc] = 1 per active-high output; PT all 1 in every mode.
 ///
-/// Mode selection is decided from the equations, not the .pld device mnemonic
-/// (BlinkyJED ignores the S/A/AS/MS suffix, exactly as TargetDevice.Resolve
-/// notes): any registered output forces registered mode; otherwise an output fed
-/// back into the array -- or an input on a pin only the array can reach in the
-/// wider modes -- forces complex; otherwise simple.
+/// Mode is selected automatically from what the design needs (the CUPL device
+/// suffix is ignored, as before):
 ///
-/// Per-mode architecture:
-///   - SYN/AC0 as above. PT (product-term disable) all 1 in every mode.
-///   - XOR[7-olmc] = 1 for an active-high output (0 = active low), all modes.
-///   - AC1[7-olmc]: simple -> 0 for outputs, 1 for spare/input cells;
-///                  complex -> 1 for every cell; registered -> 0 for registered
-///                  cells, 1 for combinational or spare cells.
-///   - Complex, and combinational cells inside registered mode, reserve the
-///     FIRST product term (row offset 0) as the tristate/OE control and use
-///     offsets 1..7 for the sum (7 terms). With no explicit .OE the output is
-///     always enabled, emitted as an all-1 (fully blown) OE row. Registered and
-///     simple cells use all eight rows (offsets 0..7) for the sum.
+///   MODE 1 (simple)     SYN=1 AC0=0.  Chosen when nothing below applies.
+///                       8 product terms per output. Spare OLMCs become
+///                       inputs (AC1=1). Byte-identical output to the
+///                       previous, mode-1-only compiler.
+///   MODE 2 (complex)    SYN=1 AC0=1.  Forced by a per-macrocell .oe, by
+///                       combinational feedback (an output used as an input),
+///                       or by an input on a pin with no simple-mode feedback
+///                       line (16V8: 15,16 ; 20V8: 18,19). AC1=1 for every
+///                       cell. Row 0 of each used OLMC block is its
+///                       output-enable term (all-1s = always enabled), rows
+///                       1..7 are the logic, so 7 terms per output. The end
+///                       macrocells (16V8: 12,19 ; 20V8: 15,22) have no
+///                       feedback and cannot be used as inputs.
+///   MODE 3 (registered) SYN=0 AC0=1.  Forced by any .d equation. Pin 1 is
+///                       the global clock and pin 11 (16V8) / 13 (20V8) the
+///                       global /OE; neither may appear in an equation.
+///                       A registered output (AC1=0) owns all 8 rows of its
+///                       block and is enabled by the global /OE, so .oe is
+///                       not available on it. A combinational output inside
+///                       registered mode (AC1=1) works like a complex-mode
+///                       cell: OE term in row 0, 7 logic terms.
 ///
-/// Simple-mode output is byte-for-byte unchanged from the previous version.
+/// Feedback literals are programmed like any other pin literal; the per-mode
+/// column tables already encode where each OLMC's feedback lands, matching
+/// what GALasm/WinCUPL emit (validated against WinCUPL .jed references for
+/// all six sample designs).
 ///
-/// VALIDATION NOTE: the simple-mode fuse map was validated by diffing against
-/// WinCUPL. The complex/registered architecture-bit and OE-term encodings here
-/// follow the published GALasm model but have NOT been diffed against a WinCUPL
-/// .jed in this build -- do that (compile the same .pld with WinCUPL/GALasm and
-/// compare) before programming silicon.
-///
-/// Still not emitted (rejected by the parser with a clear error): an explicit
-/// .OE tristate expression. Complex-mode outputs default to always-enabled.
+/// Still not handled (rejected by the parser): output extensions other than
+/// .d/.oe, set/range/index notation, and '$' preprocessor directives.
 /// </summary>
 internal static class Compiler
 {
+    private enum GalMode { Simple = 1, Complex = 2, Registered = 3 }
+
     // Row offset per OLMC index: OLMC 0 -> row 56 ... OLMC 7 -> row 0.
     private static readonly int[] ToOlmc = { 56, 48, 40, 32, 24, 16, 8, 0 };
 
-    // PinToFuse tables. Index = pin-1; value = base column (true literal), or -1
-    // when that pin has no array-input column in this mode. Derived from the same
-    // GALasm PinToFuse*/ColumnMap tables the simulator geometry uses.
+    // PinToFuse per mode. Index = pin-1; -1 = no column for that pin in that
+    // mode. Values are the GALasm PinToFuse16/20 tables (the same source the
+    // TTLSim GalDevice column maps were taken from).
     private static readonly int[] PinToFuse16Mode1 =
         { 2, 0, 4, 8, 12, 16, 20, 24, 28, -1, 30, 26, 22, 18, -1, -1, 14, 10, 6, -1 };
     private static readonly int[] PinToFuse16Mode2 =
@@ -85,8 +80,10 @@ internal static class Compiler
         bool is16 = device is Gal16V8;
         int firstOlmcPin = is16 ? 12 : 15;
         int lastOlmcPin = is16 ? 19 : 22;
-        int specialA = is16 ? 15 : 18;   // pins the array reaches only in complex/registered
-        int specialB = is16 ? 16 : 19;
+        int clockPin = 1;                                    // CLK in mode 3
+        int globalOePin = is16 ? 11 : 13;                    // /OE in mode 3
+        int[] specialPins = is16 ? new[] { 15, 16 } : new[] { 18, 19 };
+        int[] outputOnlyComplexPins = is16 ? new[] { 12, 19 } : new[] { 15, 22 };
         int cols = device.Columns;
 
         // name -> pin number
@@ -97,44 +94,118 @@ internal static class Compiler
                 errors.Add($"Pin name '{p.Name}' is declared more than once.");
         }
 
-        // ---- choose the device mode from the equations ---------------------
-        var outputNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (Equation e in doc.Equations) outputNames.Add(e.Target);
+        // Partition: output equations vs their .oe (output-enable) equations.
+        var mains = new List<Equation>();
+        var oes = new List<Equation>();
+        foreach (Equation eq in doc.Equations)
+            (eq.OutputEnable ? oes : mains).Add(eq);
 
-        bool anyRegistered = false;
-        bool needsWiderInput = false;   // an output fed back, or an input on a special pin
-        foreach (Equation e in doc.Equations)
+        var targets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (Equation eq in mains) targets.Add(eq.Target);
+
+        // ---- Mode selection ------------------------------------------------
+        GalMode mode = GalMode.Simple;
+        foreach (Equation eq in mains)
+            if (eq.Registered) { mode = GalMode.Registered; break; }
+        if (mode == GalMode.Simple)
         {
-            if (e.Registered) anyRegistered = true;
-            foreach (ProductTerm t in e.Terms)
-                foreach (KeyValuePair<string, bool> lit in t.Literals)
+            bool forceComplex = oes.Count > 0;
+            foreach (Equation eq in mains)
+            {
+                foreach (ProductTerm term in eq.Terms)
                 {
-                    if (outputNames.Contains(lit.Key)) needsWiderInput = true;
-                    if (pinOf.TryGetValue(lit.Key, out int lp) && (lp == specialA || lp == specialB))
-                        needsWiderInput = true;
+                    foreach (string sig in term.Literals.Keys)
+                    {
+                        if (targets.Contains(sig))
+                            forceComplex = true;             // combinational feedback
+                        if (pinOf.TryGetValue(sig, out int p) && Array.IndexOf(specialPins, p) >= 0)
+                            forceComplex = true;             // input with no mode-1 feedback line
+                    }
                 }
+            }
+            if (forceComplex) mode = GalMode.Complex;
         }
 
-        GalMode mode = anyRegistered ? GalMode.Registered
-                     : needsWiderInput ? GalMode.Complex
-                     : GalMode.Simple;
+        int[] pinToFuse = is16
+            ? (mode == GalMode.Simple ? PinToFuse16Mode1 : mode == GalMode.Complex ? PinToFuse16Mode2 : PinToFuse16Mode3)
+            : (mode == GalMode.Simple ? PinToFuse20Mode1 : mode == GalMode.Complex ? PinToFuse20Mode2 : PinToFuse20Mode3);
 
-        int[] pinToFuse = mode switch
-        {
-            GalMode.Simple => is16 ? PinToFuse16Mode1 : PinToFuse20Mode1,
-            GalMode.Complex => is16 ? PinToFuse16Mode2 : PinToFuse20Mode2,
-            _ => is16 ? PinToFuse16Mode3 : PinToFuse20Mode3,
-        };
-
-        // ---- architecture word ---------------------------------------------
+        // Architecture word; PT is all 1 in every mode.
         map.Syn = (byte)(mode == GalMode.Registered ? 0 : 1);
         map.Ac0 = (byte)(mode == GalMode.Simple ? 0 : 1);
-        for (int i = 0; i < map.Pt.Length; i++) map.Pt[i] = 1;   // all product terms enabled
+        for (int i = 0; i < map.Pt.Length; i++) map.Pt[i] = 1;
 
+        // ---- .oe equations: one per target, exactly one product term -------
+        var oeOf = new Dictionary<string, ProductTerm>(StringComparer.OrdinalIgnoreCase);
+        foreach (Equation oe in oes)
+        {
+            if (!targets.Contains(oe.Target))
+            {
+                errors.Add($"Output '{oe.Target}.oe' has no matching output equation.");
+                continue;
+            }
+            if (oeOf.ContainsKey(oe.Target))
+            {
+                errors.Add($"Output '{oe.Target}' has more than one .oe equation.");
+                continue;
+            }
+            if (oe.Terms.Count != 1)
+            {
+                errors.Add($"Output '{oe.Target}.oe': the output enable is a single product term (got {oe.Terms.Count}).");
+                continue;
+            }
+            oeOf[oe.Target] = oe.Terms[0];
+        }
+
+        // Clear the connected input columns of one product-term row.
+        void SetLiteral(string eqTarget, int rowBase, string sig, bool asserted)
+        {
+            if (!pinOf.TryGetValue(sig, out int litPin))
+            {
+                errors.Add($"Output '{eqTarget}': undeclared signal '{sig}'.");
+                return;
+            }
+            if (mode == GalMode.Registered && litPin == clockPin)
+            {
+                errors.Add($"Output '{eqTarget}': pin {clockPin} is the global clock in registered mode and cannot be used in an equation.");
+                return;
+            }
+            if (mode == GalMode.Registered && litPin == globalOePin)
+            {
+                errors.Add($"Output '{eqTarget}': pin {globalOePin} is the global /OE in registered mode and cannot be used in an equation.");
+                return;
+            }
+            if (mode == GalMode.Complex && Array.IndexOf(outputOnlyComplexPins, litPin) >= 0)
+            {
+                errors.Add($"Output '{eqTarget}': pin {litPin} ('{sig}') has no feedback in complex mode.");
+                return;
+            }
+
+            int col = pinToFuse[litPin - 1];
+            if (col < 0)
+            {
+                errors.Add($"Output '{eqTarget}': pin {litPin} ('{sig}') cannot be an input here.");
+                return;
+            }
+
+            int negation = asserted ? 0 : 1;   // true line at col, complement at col+1
+            map.Logic[rowBase + col + negation] = 0;   // clear -> connect this input
+        }
+
+        // Program one row from a product term: start all-1, connect literals.
+        void ProgramRow(string eqTarget, int row, ProductTerm term)
+        {
+            int baseIdx = row * cols;
+            for (int c = 0; c < cols; c++) map.Logic[baseIdx + c] = 1;
+            foreach (KeyValuePair<string, bool> lit in term.Literals)
+                SetLiteral(eqTarget, baseIdx, lit.Key, lit.Value);
+        }
+
+        // ---- map each output ------------------------------------------------
         var usedOlmc = new HashSet<int>();
-        var registeredCell = new bool[TargetDevice.Ac1Size];
+        var registeredOlmc = new HashSet<int>();
 
-        foreach (Equation eq in doc.Equations)
+        foreach (Equation eq in mains)
         {
             if (!pinOf.TryGetValue(eq.Target, out int pin))
             {
@@ -153,76 +224,59 @@ internal static class Compiler
                 errors.Add($"Output '{eq.Target}' (pin {pin}) is driven by more than one equation.");
                 continue;
             }
-            registeredCell[olmc] = eq.Registered;
+            if (eq.Registered) registeredOlmc.Add(olmc);
 
-            // Complex and registered-combinational cells give up the first product
-            // term to the tristate/OE control; registered and simple cells keep all 8.
-            bool hasOeRow = mode == GalMode.Complex
-                         || (mode == GalMode.Registered && !eq.Registered);
-            int sumStart = hasOeRow ? 1 : 0;
-            int maxTerms = 8 - sumStart;
-
+            // Row budget: a registered OLMC owns all 8 rows; a combinational
+            // OLMC in modes 2/3 gives its first row to the output-enable term.
+            bool hasOeRow = !eq.Registered && mode != GalMode.Simple;
+            int maxTerms = hasOeRow ? 7 : 8;
             if (eq.Terms.Count > maxTerms)
             {
-                errors.Add($"Output '{eq.Target}': {eq.Terms.Count} product terms exceed the {maxTerms} available per output in {mode.ToString().ToLowerInvariant()} mode.");
+                errors.Add($"Output '{eq.Target}': {eq.Terms.Count} product terms exceed the {maxTerms} available per output" +
+                           (hasOeRow ? " (one term is the output enable)." : "."));
                 continue;
             }
 
             int startRow = ToOlmc[olmc];
 
-            // Always-enabled tristate term: a fully blown (all-1) OE row.
             if (hasOeRow)
             {
-                int oeBase = startRow * cols;
-                for (int c = 0; c < cols; c++) map.Logic[oeBase + c] = 1;
-            }
-
-            for (int t = 0; t < eq.Terms.Count; t++)
-            {
-                int baseIdx = (startRow + sumStart + t) * cols;
-                for (int c = 0; c < cols; c++) map.Logic[baseIdx + c] = 1;   // row starts all-1
-
-                foreach (KeyValuePair<string, bool> lit in eq.Terms[t].Literals)
+                if (oeOf.TryGetValue(eq.Target, out ProductTerm? oeTerm))
                 {
-                    string sig = lit.Key;
-                    bool asserted = lit.Value;
-
-                    if (!pinOf.TryGetValue(sig, out int litPin))
-                    {
-                        errors.Add($"Output '{eq.Target}': undeclared signal '{sig}'.");
-                        continue;
-                    }
-
-                    int col = pinToFuse[litPin - 1];
-                    if (col < 0)
-                    {
-                        errors.Add($"Output '{eq.Target}': pin {litPin} ('{sig}') cannot be an input in {mode.ToString().ToLowerInvariant()} mode.");
-                        continue;
-                    }
-
-                    int negation = asserted ? 0 : 1;   // true line at col, complement at col+1
-                    map.Logic[baseIdx + col + negation] = 0;   // clear -> connect this input
+                    ProgramRow(eq.Target, startRow, oeTerm);
+                }
+                else
+                {
+                    // No .oe -> all-1s row = a product of nothing = always enabled.
+                    int baseIdx = startRow * cols;
+                    for (int c = 0; c < cols; c++) map.Logic[baseIdx + c] = 1;
                 }
             }
+            else if (eq.Registered && oeOf.ContainsKey(eq.Target))
+            {
+                errors.Add($"Output '{eq.Target}': a registered output uses the global /OE pin; .oe is not available.");
+            }
+
+            int firstLogicRow = startRow + (hasOeRow ? 1 : 0);
+            for (int t = 0; t < eq.Terms.Count; t++)
+                ProgramRow(eq.Target, firstLogicRow + t, eq.Terms[t]);
 
             // Output polarity: active-high output sets its XOR bit.
             if (!eq.ActiveLow)
                 map.Xor[TargetDevice.XorSize - 1 - olmc] = 1;
         }
 
-        // ---- AC1 per OLMC --------------------------------------------------
+        // AC1: mode 1 -> spare OLMC pins become inputs, matching WinCUPL;
+        // mode 2 -> 1 for every cell; mode 3 -> 0 marks a registered cell,
+        // 1 a combinational or spare one.
         for (int olmc = 0; olmc < TargetDevice.Ac1Size; olmc++)
         {
-            byte ac1;
-            if (mode == GalMode.Complex)
-                ac1 = 1;                                       // every cell is tristate I/O
-            else if (!usedOlmc.Contains(olmc))
-                ac1 = 1;                                       // spare cell -> input
-            else if (mode == GalMode.Registered && !registeredCell[olmc])
-                ac1 = 1;                                       // combinational cell in registered mode
-            else
-                ac1 = 0;                                       // simple output, or registered cell
-
+            byte ac1 = mode switch
+            {
+                GalMode.Simple => (byte)(usedOlmc.Contains(olmc) ? 0 : 1),
+                GalMode.Complex => 1,
+                _ => (byte)(registeredOlmc.Contains(olmc) ? 0 : 1),
+            };
             map.Ac1[TargetDevice.Ac1Size - 1 - olmc] = ac1;
         }
 
