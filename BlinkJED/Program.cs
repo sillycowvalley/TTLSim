@@ -16,8 +16,9 @@ namespace BlinkyJed;
 ///        -> JedecWriter.Write     (fuse map -> JESD3 .jed text)
 ///     .jed output
 ///
-/// The CLI shell here is complete. The three middle stages are the substantial
-/// work and are scaffolded as stubs -- see each stage class for what it must do.
+/// The CLI accepts a single .pld file or a folder. A folder input compiles
+/// every *.pld it contains (non-recursive). The -o output may be a filename or
+/// an existing folder; when it is a folder, each .jed is named after its input.
 /// </summary>
 internal static class Program
 {
@@ -48,7 +49,7 @@ internal static class Program
         }
 
         string inputPath = args[0];
-        string? jedPath = null;
+        string? outputPath = null;    // -o : may name a file OR an existing folder
         string? deviceOverride = null;
 
         for (int i = 1; i < args.Length; i++)
@@ -56,7 +57,7 @@ internal static class Program
             switch (args[i])
             {
                 case "-o" when i + 1 < args.Length:
-                    jedPath = args[++i];
+                    outputPath = args[++i];
                     break;
                 case "-d" when i + 1 < args.Length:
                     deviceOverride = args[++i];
@@ -68,14 +69,73 @@ internal static class Program
             }
         }
 
+        // Folder input: compile every *.pld in the directory.
+        if (Directory.Exists(inputPath))
+            return CompileFolder(inputPath, outputPath, deviceOverride);
+
+        // Single-file input.
         if (!File.Exists(inputPath))
         {
-            Console.Error.WriteLine($"Input file not found: {inputPath}");
+            Console.Error.WriteLine($"Input path not found: {inputPath}");
             return 1;
         }
 
-        jedPath ??= Path.ChangeExtension(inputPath, ".jed");
+        return CompileOne(inputPath, ResolveOutputPath(inputPath, outputPath), deviceOverride);
+    }
 
+    private static int CompileFolder(string dir, string? outputPath, string? deviceOverride)
+    {
+        // A whole folder produces many .jed files, so an -o output must itself be
+        // a folder -- a single filename could not hold them all.
+        if (outputPath != null && !Directory.Exists(outputPath))
+        {
+            Console.Error.WriteLine(
+                $"When the input is a folder, -o must be an existing output folder (got: {outputPath}).");
+            return 1;
+        }
+
+        string[] files = Directory.GetFiles(dir, "*.pld");
+        Array.Sort(files, StringComparer.OrdinalIgnoreCase);
+
+        if (files.Length == 0)
+        {
+            Console.Error.WriteLine($"No .pld files found in {dir}");
+            return 1;
+        }
+
+        int failed = 0;
+        foreach (string file in files)
+        {
+            Console.WriteLine($"--- {Path.GetFileName(file)} ---");
+            if (CompileOne(file, ResolveOutputPath(file, outputPath), deviceOverride) != 0)
+                failed++;
+            Console.WriteLine();
+        }
+
+        int ok = files.Length - failed;
+        Console.WriteLine(failed > 0
+            ? $"Compiled {ok} of {files.Length} file(s), {failed} failed."
+            : $"Compiled {ok} of {files.Length} file(s).");
+        return failed > 0 ? 1 : 0;
+    }
+
+    /// <summary>
+    /// Decide where a given input's .jed is written:
+    ///   no -o             -> alongside the source, extension changed to .jed;
+    ///   -o &lt;folder&gt; (exists) -> that folder, named &lt;input&gt;.jed;
+    ///   -o &lt;file&gt;         -> that path, used as given.
+    /// </summary>
+    private static string ResolveOutputPath(string inputFile, string? outputPath)
+    {
+        if (outputPath == null)
+            return Path.ChangeExtension(inputFile, ".jed");
+        if (Directory.Exists(outputPath))
+            return Path.Combine(outputPath, Path.GetFileNameWithoutExtension(inputFile) + ".jed");
+        return outputPath;
+    }
+
+    private static int CompileOne(string inputPath, string jedPath, string? deviceOverride)
+    {
         string source = File.ReadAllText(inputPath);
         var errors = new List<string>();
 
@@ -116,14 +176,21 @@ internal static class Program
 @"BlinkyJED -- PLD compiler for the Blinky decode GALs
 
 Usage:
-  blinkyjed <input.pld> [-o <output.jed>] [-d <device>]
+  blinkyjed <input.pld> [-o <output>] [-d <device>]
+  blinkyjed <folder>    [-o <folder>] [-d <device>]
+
+A folder input compiles every *.pld in it (non-recursive). If -o is an
+existing folder, each .jed is written there using the input's name; if -o
+is a filename it is used as-is (single-file input only); with no -o the
+.jed is written alongside each source.
 
 Options:
-  -o <output.jed>   output path (default: <input>.jed)
-  -d <device>       target device, overriding the .pld header
-                    (G16V8 | G20V8 | ATF22V10)
+  -o <output>   output .jed file, OR an existing folder to write into
+                (default: alongside the input, extension changed to .jed)
+  -d <device>   target device, overriding the .pld header
+                (G16V8 | G20V8 | ATF22V10)
 
 Output:
-  <input>.jed       JEDEC fuse map, programmable onto the target GAL");
+  <name>.jed    JEDEC fuse map, programmable onto the target GAL");
     }
 }
