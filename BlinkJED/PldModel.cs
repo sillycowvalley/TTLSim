@@ -47,18 +47,21 @@ internal sealed class ProductTerm
 /// Scope (matches the surface of the Mini Blinky decode .pld files):
 ///   - header properties (Name / PartNo / ... / Device);
 ///   - PIN declarations, with optional leading '!' for active-low;
-///   - combinational equations: any expression over NOT '!', AND '&', OR '#',
-///     XOR '$' and parentheses, with CUPL precedence (highest to lowest):
-///     ! , & , # , $. The expression is flattened to a sum-of-products here
-///     (XOR expanded, De Morgan applied to negated products) so the fuse
-///     mapper downstream only ever sees an OR of AND-of-literals -- exactly
-///     what it handled before this change. Flat SOP inputs are unaffected and
-///     compile bit-for-bit as before.
+///   - equations: any expression over NOT '!', AND '&', OR '#', XOR '$' and
+///     parentheses, with CUPL precedence (highest to lowest): ! , & , # , $.
+///     The expression is flattened to a sum-of-products here (XOR expanded,
+///     De Morgan applied to negated products) so the fuse mapper downstream
+///     only ever sees an OR of AND-of-literals. Flat SOP inputs are unaffected
+///     and compile bit-for-bit as before.
+///   - the '.D' / '.R' output extension marks a REGISTERED output (mode 3);
+///     a plain target is combinational.
 ///   - comments: '//' to end of line, and '/* ... */' NON-NESTING (CUPL rule:
 ///     the first '*/' closes the block).
 ///
 /// Not yet handled (deferred, each will register an error if encountered):
-///   - output extensions (.D / .R / .OE / ...);
+///   - the '.OE' tristate expression (complex-mode outputs default to always
+///     enabled; an explicit .OE is reported as not emitted yet);
+///   - other output extensions;
 ///   - set/range/index notation, function calls;
 ///   - '$' PREPROCESSOR directives ($DEFINE / $REPEAT / $MACRO ...). Note this
 ///     is distinct from the '$' XOR operator, which IS supported above.
@@ -149,10 +152,28 @@ internal static class PldParser
         string lhs = st.Substring(0, eq).Trim();
         string rhs = st.Substring(eq + 1).Trim();
 
-        if (lhs.Contains('.'))
+        // Output extension: a trailing '.d' / '.r' / '.oe' on the target name.
+        //   .d / .r -> REGISTERED output (mode 3); a plain target is combinational.
+        //   .oe     -> tristate control; a distinct feature, not emitted yet.
+        bool registered = false;
+        int dot = lhs.IndexOf('.');
+        if (dot >= 0)
         {
-            errors.Add($"Output extensions (e.g. .D/.OE) not supported yet: \"{Shorten(st)}\".");
-            return;
+            string ext = lhs.Substring(dot + 1).Trim().ToLowerInvariant();
+            lhs = lhs.Substring(0, dot).Trim();
+            switch (ext)
+            {
+                case "d":
+                case "r":
+                    registered = true;
+                    break;
+                case "oe":
+                    errors.Add($"Output-enable (.OE) control is not emitted yet: \"{Shorten(st)}\".");
+                    return;
+                default:
+                    errors.Add($"Unknown output extension '.{ext}': \"{Shorten(st)}\".");
+                    return;
+            }
         }
 
         bool activeLow = lhs.StartsWith("!");
@@ -185,7 +206,7 @@ internal static class PldParser
             }
         }
 
-        var equation = new Equation { Target = target, ActiveLow = activeLow, Registered = false };
+        var equation = new Equation { Target = target, ActiveLow = activeLow, Registered = registered };
         foreach (var termLits in sop)
         {
             var term = new ProductTerm();
@@ -414,11 +435,11 @@ internal static class PldParser
             var acc = One();
             foreach (var term in a)
             {
-                if (term.Count == 0) return Zero();   // !(constant 1) = constant 0
-                var negTerm = new List<Dictionary<string, bool>>();
+                if (term.Count == 0) return Zero();   // !(const 1) = const 0
+                var negatedTerm = new List<Dictionary<string, bool>>();
                 foreach (var kv in term)
-                    negTerm.Add(new Dictionary<string, bool> { [kv.Key] = !kv.Value });
-                acc = And(acc, negTerm);
+                    negatedTerm.Add(new Dictionary<string, bool> { [kv.Key] = !kv.Value });
+                acc = And(acc, negatedTerm);
             }
             return acc;
         }
