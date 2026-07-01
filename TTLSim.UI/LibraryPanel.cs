@@ -87,21 +87,21 @@ public sealed class LibraryPanel : UserControl
         other.Expand();
 
         var sram = tree.Nodes.Add("SRAM");
-        AddPart(sram, "2114 - 1K x 4 SRAM", ChipPartDefinition.Ic2114);
-        AddPart(sram, "6116 - 2K x 8 SRAM", ChipPartDefinition.Ic6116);
-        AddPart(sram, "62256 - 32K x 8 SRAM", ChipPartDefinition.Ic62256);
-        AddPart(sram, "CY7C199 - 32K x 8 SRAM", ChipPartDefinition.Ic7C199);
-        AddPart(sram, "6264 - 8K x 8 SRAM (dual CS)", ChipPartDefinition.Ic6264);
-        AddPart(sram, "W24512 - 64K x 8 SRAM (dual CS)", ChipPartDefinition.IcW24512);
+        AddPart(sram, "2114 - 1K x 4 SRAM (200ns)", ChipPartDefinition.Ic2114);
+        AddPart(sram, "6116 - 2K x 8 SRAM (70ns)", ChipPartDefinition.Ic6116);
+        AddPart(sram, "6264 - 8K x 8 SRAM (20ns)", ChipPartDefinition.Ic6264);
+        AddPart(sram, "62256 - 32K x 8 SRAM (55ns)", ChipPartDefinition.Ic62256);
+        AddPart(sram, "CY7C199 - 32K x 8 SRAM (35ns)", ChipPartDefinition.Ic7C199);
+        AddPart(sram, "W24512 - 64K x 8 SRAM (15ns)", ChipPartDefinition.IcW24512);
         sram.Expand();
 
         var eepromGal = tree.Nodes.Add("EEPROMs and GALs");
-        AddPart(eepromGal, "28C16 - 2K x 8 EEPROM", ChipPartDefinition.Ic28C16);
-        AddPart(eepromGal, "28C64 - 8K x 8 EEPROM", ChipPartDefinition.Ic28C64);
-        AddPart(eepromGal, "28C128 - 16K x 8 EEPROM", ChipPartDefinition.Ic28C128);
-        AddPart(eepromGal, "28C256 - 32K x 8 EEPROM", ChipPartDefinition.Ic28C256);
-        AddPart(eepromGal, "GAL16V8 - PLD, 8 macrocells", ChipPartDefinition.IcGal16V8);
-        AddPart(eepromGal, "GAL20V8 - PLD, 8 macrocells", ChipPartDefinition.IcGal20V8);
+        AddPart(eepromGal, "28C16 - 2K x 8 EEPROM (150ns)", ChipPartDefinition.Ic28C16);
+        AddPart(eepromGal, "28C64 - 8K x 8 EEPROM (150ns)", ChipPartDefinition.Ic28C64);
+        AddPart(eepromGal, "28C128 - 16K x 8 EEPROM (150ns)", ChipPartDefinition.Ic28C128);
+        AddPart(eepromGal, "28C256 - 32K x 8 EEPROM (150ns)", ChipPartDefinition.Ic28C256);
+        AddPart(eepromGal, "GAL16V8 - PLD, 8 macrocells (15ns)", ChipPartDefinition.IcGal16V8);
+        AddPart(eepromGal, "GAL20V8 - PLD, 8 macrocells (25ns)", ChipPartDefinition.IcGal20V8);
         eepromGal.Expand();
 
         var passive = tree.Nodes.Add("Passive");

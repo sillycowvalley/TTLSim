@@ -23,7 +23,7 @@ public static class PartDelayDefaults
     /// <summary>Nominal GAL/PLD tPD in nanoseconds. Exposed as a compile-time
     /// const so the GAL model can use it as its constructor default while the
     /// number still lives only here.</summary>
-    public const int GalDefaultDelayNs = 10;
+    public const int GalDefaultDelayNs = 15;
 
     /// <summary>Default propagation/access delay in nanoseconds for the given
     /// part identifier, or null if it has no known default delay.</summary>
@@ -38,8 +38,9 @@ public static class PartDelayDefaults
         "2114" => 200,  // representative 2114 grade
         "6264" => 20,   // e.g. IDT7164-20 / fast 6264 grade
         "W24512" => 15,   // W24512AK-15: 15 ns
-        // GAL/PLD -- nominal ~10 ns tPD (see GalDefaultDelayNs).
-        "GAL16V8" or "GAL20V8" => GalDefaultDelayNs,
+        // GAL/PLD
+        "GAL16V8" => 15,
+        "GAL20V8" => 25,
         _ => null
     };
 }
