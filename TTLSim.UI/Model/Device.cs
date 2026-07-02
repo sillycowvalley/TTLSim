@@ -279,7 +279,7 @@ public sealed class Device
         /// <summary>GAL / PLD parts (carry a JEDEC fuse map).</summary>
         public static readonly HashSet<string> Gal = new(System.StringComparer.Ordinal)
         {
-            "GAL16V8", "GAL20V8",
+            "GAL16V8", "GAL20V8", "GAL22V10",
         };
 
         /// <summary>555/556 timer parts (carry a Function + astable Frequency).</summary>

@@ -55,6 +55,23 @@ public static class GalPinModel
     {
         if (string.IsNullOrWhiteSpace(programJedec)) return null;
 
+        // The 22V10 has no SYN/AC0 modes; it derives from its S bits.
+        if (partNumber == Gal22V10Device.PartNumber)
+        {
+            bool[] fuses22;
+            try
+            {
+                bool[] parsed22 = JedecFuseMap.Parse(programJedec).Fuses;
+                fuses22 = new bool[Gal22V10Device.FuseCount];
+                Array.Copy(parsed22, fuses22, Math.Min(parsed22.Length, fuses22.Length));
+            }
+            catch (FormatException)
+            {
+                return null;
+            }
+            return Derive22V10(fuses22);
+        }
+
         GalDevice? device = GalDevice.ForPartNumber(partNumber);
         if (device is null) return null;
 
@@ -135,6 +152,72 @@ public static class GalPinModel
 
         return pins;
     }
+
+    /// <summary>
+    /// GAL22V10 pin derivation. No SYN/AC0 modes: each macrocell's S0/S1 pair
+    /// gives its type and polarity directly. Pin 1 is shown as the clock when
+    /// any programmed macrocell is registered (it feeds the array either
+    /// way); there is no /OE pin -- pin 13 is a plain input. A programmed
+    /// cell is labelled from its configuration (Q / !Q registered, OUT / !OUT
+    /// combinational); an unprogrammed cell whose S1 bit is set was
+    /// explicitly configured by the compiler as a plain input (pin feedback);
+    /// a fully erased cell is unused.
+    /// </summary>
+    public static IReadOnlyList<GalPin> Derive22V10(bool[] fuses)
+    {
+        bool anyRegistered = false;
+        for (int o = 0; o < Gal22V10Device.OlmcCount; o++)
+        {
+            bool s1 = FuseAt(fuses, Gal22V10Device.S1Fuse(o));
+            if (!s1 && BlockProgrammed22V10(fuses, o)) anyRegistered = true;
+        }
+
+        var pins = new List<GalPin>
+        {
+            new(Gal22V10Device.ClockPin,
+                anyRegistered ? GalPinRole.Clock : GalPinRole.Input,
+                anyRegistered ? "CLK" : "IN"),
+        };
+
+        foreach (int p in new[] { 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13 })
+            pins.Add(new GalPin(p, GalPinRole.Input, "IN"));
+
+        for (int o = 0; o < Gal22V10Device.OlmcCount; o++)
+        {
+            int pin = Gal22V10Device.OlmcOutputPins[o];
+            bool s0 = FuseAt(fuses, Gal22V10Device.S0Fuse(o));
+            bool s1 = FuseAt(fuses, Gal22V10Device.S1Fuse(o));
+
+            if (BlockProgrammed22V10(fuses, o))
+            {
+                string label = !s1 ? (s0 ? "Q" : "!Q") : (s0 ? "OUT" : "!OUT");
+                pins.Add(new GalPin(pin, GalPinRole.Output, label));
+            }
+            else if (s1)
+            {
+                pins.Add(new GalPin(pin, GalPinRole.Input, "IN"));
+            }
+            else
+            {
+                pins.Add(new GalPin(pin, GalPinRole.Unused, "NC"));
+            }
+        }
+
+        return pins;
+    }
+
+    // A 22V10 cell is programmed if any fuse in its block (OE row + logic
+    // rows) is blown; the all-intact block is the erased state.
+    private static bool BlockProgrammed22V10(bool[] fuses, int olmc)
+    {
+        int end = Math.Min(Gal22V10Device.BlockEndFuse(olmc), fuses.Length);
+        for (int i = Gal22V10Device.BlockFirstFuse(olmc); i < end; i++)
+            if (fuses[i]) return true;
+        return false;
+    }
+
+    private static bool FuseAt(bool[] fuses, int address) =>
+        address < fuses.Length && fuses[address];
 
     // An OLMC drives its pin only if some fuse in its row block is blown. An
     // all-intact block is the erased/unconfigured state. Mirrors the same test

@@ -67,6 +67,7 @@ public static class SchematicDtoMapper
             [ChipPartDefinition.IcNe556.PartNumber] = ChipPartDefinition.IcNe556,
             [ChipPartDefinition.IcGal16V8.PartNumber] = ChipPartDefinition.IcGal16V8,
             [ChipPartDefinition.IcGal20V8.PartNumber] = ChipPartDefinition.IcGal20V8,
+            [ChipPartDefinition.IcGal22V10.PartNumber] = ChipPartDefinition.IcGal22V10,
             [ChipPartDefinition.Ds1813.PartNumber] = ChipPartDefinition.Ds1813,
 
             // Flip-flops & counters

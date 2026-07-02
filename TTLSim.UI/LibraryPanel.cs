@@ -48,7 +48,7 @@ public sealed class LibraryPanel : UserControl
         "7seg-ca",
         "NE555", "NE556",
         "28C256", "28C128", "28C64", "28C16", "62256", "CY7C199", "6116", "2114", "6264", "W24512",
-        "GAL16V8", "GAL20V8"
+        "GAL16V8", "GAL20V8", "GAL22V10"
     };
 
     public LibraryPanel()
@@ -102,6 +102,7 @@ public sealed class LibraryPanel : UserControl
         AddPart(eepromGal, "28C256 - 32K x 8 EEPROM (150ns)", ChipPartDefinition.Ic28C256);
         AddPart(eepromGal, "GAL16V8 - PLD, 8 macrocells (15ns)", ChipPartDefinition.IcGal16V8);
         AddPart(eepromGal, "GAL20V8 - PLD, 8 macrocells (25ns)", ChipPartDefinition.IcGal20V8);
+        AddPart(eepromGal, "GAL22V10 - PLD, 10 macrocells (20ns)", ChipPartDefinition.IcGal22V10);
         eepromGal.Expand();
 
         var passive = tree.Nodes.Add("Passive");

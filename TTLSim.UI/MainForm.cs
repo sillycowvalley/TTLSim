@@ -699,7 +699,7 @@ public sealed class MainForm : Form
     }
 
     private static bool IsGalPart(string partNumber) =>
-        partNumber is "GAL16V8" or "GAL20V8";
+        partNumber is "GAL16V8" or "GAL20V8" or "GAL22V10";
 
     /// <summary>The single selected GAL device, or null if the selection isn't
     /// exactly one GAL. Side-effect free; drives both the action and the
@@ -741,22 +741,32 @@ public sealed class MainForm : Form
             TTLSim.Core.JedecData jedec = TTLSim.Core.JedecFuseMap.Parse(text);   // validate; throws on malformed
 
             // Reject a fuse map compiled for a different device. The fuse count
-            // identifies the part (GAL16V8 = 2194, GAL20V8 = 2706); a mismatch
-            // would put SYN/AC0/XOR and the array at the wrong addresses.
+            // identifies the part (GAL16V8 = 2194, GAL20V8 = 2706, GAL22V10 =
+            // 5828 or 5892 -- the latter carries the unused UES region); a
+            // mismatch would put the config bits and the array at the wrong
+            // addresses.
             string partNumber = dev.Definition is TTLSim.UI.Components.ChipPartDefinition cp
                 ? cp.PartNumber : "";
-            TTLSim.Chips.Pld.GalDevice? gd = TTLSim.Chips.Pld.GalDevice.ForPartNumber(partNumber);
-            if (gd is not null && jedec.FuseCount != gd.FuseCount)
+            int[] expectedCounts = partNumber switch
+            {
+                "GAL16V8" => new[] { 2194 },
+                "GAL20V8" => new[] { 2706 },
+                "GAL22V10" => new[] { 5828, 5892 },
+                _ => System.Array.Empty<int>()
+            };
+            if (expectedCounts.Length > 0 &&
+                System.Array.IndexOf(expectedCounts, jedec.FuseCount) < 0)
             {
                 string looksLike = jedec.FuseCount switch
                 {
                     2194 => "GAL16V8",
                     2706 => "GAL20V8",
+                    5828 or 5892 => "GAL22V10",
                     _ => $"{jedec.FuseCount}-fuse"
                 };
                 MessageBox.Show(this,
-                    $"That looks like a {looksLike} fuse map, but {dev.Designator} is a {gd.PartNumber}.\n\n" +
-                    $"Load a fuse map compiled for the {gd.PartNumber}.",
+                    $"That looks like a {looksLike} fuse map, but {dev.Designator} is a {partNumber}.\n\n" +
+                    $"Load a fuse map compiled for the {partNumber}.",
                     "Wrong device", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }

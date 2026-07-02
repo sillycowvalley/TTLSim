@@ -1376,7 +1376,7 @@ public sealed record ChipPartDefinition(
     /// rail, doesn't apply); when a fuse map configures one as a plain input
     /// it simply doesn't drive. Pin function is set by the JEDEC fuse map, not
     /// by this symbol -- the names here are the generic package roles.
-    /// No simulation model yet; placeable and exportable as a board part.
+    /// Simulated via the fuse-map evaluator the factory builds (all modes).
     /// </summary>
     public static readonly ChipPartDefinition IcGal16V8 = new(
         PartNumber: "GAL16V8", PinCount: 20, PowerPin: 20, GroundPin: 10,
@@ -1421,6 +1421,37 @@ public sealed record ChipPartDefinition(
             new("I10", 10),              new("IO15", 15, Out),
             new("I11", 11),              new("I14",  14),
             new("GND", 12),              new("/OE",  13),
+        });
+
+    /// <summary>
+    /// Lattice GAL22V10 (and fuse-compatible Atmel ATF22V10), 24-pin DIP.
+    /// The bigger PLD sibling: 10 output-logic macrocells (pins 14-23), each
+    /// individually configured by the fuse map as registered or combinational,
+    /// active-high or active-low, with its own output-enable product term and
+    /// 8-16 logic terms; 12 dedicated inputs (pins 2-11 and 13) plus pin 1,
+    /// which is BOTH the register clock and an array input (usable in
+    /// equations). There is no global /OE pin. Two global product terms give
+    /// asynchronous reset and synchronous preset of all registers. Macrocell
+    /// pins are declared as outputs for the same reason as the '16V8's; pin
+    /// roles are set by the fuse map, names are the generic package roles.
+    /// </summary>
+    public static readonly ChipPartDefinition IcGal22V10 = new(
+        PartNumber: "GAL22V10", PinCount: 24, PowerPin: 24, GroundPin: 12,
+        BodyWidth: 8,
+        Pins: new ChipPin[]
+        {
+            new("CLK",  1),              new("VCC",  24),
+            new("I2",   2),              new("IO23", 23, Out),
+            new("I3",   3),              new("IO22", 22, Out),
+            new("I4",   4),              new("IO21", 21, Out),
+            new("I5",   5),              new("IO20", 20, Out),
+            new("I6",   6),              new("IO19", 19, Out),
+            new("I7",   7),              new("IO18", 18, Out),
+            new("I8",   8),              new("IO17", 17, Out),
+            new("I9",   9),              new("IO16", 16, Out),
+            new("I10", 10),              new("IO15", 15, Out),
+            new("I11", 11),              new("IO14", 14, Out),
+            new("GND", 12),              new("I13",  13),
         });
 
     /// <summary>

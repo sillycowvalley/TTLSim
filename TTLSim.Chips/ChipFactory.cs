@@ -425,7 +425,7 @@ public sealed class ChipFactory : IChipFactory
             "541" => TryCreateHc541(device, pinToNet),
             "688" => TryCreateHc688(device, pinToNet),
             "DS1813" => TryCreateDs1813(pinToNet),
-            "GAL16V8" or "GAL20V8" => TryCreateGal(device, pinToNet),
+            "GAL16V8" or "GAL20V8" or "GAL22V10" => TryCreateGal(device, pinToNet),
             "7seg-ca" => TryCreateSevenSegCa(pinToNet),
             _ => null
         };
@@ -839,8 +839,8 @@ public sealed class ChipFactory : IChipFactory
         // stand-in, special-cased at the top of CreateForUnits (CreateTimerCores).
         "NE555" or "NE556"
             => true,
-        // GAL/PLD: combinational fuse-map evaluation; fuse map in device.Program.
-        "GAL16V8" or "GAL20V8"
+        // GAL/PLD: fuse-map evaluation (all modes); fuse map in device.Program.
+        "GAL16V8" or "GAL20V8" or "GAL22V10"
             => true,
         // Parallel memory family (28C-series EEPROM + pin-compatible SRAM),
         // special-cased in CreateForUnits because contents are per-device.
@@ -997,17 +997,20 @@ public sealed class ChipFactory : IChipFactory
     }
 
     /// <summary>
-    /// Builds a combinational GAL model from the fuse map carried in
-    /// <c>device.Program</c> (JEDEC text, the same field the EEPROM uses for
-    /// Intel HEX). An empty or malformed map leaves the array blank and is
-    /// logged, rather than failing the build.
+    /// Builds a GAL model from the fuse map carried in <c>device.Program</c>
+    /// (JEDEC text, the same field the EEPROM uses for Intel HEX). The
+    /// 16V8/20V8 build a <see cref="Gal"/>; the 22V10 builds its sibling
+    /// <see cref="Gal22V10"/>. An empty or malformed map leaves the array
+    /// blank and is logged, rather than failing the build. The length-clamped
+    /// copy lets both QF5828 and QF5892 (UES-bearing) 22V10 images fit.
     /// </summary>
     private IChip? TryCreateGal(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
     {
-        GalDevice? gd = GalDevice.ForPartNumber(device.PartIdentifier);
-        if (gd is null) return null;
+        bool is22V10 = device.PartIdentifier == Gal22V10Device.PartNumber;
+        GalDevice? gd = is22V10 ? null : GalDevice.ForPartNumber(device.PartIdentifier);
+        if (!is22V10 && gd is null) return null;
 
-        bool[] fuses = new bool[gd.FuseCount];
+        bool[] fuses = new bool[is22V10 ? Gal22V10Device.FuseCount : gd!.FuseCount];
         if (!string.IsNullOrWhiteSpace(device.Program))
         {
             try
@@ -1031,7 +1034,9 @@ public sealed class ChipFactory : IChipFactory
             : (PartDelayDefaults.DefaultDelayNs(device.PartIdentifier)
                ?? PartDelayDefaults.GalDefaultDelayNs) * 1000L;
 
-        return new Gal(gd, fuses, pinToNet, delayPs);
+        return is22V10
+            ? new Gal22V10(fuses, pinToNet, delayPs)
+            : new Gal(gd!, fuses, pinToNet, delayPs);
     }
 
     private static IChip? TryCreateHc157(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
