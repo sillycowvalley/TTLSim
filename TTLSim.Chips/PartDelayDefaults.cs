@@ -41,6 +41,7 @@ public static class PartDelayDefaults
         // GAL/PLD
         "GAL16V8" => 15,
         "GAL20V8" => 25,
+        "ATF22V10" => 20,
         _ => null
     };
 }
