@@ -24,11 +24,11 @@ namespace BlinkyJed;
 /// (declared-low + plain equation = active low; both = active high again).
 /// A literal referencing a declared-active-low signal likewise connects the
 /// complement column (the pin carries the inverted sense), matching GALasm's
-/// uniform pin-polarity fold. VALIDATION NOTE: the active-high paths are
-/// WinCUPL-gold-validated; the active-low fuse rules (XOR bit + literal fold,
-/// in particular feedback from an active-low REGISTERED output) follow GALasm
-/// and are pending confirmation against the gal16v8_polarity /
-/// gal20v8_polarity WinCUPL golds.
+/// uniform pin-polarity fold. All of it is WinCUPL-gold-validated: the
+/// gal16v8_polarity gold proves the XOR-of-notations rule (including the
+/// double-negation cancel), and the gal20v8_polarity gold proves the literal
+/// fold for feedback from an active-low REGISTERED output, both within its
+/// own .d equation and read by another equation.
 ///
 /// Mode is selected automatically from what the design needs (the CUPL device
 /// suffix is ignored, as before):
