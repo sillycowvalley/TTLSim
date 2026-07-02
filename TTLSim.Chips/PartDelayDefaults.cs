@@ -41,7 +41,7 @@ public static class PartDelayDefaults
         // GAL/PLD
         "GAL16V8" => 15,
         "GAL20V8" => 25,
-        "ATF22V10" => 20,
+        "GAL22V10" => 20,   // covers the ATF22V10 (e.g. ATF22V10C-20); the part identifier is GAL22V10
         _ => null
     };
 }
