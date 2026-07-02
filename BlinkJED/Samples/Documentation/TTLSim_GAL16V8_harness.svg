@@ -1,0 +1,356 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2200 2640" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="2200" height="2640" fill="#ffffff"/>
+
+  <!-- ======================= Title ======================= -->
+  <text x="1100" y="60" text-anchor="middle" font-size="44" font-weight="bold" fill="#1a1a1a">TTLSim 16V8 burns — GAL16V8 test harness on Arduino Mega 2560</text>
+  <text x="1100" y="104" text-anchor="middle" font-size="26" fill="#5b7a99">Identical physical wiring to the Mini Blinky harness — no rewiring, only the sketch changes. D22 / D24 stay Mega INPUTS for all three chips.</text>
+
+  <!-- ======================= Legend ======================= -->
+  <g font-size="22" fill="#1a1a1a">
+    <rect x="240"  y="140" width="44" height="7" fill="#f39c12"/> <text x="294"  y="150">pin 1 (f / clk)</text>
+    <rect x="470"  y="140" width="44" height="7" fill="#1f77b4"/> <text x="524"  y="150">inputs a–d / rst / sel</text>
+    <rect x="770"  y="140" width="44" height="7" fill="#a8c8e8"/> <text x="824"  y="150">held low (unused)</text>
+    <rect x="1050" y="140" width="44" height="7" fill="#8e44ad"/> <text x="1104" y="150">pin 11 (g / /OE / ena)</text>
+    <rect x="1350" y="140" width="44" height="7" fill="#2e8b57"/> <text x="1404" y="150">GAL outputs</text>
+    <rect x="1580" y="140" width="44" height="7" fill="#d63384"/> <text x="1634" y="150">spare 12/13 (idle)</text>
+    <rect x="1830" y="140" width="44" height="7" fill="#d62728"/> <text x="1884" y="150">+5 V</text>
+    <rect x="1970" y="140" width="44" height="7" fill="#222222"/> <text x="2024" y="150">GND</text>
+  </g>
+
+  <!-- ======================= Left Mega header ======================= -->
+  <rect x="120" y="230" width="220" height="900" rx="10" fill="#f4f6f8" stroke="#9aa7b3" stroke-width="2"/>
+  <text x="230" y="216" text-anchor="middle" font-size="26" font-weight="bold" fill="#1a1a1a">Mega 2560</text>
+  <text x="230" y="1162" text-anchor="middle" font-size="20" fill="#77878f">outer row, bottom edge</text>
+
+  <!-- ======================= Right Mega header ======================= -->
+  <rect x="1860" y="230" width="220" height="900" rx="10" fill="#f4f6f8" stroke="#9aa7b3" stroke-width="2"/>
+  <text x="1970" y="216" text-anchor="middle" font-size="26" font-weight="bold" fill="#1a1a1a">Mega 2560</text>
+  <text x="1970" y="1162" text-anchor="middle" font-size="20" fill="#77878f">(same board, same header row)</text>
+
+  <!-- ======================= Chip body ======================= -->
+  <rect x="880" y="252" width="440" height="880" rx="8" fill="#eef1f4" stroke="#333d47" stroke-width="3"/>
+  <path d="M 1075 252 A 25 25 0 0 0 1125 252" fill="#ffffff" stroke="#333d47" stroke-width="3"/>
+  <text x="1100" y="1172" text-anchor="middle" font-size="26" font-weight="bold" fill="#1a1a1a">GAL16V8 — test socket (ZIF recommended)</text>
+  <text x="1100" y="1204" text-anchor="middle" font-size="21" fill="#5b7a99">chip-pin labels read:  simple / registered / complex</text>
+
+  <!-- ==== Left pin boxes + wires (rows every 88 px, first centre y=292) ==== -->
+  <!-- row template: box x150 w160 h44; wire x340->x880 -->
+  <!-- Pin 1 : D53 -->
+  <rect x="150" y="270" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="230" y="300" text-anchor="middle" font-size="24" font-weight="bold">D53</text>
+  <line x1="310" y1="292" x2="880" y2="292" stroke="#f39c12" stroke-width="5"/>
+  <text x="866" y="278" text-anchor="end" font-size="19" fill="#5b7a99">1</text>
+  <text x="896" y="299" font-size="21" fill="#1a1a1a">f / clk / —</text>
+  <!-- Pin 2 : D51 -->
+  <rect x="150" y="358" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="230" y="388" text-anchor="middle" font-size="24" font-weight="bold">D51</text>
+  <line x1="310" y1="380" x2="880" y2="380" stroke="#1f77b4" stroke-width="5"/>
+  <text x="866" y="366" text-anchor="end" font-size="19" fill="#5b7a99">2</text>
+  <text x="896" y="387" font-size="21" fill="#1a1a1a">a / rst / a</text>
+  <!-- Pin 3 : D49 -->
+  <rect x="150" y="446" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="230" y="476" text-anchor="middle" font-size="24" font-weight="bold">D49</text>
+  <line x1="310" y1="468" x2="880" y2="468" stroke="#1f77b4" stroke-width="5"/>
+  <text x="866" y="454" text-anchor="end" font-size="19" fill="#5b7a99">3</text>
+  <text x="896" y="475" font-size="21" fill="#1a1a1a">b / — / b</text>
+  <!-- Pin 4 : D47 -->
+  <rect x="150" y="534" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="230" y="564" text-anchor="middle" font-size="24" font-weight="bold">D47</text>
+  <line x1="310" y1="556" x2="880" y2="556" stroke="#1f77b4" stroke-width="5"/>
+  <text x="866" y="542" text-anchor="end" font-size="19" fill="#5b7a99">4</text>
+  <text x="896" y="563" font-size="21" fill="#1a1a1a">c / — / c</text>
+  <!-- Pin 5 : D45 -->
+  <rect x="150" y="622" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="230" y="652" text-anchor="middle" font-size="24" font-weight="bold">D45</text>
+  <line x1="310" y1="644" x2="880" y2="644" stroke="#1f77b4" stroke-width="5"/>
+  <text x="866" y="630" text-anchor="end" font-size="19" fill="#5b7a99">5</text>
+  <text x="896" y="651" font-size="21" fill="#1a1a1a">d / — / sel</text>
+  <!-- Pin 6 : D43 -->
+  <rect x="150" y="710" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="230" y="740" text-anchor="middle" font-size="24" font-weight="bold">D43</text>
+  <line x1="310" y1="732" x2="880" y2="732" stroke="#a8c8e8" stroke-width="5"/>
+  <text x="866" y="718" text-anchor="end" font-size="19" fill="#5b7a99">6</text>
+  <text x="896" y="739" font-size="21" fill="#77878f">— held low</text>
+  <!-- Pin 7 : D41 -->
+  <rect x="150" y="798" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="230" y="828" text-anchor="middle" font-size="24" font-weight="bold">D41</text>
+  <line x1="310" y1="820" x2="880" y2="820" stroke="#a8c8e8" stroke-width="5"/>
+  <text x="866" y="806" text-anchor="end" font-size="19" fill="#5b7a99">7</text>
+  <text x="896" y="827" font-size="21" fill="#77878f">— held low</text>
+  <!-- Pin 8 : D39 -->
+  <rect x="150" y="886" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="230" y="916" text-anchor="middle" font-size="24" font-weight="bold">D39</text>
+  <line x1="310" y1="908" x2="880" y2="908" stroke="#a8c8e8" stroke-width="5"/>
+  <text x="866" y="894" text-anchor="end" font-size="19" fill="#5b7a99">8</text>
+  <text x="896" y="915" font-size="21" fill="#77878f">— held low</text>
+  <!-- Pin 9 : D37 -->
+  <rect x="150" y="974" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="230" y="1004" text-anchor="middle" font-size="24" font-weight="bold">D37</text>
+  <line x1="310" y1="996" x2="880" y2="996" stroke="#a8c8e8" stroke-width="5"/>
+  <text x="866" y="982" text-anchor="end" font-size="19" fill="#5b7a99">9</text>
+  <text x="896" y="1003" font-size="21" fill="#77878f">— held low</text>
+  <!-- Pin 10 : GND -->
+  <rect x="150" y="1062" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="230" y="1092" text-anchor="middle" font-size="24" font-weight="bold">GND</text>
+  <line x1="310" y1="1084" x2="880" y2="1084" stroke="#222222" stroke-width="5"/>
+  <text x="866" y="1070" text-anchor="end" font-size="19" fill="#5b7a99">10</text>
+  <text x="896" y="1091" font-size="21" font-weight="bold" fill="#1a1a1a">GND</text>
+
+  <!-- ==== Right pin boxes + wires ==== -->
+  <!-- Pin 20 : 5V -->
+  <rect x="1890" y="270" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="1970" y="300" text-anchor="middle" font-size="24" font-weight="bold">5V</text>
+  <line x1="1320" y1="292" x2="1890" y2="292" stroke="#d62728" stroke-width="5"/>
+  <text x="1334" y="278" font-size="19" fill="#5b7a99">20</text>
+  <text x="1304" y="299" text-anchor="end" font-size="21" font-weight="bold" fill="#1a1a1a">VCC</text>
+  <!-- Pin 19 : D25 -->
+  <rect x="1890" y="358" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="1970" y="388" text-anchor="middle" font-size="24" font-weight="bold">D25</text>
+  <line x1="1320" y1="380" x2="1890" y2="380" stroke="#2e8b57" stroke-width="5"/>
+  <text x="1334" y="366" font-size="19" fill="#5b7a99">19</text>
+  <text x="1304" y="387" text-anchor="end" font-size="21" fill="#1a1a1a">yand / q0 / y1</text>
+  <!-- Pin 18 : D27 -->
+  <rect x="1890" y="446" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="1970" y="476" text-anchor="middle" font-size="24" font-weight="bold">D27</text>
+  <line x1="1320" y1="468" x2="1890" y2="468" stroke="#2e8b57" stroke-width="5"/>
+  <text x="1334" y="454" font-size="19" fill="#5b7a99">18</text>
+  <text x="1304" y="475" text-anchor="end" font-size="21" fill="#1a1a1a">yor / q1 / y2 ²</text>
+  <!-- Pin 17 : D29 -->
+  <rect x="1890" y="534" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="1970" y="564" text-anchor="middle" font-size="24" font-weight="bold">D29</text>
+  <line x1="1320" y1="556" x2="1890" y2="556" stroke="#2e8b57" stroke-width="5"/>
+  <text x="1334" y="542" font-size="19" fill="#5b7a99">17</text>
+  <text x="1304" y="563" text-anchor="end" font-size="21" fill="#1a1a1a">yxor / q2 / fb</text>
+  <!-- Pin 16 : D31 -->
+  <rect x="1890" y="622" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="1970" y="652" text-anchor="middle" font-size="24" font-weight="bold">D31</text>
+  <line x1="1320" y1="644" x2="1890" y2="644" stroke="#2e8b57" stroke-width="5"/>
+  <text x="1334" y="630" font-size="19" fill="#5b7a99">16</text>
+  <text x="1304" y="651" text-anchor="end" font-size="21" fill="#1a1a1a">— / — / g</text>
+  <!-- Pin 15 : D33 -->
+  <rect x="1890" y="710" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="1970" y="740" text-anchor="middle" font-size="24" font-weight="bold">D33</text>
+  <line x1="1320" y1="732" x2="1890" y2="732" stroke="#c4cdd4" stroke-width="5"/>
+  <text x="1334" y="718" font-size="19" fill="#5b7a99">15</text>
+  <text x="1304" y="739" text-anchor="end" font-size="21" fill="#77878f">— unused</text>
+  <!-- Pin 14 : D35 -->
+  <rect x="1890" y="798" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="1970" y="828" text-anchor="middle" font-size="24" font-weight="bold">D35</text>
+  <line x1="1320" y1="820" x2="1890" y2="820" stroke="#2e8b57" stroke-width="5"/>
+  <text x="1334" y="806" font-size="19" fill="#5b7a99">14</text>
+  <text x="1304" y="827" text-anchor="end" font-size="21" fill="#1a1a1a">yfg / carry / —</text>
+  <!-- Pin 13 : D24 (series R) -->
+  <rect x="1890" y="886" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="1970" y="916" text-anchor="middle" font-size="24" font-weight="bold">D24</text>
+  <line x1="1320" y1="908" x2="1560" y2="908" stroke="#d63384" stroke-width="5"/>
+  <rect x="1560" y="894" width="120" height="28" rx="5" fill="#ffffff" stroke="#d63384" stroke-width="4"/>
+  <text x="1620" y="884" text-anchor="middle" font-size="18" fill="#d63384">470Ω–1k</text>
+  <line x1="1680" y1="908" x2="1890" y2="908" stroke="#d63384" stroke-width="5"/>
+  <text x="1334" y="894" font-size="19" fill="#5b7a99">13</text>
+  <text x="1304" y="915" text-anchor="end" font-size="21" fill="#77878f">spare (idle)</text>
+  <!-- Pin 12 : D22 (series R) -->
+  <rect x="1890" y="974" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="1970" y="1004" text-anchor="middle" font-size="24" font-weight="bold">D22</text>
+  <line x1="1320" y1="996" x2="1560" y2="996" stroke="#d63384" stroke-width="5"/>
+  <rect x="1560" y="982" width="120" height="28" rx="5" fill="#ffffff" stroke="#d63384" stroke-width="4"/>
+  <text x="1620" y="972" text-anchor="middle" font-size="18" fill="#d63384">470Ω–1k</text>
+  <line x1="1680" y1="996" x2="1890" y2="996" stroke="#d63384" stroke-width="5"/>
+  <text x="1334" y="982" font-size="19" fill="#5b7a99">12</text>
+  <text x="1304" y="1003" text-anchor="end" font-size="21" fill="#77878f">spare (idle)</text>
+  <!-- Pin 11 : D23 -->
+  <rect x="1890" y="1062" width="160" height="44" rx="7" fill="#ffffff" stroke="#333d47" stroke-width="2.5"/>
+  <text x="1970" y="1092" text-anchor="middle" font-size="24" font-weight="bold">D23</text>
+  <line x1="1320" y1="1084" x2="1890" y2="1084" stroke="#8e44ad" stroke-width="5"/>
+  <text x="1334" y="1070" font-size="19" fill="#5b7a99">11</text>
+  <text x="1304" y="1091" text-anchor="end" font-size="21" fill="#1a1a1a">g / /OE / ena</text>
+
+  <!-- Decoupling cap note -->
+  <g font-size="22" fill="#1a1a1a">
+    <text x="360" y="1252" text-anchor="end" fill="#d62728" font-weight="bold">20</text>
+    <line x1="372" y1="1244" x2="430" y2="1244" stroke="#d62728" stroke-width="5"/>
+    <line x1="430" y1="1226" x2="430" y2="1262" stroke="#222222" stroke-width="6"/>
+    <line x1="448" y1="1226" x2="448" y2="1262" stroke="#222222" stroke-width="6"/>
+    <line x1="448" y1="1244" x2="506" y2="1244" stroke="#222222" stroke-width="5"/>
+    <text x="518" y="1252" font-weight="bold">10</text>
+    <text x="566" y="1252">C1: 100 nF ceramic across pins 20–10, close to the socket</text>
+  </g>
+  <text x="1100" y="1300" text-anchor="middle" font-size="23" fill="#c0392b">D22 / D24 never change direction for these chips: Mega INPUT (idle) on all three — series resistors stay fitted and are harmless.</text>
+
+  <!-- ======================= Physical header view ======================= -->
+  <text x="1100" y="1372" text-anchor="middle" font-size="30" font-weight="bold" fill="#1a1a1a">Physical view — bottom-edge header, left → right (unchanged from Mini Blinky harness)</text>
+  <!-- 18 columns, w=106, gap=8, start x=76 -->
+  <g font-size="19" text-anchor="middle">
+    <text x="52" y="1432" text-anchor="end" fill="#77878f">inner</text>
+    <text x="52" y="1512" text-anchor="end" fill="#77878f">outer</text>
+    <!-- inner row -->
+    <g fill="#f4f6f8" stroke="#b7c2cb" stroke-width="2">
+      <rect x="76"   y="1400" width="106" height="52" rx="6"/><rect x="190"  y="1400" width="106" height="52" rx="6"/><rect x="304"  y="1400" width="106" height="52" rx="6"/><rect x="418"  y="1400" width="106" height="52" rx="6"/><rect x="532"  y="1400" width="106" height="52" rx="6"/><rect x="646"  y="1400" width="106" height="52" rx="6"/><rect x="760"  y="1400" width="106" height="52" rx="6"/><rect x="874"  y="1400" width="106" height="52" rx="6"/><rect x="988"  y="1400" width="106" height="52" rx="6"/><rect x="1102" y="1400" width="106" height="52" rx="6"/><rect x="1216" y="1400" width="106" height="52" rx="6"/><rect x="1330" y="1400" width="106" height="52" rx="6"/><rect x="1444" y="1400" width="106" height="52" rx="6"/><rect x="1558" y="1400" width="106" height="52" rx="6"/><rect x="1672" y="1400" width="106" height="52" rx="6"/>
+      <rect x="1786" y="1400" width="106" height="52" rx="6" fill="#fbe4ee"/><rect x="1900" y="1400" width="106" height="52" rx="6" fill="#fbe4ee"/>
+      <rect x="2014" y="1400" width="106" height="52" rx="6"/>
+    </g>
+    <g fill="#8b98a3" font-weight="bold">
+      <text x="129" y="1424">GND</text><text x="243" y="1424">D52</text><text x="357" y="1424">D50</text><text x="471" y="1424">D48</text><text x="585" y="1424">D46</text><text x="699" y="1424">D44</text><text x="813" y="1424">D42</text><text x="927" y="1424">D40</text><text x="1041" y="1424">D38</text><text x="1155" y="1424">D36</text><text x="1269" y="1424">D34</text><text x="1383" y="1424">D32</text><text x="1497" y="1424">D30</text><text x="1611" y="1424">D28</text><text x="1725" y="1424">D26</text>
+    </g>
+    <g fill="#1a1a1a" font-weight="bold">
+      <text x="1839" y="1424">D24</text><text x="1953" y="1424">D22</text><text x="2067" y="1424" fill="#8b98a3">5V</text>
+    </g>
+    <g fill="#8b98a3" font-size="17">
+      <text x="129" y="1445">—</text><text x="243" y="1445">—</text><text x="357" y="1445">—</text><text x="471" y="1445">—</text><text x="585" y="1445">—</text><text x="699" y="1445">—</text><text x="813" y="1445">—</text><text x="927" y="1445">—</text><text x="1041" y="1445">—</text><text x="1155" y="1445">—</text><text x="1269" y="1445">—</text><text x="1383" y="1445">—</text><text x="1497" y="1445">—</text><text x="1611" y="1445">—</text><text x="1725" y="1445">—</text>
+      <text x="1839" y="1445" fill="#d63384">spare ¹</text><text x="1953" y="1445" fill="#d63384">spare ¹</text><text x="2067" y="1445">—</text>
+    </g>
+    <!-- outer row -->
+    <g stroke="#8b98a3" stroke-width="2">
+      <rect x="76"   y="1462" width="106" height="52" rx="6" fill="#e6e9ec"/>
+      <rect x="190"  y="1462" width="106" height="52" rx="6" fill="#fdebd0"/>
+      <rect x="304"  y="1462" width="106" height="52" rx="6" fill="#dbe9f6"/><rect x="418"  y="1462" width="106" height="52" rx="6" fill="#dbe9f6"/><rect x="532"  y="1462" width="106" height="52" rx="6" fill="#dbe9f6"/><rect x="646"  y="1462" width="106" height="52" rx="6" fill="#dbe9f6"/>
+      <rect x="760"  y="1462" width="106" height="52" rx="6" fill="#eef4fa"/><rect x="874"  y="1462" width="106" height="52" rx="6" fill="#eef4fa"/><rect x="988"  y="1462" width="106" height="52" rx="6" fill="#eef4fa"/><rect x="1102" y="1462" width="106" height="52" rx="6" fill="#eef4fa"/>
+      <rect x="1216" y="1462" width="106" height="52" rx="6" fill="#e3f2e9"/><rect x="1330" y="1462" width="106" height="52" rx="6" fill="#eef1f4"/><rect x="1444" y="1462" width="106" height="52" rx="6" fill="#e3f2e9"/><rect x="1558" y="1462" width="106" height="52" rx="6" fill="#e3f2e9"/><rect x="1672" y="1462" width="106" height="52" rx="6" fill="#e3f2e9"/><rect x="1786" y="1462" width="106" height="52" rx="6" fill="#e3f2e9"/>
+      <rect x="1900" y="1462" width="106" height="52" rx="6" fill="#efe2f5"/>
+      <rect x="2014" y="1462" width="106" height="52" rx="6" fill="#fbdcdc"/>
+    </g>
+    <g fill="#1a1a1a" font-weight="bold">
+      <text x="129" y="1486">GND</text><text x="243" y="1486">D53</text><text x="357" y="1486">D51</text><text x="471" y="1486">D49</text><text x="585" y="1486">D47</text><text x="699" y="1486">D45</text><text x="813" y="1486">D43</text><text x="927" y="1486">D41</text><text x="1041" y="1486">D39</text><text x="1155" y="1486">D37</text><text x="1269" y="1486">D35</text><text x="1383" y="1486">D33</text><text x="1497" y="1486">D31</text><text x="1611" y="1486">D29</text><text x="1725" y="1486">D27</text><text x="1839" y="1486">D25</text><text x="1953" y="1486">D23</text><text x="2067" y="1486">5V</text>
+    </g>
+    <g fill="#5b7a99" font-size="17">
+      <text x="129" y="1507">pin 10</text><text x="243" y="1507">f / clk</text><text x="357" y="1507">a / rst</text><text x="471" y="1507">b</text><text x="585" y="1507">c</text><text x="699" y="1507">d / sel</text><text x="813" y="1507">low</text><text x="927" y="1507">low</text><text x="1041" y="1507">low</text><text x="1155" y="1507">low</text><text x="1269" y="1507">pin 14</text><text x="1383" y="1507">pin 15</text><text x="1497" y="1507">pin 16</text><text x="1611" y="1507">pin 17</text><text x="1725" y="1507">pin 18</text><text x="1839" y="1507">pin 19</text><text x="1953" y="1507">pin 11</text><text x="2067" y="1507">pin 20</text>
+    </g>
+  </g>
+  <text x="1100" y="1554" text-anchor="middle" font-size="20" fill="#5b7a99">board edge below • inner-row pins D24 / D22 sit directly opposite D25 / D23 at the right-hand end</text>
+
+  <!-- ======================= Per-GAL table ======================= -->
+  <text x="1100" y="1622" text-anchor="middle" font-size="30" font-weight="bold" fill="#1a1a1a">Per-burn pin assignments (pin 20 = 5 V, pin 10 = GND on all three)</text>
+
+  <!-- header -->
+  <g>
+    <rect x="140" y="1648" width="1920" height="54" fill="#37474f"/>
+    <g font-size="23" font-weight="bold" fill="#ffffff" text-anchor="middle">
+      <text x="200"  y="1684">GAL pin</text>
+      <text x="330"  y="1684">Mega</text>
+      <text x="520"  y="1684">Direction (Mega)</text>
+      <text x="875"  y="1684">gal16v8_simple</text>
+      <text x="1345" y="1684">gal16v8_registered</text>
+      <text x="1820" y="1684">gal16v8_complex</text>
+    </g>
+  </g>
+  <!-- column separators + row background stripes: 15 data rows h=50 from y=1702 -->
+  <g fill="#f4f6f8">
+    <rect x="140" y="1752" width="1920" height="50"/>
+    <rect x="140" y="1852" width="1920" height="50"/>
+    <rect x="140" y="1952" width="1920" height="50"/>
+    <rect x="140" y="2052" width="1920" height="50"/>
+    <rect x="140" y="2152" width="1920" height="50"/>
+    <rect x="140" y="2252" width="1920" height="50"/>
+    <rect x="140" y="2352" width="1920" height="50"/>
+  </g>
+  <g stroke="#cfd6dc" stroke-width="1.5">
+    <line x1="140" y1="2452" x2="2060" y2="2452"/>
+    <line x1="140" y1="1702" x2="140" y2="2452"/>
+    <line x1="260" y1="1648" x2="260" y2="2452"/>
+    <line x1="400" y1="1648" x2="400" y2="2452"/>
+    <line x1="640" y1="1648" x2="640" y2="2452"/>
+    <line x1="1110" y1="1648" x2="1110" y2="2452"/>
+    <line x1="1580" y1="1648" x2="1580" y2="2452"/>
+    <line x1="2060" y1="1648" x2="2060" y2="2452"/>
+  </g>
+  <!-- rows -->
+  <g font-size="22" fill="#1a1a1a">
+    <!-- y centres: 1734, 1784, 1834, 1884, 1934, 1984, 2034, 2084, 2134, 2184, 2234, 2284, 2334, 2384, 2434 -->
+    <g text-anchor="middle" font-weight="bold"><text x="200" y="1734">1</text><text x="330" y="1734">D53</text></g>
+    <text x="520" y="1734" text-anchor="middle">output, always</text>
+    <text x="875" y="1734" text-anchor="middle">f (plain input)</text>
+    <text x="1345" y="1734" text-anchor="middle">clk (rising edge)</text>
+    <text x="1820" y="1734" text-anchor="middle" fill="#8b98a3">— (hold low)</text>
+
+    <g text-anchor="middle" font-weight="bold"><text x="200" y="1784">2</text><text x="330" y="1784">D51</text></g>
+    <text x="520" y="1784" text-anchor="middle">output, always</text>
+    <text x="875" y="1784" text-anchor="middle">a</text>
+    <text x="1345" y="1784" text-anchor="middle">rst (sync, active high)</text>
+    <text x="1820" y="1784" text-anchor="middle">a</text>
+
+    <g text-anchor="middle" font-weight="bold"><text x="200" y="1834">3</text><text x="330" y="1834">D49</text></g>
+    <text x="520" y="1834" text-anchor="middle">output, always</text>
+    <text x="875" y="1834" text-anchor="middle">b</text>
+    <text x="1345" y="1834" text-anchor="middle" fill="#8b98a3">— (hold low)</text>
+    <text x="1820" y="1834" text-anchor="middle">b</text>
+
+    <g text-anchor="middle" font-weight="bold"><text x="200" y="1884">4</text><text x="330" y="1884">D47</text></g>
+    <text x="520" y="1884" text-anchor="middle">output, always</text>
+    <text x="875" y="1884" text-anchor="middle">c</text>
+    <text x="1345" y="1884" text-anchor="middle" fill="#8b98a3">— (hold low)</text>
+    <text x="1820" y="1884" text-anchor="middle">c</text>
+
+    <g text-anchor="middle" font-weight="bold"><text x="200" y="1934">5</text><text x="330" y="1934">D45</text></g>
+    <text x="520" y="1934" text-anchor="middle">output, always</text>
+    <text x="875" y="1934" text-anchor="middle">d</text>
+    <text x="1345" y="1934" text-anchor="middle" fill="#8b98a3">— (hold low)</text>
+    <text x="1820" y="1934" text-anchor="middle">sel</text>
+
+    <g text-anchor="middle" font-weight="bold"><text x="200" y="1984">6–9</text><text x="330" y="1984" font-size="19">D43,41,39,37</text></g>
+    <text x="520" y="1984" text-anchor="middle">output, always</text>
+    <text x="875" y="1984" text-anchor="middle" fill="#8b98a3">— (hold low)</text>
+    <text x="1345" y="1984" text-anchor="middle" fill="#8b98a3">— (hold low)</text>
+    <text x="1820" y="1984" text-anchor="middle" fill="#8b98a3">— (hold low)</text>
+
+    <g text-anchor="middle" font-weight="bold"><text x="200" y="2034">11</text><text x="330" y="2034">D23</text></g>
+    <text x="520" y="2034" text-anchor="middle">output, always</text>
+    <text x="875" y="2034" text-anchor="middle">g (plain input)</text>
+    <text x="1345" y="2034" text-anchor="middle">/OE (0 = drive) ³</text>
+    <text x="1820" y="2034" text-anchor="middle">ena (per-pin OE)</text>
+
+    <g text-anchor="middle" font-weight="bold"><text x="200" y="2084">12</text><text x="330" y="2084">D22 ¹</text></g>
+    <text x="520" y="2084" text-anchor="middle">input, idle</text>
+    <text x="875" y="2084" text-anchor="middle" fill="#8b98a3">—</text>
+    <text x="1345" y="2084" text-anchor="middle" fill="#8b98a3">—</text>
+    <text x="1820" y="2084" text-anchor="middle" fill="#8b98a3">—</text>
+
+    <g text-anchor="middle" font-weight="bold"><text x="200" y="2134">13</text><text x="330" y="2134">D24 ¹</text></g>
+    <text x="520" y="2134" text-anchor="middle">input, idle</text>
+    <text x="875" y="2134" text-anchor="middle" fill="#8b98a3">—</text>
+    <text x="1345" y="2134" text-anchor="middle" fill="#8b98a3">—</text>
+    <text x="1820" y="2134" text-anchor="middle" fill="#8b98a3">—</text>
+
+    <g text-anchor="middle" font-weight="bold"><text x="200" y="2184">14</text><text x="330" y="2184">D35</text></g>
+    <text x="520" y="2184" text-anchor="middle">input, always</text>
+    <text x="875" y="2184" text-anchor="middle">yfg = f &amp; g</text>
+    <text x="1345" y="2184" text-anchor="middle">carry = q0&amp;q1&amp;q2</text>
+    <text x="1820" y="2184" text-anchor="middle" fill="#8b98a3">—</text>
+
+    <g text-anchor="middle" font-weight="bold"><text x="200" y="2234">15</text><text x="330" y="2234">D33</text></g>
+    <text x="520" y="2234" text-anchor="middle">input, idle</text>
+    <text x="875" y="2234" text-anchor="middle" fill="#8b98a3">—</text>
+    <text x="1345" y="2234" text-anchor="middle" fill="#8b98a3">—</text>
+    <text x="1820" y="2234" text-anchor="middle" fill="#8b98a3">—</text>
+
+    <g text-anchor="middle" font-weight="bold"><text x="200" y="2284">16</text><text x="330" y="2284">D31</text></g>
+    <text x="520" y="2284" text-anchor="middle">input, always</text>
+    <text x="875" y="2284" text-anchor="middle" fill="#8b98a3">—</text>
+    <text x="1345" y="2284" text-anchor="middle" fill="#8b98a3">—</text>
+    <text x="1820" y="2284" text-anchor="middle">g = fb # sel</text>
+
+    <g text-anchor="middle" font-weight="bold"><text x="200" y="2334">17</text><text x="330" y="2334">D29</text></g>
+    <text x="520" y="2334" text-anchor="middle">input, always</text>
+    <text x="875" y="2334" text-anchor="middle">yxor = a $ b</text>
+    <text x="1345" y="2334" text-anchor="middle">q2 (registered) ³</text>
+    <text x="1820" y="2334" text-anchor="middle">fb = a &amp; c</text>
+
+    <g text-anchor="middle" font-weight="bold"><text x="200" y="2384">18</text><text x="330" y="2384">D27</text></g>
+    <text x="520" y="2384" text-anchor="middle">input (pullup ²)</text>
+    <text x="875" y="2384" text-anchor="middle">yor = a#b#c#d</text>
+    <text x="1345" y="2384" text-anchor="middle">q1 (registered) ³</text>
+    <text x="1820" y="2384" text-anchor="middle">y2 = a $ b (ena-gated) ²</text>
+
+    <g text-anchor="middle" font-weight="bold"><text x="200" y="2434">19</text><text x="330" y="2434">D25</text></g>
+    <text x="520" y="2434" text-anchor="middle">input, always</text>
+    <text x="875" y="2434" text-anchor="middle">yand = a&amp;b&amp;c&amp;d</text>
+    <text x="1345" y="2434" text-anchor="middle">q0 (registered) ³</text>
+    <text x="1820" y="2434" text-anchor="middle">y1 = a&amp;b # c</text>
+  </g>
+
+  <!-- ======================= Footnotes ======================= -->
+  <g font-size="21" fill="#1a1a1a">
+    <text x="140" y="2496">¹ D22 / D24 (GAL pins 12/13) are unused by all three burns. Leave the series 470 Ω – 1 kΩ resistors fitted; the Mega keeps these pins as inputs the whole time.</text>
+    <text x="140" y="2532">² Hi-Z check for y2 (complex burn): set D27 to INPUT_PULLUP, apply a = b (driven y2 would be 0) with ena = 0 — reading 1 proves the pin floated (tri-state works).</text>
+    <text x="140" y="2568">³ /OE check (registered burn): drive D23 high with INPUT_PULLUP on D25/D27/D29 — all read 1 regardless of counter state, proving the registered outputs went Hi-Z.</text>
+    <text x="140" y="2604">Clocking (registered burn): pulse D53 low→high→low per step; read q2 q1 q0 while the clock is low. Sequence 000→001→…→111→000; rst = 1 forces 000 on the next edge.</text>
+  </g>
+</svg>
