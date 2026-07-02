@@ -1,410 +1,608 @@
-# TTL Blinky CPU — Design Summary
+# TTL Blinky CPU — Master Reference (W = 8)
 
-A minimal-but-honest TTL CPU aimed at "blinking lights" aesthetics: every LED on the front panel means something, every clock tick is one instruction, and the architecture is interesting enough to be more than a toy.
+> **This is the single authoritative Blinky (W = 8) document.** It defines the current state of the architecture: super-op encoding with a 13-bit address space, relative conditional branches, ALU rev 2, the SRAM-backed return stack with hardware base-pointercall frames, and the interrupt subsystem (NMI / IRQ / BRK).
+
+A minimal-but-honest TTL CPU aimed at "blinking lights" aesthetics: every LED on the front panel means something, every clock tick is one instruction, and the architecture is
+interesting enough to be more than a toy.
 
 ## Design Philosophy
 
-- **Single-cycle execution** — one clock tick = one instruction, no exceptions.
-- **Front-panel honesty** — every visible LED reflects real machine state in real time. Single-stepping shows complete, settled states.
-- **Minimum chip count without architectural compromise** — roughly 25–30 TTL packages plus memory.
-- **Stack machine, not register machine** — operands are implicit, control logic stays small, the front panel becomes more informative.
+- **Single-cycle execution** — one clock tick = one instruction, no exceptions. Interrupt
+  entry is one inserted cycle; return from interrupt is one cycle.
+- **Front-panel honesty** — every visible LED reflects real machine state in real time.
+  Single-stepping shows complete, settled states. Switchable to MHz clock though.
+- **Stack machine, not register machine** — operands are implicit, control logic stays
+  small, the front panel becomes more informative.
 
 ## Top-Level Architecture
 
-**Stack machine, Harvard memory, dual data/return stacks.**
+**Stack machine, Harvard memory, dual data/return stacks, base-pointer call frames,
+vectored interrupts.**
 
-| Bus / Width | Size | Notes |
-|---|---|---|
-| Data bus (D) | 8 bits | Main data memory and ALU width |
-| Instruction bus (I) | 16 bits | Fixed-width instructions, single-cycle fetch |
-| Address bus | 8 bits | 256 bytes each of I-memory and D-memory |
-| Data stack | 8 bits wide | TOS+NOS in registers, rest in stack memory |
-| Return stack | 8 bits wide | Separate memory, accessed independently |
+| Bus / Width         | Size                       | Notes                                                        |
+| ------------------- | -------------------------- | ------------------------------------------------------------ |
+| Data bus (D)        | 8 bits                     | ALU and data width (`W = 8`)                                 |
+| Instruction bus (I) | 16 bits                    | Fixed-width instructions, single-cycle fetch                 |
+| I-address bus (PC)  | 13 bits                    | 8K instructions                                              |
+| D-address bus       | 13 bits                    | 8K data cells                                                |
+| I/O port address    | 8 bits                     | Z80-style separate space, 256 ports                          |
+| Data stack          | 8 bits wide, 256 deep      | TOS + NOS in registers, rest in stack SRAM                   |
+| Return stack        | 2 × 16-bit lanes, 256 deep | `{PC, N, Z, C}` lane + `{BP, I, B}` lane — see §Return Stack |
+| BP (base pointer)   | 13 bits                    | Frame top; saved/restored by CALL/RET in hardware            |
 
-Four memories total: instruction ROM, data RAM, data stack, return stack. Each on its own bus — all four can be accessed in the same clock cycle. That's the architectural luxury that makes single-cycle execution feasible on TTL.
+Four memories total: instruction memory, data RAM, data stack, return stack. Each on its own bus — all four can be accessed in the same clock cycle. That's the architectural
+luxury that makes single-cycle execution feasible on TTL.
 
 ## Why a Stack Machine
 
 On a register machine, an instruction must encode source and destination registers — those bits come out of the opcode budget. On a stack machine, operands are implicit: ALU input A is always TOS, input B is always NOS, result goes to TOS. No operand routing, no register file decode, no mux trees feeding the ALU.
 
-Concrete benefits:
+- **Simpler ALU plumbing.** ALU inputs are wired directly to TOS and NOS. No operand mux.
+- **More opcode space.** With 16-bit instructions and no register fields, the entire
+  encoding is available for opcode and operand.
+- **Better front panel.** TOS and NOS LEDs show live computation. Stack depth LEDs show program state.
+- **Forth-friendly.** A small Forth interpreter is the natural software stack.
 
-- **Simpler ALU plumbing.** ALU inputs are wired directly to TOS and NOS registers. No operand mux.
-- **More opcode space.** With 16-bit instructions and no register fields, the entire encoding is available for opcode and immediate.
-- **Better front panel.** TOS and NOS LEDs show live computation. Stack depth LEDs show program state. Registers, by contrast, are static — they don't "flow."
-- **Forth-friendly.** A small Forth interpreter is the natural software stack and writes itself onto this hardware.
+Historical precedents: Novix NC4016, MuP21, F21, Burroughs B5000 (in spirit).
 
-Historical precedents: Novix NC4016, MuP21, F21, Burroughs B5000 (in spirit), and every Forth machine ever built.
+The one place a pure stack machine underperforms — operand permutation in recursion-heavy code — is addressed by the **BP frame-local subsystem** (§Call Frames), which grafts register-machine-style random-access operands onto the stack core without touching the single-port stack.
 
 ## Why Harvard
 
-Separate instruction and data buses eliminate fetch/execute contention. On a TTL machine where you already have separate ROM and RAM chips, Harvard is essentially free — it just acknowledges the physical reality of the memory system.
+Separate instruction and data buses eliminate fetch/execute contention. On a TTL machine with separate ROM and RAM chips, Harvard is essentially free.
 
-Wins:
-- No bus arbitration logic.
-- Instruction fetch happens in parallel with data memory access.
-- Doubles effective address space (256 bytes of code AND 256 bytes of data, not 256 total).
+- No bus arbitration logic; fetch parallel with data access.
+- Independent address spaces (8K code AND 8K data).
 - Enables true single-cycle execution.
 
-Cost: can't execute code from RAM. For this machine, irrelevant — programs live in EEPROM.
+Cost: can't execute code from RAM — irrelevant here; programs live in EEPROM.
 
 ## Why 16-Bit Fixed Instructions
 
-The competing option was 8-bit variable-length (denser code, more programs fit in memory). Rejected because:
+The architecture needs a 4-bit-class opcode plus operand; 8-bit-wide memory chips set the physical instruction word at 16 bits. The super-op encoding **spends** the full word:
+variable *operand* width inside a fixed *instruction* width.
 
-- **Single-cycle execution is the whole aesthetic.** Variable-length means some instructions are two cycles, which breaks the "one tick = one instruction" property and makes single-stepping ambiguous.
-- **Code density doesn't bind at this scale.** 256 bytes of program memory = 128 fixed-width instructions, which is plenty for blinky programs (Larson scanner, Fibonacci, sieve, tiny Forth core all fit comfortably).
-- **No fetch state machine.** The control unit becomes: latch ROM output on clock edge, decode combinationally, done.
-- **Full address reach in one instruction.** `BRANCH 0x42`, `LOAD 0x80`, `CALL 0xC0` — all single-word, single-cycle. No high-byte/low-byte sequences.
+- **Single-cycle execution.** Every instruction is one 16-bit word, one tick.
+- **No fetch state machine.** Latch memory output on the clock edge, decode
+  combinationally, done.
+- **Full address reach in one instruction.** `JUMP`, `CALL`, `LOAD`, `STORE` carry a
+  13-bit absolute address — single-word, single-cycle, across the whole 8K space. No
+  high-byte/low-byte sequences, ever.
 
-Cost: one extra EEPROM chip on the I-memory side. Worth it.
+---
 
-## Instruction Encoding Sketch
+# 1. Instruction Encoding — the Super-Op Format
 
-16 bits, with a generous budget thanks to implicit operands:
+Bit 15 (**I**) is the **format selector**.
+
+## I = 1 — Super-ops (wide operand)
+
+Exactly four instructions get the wide format: the ones that need full address reach.
 
 ```
- 15  14  13  12  11  10   9   8   7   6   5   4   3   2   1   0
-+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-| I |        opcode (7 bits)    |     immediate / address (8b)  |
-+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+ 15  14  13 | 12  11  10   9   8   7   6   5   4   3   2   1   0
++---+-------+---------------------------------------------------+
+| 1 |  op   |              address (13 bits)                    |
++---+-------+---------------------------------------------------+
 ```
 
-- **Bit 15 (I):** "has immediate" flag.
-- **If I=0:** 15 bits of pure opcode space (way more than needed). Used for ALU ops, stack manipulation, returns, and other operand-less instructions.
-- **If I=1:** 7-bit opcode + 8-bit immediate or absolute address. Used for PUSH-immediate, branches, calls, direct loads/stores.
+| I=1 op | Bits 14:13 | Mnemonic     | Effect                                             |
+| ------ | ---------- | ------------ | -------------------------------------------------- |
+| 0      | 00         | `JUMP addr`  | PC ← addr (unconditional, absolute, full 8K reach) |
+| 1      | 01         | `CALL addr`  | push `{PC+1, BP}` to return stack; PC ← addr       |
+| 2      | 10         | `LOAD addr`  | push D-mem[addr] `( -- m )`, ΔDSP +1               |
+| 3      | 11         | `STORE addr` | pop TOS → D-mem[addr] `( a -- )`, ΔDSP −1          |
 
-### Opcode Families (rough allocation)
+## I = 0 — Normal ops (8-bit operand)
 
-| Family | Examples | Notes |
-|---|---|---|
-| ALU | ADD, ADC, SUB, AND, OR, XOR, NOT, SHL, SHR, ASR, ROL, ROR, TST, CMP | TOS,NOS → TOS. **N/Z set by every ALU op; C only by arithmetic, shifts and CMP — logic ops preserve C** (per-flag masking, ALU rev 2). ADC reads C for multi-byte arithmetic. TST (one-operand) and CMP (two-operand, non-destructive `( a b -- a b )`) set flags without writing TOS; the old *popping* CMP stays dropped (see below). SBC and NEG remain unallocated (the two reserved ALU nibbles could host them later). |
-| Stack | DUP, DROP, SWAP, OVER, NIP, TUCK | Data stack manipulation. Does not affect flags. ROT is a macro (`>R SWAP R> SWAP`), never an opcode — not single-cycle on a single-port stack. |
-| Return stack | >R, R>, R@ | Move between stacks. Does not affect flags. |
-| Memory (stack form) | FETCH | Address from TOS (Forth-style), `( addr -- value )`, ΔDSP = 0. Does not affect flags. Stack-form STORE is dropped — see below. |
-| Memory (immediate form) | LOAD #addr, STORE #addr | Address from instruction's low byte. Does not affect flags. |
-| I/O (stack form) | IN | Port number from TOS, `( port -- value )`, ΔDSP = 0. Does not affect flags. Stack-form OUT is dropped — see below. |
-| I/O (immediate form) | IN #port, OUT #port | Port number from instruction's low byte. Does not affect flags. |
-| Control | RET, NOP, HALT | Operand-less. Does not affect flags. |
-| Immediate | PUSH #imm, BRANCH addr, CALL addr, BEQ addr, BNE addr, BCC addr, BCS addr, BMI addr, BPL addr | Use the immediate field. Conditional branches test the N/Z/C flags set by the most recent ALU op. |
+```
+ 15  14  13  12  11  10   9   8 | 7   6   5   4   3   2   1   0
++---+---------------------------+-------------------------------+
+| 0 |       opcode (7 bits)     |     operand / offset (8b)     |
++---+---------------------------+-------------------------------+
+```
 
-Reads keep both forms: stack-form `FETCH` and `IN` take a run-time-computed address/port from TOS (genuinely ΔDSP = 0 — the value read replaces the address), and the immediate forms are denser for fixed accesses (one instruction instead of `PUSH #addr` + access). **Writes are immediate-form only** (`STORE #addr`, `OUT #port`): a clean stack-form write `( data addr -- )` is a forbidden −2 on the single-port stack, and the old −1 compromise left a dangling operand on every write — dropped on both machines (see "Why writes are immediate-form only" below). Run-time-computed write targets are unrolled to fixed addresses/ports, or the targets are mapped to fixed ports.
+Everything else lives here: ALU ops (sub-op nibble in operand[3:0]), stack and
+return-stack ops, `PUSH #imm`, `IN`/`OUT`, the relative conditional branches, the frame
+ops `LOCAL@`/`LOCAL!`/`ENTER`, the interrupt ops `BRK`/`RTI`/`SEI`/`CLI`, and
+`RET`/`NOP`/`HALT`. Operand-less instructions ignore the operand field — except the ALU family, where operand[3:0] is the sub-op select and bits L3/L2 double as the shifter
+fill-mux select (§ALU).
 
-Most opcodes are operand-less (one cycle, no immediate). Branches, calls, pushes of arbitrary constants, and immediate-form memory/I/O accesses use the immediate field — still one cycle, because the 16-bit instruction already contains everything needed.
+The wide address reach lives only in the four super-ops; PC, BP, and the D-address bus
+are 13 bits while the data path stays 8.
 
-### CALL / RET semantics
+## Relative conditional branches
 
-CALL pushes PC+1 onto the return stack and sets PC to the immediate address. PC+1 is the pre-incremented PC value — the PC is a '161 counter that increments every cycle anyway, so PC+1 is available on the counter's outputs *before* the next clock edge, with no adder needed. Wire that into the return-stack write port.
+The six 6502-style conditionals plus a short unconditional are **PC-relative** with a
+signed 8-bit offset:
 
-RET sets PC ← RTOS (no increment) and pops the return stack.
+- **Target = PC + 1 + offset**, offset ∈ −128…+127. Offset 0 falls through.
+- Reach is ±~127 instructions around the branch — ample for loop bodies and local
+  control flow.
+- **Far conditionals** use the classic inverse-branch idiom: invert the condition and
+  hop over a `JUMP`:
 
-## Register Set
+```
+        ; BEQ far_target, out of relative reach:
+        BNE +1          ; skip the JUMP when Z clear
+        JUMP far_target ; full 13-bit reach
+```
 
-Not registers in the traditional sense — these are the architecturally visible state elements:
+All six conditions have their inverse in the set (BEQ/BNE, BCS/BCC, BMI/BPL), so every
+far conditional is exactly two instructions.
 
-| Element | Width | Purpose |
-|---|---|---|
-| PC | 8 bits | Program counter (I-memory address) |
-| IR | 16 bits | Instruction register (current instruction) |
-| TOS | 8 bits | Top of data stack (2× '194 shift register: parallel-loads on writes, shifts on SHL/SHR/ASR/ROL/ROR) |
-| NOS | 8 bits | Next on data stack (in a '374 latch) |
-| DSP | 8 bits | Data stack pointer |
-| RTOS | 8 bits | Top of return stack |
-| RSP | 8 bits | Return stack pointer |
-| N flag | 1 bit | Negative — bit 7 of the most recent ALU result. Used by BMI/BPL for signed comparisons. |
-| Z flag | 1 bit | Zero — set when the most recent ALU result was all zero. Used by BEQ/BNE. |
-| C flag | 1 bit | Carry — carry/borrow out of bit 7 (arithmetic, CMP) or the bit shifted out (shifts/rotates). Written only by those ops — logic ops preserve it (per-flag masking, ALU rev 2). Used by ADC for multi-byte arithmetic, and by BCC/BCS for unsigned comparisons. |
+`BRA offset` (unconditional relative) exists alongside `JUMP addr`: it costs one I=0
+opcode, makes short forward/backward hops relocatable, and keeps loop code independent of
+load address.
 
-TOS and NOS in dedicated latches (not in stack memory) is non-negotiable — it lets ALU ops complete in one cycle without a memory access.
+---
 
-## Stack Pointer Behavior
+# 2. Instruction Set
 
-Both DSP and RSP are free-running modulo-N counters with no overflow or underflow detection. This mirrors the 6502's stack design philosophy, adapted for a dual-stack machine — and it's strictly cleaner here than on the 6502.
+## I = 1 super-ops
 
-Specification:
+Covered above: `JUMP`, `CALL`, `LOAD`, `STORE`. Note **writes are immediate-form only**
+(`STORE addr`, `OUT #port`) — see §Stack Discipline.
 
-- Both SPs are '191 (4-bit synchronous up/down) counters, cascaded ×2 for 8 bits. (The
-  '169 originally specified is unobtainable in HC; the in-stock '191 replaces it. The
-  direction sense inverts — '169 U//D high = up, '191 D//U LOW = up — absorbed in the
-  decode equations.)
-- Reset-to-zero uses the '191's asynchronous `/LOAD` with its parallel data inputs tied low,
-  driven by the same active-low system reset net as the PC's `/CLR` — power-on state is SP=0
-  for both stacks, still one shared reset wire. (The '191 has no clear pin; load-of-zero is
-  its reset idiom.)
-- No comparator, no range-check logic, no "stack full" or "stack empty" signal feeding the control unit.
-- SP outputs go directly to the stack memory address pins.
-- On overflow or underflow, the SP wraps silently (255 → 0 and vice versa).
+## I = 0 families
 
-Why this works:
+| Family              | Instructions                                                        | Operand field                        | Flags                                                       | Notes                                                                                                                                                   |
+| ------------------- | ------------------------------------------------------------------- | ------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ALU                 | ADD, ADC, SUB, XOR, NOT, TST, SHL, SHR, AND, CMP, ASR, OR, ROL, ROR | sub-op nibble (rev-2 map, §ALU)      | N/Z every op; C only arith/shift/CMP — logic ops preserve C | TOS,NOS → TOS. ADC reads C. TST/CMP set flags without writing TOS. SBC and NEG unallocated (nibbles A/D reserved).                                      |
+| Stack               | DUP, DROP, SWAP, OVER, NIP, TUCK                                    | —                                    | none                                                        | ROT is a macro (`>R SWAP R> SWAP`), never an opcode — not single-cycle on a single-port stack.                                                          |
+| Return stack        | >R, R>, R@                                                          | —                                    | none                                                        | Move 8-bit values between stacks; see §Return Stack for lane semantics.                                                                                 |
+| Frame               | LOCAL@ off, LOCAL! off, ENTER k                                     | signed 8-bit offset / unsigned count | none                                                        | BP-relative locals; §Call Frames.                                                                                                                       |
+| Memory (stack form) | FETCH                                                               | — (addr = TOS)                       | none                                                        | `( addr -- value )`, ΔDSP 0. **Reach: low 256 D-mem cells** (TOS is 8 bits, zero-extended onto the 13-bit D-address bus). There is no stack-form STORE. |
+| I/O                 | IN (stack form), IN #port, OUT #port                                | port (immediate forms)               | none                                                        | 8-bit port space. There is no stack-form OUT.                                                                                                           |
+| Branch (relative)   | BRA, BEQ, BNE, BCC, BCS, BMI, BPL                                   | signed 8-bit offset                  | none                                                        | Target = PC+1+offset.                                                                                                                                   |
+| Interrupt           | BRK, RTI, SEI, CLI                                                  | —                                    | RTI restores N/Z/C/I; SEI/CLI write I                       | §Interrupts.                                                                                                                                            |
+| Control             | RET, NOP, HALT                                                      | —                                    | none                                                        | RET pops `{PC, BP}` — restores both, leaves flags alone.                                                                                                |
+| Immediate           | PUSH #imm                                                           | 8-bit immediate                      | none                                                        | Full 8-bit data range in one word.                                                                                                                      |
 
-- **Headroom.** Forth-shaped code rarely exceeds 4–5 deep on the data stack or ~8 deep on the return stack. A 256-deep stack has 30×+ headroom. Overflow in correct code is essentially impossible.
-- **Visible failure.** When wraparound *does* happen (because of a buggy program), the DSP/RSP LEDs visibly roll over on the front panel. The bug is diagnostic, not silent — a strict improvement over the 6502, where overflow silently corrupts the bottom of the stack with no indication.
-- **Return-stack wraparound is its own warning.** If RSP wraps and a subsequent RET pulls a nonsense address, the PC visibly jumps somewhere wrong and the machine starts executing garbage. Obviously broken, immediately visible.
+Reads keep both forms: stack-form `FETCH` and `IN` take a run-time-computed address/port from TOS (genuinely ΔDSP = 0 — the value read replaces the address), and the immediate/super-op forms are denser for fixed accesses. **Writes are immediate-form only** (`STORE addr`, `OUT #port`): a clean stack-form write `( data addr -- )` is a forbidden −2 on the single-port stack, and a −1 compromise leaves a dangling operand on every write.
+Run-time-computed write targets are unrolled to fixed addresses/ports, mapped to fixed ports, or handled through frame locals.
 
-What this buys:
+## CALL / RET semantics
 
-- No overflow/underflow logic anywhere in the control unit.
-- No fault or halt signals to wire up.
-- No decisions about what to do on overflow (trap? halt? wrap?).
-- Reset wiring is "tie all clear pins to one net" — no per-SP reset logic.
+- **`CALL addr`:** push `{PC+1, BP}` onto the return stack as one unit (both lanes, one
+  write cycle); PC ← addr; RSP counts up. BP itself is **held** — the callee opens its
+  own frame with `ENTER`.
+- **`RET`:** read both lanes at RSP−1; PC ← saved PC, BP ← saved BP, loading in
+  parallel; RSP counts down. Restoring BP frees the callee's frame in the same motion — there is no `FREE`/`LEAVE` opcode, deliberately. RET ignores the flag bits in the lanes; only RTI restores flags.
 
-What this forecloses:
+PC+1 is produced by the PC adder every cycle regardless (§Sequencing), so a CALL needs no extra arithmetic for the return address.
 
-- No software-visible stack-overflow exceptions. Fine for blinky (no interrupts anyway). The "useful" v2 of this design might want real overflow detection on at least the return stack, since silent return-stack wraparound is hard to debug in larger programs.
+---
 
-### Stack Modification Per Cycle
+# 3. Programmer's Model
 
-Every instruction changes the data stack pointer by exactly **+1, 0, or −1**. No instruction shifts the stack by two in a single cycle. This is a deliberate constraint that simplifies the hardware substantially:
+| Element   | Width  | Purpose                                                                                                                 |
+| --------- | ------ | ----------------------------------------------------------------------------------------------------------------------- |
+| PC        | 13     | Program counter (register + adder)                                                                                      |
+| IR        | 16     | Instruction register                                                                                                    |
+| TOS       | 8      | Top of data stack (2× '194: parallel-loads on writes, shifts on SHL/SHR/ASR/ROL/ROR)                                    |
+| NOS       | 8      | Next on data stack ('374-class latch)                                                                                   |
+| DSP       | 8      | Data-stack pointer (256 deep)                                                                                           |
+| RTOS      | 13     | Top of return stack, PC lane (where we'll return to)                                                                    |
+| RSP       | 8      | Return-stack pointer (256 deep)                                                                                         |
+| BP        | 13     | Base pointer — top of the current call frame; hardware-saved/restored by CALL/RET                                       |
+| N / Z / C | 1 each | ALU flags, written only by the ALU class (per-flag enables); restored by RTI                                            |
+| I         | 1      | Interrupt mask: 1 = IRQ masked. Set on reset and on interrupt entry; SEI/CLI write it; RTI restores it. NMI ignores it. |
 
-- DSP is a single up/down counter (two cascaded '191s), with one direction-control signal from the decoder.
-- Stack memory is single-port SRAM — one read *or* one write per cycle, never both.
-- TOS and NOS each move by at most one position per cycle, so their input muxes stay small.
+The B flag (BRK-vs-hardware discriminator) is not a register — it exists only in the
+pushed return word, 6502-style (§Interrupts).
 
-By instruction class:
+TOS and NOS in dedicated registers (not in stack memory) is non-negotiable — it lets ALU ops complete in one cycle without a stack-memory access.
 
-| ΔDSP | Instructions |
-|---|---|
-| +1 | `PUSH #imm`, `DUP`, `OVER`, `LOAD #addr`, `IN #port`, `R>` |
-| 0 | `NOT`, `SHL`, `SHR`, `ASR`, `ROL`, `ROR`, `TST`, `CMP`, `SWAP`, `NOP`, branches, stack-form `IN`, stack-form `FETCH` |
-| −1 | `ADD`, `ADC`, `SUB`, `AND`, `OR`, `XOR`, `DROP`, `NIP`, `>R`, `OUT #port`, `STORE #addr` |
+## ALU flags (per-flag write enables)
 
-#### Why writes are immediate-form only
+N/Z/C are written **only** by the ALU class (and RTI) — stack, memory, I/O, frame, and
+control instructions leave the flags alone, so a TST/CMP/arithmetic op can be separated
+from its consuming branch by any number of non-ALU instructions. Within the ALU class the write is **per-flag**: N/Z latch on every live ALU sub-op (`NZ_WE`); C latches only
+on the ops that define it — ADD/ADC/SUB/CMP (carry/borrow out of bit 7) and the five
+shifts (the shifted-out bit) — via its own enable, `C_WE`. The logic ops (XOR, NOT, TST,
+AND, OR) **preserve C**, so a carry or shifted-out bit survives intervening masking ops
+until its consuming branch.
 
-Conventional Forth `STORE` is `( data addr -- )`, consuming both. That's a −2 instruction, which would require either dual-port stack memory or a banking scheme, plus DSP-by-2 logic.
+| Flag | Definition                                                                                                                                                         | Used by        |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- |
+| N    | bit 7 of the result                                                                                                                                                | BMI / BPL      |
+| Z    | result is all-zero ('181 A=B, wire-ANDed across the pair)                                                                                                          | BEQ / BNE      |
+| C    | arith/CMP: carry/borrow out of bit 7 (high '181 Cn+4, latched directly). Shifts: the bit shifted out (old bit 7 leftward, old bit 0 rightward). Held by logic ops. | BCS / BCC, ADC |
 
-The earlier compromise kept stack-form writes at −1 by consuming only the address and writing NOS — but that left a dangling operand `( data addr -- data )` on every write, costing a `DROP` in the common case. Ratified resolution (shared with the mini): **stack-form `STORE` and `OUT` are dropped.** Writes take their address/port from the instruction literal (`STORE #addr`, `OUT #port`) and pop only the data from TOS — naturally −1, no residue.
+Cost: ~1.5 packages ('74s), the C flip-flop's enable on the `C_WE` net, plus one '157 on
+the flag inputs for the RTI restore path (§Interrupts). "Carry set after SUB = no
+borrow," same as the 6502.
 
-Stack-form reads survive (`FETCH`, `IN`) because replacing the address on TOS with the value read is genuinely ΔDSP = 0 — no residue to manage. A run-time-computed *write* target is no longer single-instruction: unroll to fixed `STORE #addr` / `OUT #port`s, or map the targets to fixed ports.
+---
 
-#### TOS / NOS update rules
+# 4. ALU
 
-With ΔDSP ∈ {+1, 0, −1}, each instruction picks one input for TOS and one for NOS from a small set of sources:
+2× '181 cascaded for 8 bits, active-high-operand convention. The sub-op nibble lives in
+IR operand bits [3:0]:
 
-| Operation | TOS ← | NOS ← | Stack memory |
-|---|---|---|---|
-| Push (+1) | new value (immediate, fetched, ALU, etc.) | old TOS | write old NOS at DSP+1 |
-| Unary (0) | ALU result of old TOS | unchanged | idle |
-| `SWAP` (0) | old NOS | old TOS | idle |
-| Binary ALU (−1) | ALU result of old TOS, old NOS | stack[DSP−1] read | idle (read only) |
-| `DROP` (−1) | old NOS | stack[DSP−1] read | idle (read only) |
-| `STORE #addr` / `OUT #port` (−1) | old NOS | stack[DSP−1] read | D-memory or I/O write of old TOS |
-| Stack-form `FETCH` / `IN` (0) | value read (addr/port was old TOS) | unchanged | D-memory or I/O read; stack idle |
+| Nib | Op  | Class                 | Nib | Op                | Class                 |
+| --- | --- | --------------------- | --- | ----------------- | --------------------- |
+| 0   | ADD | binary pop, arith     | 8   | AND               | binary pop, logic     |
+| 1   | ADC | binary pop, arith     | 9   | CMP               | flags-only, arith     |
+| 2   | SUB | binary pop, arith     | A   | *reserved (idle)* |                       |
+| 3   | XOR | binary pop, logic     | B   | ASR               | '194 right, sign fill |
+| 4   | NOT | unary, logic          | C   | OR                | binary pop, logic     |
+| 5   | TST | flags-only, logic     | D   | *reserved (idle)* |                       |
+| 6   | SHL | '194 left, zero fill  | E   | ROL               | '194 left, wrap       |
+| 7   | SHR | '194 right, zero fill | F   | ROR               | '194 right, wrap      |
 
-Every row uses at most one stack memory access (read *or* write), and TOS/NOS each have a 4-to-1 mux on their input, no more. That's the whole stack data path.
+The placements are **not aesthetic**: (a) the shifter fill-mux select is raw IR bits
+L3/L2 (zero decode cost), which pins ASR into 10xx and ROL/ROR into 11xx; (b) the chosen slots keep the `TOS_M1`/`TOS_M0` decode at 7 of the 16V8's 8 product terms. '181 code sharing: SUB/XOR/CMP share select 0110 (mode and write-mask differ); ADD/ADC share 1001 (Cn differs); TST = 1111.
+
+**Shifts — five forms on the '194 TOS.** The TOS register *is* a '194 pair: SHL/SHR
+(logical, zero fill), ASR (sign fill), plain rotates ROL/ROR (wrap the falling-out bit).
+The fill source is one '153 dual 4:1 mux on the '194 serial pins, selected by raw IR
+bits L3/L2 — don't-care except while shifting. The pins that matter are the cascade
+ends: right-shift serial input = DSR of the **high** '194 (Q7 end); left-shift serial input = DSL of the **low** '194 (Q0 end); Q7/Q0 taps from those same ends. '153 inputs — DSR section: in0 = in1 = GND, in2 = Q7, in3 = Q0; DSL section: in0 = in1 = in2 = GND,
+in3 = Q7. C sources from the bit shifted out (`C_SRC = shf`), not the carry chain.
+Multi-bit shifts are loops — no shift-amount field. Rotate-through-carry, if ever
+wanted, is a one-wire change on the '153 inputs.
+
+**CMP** — non-destructive `( a b -- a b )`: '181 select 0110 arith, Cn = L (exactly
+SUB), result discarded — TOS holds, NOS holds, no stack access, ΔDSP 0. Flags of
+TOS − NOS latch: Z = equal, C = 1 means TOS ≥ NOS. A popping CMP `( a b -- )` would be a forbidden −2 and does not exist.
+
+**Cn/Cn+4 polarity for the ripple wire.** The '181's Cn *input* takes HIGH = "no
+carry-in", LOW = "+1" — opposite polarity from the Cn+4 *output* (HIGH when carry
+occurred). Direct-wiring low-'181 Cn+4 to high-'181 Cn inverts the carry meaning during
+ripple; a single inverter on the cascade wire fixes it — '04 in the all-HC build,
+**HCT04 when the LS-181 backup is fitted** (fence rule; see Sourcing).
+
+---
+
+# 5. Stack Discipline
+
+Every instruction changes DSP by exactly **+1, 0, or −1**. No instruction shifts the
+stack by two in one cycle: DSP stays a single up/down counter, stack memory stays
+single-port SRAM (one read *or* one write per cycle), and the TOS/NOS input muxes stay
+small.
+
+| ΔDSP | Instructions                                                                                                                            |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| +1   | PUSH #imm, DUP, OVER, TUCK, R@, LOAD addr, IN #port, R>, LOCAL@ off                                                                     |
+| 0    | NOT, SHL, SHR, ASR, ROL, ROR, TST, CMP, SWAP, NOP, HALT, all branches, JUMP, CALL, RET, ENTER, BRK, RTI, SEI, CLI, stack-form IN, FETCH |
+| −1   | ADD, ADC, SUB, AND, OR, XOR, DROP, NIP, >R, OUT #port, STORE addr, LOCAL! off                                                           |
+
+## TOS / NOS update rules
+
+| Operation                       | TOS ←                                        | NOS ←             | Stack memory                                      |
+| ------------------------------- | -------------------------------------------- | ----------------- | ------------------------------------------------- |
+| Push (+1)                       | new value (imm / fetched / ALU / NOS / RTOS) | old TOS           | write old NOS at DSP+1                            |
+| `TUCK` (+1)                     | hold                                         | hold              | **write old TOS** at DSP+1                        |
+| Unary / shift (0)               | ALU or '194-shifted old TOS                  | unchanged         | idle                                              |
+| `SWAP` (0)                      | old NOS                                      | old TOS           | idle                                              |
+| Binary ALU (−1)                 | ALU(old TOS, old NOS)                        | stack[DSP−1] read | read only                                         |
+| `DROP` / `NIP` (−1)             | old NOS / hold                               | stack[DSP−1] read | read only                                         |
+| `STORE` / `OUT` / `LOCAL!` (−1) | old NOS                                      | stack[DSP−1] read | read only (the write goes to D-mem / I/O / frame) |
+| `FETCH` / stack-form `IN` (0)   | value read (addr/port was old TOS)           | unchanged         | idle                                              |
+
+- **`OVER`** `( a b -- a b a )` is a normal push with `TOS_SRC = NOS` — zero dedicated
+  hardware (NOS already feeds the TOS mux via the SWAP path; the spilled old NOS is the duplicate).
+- **`NIP`** `( a b -- b )` is a DROP with TOS held — zero dedicated hardware.
+- **`R@`** `( -- r )` is a push with `TOS_SRC = RTOS` (the RET path), plus a
+  return-stack read that must **not** pop: `rstk_read_en = pop OR R@`, addressing RSP−1 with `RSP_EN` deasserted.
+- **`TUCK`** `( a b -- b a b )` writes **old TOS** into the stack SRAM while NOS holds.
+  The stack data-in path is therefore a **quad 3-state 2:1 mux ('257 ×2) selecting NOS vs TOS**, with one GAL output for the select.
+
+## Stack pointers
+
+Both DSP and RSP are free-running modulo-256 counters (2× '191 each) with no
+overflow/underflow detection — 6502 philosophy, improved: wraparound is *visible* on the front-panel depth LEDs, diagnostic rather than silent. Reset uses the '191's
+asynchronous `/LOAD` with parallel inputs tied low, on the shared system reset net ('191 has no clear pin; load-of-zero is its reset idiom). 256 deep is 30×+ headroom over
+Forth-shaped code.
+
+---
+
+# 6. Sequencing — PC, Adder, NEXTPC
+
+- **PC register:** 13-bit loadable register (2× 8-bit '377-class, 13 of 16 bits used),
+  loading NEXTPC on every rising edge.
+- **PC adder:** 13-bit ('283 ×4), A = PC, B = the **offset mux**:
+  - sequential / super-op / CALL / BRK cycles: B = +1 (constant 1),
+  - taken relative branch: B = sign-extended IR[7:0].
+    The adder output is simultaneously "PC+1" (the CALL/BRK return address — free, every cycle the offset mux selects +1) and the relative-branch target.
+- **NEXTPC (3-state bus, 13 bits):**
+  - **adder** — sequential flow and taken relative branches,
+  - **IR[12:0]** — JUMP / CALL absolute target,
+  - **RTOS (PC lane)** — RET / RTI, driven directly by the return-stack SRAM,
+  - **vector** — interrupt/BRK entry: tied lines force the fixed vector address
+    (§Interrupts).
+    Conditional branches select *adder-with-offset* vs *adder-with-+1* purely in the
+    offset mux; the flag test lives in the flow GAL — the only place flags feed control.
+    The 3-state-bus form reuses the return stack's existing bus discipline; a '153 mux tree is the alternative at higher chip count.
+
+---
+
+# 7. Return Stack & Call Frames
+
+The return stack is the machine's call/interrupt spine: an SRAM-backed stack whose
+hardware pointer addresses a small RAM, so calls and interrupts nest to the full pointer
+depth (256).
+
+## The return word — two 16-bit lanes
+
+Each entry is **two 16-bit lanes** (4× 8-bit SRAM chips of width):
+
+| Lane    | Bits 12:0 | Bits 15:13      |
+| ------- | --------- | --------------- |
+| PC lane | saved PC  | **N, Z, C**     |
+| BP lane | saved BP  | **I, B**, spare |
+
+The flag bits ride in the lanes' spare width, so pushing and popping processor state
+costs no extra cycle and no extra chip. Every push drives all lane bits (flags and BP are
+simply wired to the data-in); what differs per instruction is what the **pop** loads:
+`RET` loads PC and BP only; `RTI` loads PC, BP, N/Z/C, and I; `R>`/`R@` read the PC
+lane's low 8 bits as data and load nothing else.
+
+## Pointer convention and addressing — write at RSP, read at RSP − 1
+
+RSP points at the **next-free slot**, so the live top-of-stack sits at RSP − 1. The '191
+decrements on the same edge that loads the PC, so a pop must read `stk[RSP−1]` — reading at the raw pointer fetches the empty slot above the top. The addressing is spatial, not temporal:
+
+- A **'283 decrementer** (×2) forms RSP − 1 continuously (A = RSP, B = all-ones,
+  Cin = 0 → A − 1 mod 256; carry-out unused).
+- A **'157 address mux** (×2) drives the SRAM address from RSP on a write
+  (`RSP_UD = up`) and RSP − 1 on a read (`RSP_UD = down`). `/G` tied low.
+
+A pop therefore reads the true top-of-stack, and PC/BP/flags latch it on the same edge
+that decrements the pointer — no decremented-address path racing the clock. Verified in TTLSim: nested CALL/RET returns correctly on every pass, RSP unwinds cleanly with single counter edges, worst-case back-to-back CALL → RET included.
+
+## Clocking — no gated clocks, ever
+
+RSP runs **straight off the system clock**; direction is the '157 select, never a gated
+or muxed counter clock. Gating the counter clock with a combinational signal (RSP_UD is combinational off the IR, which changes *on* the edge) produces runt pulses and
+double-counts. The decrementer removes any need for clock tricks: back-to-back
+CALL → RET counts up then down, once each, cleanly.
+
+## Write strobe — WRPH = /CLK
+
+- `/WE = NAND(push, WRPH)` where **push = RSP_EN·(RSP_UD = up)** and **`WRPH = /CLK`** — the write window is confined to the settled **second half** of the cycle. At the start of a cycle the IR is still resolving and RSP_UD can twitch; a full-clock-high window punches that twitch through to /WE as a spurious write. /CLK keeps it off the strobe. 
+  Verified: zero spurious writes under worst-case packing.
+- The RSP_EN qualification in the push term is **mandatory**: with `>R` in the
+  instruction set, RSP_UD alone does not identify a push.
+- `/CS` is driven directly by `RSP_EN` (both active-low) — the RAM is selected exactly
+  on push/pop/R@ cycles and its bus is high-Z on every idle cycle.
+- Timing margin: /WE deasserts at the cycle-ending edge; the address moves only after counter-plus-mux propagation, while /WE rises after one glue gate — /WE is high before the address moves. Enormous margin at demo clock rates; only a very fast clock would want a bounded write pulse.
+
+## Data-in and lane sources
+
+- **PC lane bits 12:0:** a 3-state mux drives **PC+1** (CALL, BRK), **raw PC**
+  (hardware interrupt entry — the interrupted instruction has not executed, and
+  re-executes on return), or **TOS zero-extended** (`>R`), selected by `RDIN_SEL`;
+  released on reads so the SRAM drives the RTOS bus onto NEXTPC.
+- **PC lane bits 15:13:** the live N/Z/C flags, always driven.
+- **BP lane:** current **BP** (bits 12:0, always driven — writing BP on `>R` is
+  harmless), the **I** flag, and **B** = 1 for `BRK`, 0 for hardware IRQ/NMI (and
+  don't-care on CALL/`>R`, which RET/R> never read back as flags).
+- **BP restore is RET/RTI-only.** `R>` and `R@` move data and must not load BP; the BP
+  register's load-enable asserts on RET, RTI, and ENTER only.
+- Mixing `>R` data with return words is the standard Forth-machine discipline hazard:
+  a `RET`/`RTI` through a `>R`'d data value vectors the PC (and BP) into garbage —
+  visibly, on the front panel.
+
+## Base pointer and frame locals
+
+Random-access, frame-relative locals remove the operand-permutation tax (the Hanoi
+four-argument shuffle) that is the stack machine's one weakness. Locals live in **data
+memory**, addressed relative to **BP** — deliberately *not* in the data stack, where a
+local read would need a frame read plus a push spill in one cycle (two accesses, illegal
+on the single port). D-memory is a separate port, so `LOCAL@` (D-mem read + stack push) and `LOCAL!` (stack pop + D-mem write) each touch two different memories once and stay single-cycle.
+
+| Op           | Effect                              | Encoding                 |
+| ------------ | ----------------------------------- | ------------------------ |
+| `LOCAL@ off` | push D-mem[BP + off]                | I=0, signed 8-bit offset |
+| `LOCAL! off` | pop TOS → D-mem[BP + off]           | I=0, signed 8-bit offset |
+| `ENTER k`    | reserve a k-slot frame: BP ← BP + k | I=0, unsigned count      |
+
+- BP marks the **top** of the frame region (next free slot); after `ENTER k` the frame
+  occupies BP−k … BP−1, so the standard convention addresses locals at **negative
+  offsets**. Exact slot layout is a software calling convention; the hardware supplies
+  only BP-relative addressing, automatic save/restore, and frame reserve.
+- **No `FREE`/`LEAVE`:** RET's automatic BP restore frees the frame. Tail-call frame
+  collapse, if ever wanted, reuses the ENTER adder with a negative constant.
+- **Reset:** BP async-loads **0** on `/RESET`, the same load-zero idiom as RSP —
+  uniform with PC/DSP/RSP. If low D-memory is reserved for globals, the init stub lifts
+  BP above them with one `ENTER <base>` before the first CALL; with no low globals, no stub. The pre-CALL top level runs as "frame 0"; returning out of `main` is undefined (halt).
+- **Hardware:** BP register (13-bit, 2× '377-class, async-load-zero), BP source 2:1 mux
+  ('157 ×4: ENTER-adder vs saved-BP lane; hold via load-enable), **BP + offset adder
+  ('283 ×4)** computing both `BP + k` (ENTER) and the BP-relative local address
+  (sign-extended offset, same sign-extension pattern as the branch offset), and the
+  D-address mux at 3:1 (super-op IR[12:0] / zero-extended TOS / BP-relative).
+- A typical prologue: `ENTER k`, copy stack arguments into the frame with `LOCAL!`,
+  body reads them by index with no ROT; RET tears the frame down. Per-level frames mean a child can never clobber a parent's locals. Measured effect on Hanoi: ~30 → ~18 cycles/node; Blinky wins both the call/return half *and* the operand half against a 14 MHz 65C02.
+
+---
+
+# 8. Interrupts — NMI, IRQ, BRK
+
+Two hardware request lines and one software trap, 6502-shaped: interrupt entry **is** a
+forced `BRK` — the flow GAL jams the BRK pattern onto the decode inputs in place of the fetched instruction — and the **B** bit in the pushed word is what distinguishes
+software BRK (B = 1) from hardware IRQ/NMI (B = 0).
+
+## Semantics
+
+| Event             | Trigger                    | Masked by I?                                         | Pushes                           | PC ←                                |
+| ----------------- | -------------------------- | ---------------------------------------------------- | -------------------------------- | ----------------------------------- |
+| **NMI**           | edge-latched request line  | no (also overrides CLK_RUN — wakes a HALTed machine) | `{PC, N,Z,C}` + `{BP, I, B=0}`   | NMI vector                          |
+| **IRQ**           | level-sampled request line | yes                                                  | `{PC, N,Z,C}` + `{BP, I, B=0}`   | IRQ/BRK vector                      |
+| **`BRK`**         | I=0 instruction            | no                                                   | `{PC+1, N,Z,C}` + `{BP, I, B=1}` | IRQ/BRK vector                      |
+| **`RTI`**         | I=0 instruction            | —                                                    | pops both lanes                  | saved PC; BP, N/Z/C, I all restored |
+| **`SEI` / `CLI`** | I=0 instructions           | —                                                    | —                                | (I ← 1 / I ← 0)                     |
+
+- **Hardware entry pushes raw PC** — the displaced instruction has not executed and
+  re-executes on return. **BRK pushes PC+1** — it *has* executed; return resumes after
+  it.
+- **Entry sets I** (both NMI and IRQ, 6502-style), so the handler runs with further
+  IRQs masked; RTI restores the prior I from the stack. Nested IRQs are opt-in via
+  `CLI` inside the handler; NMI nests regardless.
+- **I = 1 on reset** (interrupts disabled until the init stub does `CLI`) — the
+  22V10's asynchronous-reset product term provides this for free.
+- **Priority:** NMI over IRQ; one request is taken per inserted cycle.
+- Because entry is one inserted cycle and RTI is one cycle, an interrupt round-trip is
+  **2 cycles** — against the 6502's 13 (7 entry + 6 RTI) — and BP rides the push
+  automatically, so a handler can use `ENTER`/locals with zero extra convention. The
+  front panel shows the entry as one settled state.
+
+## Vectors
+
+The reset/vector page sits at the base of I-memory; each vector slot holds a single
+`JUMP` (one word, full reach):
+
+| Address | Slot             |
+| ------- | ---------------- |
+| 0x0000  | reset entry      |
+| 0x0001  | IRQ / BRK vector |
+| 0x0002  | NMI vector       |
+
+Forcing a vector onto NEXTPC is tied address lines (bit 0 or bit 1 high, rest low)
+behind one 3-state enable — effectively free.
+
+## Startup sequence
+
+Vector slots hold **instructions, not addresses** — one word is a full-reach `JUMP`, so
+no vector-fetch cycle or reset sequencer exists (unlike the 6502, which reads its
+vectors as data). Startup is therefore just the reset state plus ordinary execution:
+
+1. `/RESET` asserts (Mega during development; DS1813 / boot-loader done flip-flop in
+   stand-alone builds — released only once I-memory is ready). PC, DSP, RSP, and BP
+   async-load **0**; the 22V10's async-reset term sets **I = 1** (IRQs masked).
+2. On release, the first fetch is the instruction at 0x0000 — `JUMP init` — executed as
+   an ordinary single-cycle instruction, hopping over the vector slots at 0x0001/0x0002.
+3. The init stub runs with IRQs already masked (no SEI needed): `ENTER <base>` if low
+   D-memory carries globals, set up handlers and ports, `CLI` when ready, fall into
+   main. Main never returns — RET out of frame 0 is undefined — so it ends in HALT or a loop. NMI is live from the moment reset releases.
+
+The PC clear *is* the reset vector.
+
+## Hardware
+
+| Block                | Part             | Role                                                                                                                                                                                                                                                                                                                                                   |
+| -------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Flow / interrupt GAL | **22V10**        | Holds the flow-decode role. Wide inputs take opcode + I-bit + N/Z/C + IRQ_PEND + NMI_PEND + I-mask; the 16-term middle macrocells take `PCSEL` (fattest output) and the BRK-force enable; **registered macrocells hold the IRQ sampler, the NMI edge latch, and the I flag** (pin 1 = system clock), with the async-reset term setting I = 1 on reset. |
+| BRK-force            | '257 ×2          | Jams the BRK opcode pattern onto the decode-input side of the IR on an interrupt-entry cycle.                                                                                                                                                                                                                                                          |
+| Flag restore mux     | '157             | Second source (stack-read bits) into the N/Z/C flip-flops, load-enabled on RTI.                                                                                                                                                                                                                                                                        |
+| Vector driver        | 1 buffer enable  | Tied lines onto the NEXTPC bus.                                                                                                                                                                                                                                                                                                                        |
+| PC-lane data-in      | (existing '257s) | Carries the raw-PC source alongside PC+1 and TOS.                                                                                                                                                                                                                                                                                                      |
+
+**Net: ~4–5 ICs plus the 22V10 in the flow-GAL slot.** The lane spare bits are what make
+this cheap: state save/restore needs no extra stack width, no extra cycle, and no extra
+memory chip.
+
+## GAL complement
+
+| Device    | Role                                                                                                            |
+| --------- | --------------------------------------------------------------------------------------------------------------- |
+| 16V8 ×4   | ALU/shift select · stack-top/D-mem · pointers/C-enable                                                          |
+| 16V8      | BP / frame control (BP load, BP source, third D-address select, BP-relative strobes)                            |
+| **22V10** | Control flow + interrupts (PCSEL, ALU_Cn, I/O strobes, BRK-force, vector enable, IRQ/NMI synchronizers, I flag) |
+
+The decode pin budget, not the datapath, is the binding constraint machine-wide; the
+derived-strobe pattern (/CS and /WE derived from pointer signals rather than decoded — the DSTK/RSTK template) is the standing technique for reclaiming outputs. BlinkyJED,
+TTLSim, and the WinCUPL cross-check chain all support the 22V10, so it verifies exactly
+as the 16V8s do: BlinkyJED compile, fuse-for-fuse cross-check, JED import into the sim,
+full IR sweep, JEDTester on silicon.
+
+---
+
+# 9. Memory & I/O
+
+| Space        | Size                       | Notes                                                                                                                 |
+| ------------ | -------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| I-memory     | 8K × 16                    | 2× 8-bit devices in parallel (28C64 EEPROMs). Harvard, fetch parallel with data access. Vector page at 0x0000–0x0002. |
+| D-memory     | 8K × 8                     | One 62256 / CY7C199-class part, 8K used. Address from the 3:1 D-address mux (super-op / TOS / BP-relative).           |
+| Data stack   | 256 × 8                    | Single-port; /CS, /WE derived from DSP; TUCK write-select '257 on data-in.                                            |
+| Return stack | 256 × 32 (2× 16-bit lanes) | Single-port; /CS, /WE derived from RSP per §7.                                                                        |
+| I/O          | 256 ports × 8              | Z80-style separate space; `IORQ` distinguishes I/O from D-mem cycles.                                                 |
 
 ## I/O
 
-Z80-style separate I/O address space, 8 bits wide, accessed via dedicated `IN` / `OUT` instructions. This keeps the 256-byte D-memory space available entirely for data, and the symmetric 8-bit address width matches every other address bus in the machine.
+Reads in both forms (`IN` stack-form takes the port from TOS, `( port -- value )`,
+ΔDSP 0; `IN #port` immediate); writes immediate-form only (`OUT #port` pops TOS). The port-number path is a 2:1 mux (TOS vs IR[7:0]). Decode only the bits current devices need; unused high bits alias harmlessly. The 8×8 direct-mapped LED matrix (8× '374 row latches at ports 0–7, DUP…OUT idiom to broadcast) is the centerpiece demo, plus a '244 switch port and a '374 status port — ~2 decoder chips, ~10 port chips. Peripherals that raise IRQ (a timer, a UART-class port) wire onto the level-sampled IRQ line; a panic button or single-shot debug trigger suits NMI.
 
-### Address space
+---
 
-- **8-bit port address**, logically 256 ports.
-- **Decoded as much as needed.** Physical decoder chips only cover the bits required for current devices. Unused high bits alias — fine, since nothing lives at the aliased addresses. v1 typically decodes 3–4 bits (8–16 ports).
-- **Reuses the D-address bus** during `IN`/`OUT` cycles. A dedicated `IORQ` control signal from the CPU tells the I/O decoder "this bus access is for you, not for D-memory."
+# 10. Front Panel
 
-### Instruction variants
+| Field             | LEDs | Meaning                                                                      |
+| ----------------- | ---- | ---------------------------------------------------------------------------- |
+| PC                | 13   | position in program                                                          |
+| IR                | 16   | current instruction, fully visible                                           |
+| TOS               | 8    | top of data stack — the "accumulator" in spirit; the shifter display         |
+| NOS               | 8    | next on stack                                                                |
+| DSP               | 8    | data-stack depth                                                             |
+| RTOS              | 13   | top of return stack (where we'll return to)                                  |
+| RSP               | 8    | return-stack depth                                                           |
+| BP                | 13   | current frame top — recursion depth becomes *visible* as BP climbs and falls |
+| N / Z / C / I     | 4    | ALU flags + interrupt mask                                                   |
+| IRQ / NMI pending | 2    | the synchronizer outputs — an interrupt is visible *before* it is taken      |
 
-Reads come in both forms; writes are immediate-form only, mirroring the memory access pattern:
+Plus clock/run/halt/step controls. Running Hanoi, the BP LEDs breathe with recursion
+depth while RSP mirrors it; single-stepping into an interrupt shows the pending LED,
+then the one-cycle entry as a settled state — displays no accumulator machine can offer.
 
-| Form | Encoding | Port number from | Use case |
-|---|---|---|---|
-| `IN` (stack form) | `I=0` operand-less | TOS | Computed input ports; `( port -- value )`, ΔDSP = 0 |
-| `IN #port` / `OUT #port` | `I=1` with immediate | Instruction's low byte | Fixed ports (status LEDs, switches, matrix rows). No stack-form `OUT` — see "Why writes are immediate-form only" |
+---
 
-Stack form: `IN` replaces the port number on TOS with the input byte read from that port (net ΔDSP = 0) — the path for run-time-computed *input* ports, and the instruction that drives the I/O address mux from TOS. Computed *output* ports are no longer single-instruction: unroll to fixed `OUT #port`s, or map the targets to fixed ports.
+# 11. Chip Count Estimate
 
-Immediate form: port number is the low byte of the instruction. `OUT #port` pops data from TOS and writes to the named port; `IN #port` reads from the named port and pushes onto the stack. Single cycle each.
+Core CPU and memory subsystem (all-HC baseline; see Sourcing):
 
-### Port-number routing
+| Block                                                                                                                                                     | Chips      |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| ALU (2× '181 + Cn ripple inverter)                                                                                                                        | 2–3        |
+| TOS (2× '194) + fill mux ('153) + NOS ('374)                                                                                                              | 4          |
+| TUCK write-select ('257 ×2 on stack data-in)                                                                                                              | 2          |
+| Data stack SRAM + DSP ('191 ×2)                                                                                                                           | 3          |
+| Return stack SRAM ×4 (two 16-bit lanes) + RSP ('191 ×2) + RSP−1 decrementer ('283 ×2) + address mux ('157 ×2) + strobe glue ('00) + PC-lane data-in muxes | ~13        |
+| PC register ('377 ×2) + PC adder ('283 ×4) + offset mux/sign-extend ('157 ×2)                                                                             | 8          |
+| NEXTPC 3-state bus drivers + vector enable                                                                                                                | 3          |
+| BP register ('377 ×2) + source mux ('157 ×4) + BP adder ('283 ×4)                                                                                         | 10         |
+| D-address 3:1 mux (13-bit)                                                                                                                                | ~4         |
+| Instruction register ('374 ×2) + BRK-force ('257 ×2)                                                                                                      | 4          |
+| Flag flip-flops + RTI restore mux                                                                                                                         | 3          |
+| Decode / control (16V8 ×5 + **22V10**)                                                                                                                    | 6          |
+| I-memory (2× 8K×8) + D-memory (1)                                                                                                                         | 3          |
+| I/O decode ('138s) + port-number mux ('157)                                                                                                               | 3–4        |
+| Bus drivers, clock/reset/single-step                                                                                                                      | 4–5        |
+| **Core total**                                                                                                                                            | **~72–75** |
 
-The I/O decoder receives its 8-bit port number through a 2:1 mux:
+Optional peripherals (matrix, switches, status) add ~10. The hardware breakpoint ('688
+comparator ×2 for the 13-bit PC + '00 + '74, proven on the W = 4 board) adds 4.
 
-- Mux input A: TOS (for stack-form `IN`).
-- Mux input B: IR low byte (for immediate-form `IN #port`/`OUT #port`).
-- Mux select: controlled by the instruction decoder (the `I` bit plus opcode pattern).
+---
 
-One '157 (8-bit 2:1 mux, two packages) handles this. Same pattern can be reused for memory addresses if both stack and immediate forms of `FETCH`/`STORE` and `LOAD`/`STORE` are wired through a shared address mux.
+# # 13. Sourcing Notes (June 2026)
 
-### Example: 8×8 LED matrix mapped as 8 sequential ports
+Stock tracked in `ChipInventory.md` (all-HC baseline; "in transit" = ordered, counted
+available).
 
-Wire 8× '374 latches at ports 0x00–0x07, each driving one row of the matrix. Writing to port N sets the pattern for row N.
+- **'191** for all stack pointers (HC169 unobtainable). Direction sense: '191 D//U
+  LOW = up (absorbed in decode/glue); count enable is active-low /CTEN; load is
+  asynchronous — which is what makes the /LOAD-low reset idiom work.
+- **'181.** Primary 74HC181; 74LS181 backup only, behind an HCT fence at **every** '181
+  output boundary (HCT04 ripple inverter, HCT374 latches on /F, HCT245 buses, HCT flag taps). All-HC build needs no fence.
+- **'374.** HCT374 is the drop-in for every '374 slot (HC374 unobtainable).
 
-The row ports are fixed, so the immediate-form `OUT #port` fits naturally. Writing one value to all eight rows uses the DUP idiom (`OUT #port` pops its data):
+---
 
-```
-\ Clear the matrix (all rows to 0)
-PUSH #0
-DUP  OUT #0
-DUP  OUT #1
-DUP  OUT #2
-DUP  OUT #3
-DUP  OUT #4
-DUP  OUT #5
-DUP  OUT #6
-OUT #7             \ last write consumes the value
-```
+# Deliberately Excluded
 
-Unrolled rather than looped — the ports are known at assembly time, which is exactly the case the immediate form is for.
-
-Or for a Game of Life update, compute the next-generation byte for each row on the stack and `OUT #row` it to its fixed port. The matrix is direct-mapped — no scanning multiplexer, no refresh logic, every LED reflects a real bit at all times. 64 LEDs, 8 latch chips, total honesty.
-
-For fixed ports like a status LED byte or input switches, the immediate form is denser:
-
-```
-SWITCHES IN        \ read switches port directly
-STATUS OUT         \ write TOS to status port directly
-```
-
-### Decoder chip count
-
-- v1 build (8×8 matrix at ports 0x00–0x07, switches at 0x08, status LEDs at 0x09): one '138 decodes the low 3 bits for the matrix rows, another handles a couple of additional ports. **~2 chips for the I/O decode.**
-- Plus the port hardware itself: 8× '374 for the matrix rows (8 chips), 1× '244 for switches input (1 chip), 1× '374 for status LEDs (1 chip). **10 chips for the actual ports.**
-
-The matrix dominates the chip count, but it dominates the *experience* too — 64 directly-mapped LEDs is the centerpiece demo.
-
-## Front Panel
-
-The point of all this. Every architectural element gets LEDs:
-
-- **PC (8 LEDs)** — where we are in the program.
-- **IR (16 LEDs)** — current instruction, fully visible.
-- **TOS (8 LEDs)** — top of data stack, the "accumulator" in spirit.
-- **NOS (8 LEDs)** — next on stack, visible operand for the next ALU op.
-- **DSP (8 LEDs)** — data stack depth.
-- **RTOS (8 LEDs)** — top of return stack (where we'll return to).
-- **RSP (8 LEDs)** — return stack depth.
-- **Flag LEDs (3 LEDs: N, Z, C)** — set by every ALU op. Show the result of the most recent arithmetic or logical operation.
-- **Clock / Run / Halt / Step controls** — slow clock (1 Hz to a few kHz), single-step button, run/halt switch.
-
-Running Fibonacci, you watch the two top-of-stack LEDs do the Fibonacci dance while the depth stays constant. Running a Larson scanner, the output port LEDs sweep while the PC cycles through a tight loop. The machine *shows you what it's doing.*
-
-## Chip Count Estimate
-
-Core CPU and memory subsystem:
-
-| Block | Chips |
-|---|---|
-| ALU (2× '181 cascaded for 8 bits — HC primary, LS backup behind an HCT fence; plus an inverter on the Cn+4 → Cn ripple wire: '04, or HCT04 in the LS build — see Flags note and Sourcing notes) | 2–3 |
-| TOS (2× '194 shift register) + serial-fill mux ('153, ALU rev 2) + NOS latch ('374) | 4 |
-| Data stack memory (256-deep SRAM) | 1 |
-| Data stack pointer ('191 up/down counter, cascaded ×2 for 8 bits) | 2 |
-| Return stack memory + pointer (1× SRAM + 2× '191) | 3 |
-| PC ('161) | 1 |
-| Instruction register (2× '374) | 2 |
-| Decode / control (GAL16V8/22V10 class — the mini's ratified GAL scheme scaled to the wider opcode) | 4–5 |
-| Bus drivers ('245s) | 2 |
-| Address-source mux ('157, selects TOS vs. IR-low-byte for memory/IO address) | 2 |
-| I-memory (2× 8-bit SRAM in parallel — loaded by Mega at boot; or 2× 8-bit EEPROM for stand-alone) | 2 |
-| D-memory (1× SRAM) | 1 |
-| I/O address decoder ('138s) | 2 |
-| Clock / reset / single-step | 2–3 |
-| **Core total** | **~30–35** |
-
-Optional I/O peripherals (typical v1 build):
-
-| Block | Chips |
-|---|---|
-| 8×8 LED matrix (8× '374 row latches, one per row) | 8 |
-| Switch input port (1× '244 buffer) | 1 |
-| Status LED output port (1× '374 latch) | 1 |
-| **Peripheral total** | **10** |
-
-The peripherals dominate the chip count once the matrix is in play, but they dominate the experience too — 64 direct-mapped LEDs is the centerpiece demo. A minimal build without the matrix (just switches + status LEDs) is ~2 peripheral chips.
-
-Single perfboard, weekend or two of wiring, front panel that fits on a single piece of aluminum.
-
-### Sourcing notes (June 2026)
-
-Stock and orders are tracked in `ChipInventory.md` (all-HC baseline, counts verified 11 June 2026; "in transit" there means ordered and is counted as available here).
-
-- **'169 → '191.** The 74HC169 is unobtainable; both stack pointers are 74HC191s (20 in transit). Same role — synchronous up/down counting with hold — with three wiring-level differences: the direction sense inverts ('169 U//D high = up; '191 D//U LOW = up — flip the decode equation), the count enable is the single active-low /CTEN, and load is asynchronous (which is what makes the /LOAD-low reset idiom above work).
-- **'181 family.** Primary ALU part is the 74HC181 (10 in transit). The 74LS181s (8 in transit) are backup only: LS outputs (VOH ≥ 2.7 V) cannot reliably drive plain-HC inputs (VIH ≈ 3.5 V at 5 V), so an LS-181 build must place HCT parts at **every** '181 output boundary — the ripple inverter (HCT04), any latch fed by the /F outputs (HCT374), any '181-driven bus (HCT245), and the flag taps (spare HCT04 sections). HCT04 / HCT245 / HCT374 are stocked for exactly this. The all-HC build needs no fence anywhere.
-- **'374.** The HC374 is unobtainable; new stock is HCT374 (16 in transit) — a drop-in for every '374 slot here (HCT inputs accept HC levels and its outputs drive HC).
-
-## Stack Depth
-
-Both stacks are 256 deep, implemented in SRAM. The 8-bit stack pointers match the front-panel symmetry — DSP and RSP LEDs are the same width as every other address bus in the machine — and 256 is far deeper than any sane program will ever use, so wraparound is purely a diagnostic for bugs.
-
-## What This Machine Can Run
-
-- Larson scanner / chaser lights on an output port
-- Count and display loops
-- Fibonacci sequence
-- Sieve of small primes
-- Tiny Forth inner interpreter (~60–80 instructions)
-- Simple game-of-life on an 8×8 LED matrix
-- Bit-banged serial I/O for terminal connection (slow but works)
-
-Not enough room for a full Forth — that's the "useful" version of this design, with 16-bit data and a 12-or-16-bit address bus. The blinky machine is the architectural prototype; the useful machine is the same shape scaled up.
-
-## Development Rig
-
-An Arduino Mega 2560 acts as the development companion, transforming the edit-compile-run loop from minutes (EEPROM swap) to seconds (USB upload). The Mega is *not* part of the CPU — the CPU's hardware interface is unchanged. The Mega just drives that interface from the outside during development.
-
-### What the Mega does
-
-- **Loads program memory at boot.** I-memory becomes SRAM (not EEPROM). On reset, the Mega writes the program into the SRAM while the TTL CPU is held in reset. When loading completes, the Mega releases its drive on the I-memory buses and asserts run.
-- **Generates the clock.** Programmable frequency from single-step (button press → one cycle) up to whatever the TTL can handle. Enables run-to-PC-value breakpoints by simply not generating the next clock pulse when the address bus matches a target.
-- **Drives reset.** PC-controlled, so the host can reset and reload the TTL machine without touching it.
-- **Spies on buses.** With ~25 pins free after the boot-load role, the Mega can sample the D-bus, D-address bus, flags, and selected stack-top lines on every clock cycle and stream a trace back to the PC over USB.
-
-### Pin allocation (Mega 2560, 54 digital I/O)
-
-| Role | Pins |
-|---|---|
-| I-memory address (write during boot, high-Z after) | 8 |
-| I-memory data, low byte (write during boot, high-Z after) | 8 |
-| I-memory data, high byte (write during boot, high-Z after) | 8 |
-| I-memory write-enable | 1 |
-| TTL clock output | 1 |
-| TTL reset output | 1 |
-| Spare for spy lines (D-bus, D-address, flags, etc.) | ~25 |
-
-### Bus separation
-
-The Mega's connections to the I-memory address and data buses go through 74HC245 transceivers. During boot, the Mega's `/OE` line to those transceivers is asserted; after boot it's deasserted and the TTL CPU's PC drives the address bus while the SRAM drives the data bus. Clean separation, no risk of the Mega glitching a fetch by accidentally reasserting a pin.
-
-Cost: 3 extra '245 transceivers in the I-memory path. Worth it for reliability.
-
-### What this unlocks
-
-- **Instant program load.** Edit on PC, upload via USB, run. No EEPROM programmer, no chip swap.
-- **PC-value breakpoints.** Mega watches the address bus, halts the clock at a target PC.
-- **Watchpoints on D-memory accesses.** Mega watches the D-address bus, halts on read/write of a target address.
-- **Execution traces.** Per-cycle sampling of whatever's wired to spy pins, logged to PC over USB.
-- **Automated regression tests.** PC-side harness loads a program, runs N cycles, reads back state, compares to expected.
-- **Variable clock speeds for demos.** 1 Hz for "watch the LEDs," 100 kHz for "show it running fast," anything in between.
-
-### Why Mega over Uno
-
-An Uno has only ~18 usable pins, which is not enough for the parallel data paths the boot-load role needs without shift-register tricks. A Mega has 54 pins — the boot loader uses ~27, leaving ~25 free for spy duties without any pin-multiplexing gymnastics. For an extra ~$10 over an Uno, the Mega eliminates a layer of design complexity in the development rig. Easy call.
-
-## Open Decisions
-
-- **Shifts — resolved: single-bit on the '194 TOS, five forms (ALU rev 2).** The TOS
-  register *is* a '194 bidirectional shift register (2× at W = 8): SHL/SHR (logical, zero
-  fill), ASR (sign fill) and plain rotates ROL/ROR (wrap the falling-out bit) are all TOS
-  shift modes. The fill source is one '153 dual 4:1 mux on the '194 serial pins, selected by
-  raw IR literal bits L3/L2 — don't-care except while shifting, so it costs no decode. C is
-  sourced from the bit shifted out (old top bit leftward, old bottom bit rightward) rather
-  than the carry chain. Multi-bit shifts remain loops — the instruction word has no field
-  for a shift amount. Rotate-through-carry, if ever wanted, is a one-wire change on the
-  '153 inputs (C instead of the wrap bit).
-- **Flags.** Three flags: N (negative, bit 7 of result), Z (zero, all bits of result are zero), C (carry-out of bit 7). The flags are written **only** by the ALU class — stack, memory, I/O, and control instructions leave them alone, so a `TST`, `CMP` or arithmetic op can be separated from its consuming branch by any number of non-ALU instructions. Within the ALU class the write is **per-flag (ALU rev 2):** N/Z latch on every ALU op (`NZ_WE`); C latches only on the ops that define it — ADD/ADC/SUB/CMP (carry/borrow) and the five shifts (the shifted-out bit) — via its own enable, `C_WE`. The logic ops (XOR, NOT, TST, AND, OR) preserve C, so a carry or shifted-out bit survives intervening masking ops until its consuming branch. (This retires the old "logic ops latch C = 1 from the held-high logic-mode Cn+4" caveat.) Cost: ~1.5 packages (one '74 dual D flip-flop holds two flags, half of a second holds the third) plus three front-panel LEDs; the C flip-flop's enable simply sits on the `C_WE` net instead of sharing `NZ_WE`. The Z flag rides for free on the '181's A=B output (wire-ANDed across the two cascaded ALU chips); N is bit 7 of the result; C is the Cn+4 output of the high '181 latched directly (active-HIGH when carry occurred, matching the BCS-when-carry-set semantics).
-
-**Cn/Cn+4 polarity gotcha for the ripple wire.** In the active-high-operand convention this design uses, the '181's Cn *input* takes HIGH to mean "no carry-in" and LOW to mean "+1 carry-in" — the opposite polarity from the Cn+4 *output*, which is HIGH when carry occurred. Direct-wiring Cn+4 of the low '181 to Cn of the high '181 therefore inverts the carry meaning during ripple. A single inverter slot on the cascade wire fixes it — '04 in the all-HC build, **HCT04 when the LS-181 backup is fitted**, since the inverter's input hangs directly on an LS output. In the LS build the flag taps (Cn+4, A=B, result bit 7) are likewise LS-driven nodes and need HCT receivers per the fence rule in Sourcing notes. (For subtract, the '181 internally complements B; the same inverter still gives the correct ripple — the *flag* polarity is what differs between add and subtract conventions, but the C flag is read off the high '181's Cn+4 directly, so software just learns that "carry set after SUB = no borrow", same as the 6502.)
-- **Conditional execution granularity?** Six flag-based conditional branches (BEQ, BNE, BCC, BCS, BMI, BPL) plus unconditional BRANCH, in 6502 style. Comparisons are done by TST ('181 F = A, flags only, write suppressed) or by the non-destructive CMP `( a b -- a b )` — SUB's '181 row with the write suppressed and no stack motion, ΔDSP 0, legal where the old *popping* CMP's `( a b -- )` was a forbidden −2 — or fall out as side effects of plain arithmetic (SUB sets the flags of TOS − NOS). The branch-decode logic is a single 8-way mux (six conditions plus always plus the unconditional case) — one '151 or '153, or folded into the flag-reading decode GAL.
-- **Program loading.** During development, an Arduino Mega serves as both boot loader and debug controller — see the Development Rig section above. For a stand-alone deployment, two 8-bit EEPROMs in parallel (low byte + high byte of the 16-bit I-bus) replace the Mega + SRAM, with programs burned off-board and chips swapped via sockets.
-- **Hardware breakpoint.** A standalone run-to-PC breakpoint now exists in hardware — a ’688 comparing the PC against a switch-set address feeds a synchronous HALT flip-flop (’74), edge-detected so it fires once per entry. Proven on the W=4 bring-up board, it halts the machine **at** the matched instruction and drops it into single-step with **no host attached**, complementing the Mega-driven breakpoint above. It scales to the full machine by widening the comparator to the 8-bit PC. Three added ICs (’688 + ’00 + ’74) plus address switches; see `Blinky_Breakpoint.md`.
-
-- **TOS write buffer (data-bus arbitration).** Same issue as the mini, scaled to 8 bits: the
-  TOS '194 pair and the '181 drive continuously, and the 2114s have no `/OE`, so `STORE` and
-  `OUT` cannot tie TOS to the D-bus directly — on a LOAD the RAM and the '194s would fight.
-  TOS drives the shared D-bus through a 3-state buffer (one '245 bank, or a '244) enabled only
-  on a write (`/OE = DMEM_WE` · `IO_WR`); the read drivers are the D-mem RAM and the input
-  ports. The full treatment — selector-per-sink table and the return-stack RDIN caveat — is in
-  `Mini_Blinky_CPU.md` §4a; the wiring is identical bar width.
-
-## Summary
-
-8-bit data, 8-bit address (everywhere — D-memory, I-memory, I/O), 16-bit fixed instructions, Harvard memory, dual stacks, single-cycle execution. Stack machine semantics keep the control logic small and the front panel meaningful. Just over 30 TTL chips for the core datapath, control, and memory, plus ~10 more for an 8×8 LED matrix and other peripherals. A genuine CPU with genuine character — and a front panel that actually shows you what's happening.
+- **`FREE` / `LEAVE`** — RET's automatic BP restore already frees the frame.
+- **Flat register file ('670 ×2)** — redundant beside frame locals; additive later if a
+  hot non-recursive loop ever wants it.
+- **`PICK` / `ROLL`** — not single-cycle on the single-port stack; frame locals do the
+  job better.
+- **Dual-port stack SRAM** — large chip-count hit for a fraction of the win frame
+  locals already capture.
+- **V flag** — not adopted. The 22V10 removes the pin-budget blocker, so signed
+  branches (BVS/BVC) are feasible; they remain excluded until a workload wants them.
+- **Popping CMP `( a b -- )`** — forbidden −2; the non-destructive CMP covers the need.
+- **Stack-form STORE / OUT** — forbidden −2 or dangling-operand −1; writes are
+  immediate/super-op form only.
+- **Interrupt priority encoder / multiple IRQ vectors** — one IRQ line, one vector; the handler polls device status ports. Additional request lines cost 22V10 inputs the
+  budget doesn't owe.
