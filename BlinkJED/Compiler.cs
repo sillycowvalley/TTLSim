@@ -1,11 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace BlinkyJed;
 
 /// <summary>
-/// Stage 3: map parsed equations onto a device fuse map for the 16V8 / 20V8,
-/// covering all three GAL configurations. Mirrors GALasm:
+/// Stage 3: map parsed equations onto a device fuse map. Dispatches by
+/// family: the 16V8/20V8 path lives here; the 22V10 is
+/// <see cref="Compiler22V10"/>.
+///
+/// The 16V8/20V8 path covers all three GAL configurations. Mirrors GALasm:
 ///
 ///   - Logic starts all-1; a used product-term row keeps its 1s except the
 ///     connected input columns, which are cleared to 0. Every other row stays 0
@@ -15,6 +18,17 @@ namespace BlinkyJed;
 ///     complement at col+1. The PinToFuse table is per-mode, because the GAL
 ///     re-routes feedback differently in each configuration.
 ///   - XOR[7-olmc] = 1 per active-high output; PT all 1 in every mode.
+///
+/// Output polarity is the XOR of the two CUPL notations: a '!' on the PIN
+/// declaration and a '!' on the equation's left-hand side each flip it
+/// (declared-low + plain equation = active low; both = active high again).
+/// A literal referencing a declared-active-low signal likewise connects the
+/// complement column (the pin carries the inverted sense), matching GALasm's
+/// uniform pin-polarity fold. VALIDATION NOTE: the active-high paths are
+/// WinCUPL-gold-validated; the active-low fuse rules (XOR bit + literal fold,
+/// in particular feedback from an active-low REGISTERED output) follow GALasm
+/// and are pending confirmation against the gal16v8_polarity /
+/// gal20v8_polarity WinCUPL golds.
 ///
 /// Mode is selected automatically from what the design needs (the CUPL device
 /// suffix is ignored, as before):
@@ -46,8 +60,9 @@ namespace BlinkyJed;
 /// what GALasm/WinCUPL emit (validated against WinCUPL .jed references for
 /// all six sample designs).
 ///
-/// Still not handled (rejected by the parser): output extensions other than
-/// .d/.oe, set/range/index notation, and '$' preprocessor directives.
+/// The 22V10-only extensions .ar and .sp are rejected here with a clear
+/// error. Still not handled (rejected by the parser): other output
+/// extensions, set/range/index notation, and '$' preprocessor directives.
 /// </summary>
 internal static class Compiler
 {
@@ -73,7 +88,14 @@ internal static class Compiler
     private static readonly int[] PinToFuse20Mode3 =
         { -1, 0, 4, 8, 12, 16, 20, 24, 28, 32, 36, -1, -1, 38, 34, 30, 26, 22, 18, 14, 10, 6, 2, -1 };
 
-    public static FuseMap Compile(PldDocument doc, TargetDevice device, List<string> errors)
+    public static FuseMapBase Compile(PldDocument doc, TargetDevice device, List<string> errors)
+    {
+        if (device is Gal22V10 g22)
+            return Compiler22V10.Compile(doc, g22, errors);
+        return CompileV8(doc, (GalV8Device)device, errors);
+    }
+
+    private static FuseMap CompileV8(PldDocument doc, GalV8Device device, List<string> errors)
     {
         var map = new FuseMap(device);   // Logic/Xor/Sig/Ac1/Pt all 0, Syn/Ac0 0
 
@@ -86,19 +108,29 @@ internal static class Compiler
         int[] outputOnlyComplexPins = is16 ? new[] { 12, 19 } : new[] { 15, 22 };
         int cols = device.Columns;
 
-        // name -> pin number
-        var pinOf = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        // name -> declaration (pin number + declared polarity)
+        var declOf = new Dictionary<string, PinDeclaration>(StringComparer.OrdinalIgnoreCase);
         foreach (PinDeclaration p in doc.Pins)
         {
-            if (!pinOf.TryAdd(p.Name, p.Number))
+            if (!declOf.TryAdd(p.Name, p))
                 errors.Add($"Pin name '{p.Name}' is declared more than once.");
+        }
+
+        // The global AR/SP rows exist only on the 22V10.
+        foreach (Equation eq in doc.Equations)
+        {
+            if (eq.AsyncReset || eq.SyncPreset)
+                errors.Add($"Output '{eq.Target}': .{(eq.AsyncReset ? "ar" : "sp")} is only supported on the GAL22V10.");
         }
 
         // Partition: output equations vs their .oe (output-enable) equations.
         var mains = new List<Equation>();
         var oes = new List<Equation>();
         foreach (Equation eq in doc.Equations)
+        {
+            if (eq.AsyncReset || eq.SyncPreset) continue;   // reported above
             (eq.OutputEnable ? oes : mains).Add(eq);
+        }
 
         var targets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (Equation eq in mains) targets.Add(eq.Target);
@@ -118,7 +150,7 @@ internal static class Compiler
                     {
                         if (targets.Contains(sig))
                             forceComplex = true;             // combinational feedback
-                        if (pinOf.TryGetValue(sig, out int p) && Array.IndexOf(specialPins, p) >= 0)
+                        if (declOf.TryGetValue(sig, out PinDeclaration? d) && Array.IndexOf(specialPins, d.Number) >= 0)
                             forceComplex = true;             // input with no mode-1 feedback line
                     }
                 }
@@ -157,14 +189,17 @@ internal static class Compiler
             oeOf[oe.Target] = oe.Terms[0];
         }
 
-        // Clear the connected input columns of one product-term row.
+        // Clear the connected input columns of one product-term row. A signal
+        // declared active-low carries the inverted sense on its pin, so the
+        // literal polarity folds the declaration (GALasm's uniform pin fold).
         void SetLiteral(string eqTarget, int rowBase, string sig, bool asserted)
         {
-            if (!pinOf.TryGetValue(sig, out int litPin))
+            if (!declOf.TryGetValue(sig, out PinDeclaration? decl))
             {
                 errors.Add($"Output '{eqTarget}': undeclared signal '{sig}'.");
                 return;
             }
+            int litPin = decl.Number;
             if (mode == GalMode.Registered && litPin == clockPin)
             {
                 errors.Add($"Output '{eqTarget}': pin {clockPin} is the global clock in registered mode and cannot be used in an equation.");
@@ -188,7 +223,7 @@ internal static class Compiler
                 return;
             }
 
-            int negation = asserted ? 0 : 1;   // true line at col, complement at col+1
+            int negation = (asserted ? 0 : 1) ^ (decl.ActiveLow ? 1 : 0);
             map.Logic[rowBase + col + negation] = 0;   // clear -> connect this input
         }
 
@@ -207,11 +242,12 @@ internal static class Compiler
 
         foreach (Equation eq in mains)
         {
-            if (!pinOf.TryGetValue(eq.Target, out int pin))
+            if (!declOf.TryGetValue(eq.Target, out PinDeclaration? targetDecl))
             {
                 errors.Add($"Output '{eq.Target}' has no PIN declaration.");
                 continue;
             }
+            int pin = targetDecl.Number;
             if (pin < firstOlmcPin || pin > lastOlmcPin)
             {
                 errors.Add($"Output '{eq.Target}' (pin {pin}) is not an output-capable pin ({firstOlmcPin}-{lastOlmcPin}).");
@@ -261,15 +297,18 @@ internal static class Compiler
             for (int t = 0; t < eq.Terms.Count; t++)
                 ProgramRow(eq.Target, firstLogicRow + t, eq.Terms[t]);
 
-            // Output polarity: active-high output sets its XOR bit.
-            if (!eq.ActiveLow)
-                map.Xor[TargetDevice.XorSize - 1 - olmc] = 1;
+            // Output polarity: the XOR of the PIN-declaration '!' and the
+            // equation-LHS '!'. An effectively active-high output sets its
+            // XOR fuse.
+            bool effectiveActiveLow = eq.ActiveLow ^ targetDecl.ActiveLow;
+            if (!effectiveActiveLow)
+                map.Xor[GalV8Device.XorSize - 1 - olmc] = 1;
         }
 
         // AC1: mode 1 -> spare OLMC pins become inputs, matching WinCUPL;
         // mode 2 -> 1 for every cell; mode 3 -> 0 marks a registered cell,
         // 1 a combinational or spare one.
-        for (int olmc = 0; olmc < TargetDevice.Ac1Size; olmc++)
+        for (int olmc = 0; olmc < GalV8Device.Ac1Size; olmc++)
         {
             byte ac1 = mode switch
             {
@@ -277,7 +316,7 @@ internal static class Compiler
                 GalMode.Complex => 1,
                 _ => (byte)(registeredOlmc.Contains(olmc) ? 0 : 1),
             };
-            map.Ac1[TargetDevice.Ac1Size - 1 - olmc] = ac1;
+            map.Ac1[GalV8Device.Ac1Size - 1 - olmc] = ac1;
         }
 
         // User signature: emitted ERASED (all 1s), deliberately diverging from

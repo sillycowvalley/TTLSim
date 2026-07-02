@@ -11,7 +11,7 @@ namespace BlinkyJed;
 ///
 ///     .pld source
 ///        -> PldParser.Parse      (tokens -> pin map + boolean equations)
-///        -> TargetDevice.Resolve (G16V8 / G20V8 / ATF22V10)
+///        -> TargetDevice.Resolve (G16V8 / G20V8 / G22V10)
 ///        -> Compiler.Compile     (SOP build + minimise + map to fuse array)
 ///        -> JedecWriter.Write     (fuse map -> JESD3 .jed text)
 ///     .jed output
@@ -149,7 +149,7 @@ internal static class Program
         if (device == null || errors.Count > 0) return Report(errors);
 
         // ---- Stage 3: compile to a fuse map --------------------------------
-        FuseMap fuses = Compiler.Compile(doc, device, errors);
+        FuseMapBase fuses = Compiler.Compile(doc, device, errors);
         if (errors.Count > 0) return Report(errors);
 
         // ---- Stage 4: emit JEDEC -------------------------------------------
@@ -188,7 +188,7 @@ Options:
   -o <output>   output .jed file, OR an existing folder to write into
                 (default: alongside the input, extension changed to .jed)
   -d <device>   target device, overriding the .pld header
-                (G16V8 | G20V8 | ATF22V10)
+                (G16V8 | G20V8 | G22V10)
 
 Output:
   <name>.jed    JEDEC fuse map, programmable onto the target GAL");

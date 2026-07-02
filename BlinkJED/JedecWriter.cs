@@ -4,7 +4,7 @@ using System.Text;
 namespace BlinkyJed;
 
 /// <summary>
-/// Stage 4: render a <see cref="FuseMap"/> as JEDEC (.jed) text. The '*' field
+/// Stage 4: render a <see cref="FuseMapBase"/> as JEDEC (.jed) text. The '*' field
 /// area -- the part a device programmer actually reads -- is emitted byte-for-byte
 /// the way WinCUPL lays it out, so the two tools' hex areas diff clean:
 ///
@@ -18,9 +18,10 @@ namespace BlinkyJed;
 ///   *             closing field, immediately followed by ETX
 ///
 /// One rule -- "tile the linear fuse map into 32-fuse chunks, skip all-zero
-/// chunks" -- reproduces WinCUPL's logic AND architecture records for both the
-/// 16V8 and 20V8, because the region bases (XOR/SIG/AC1/PT/SYN/AC0) already fall
-/// on the same fuse numbers.
+/// chunks" -- reproduces WinCUPL's logic AND architecture records for every
+/// supported family, because each family's region bases (XOR/SIG/AC1/PT/SYN/
+/// AC0 on the V8s; S bits and UES on the 22V10) already fall on the same fuse
+/// numbers in the flattened map.
 ///
 /// The free-text header before the first '*' stays BlinkyJED's own (it is not a
 /// '*' line). The transmission checksum after ETX therefore differs from WinCUPL,
@@ -35,7 +36,7 @@ internal static class JedecWriter
     private const string Nl = "\r\n";
     private const int Chunk = 32;   // fuses per *L record, 32-aligned (WinCUPL convention)
 
-    public static string Write(FuseMap map, TargetDevice device, PldDocument doc)
+    public static string Write(FuseMapBase map, TargetDevice device, PldDocument doc)
     {
         var sb = new StringBuilder();
 

@@ -27,13 +27,17 @@ internal sealed class PinDeclaration
 /// One output equation: a sum (OR) of product terms (AND of literals).
 /// Registered vs combinational and output polarity drive OLMC config fuses.
 /// A .oe equation carries the target's output-enable product term instead of
-/// its logic; the compiler pairs it with the target's output equation.
+/// its logic; the compiler pairs it with the target's output equation. The
+/// .ar/.sp equations (22V10 only) carry the global async-reset / sync-preset
+/// product term; the parser records them, the compilers enforce the rules.
 /// </summary>
 internal sealed class Equation
 {
     public string Target = "";              // output signal name
     public bool Registered;                 // .d suffix (registered) vs combinational
     public bool OutputEnable;               // .oe suffix (per-macrocell output enable)
+    public bool AsyncReset;                 // .ar suffix (22V10 global async reset)
+    public bool SyncPreset;                 // .sp suffix (22V10 global sync preset)
     public bool ActiveLow;                  // complemented output (leading !)
     public List<ProductTerm> Terms = new(); // OR of these
 }
@@ -57,14 +61,16 @@ internal sealed class ProductTerm
 ///     mapper downstream only ever sees an OR of AND-of-literals. Flat SOP
 ///     inputs compile bit-for-bit as before.
 ///   - output extensions: '.d' marks a registered output, '.oe' gives an
-///     output its per-macrocell output-enable term. Which GAL mode these
-///     select, and their constraints, are the compiler's business; the parser
-///     just records them. Any other extension is rejected.
+///     output its per-macrocell output-enable term, '.ar' and '.sp' carry the
+///     22V10's global async-reset / sync-preset terms. Which GAL mode or
+///     device these select, and their constraints, are the compiler's
+///     business; the parser just records them. Any other extension is
+///     rejected.
 ///   - comments: '//' to end of line, and '/* ... */' NON-NESTING (CUPL rule:
 ///     the first '*/' closes the block).
 ///
 /// Not yet handled (deferred, each will register an error if encountered):
-///   - output extensions other than .d / .oe;
+///   - output extensions other than .d / .oe / .ar / .sp;
 ///   - set/range/index notation, function calls;
 ///   - '$' PREPROCESSOR directives ($DEFINE / $REPEAT / $MACRO ...). Note this
 ///     is distinct from the '$' XOR operator, which IS supported above.
@@ -155,10 +161,13 @@ internal static class PldParser
         string lhs = st.Substring(0, eq).Trim();
         string rhs = st.Substring(eq + 1).Trim();
 
-        // Optional output extension: '.d' (registered output) or '.oe'
-        // (per-macrocell output enable). Anything else is still rejected.
+        // Optional output extension: '.d' (registered output), '.oe'
+        // (per-macrocell output enable), '.ar' / '.sp' (22V10 global reset /
+        // preset). Anything else is still rejected.
         bool registered = false;
         bool outputEnable = false;
+        bool asyncReset = false;
+        bool syncPreset = false;
         int dot = lhs.IndexOf('.');
         if (dot >= 0)
         {
@@ -168,9 +177,13 @@ internal static class PldParser
                 registered = true;
             else if (suffix.Equals("oe", StringComparison.OrdinalIgnoreCase))
                 outputEnable = true;
+            else if (suffix.Equals("ar", StringComparison.OrdinalIgnoreCase))
+                asyncReset = true;
+            else if (suffix.Equals("sp", StringComparison.OrdinalIgnoreCase))
+                syncPreset = true;
             else
             {
-                errors.Add($"Output extension '.{suffix}' not supported (only .d and .oe): \"{Shorten(st)}\".");
+                errors.Add($"Output extension '.{suffix}' not supported (only .d, .oe, .ar and .sp): \"{Shorten(st)}\".");
                 return;
             }
         }
@@ -182,9 +195,9 @@ internal static class PldParser
             errors.Add($"Bad equation target: \"{Shorten(lhs)}\".");
             return;
         }
-        if (outputEnable && activeLow)
+        if (activeLow && (outputEnable || asyncReset || syncPreset))
         {
-            errors.Add($"Output '{target}': '!' is not valid on a .oe equation.");
+            errors.Add($"Output '{target}': '!' is not valid on a .oe/.ar/.sp equation.");
             return;
         }
 
@@ -216,6 +229,8 @@ internal static class PldParser
             ActiveLow = activeLow,
             Registered = registered,
             OutputEnable = outputEnable,
+            AsyncReset = asyncReset,
+            SyncPreset = syncPreset,
         };
         foreach (var termLits in sop)
         {
