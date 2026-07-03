@@ -410,6 +410,7 @@ public sealed class ChipFactory : IChipFactory
         {
             "47" => TryCreateLs47(pinToNet),
             "74" => TryCreateHc74(device, pinToNet),
+            "139" => TryCreateHc139(device, pinToNet),
             "153" => TryCreateHc153(device, pinToNet),
             "157" => TryCreateHc157(device, pinToNet),
             "257" => TryCreateHc257(device, pinToNet),
@@ -627,6 +628,25 @@ public sealed class ChipFactory : IChipFactory
             delayPs: TtlTiming.ResolvePs(device));
     }
 
+    private IChip? TryCreateHc139(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        // Required pins from ChipPartDefinition.Ic74139 (pin 16 VCC and pin 8
+        // GND excluded). All 14 signal pins must be present.
+        int[] needed = { 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15 };
+        foreach (int p in needed)
+            if (!pinToNet.TryGetValue(p, out Net? n) || n is null) return null;
+
+        Net Get(int pin) => pinToNet[pin];
+
+        return new Hc139(
+            aeN: Get(1), aa0: Get(2), aa1: Get(3),
+            ay0N: Get(4), ay1N: Get(5), ay2N: Get(6), ay3N: Get(7),
+            by3N: Get(9), by2N: Get(10), by1N: Get(11), by0N: Get(12),
+            ba1: Get(13), ba0: Get(14), beN: Get(15),
+            label: "139", logger: logger,
+            delayPs: TtlTiming.ResolvePs(device));
+    }
+
     private IChip? TryCreateHc161(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
     {
         // Same pinout as the '163. Required pins are the INPUTS only:
@@ -829,7 +849,7 @@ public sealed class ChipFactory : IChipFactory
     public bool IsSimulated(BuildDevice device) => device.PartIdentifier switch
     {
         // Box-chip ICs (per-unit dispatch in CreateForUnit).
-        "47" or "74" or "153" or "157" or "161" or "163" or "173" or "181" or "191"
+        "47" or "74" or "139" or "153" or "157" or "161" or "163" or "173" or "181" or "191"
             or "244" or "245" or "257" or "273" or "283" or "541" or "688" or "7seg-ca"
             => true,
         // Reset supervisor (per-unit dispatch in CreateForUnit).

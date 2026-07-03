@@ -81,6 +81,7 @@ public static class TtlTiming
 
         // ---- combinational MSI (tPD max) --------------------------------
         ["LS:283"] = new(25_000),  ["HC:283"] = new(40_000),  // 4-bit adder (carry path)
+        ["LS:139"] = new(38_000),  ["HC:139"] = new(33_000),  // dual 2:4 decoder
         ["LS:153"] = new(22_000),  ["HC:153"] = new(34_000),  // dual 4:1 mux
         ["LS:157"] = new(18_000),  ["HC:157"] = new(30_000),  // quad 2:1 mux
         ["LS:181"] = new(30_000),  ["HC:181"] = new(45_000),  // ALU (single '181, worst path)
