@@ -102,6 +102,7 @@ public sealed class MainForm : Form
         var saveAsItem = new ToolStripMenuItem("Save &As...", null, OnSaveAs)
         { ShortcutKeys = Keys.Control | Keys.Shift | Keys.S };
         var exportEasyEDAItem = new ToolStripMenuItem("&Export EasyEDA...", null, OnExportEasyEDA);
+        var exportLabelsItem = new ToolStripMenuItem("Export Chip &Labels...", null, OnExportChipLabels);
         importHexItem = new ToolStripMenuItem("&Import HEX into EEPROM...", null, OnImportHex);
         exportHexItem = new ToolStripMenuItem("E&xport EEPROM HEX...", null, OnExportHex);
         importJedecItem = new ToolStripMenuItem("Import &JEDEC into GAL...", null, OnImportJedec);
@@ -112,6 +113,7 @@ public sealed class MainForm : Form
         fileMenu.DropDownItems.Add(saveAsItem);
         fileMenu.DropDownItems.Add(new ToolStripSeparator());
         fileMenu.DropDownItems.Add(exportEasyEDAItem);
+        fileMenu.DropDownItems.Add(exportLabelsItem);
         fileMenu.DropDownItems.Add(importHexItem);
         fileMenu.DropDownItems.Add(exportHexItem);
         fileMenu.DropDownItems.Add(importJedecItem);
@@ -678,6 +680,38 @@ public sealed class MainForm : Form
         }
     }
 
+    private void OnExportChipLabels(object? sender, EventArgs e)
+    {
+        using var dlg = new SaveFileDialog
+        {
+            Filter = "PDF label sheet (*.pdf)|*.pdf",
+            DefaultExt = "pdf",
+            FileName = (currentFilePath != null
+                ? Path.GetFileNameWithoutExtension(currentFilePath)
+                : "Untitled") + "-labels.pdf",
+            InitialDirectory = !string.IsNullOrEmpty(RecentFolders.LabelFolder)
+                ? RecentFolders.LabelFolder
+                : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+        };
+        if (dlg.ShowDialog(this) != DialogResult.OK) return;
+        RecentFolders.RememberLabelFromFile(dlg.FileName);
+
+        try
+        {
+            int count = Export.ChipLabelSheetExporter.Export(canvas.Schematic, dlg.FileName);
+            if (count == 0)
+                MessageBox.Show(this,
+                    "The schematic has no labelable chips (DIP-packaged ICs), " +
+                    "so no label sheet was written.",
+                    "Export Chip Labels", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Could not export the label sheet:\n{ex.Message}",
+                "Export Chip Labels", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
     // ---- Intel HEX program import/export (EEPROM parts) -------------------
 
     private static bool IsEepromPart(string partNumber) =>
@@ -1122,6 +1156,7 @@ internal static class RecentFolders
     public static string? ProjectFolder { get; set; }
     public static string? ExportFolder { get; set; }
     public static string? HexFolder { get; set; }   // shared by HEX import + export
+    public static string? LabelFolder { get; set; } // chip label sheet export
     public static int? WindowX { get; set; }
     public static int? WindowY { get; set; }
     public static int? WindowW { get; set; }
@@ -1142,6 +1177,7 @@ internal static class RecentFolders
                 if (key == "project" && Directory.Exists(val)) ProjectFolder = val;
                 else if (key == "export" && Directory.Exists(val)) ExportFolder = val;
                 else if (key == "hex" && Directory.Exists(val)) HexFolder = val;
+                else if (key == "labels" && Directory.Exists(val)) LabelFolder = val;
                 else if (key == "x" && int.TryParse(val, out var x)) WindowX = x;
                 else if (key == "y" && int.TryParse(val, out var y)) WindowY = y;
                 else if (key == "w" && int.TryParse(val, out var w)) WindowW = w;
@@ -1163,6 +1199,7 @@ internal static class RecentFolders
                 $"project={ProjectFolder ?? ""}",
                 $"export={ExportFolder ?? ""}",
                 $"hex={HexFolder ?? ""}",
+                $"labels={LabelFolder ?? ""}",
                 $"x={WindowX?.ToString() ?? ""}",
                 $"y={WindowY?.ToString() ?? ""}",
                 $"w={WindowW?.ToString() ?? ""}",
@@ -1189,5 +1226,11 @@ internal static class RecentFolders
     {
         var dir = Path.GetDirectoryName(path);
         if (!string.IsNullOrEmpty(dir)) { HexFolder = dir; Save(); }
+    }
+
+    public static void RememberLabelFromFile(string path)
+    {
+        var dir = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(dir)) { LabelFolder = dir; Save(); }
     }
 }

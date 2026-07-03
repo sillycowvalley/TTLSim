@@ -337,8 +337,9 @@ public sealed class ChipUnit : Unit
     }
 
     /// <summary>
-    /// The name to display for a pin: the JEDEC-derived role label for a
-    /// programmed GAL, otherwise the static definition name.
+    /// The name to display for a pin: the JEDEC-derived label for a
+    /// programmed GAL (header signal name where present, else the fuse
+    /// role), otherwise the static definition name.
     /// </summary>
     private string EffectiveName(Pin pin)
     {
@@ -350,7 +351,10 @@ public sealed class ChipUnit : Unit
 
     /// <summary>
     /// Pin-number -&gt; derived label for this instance's loaded fuse map, or
-    /// null when there's no GAL program to follow. Re-derived only when
+    /// null when there's no GAL program to follow. Signal names from the
+    /// JEDEC header's "Pins:" block (BlinkyJED output; see GalJedecHeader)
+    /// take precedence over the fuse-derived role labels (IN/OUT/CLK/...),
+    /// which in turn beat the static definition names. Re-derived only when
     /// Device.Program changes (import replaces the string, so a reference check
     /// catches it); a malformed or non-GAL program caches as null and falls
     /// back to the static names.
@@ -371,11 +375,16 @@ public sealed class ChipUnit : Unit
             galPinLabels = null;
 
             var derived = TTLSim.Chips.Pld.GalPinModel.TryDerive(definition.PartNumber, program);
-            if (derived is not null)
+            var headerNames = TTLSim.Chips.Pld.GalJedecHeader.TryParsePinNames(program);
+            if (derived is not null || headerNames is not null)
             {
                 var map = new System.Collections.Generic.Dictionary<int, string>();
-                foreach (var gp in derived)
-                    map[gp.Number] = gp.Label;
+                if (derived is not null)
+                    foreach (var gp in derived)
+                        map[gp.Number] = gp.Label;
+                if (headerNames is not null)
+                    foreach (var kv in headerNames)
+                        map[kv.Key] = kv.Value;
                 galPinLabels = map;
             }
         }

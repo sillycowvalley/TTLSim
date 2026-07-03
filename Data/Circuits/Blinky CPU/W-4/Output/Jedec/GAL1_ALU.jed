@@ -2,6 +2,9 @@
 Used Program:   BlinkyJED
 Name:           GAL1_ALU
 Device:         GAL16V8
+Pins:           2:OP0 3:OP1 4:OP2 5:OP3 6:L0 7:L1 8:L2 9:L3 12:TOS_M1
+Pins:           13:TOS_M0 14:C_SRC 15:ALU_M 16:ALU_S3 17:ALU_S2 18:ALU_S1
+Pins:           19:ALU_S0
 
 *QP20 
 *QF2194 
@@ -46,4 +49,4 @@ Device:         GAL16V8
 *L02144 11111111111111111111111111111111
 *L02176 111111111111111110
 *C8D41
-*3EEB
+*65F7

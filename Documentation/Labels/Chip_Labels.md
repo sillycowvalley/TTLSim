@@ -211,12 +211,46 @@ for the current schematic:
   line-for-line mirror run against a mock BOM: 24 labels, zero overlaps,
   all inside margins, verified render.
 
-## 7. Remaining open items
+## 7. GAL naming (implemented)
 
-1. **GAL labels from the fuse map** — `ChipUnit` already derives per-instance
-   GAL pin labels from the loaded JEDEC program; the exporter currently
-   prints the generic package roles (CLK, I2, IO15…). Feeding the programmed
-   names into the label would make each GAL's sticker match its function.
-2. Synthesize further glyphs (`J`, lowercase `g w z q`, …) only when a chip
+Standard JEDEC has no pin-name field, so BlinkyJED and TTLSim share a header
+convention. `JedecWriter` emits the `.pld` PIN declarations into the JEDEC
+design-specification header (free text between STX and the first `*` field):
+
+```
+Used Program:   BlinkyJED
+Name:           GAL1_ALU
+Device:         GAL16V8
+Pins:           2:OP0 3:OP1 4:OP2 5:OP3 6:L0 7:L1 8:L2 9:L3
+Pins:           12:TOS_M0 13:TOS_M1 14:C_SRC 15:ALU_M 16:ALU_S3 ...
+```
+
+Contract: tokens are `number:name`, sorted by pin number; CUPL's leading `!`
+marks active-low; wrapped lines each repeat the `Pins:` label so every line
+parses independently. The block is free header text — it changes only the
+transmission checksum (recomputed), never the fuse area or the `*C` fuse
+checksum, so the `*` field area still diffs byte-identical against WinCUPL
+and burned chips need no re-burn; recompiling the `.pld` files is enough.
+
+`GalJedecHeader` (TTLSim, alongside `GalPinModel`) parses the block from
+`Device.Program`: `TryParsePinNames` (converting `!` to TTLSim's leading
+`/`) and `TryParseDesignName`. Consumers layer names as: **header signal
+names > fuse-derived role labels (`IN`/`OUT`/`CLK`/`/OE`/`NC`) > static
+definition names**. `ChipUnit.GalLabels()` applies this for the schematic
+symbol; the label exporter applies the same for stickers. Old `.jed` files
+without the block (WinCUPL, earlier BlinkyJED) degrade gracefully to roles.
+
+In the exporter, GALs additionally group by part number **plus fuse map**
+(differently-programmed GAL16V8s never share a label), display the design
+name in gray instead of the generic part number, and carry their schematic
+designators in the group caption (`GAL1_ALU (U3)`).
+
+Round-trip validated against a real BlinkyJED `.jed`: fuse area
+byte-identical after insertion, all names recovered, active-low conversion
+correct, no-block files return null.
+
+## 8. Remaining open items
+
+1. Synthesize further glyphs (`J`, lowercase `g w z q`, …) only when a chip
    definition actually needs them.
-3. Caliper-verify the skinny DIP-24 29.0 mm row against GAL20V8 stock.
+2. Caliper-verify the skinny DIP-24 29.0 mm row against GAL20V8 stock.

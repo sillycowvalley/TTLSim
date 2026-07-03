@@ -80,18 +80,25 @@ public static class ChipLabelSheetExporter
     {
         LabelVectorFont font = LabelVectorFont.LoadEmbedded();
 
-        // ---- BOM: group labelable devices by displayed part number -------
+        // ---- BOM: group labelable devices ---------------------------------
         // Labelable = box chips (ChipPartDefinition) in a DIP package.
         // TO-92 parts (DS1813) have no flat top to stick a label on.
         // Passives, headers, and standalone items are not chips.
+        //
+        // GALs group by part number AND fuse map: a GAL is whatever its
+        // program makes it, so two differently-programmed GAL16V8s must not
+        // share a label. A programmed GAL displays its design name from the
+        // JEDEC header ("GAL1_ALU") and its header/fuse-derived pin names;
+        // its caption carries the designators so the sticker is traceable to
+        // the schematic.
         var groups = schematic.Devices
             .Where(d => d.Definition is ChipPartDefinition { To92: false })
-            .GroupBy(d => d.FullPartNumber)
-            .Select(g => new LabelGroup(
-                g.Key,
-                (ChipPartDefinition)g.First().Definition,
-                g.Count()))
-            .OrderBy(g => g.PartName, StringComparer.OrdinalIgnoreCase)
+            .GroupBy(d => d.Definition is ChipPartDefinition cp
+                          && Device.Identifiers.Gal.Contains(cp.PartNumber)
+                ? d.FullPartNumber + "\n" + (d.Program ?? "")
+                : d.FullPartNumber)
+            .Select(g => BuildGroup(g.ToList()))
+            .OrderBy(g => g.DisplayName, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
         if (groups.Count == 0) return 0;
@@ -105,8 +112,10 @@ public static class ChipLabelSheetExporter
             (double width, double height) = LabelSize(group.Definition);
             double slotHeight = CaptionSize + CaptionGap + height;
             string caption = group.Count == 1
-                ? group.PartName
-                : string.Format(CultureInfo.InvariantCulture, "{0} x {1}", group.Count, group.PartName);
+                ? group.DisplayName
+                : string.Format(CultureInfo.InvariantCulture, "{0} x {1}", group.Count, group.DisplayName);
+            if (group.DesignatorNote is not null)
+                caption += " (" + group.DesignatorNote + ")";
 
             for (int i = 0; i < group.Count; i++)
             {
@@ -120,7 +129,7 @@ public static class ChipLabelSheetExporter
                     font.AppendTextOps(layout.Ops, caption, x, slotTop - CaptionSize, CaptionSize);
                 }
 
-                DrawLabel(layout.Ops, font, group.Definition, group.PartName,
+                DrawLabel(layout.Ops, font, group,
                     x, slotTop - CaptionSize - CaptionGap);
                 labelCount++;
             }
@@ -133,7 +142,58 @@ public static class ChipLabelSheetExporter
         return labelCount;
     }
 
-    private sealed record LabelGroup(string PartName, ChipPartDefinition Definition, int Count);
+    private sealed record LabelGroup(
+        string DisplayName,
+        ChipPartDefinition Definition,
+        int Count,
+        Dictionary<int, string>? PinNameOverrides,
+        string? DesignatorNote);
+
+    /// <summary>
+    /// Build one label group from the devices sharing a group key. For a
+    /// programmed GAL: the display name is the design name from the JEDEC
+    /// header (falling back to the part number), the pin names are the
+    /// header signal names overlaid on the fuse-derived role labels
+    /// (matching ChipUnit's symbol labelling), and the caption gains the
+    /// device designators.
+    /// </summary>
+    private static LabelGroup BuildGroup(List<Device> devices)
+    {
+        Device first = devices[0];
+        var chip = (ChipPartDefinition)first.Definition;
+        string displayName = first.FullPartNumber;
+        Dictionary<int, string>? overrides = null;
+        string? designatorNote = null;
+
+        bool isGal = Device.Identifiers.Gal.Contains(chip.PartNumber);
+        if (isGal && !string.IsNullOrWhiteSpace(first.Program))
+        {
+            string program = first.Program!;
+            displayName = TTLSim.Chips.Pld.GalJedecHeader.TryParseDesignName(program)
+                          ?? displayName;
+
+            var derived = TTLSim.Chips.Pld.GalPinModel.TryDerive(chip.PartNumber, program);
+            var headerNames = TTLSim.Chips.Pld.GalJedecHeader.TryParsePinNames(program);
+            if (derived is not null || headerNames is not null)
+            {
+                overrides = new Dictionary<int, string>();
+                if (derived is not null)
+                    foreach (var gp in derived)
+                        overrides[gp.Number] = gp.Label;
+                if (headerNames is not null)
+                    foreach (var kv in headerNames)
+                        overrides[kv.Key] = kv.Value;
+            }
+
+            designatorNote = string.Join(" ", devices
+                .Select(d => d.Designator)
+                .Where(d => !string.IsNullOrEmpty(d))
+                .OrderBy(d => d, StringComparer.OrdinalIgnoreCase));
+            if (designatorNote.Length == 0) designatorNote = null;
+        }
+
+        return new LabelGroup(displayName, chip, devices.Count, overrides, designatorNote);
+    }
 
     // ------------------------------------------------------------------ shelf layout
 
@@ -224,8 +284,10 @@ public static class ChipLabelSheetExporter
     private static bool IsWidePackage(ChipPartDefinition chip) => chip.BodyWidth >= 12;
 
     private static void DrawLabel(StringBuilder ops, LabelVectorFont font,
-        ChipPartDefinition chip, string partName, double x, double yTop)
+        LabelGroup group, double x, double yTop)
     {
+        ChipPartDefinition chip = group.Definition;
+        string partName = group.DisplayName;
         int rows = (chip.PinCount + 1) / 2;
         (double width, double height) = LabelSize(chip);
         double yBottom = yTop - height;
@@ -256,7 +318,12 @@ public static class ChipLabelSheetExporter
         // column pin N opposite pin 1 (DIP mirror). Rows on exact 0.1 in
         // pitch centred in the body; names verbatim from the definition;
         // NC prints blank; leading '/' kept literally.
+        // Pin names: the group's overrides (GAL header signal names over
+        // fuse-derived roles) where present, else the static definition.
         var namesByNumber = chip.Pins.ToDictionary(p => p.Number, p => p.Name);
+        if (group.PinNameOverrides is not null)
+            foreach (var kv in group.PinNameOverrides)
+                namesByNumber[kv.Key] = kv.Value;
         double pinSpan = (rows - 1) * RowPitch;
         double firstRowCentreY = yTop - (height - pinSpan) / 2;
 

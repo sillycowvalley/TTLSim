@@ -45,7 +45,19 @@ internal static class JedecWriter
         sb.Append("Used Program:   BlinkyJED").Append(Nl);
         if (doc.Title.Length > 0)
             sb.Append("Name:           ").Append(doc.Title).Append(Nl);
-        sb.Append("Device:         ").Append(device.Name).Append(Nl).Append(Nl);
+        sb.Append("Device:         ").Append(device.Name).Append(Nl);
+
+        // PIN declarations from the .pld source, so downstream tools (TTLSim's
+        // GAL symbol and chip-label export) can recover signal names --
+        // standard JEDEC has no pin-name field. This is free header text: it
+        // affects only the transmission checksum (recomputed below), never the
+        // fuse area or the *C fuse checksum, so the '*' field area still diffs
+        // byte-identical against WinCUPL. Active-low pins keep CUPL's leading
+        // '!' (TTLSim converts to its '/' convention on read). Wrapped lines
+        // each repeat the "Pins:" label so readers can parse line-by-line.
+        AppendPinLines(sb, doc);
+
+        sb.Append(Nl);
 
         // Global fields, in WinCUPL order: QP, QF, G, F (each with a trailing space).
         sb.Append("*QP").Append(device.PinCount).Append(' ').Append(Nl);
@@ -76,6 +88,39 @@ internal static class JedecWriter
         sb.Append('\n');               // single trailing LF, as WinCUPL writes
 
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Emit the PIN declarations as "Pins:" header lines, sorted by pin
+    /// number, each token "number:name" (leading '!' preserved for
+    /// active-low). Long pin sets wrap onto further lines that repeat the
+    /// "Pins:" label, keeping every line independently parseable. Emits
+    /// nothing when the source declared no pins.
+    /// </summary>
+    private static void AppendPinLines(StringBuilder sb, PldDocument doc)
+    {
+        if (doc.Pins.Count == 0) return;
+
+        var pins = new System.Collections.Generic.List<PinDeclaration>(doc.Pins);
+        pins.Sort((a, b) => a.Number.CompareTo(b.Number));
+
+        const string label = "Pins:           ";   // value column aligned with the lines above
+        const int wrapColumn = 76;
+
+        var line = new StringBuilder(label);
+        foreach (PinDeclaration pin in pins)
+        {
+            string token = pin.Number.ToString(CultureInfo.InvariantCulture)
+                + ":" + (pin.ActiveLow ? "!" : "") + pin.Name;
+            if (line.Length > label.Length && line.Length + 1 + token.Length > wrapColumn)
+            {
+                sb.Append(line).Append(Nl);
+                line = new StringBuilder(label);
+            }
+            if (line.Length > label.Length) line.Append(' ');
+            line.Append(token);
+        }
+        if (line.Length > label.Length) sb.Append(line).Append(Nl);
     }
 
     private static void AppendChunk(StringBuilder sb, int addr, byte[] bits, int count)
