@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net8.0-windows</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <IsPackable>false</IsPackable>
@@ -18,10 +18,17 @@
   <ItemGroup>
     <ProjectReference Include="..\TTLSim.Chips\TTLSim.Chips.csproj" />
     <ProjectReference Include="..\TTLSim.Core\TTLSim.Core.csproj" />
+    <ProjectReference Include="..\TTLSim.UI\TTLSim.UI.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Benchmarks\Blinky_PC_-_4_Bit_-_CALL.ttlproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
