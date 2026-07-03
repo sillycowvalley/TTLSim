@@ -18,9 +18,9 @@ public sealed partial class WireRouter
     /// </summary>
     private static void RouteGroup(
         List<Connection> group, Rectangle bounds,
-        SearchScratch scratch, bool[,] bodyBlocked,
-        int[,] foreignWirePenalty, int[,] ownNetPenalty,
-        byte[,] foreignWireDir,
+        SearchScratch scratch, bool[] bodyBlocked,
+        int[] foreignWirePenalty, int[] ownNetPenalty,
+        byte[] foreignWireDir,
         Dictionary<Connection, IReadOnlyList<Point>> polylines,
         HashSet<Point> junctionsSet,
         HashSet<Point>? hardBlockBendCells)
@@ -113,9 +113,9 @@ public sealed partial class WireRouter
 
     private static void RouteStar(
         List<Connection> group, Pin commonPin,
-        Rectangle bounds, SearchScratch scratch, bool[,] bodyBlocked,
-        int[,] foreignWirePenalty, int[,] ownNetPenalty,
-        byte[,] foreignWireDir,
+        Rectangle bounds, SearchScratch scratch, bool[] bodyBlocked,
+        int[] foreignWirePenalty, int[] ownNetPenalty,
+        byte[] foreignWireDir,
         Dictionary<Connection, IReadOnlyList<Point>> polylines,
         HashSet<Point> junctionsSet,
         HashSet<Point>? hardBlockBendCells)
@@ -200,9 +200,9 @@ public sealed partial class WireRouter
 
     private static IReadOnlyList<Point> RouteOne(
         Connection connection, Rectangle bounds,
-        SearchScratch scratch, bool[,] bodyBlocked,
-        int[,] foreignWirePenalty, int[,] ownNetPenalty,
-        byte[,] foreignWireDir,
+        SearchScratch scratch, bool[] bodyBlocked,
+        int[] foreignWirePenalty, int[] ownNetPenalty,
+        byte[] foreignWireDir,
         HashSet<Point>? hardBlockBendCells)
         => RouteTwoPin(connection.A, connection.B, bounds, scratch, bodyBlocked,
             foreignWirePenalty, ownNetPenalty, foreignWireDir,
@@ -210,12 +210,12 @@ public sealed partial class WireRouter
 
     private static IReadOnlyList<Point> RouteTwoPin(
         Pin pinA, Pin pinB, Rectangle bounds,
-        SearchScratch scratch, bool[,] bodyBlocked,
-        int[,] foreignWirePenalty, int[,] ownNetPenalty,
-        byte[,] foreignWireDir,
+        SearchScratch scratch, bool[] bodyBlocked,
+        int[] foreignWirePenalty, int[] ownNetPenalty,
+        byte[] foreignWireDir,
         HashSet<Point>? hardBlockBendCells)
     {
-        var blocked = (bool[,])bodyBlocked.Clone();
+        var blocked = (bool[])bodyBlocked.Clone();
         CarveCorridor(blocked, bounds, pinA);
         CarveCorridor(blocked, bounds, pinB);
 
@@ -233,12 +233,12 @@ public sealed partial class WireRouter
 
     private static IReadOnlyList<Point>? RouteToNet(
         Pin leaf, HashSet<Point> netCells,
-        Rectangle bounds, SearchScratch scratch, bool[,] bodyBlocked,
-        int[,] foreignWirePenalty, int[,] ownNetPenalty,
-        byte[,] foreignWireDir,
+        Rectangle bounds, SearchScratch scratch, bool[] bodyBlocked,
+        int[] foreignWirePenalty, int[] ownNetPenalty,
+        byte[] foreignWireDir,
         HashSet<Point>? hardBlockBendCells)
     {
-        var blocked = (bool[,])bodyBlocked.Clone();
+        var blocked = (bool[])bodyBlocked.Clone();
         CarveCorridor(blocked, bounds, leaf);
 
         foreach (var cell in netCells)

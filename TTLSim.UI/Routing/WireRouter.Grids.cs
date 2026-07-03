@@ -9,8 +9,13 @@ namespace TTLSim.UI.Routing;
 
 public sealed partial class WireRouter
 {
+    // All routing grids are flat 1D arrays indexed (iy * bounds.Width) + ix
+    // -- the same convention SearchScratch documents for the search state.
+    // Flattened from [,] because multidimensional element access dominated
+    // the search's self time once the queue and reset costs were removed.
+
     private static void StampPolyline(
-        int[,] grid, Rectangle bounds,
+        int[] grid, Rectangle bounds,
         IReadOnlyList<Point> poly, int penalty)
     {
         for (int i = 0; i < poly.Count - 1; i++)
@@ -35,7 +40,7 @@ public sealed partial class WireRouter
     }
 
     private static void MarkPolylineDirections(
-        byte[,] grid, Rectangle bounds, IReadOnlyList<Point> poly)
+        byte[] grid, Rectangle bounds, IReadOnlyList<Point> poly)
     {
         for (int i = 0; i < poly.Count - 1; i++)
         {
@@ -59,43 +64,43 @@ public sealed partial class WireRouter
     }
 
     private static void MarkPolylineVertices(
-        byte[,] grid, Rectangle bounds, IReadOnlyList<Point> poly)
+        byte[] grid, Rectangle bounds, IReadOnlyList<Point> poly)
     {
         foreach (var v in poly)
             SetBit(grid, bounds, v, ForeignVertex);
     }
 
-    private static void FoldAndClear(int[,] ownGrid, int[,] foreignGrid, Rectangle bounds)
+    private static void FoldAndClear(int[] ownGrid, int[] foreignGrid, Rectangle bounds)
     {
-        for (int ix = 0; ix < bounds.Width; ix++)
-            for (int iy = 0; iy < bounds.Height; iy++)
+        for (int i = 0; i < ownGrid.Length; i++)
+        {
+            int v = ownGrid[i];
+            if (v != 0)
             {
-                if (ownGrid[ix, iy] != 0)
-                {
-                    foreignGrid[ix, iy] += ownGrid[ix, iy];
-                    ownGrid[ix, iy] = 0;
-                }
+                foreignGrid[i] += v;
+                ownGrid[i] = 0;
             }
+        }
     }
 
-    private static void StampRect(bool[,] grid, Rectangle bounds, Rectangle rect, bool value)
+    private static void StampRect(bool[] grid, Rectangle bounds, Rectangle rect, bool value)
     {
         for (int gx = rect.Left; gx < rect.Right; gx++)
             for (int gy = rect.Top; gy < rect.Bottom; gy++)
                 if (TryIndex(bounds, gx, gy, out int ix, out int iy))
-                    grid[ix, iy] = value;
+                    grid[(iy * bounds.Width) + ix] = value;
     }
 
-    private static void AddAt(int[,] grid, Rectangle bounds, int gx, int gy, int value)
+    private static void AddAt(int[] grid, Rectangle bounds, int gx, int gy, int value)
     {
         if (TryIndex(bounds, gx, gy, out int ix, out int iy))
-            grid[ix, iy] += value;
+            grid[(iy * bounds.Width) + ix] += value;
     }
 
-    private static void SetBit(byte[,] grid, Rectangle bounds, Point cell, byte bit)
+    private static void SetBit(byte[] grid, Rectangle bounds, Point cell, byte bit)
     {
         if (TryIndex(bounds, cell.X, cell.Y, out int ix, out int iy))
-            grid[ix, iy] |= bit;
+            grid[(iy * bounds.Width) + ix] |= bit;
     }
 
     private static Rectangle ComputeGridBounds(Schematic schematic)

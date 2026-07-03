@@ -104,13 +104,17 @@ public sealed partial class WireRouter : IConnectionRouter
 
         var scratch = new SearchScratch(bounds);
 
-        var bodyBlocked = new bool[bounds.Width, bounds.Height];
+        // Routing grids are flat 1D arrays indexed (iy * Width) + ix; see
+        // WireRouter.Grids.cs for the convention.
+        int cellCount = bounds.Width * bounds.Height;
+
+        var bodyBlocked = new bool[cellCount];
         foreach (var item in schematic.ActiveItems)
             StampRect(bodyBlocked, bounds, item.RoutingBounds, true);
 
-        var foreignWirePenalty = new int[bounds.Width, bounds.Height];
-        var ownNetPenalty = new int[bounds.Width, bounds.Height];
-        var foreignWireDir = new byte[bounds.Width, bounds.Height];
+        var foreignWirePenalty = new int[cellCount];
+        var ownNetPenalty = new int[cellCount];
+        var foreignWireDir = new byte[cellCount];
 
         // Pre-seed pin cells.
         foreach (var item in schematic.ActiveItems)

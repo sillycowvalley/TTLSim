@@ -49,7 +49,7 @@ public sealed partial class WireRouter
         _ => d
     };
 
-    private static void CarveCorridor(bool[,] blocked, Rectangle bounds, Pin pin)
+    private static void CarveCorridor(bool[] blocked, Rectangle bounds, Pin pin)
     {
         var p = pin.WorldPosition;
         var (dx, dy) = DirToDelta(pin.Direction);
@@ -65,10 +65,10 @@ public sealed partial class WireRouter
         Clear(blocked, bounds, cell);
     }
 
-    private static void Clear(bool[,] blocked, Rectangle bounds, Point cell)
+    private static void Clear(bool[] blocked, Rectangle bounds, Point cell)
     {
         if (TryIndex(bounds, cell.X, cell.Y, out int ix, out int iy))
-            blocked[ix, iy] = false;
+            blocked[(iy * bounds.Width) + ix] = false;
     }
 
     // A* search to a single pin. The heuristic is Manhattan distance to the
@@ -87,9 +87,9 @@ public sealed partial class WireRouter
     // stale iff its f exceeds the current best g plus h for its state --
     // i.e. the state was improved after this entry was pushed.
     private static List<Point>? Search(
-        Rectangle bounds, SearchScratch scratch, bool[,] blocked,
-        int[,] foreignWirePenalty, int[,] ownNetPenalty,
-        byte[,] foreignWireDir,
+        Rectangle bounds, SearchScratch scratch, bool[] blocked,
+        int[] foreignWirePenalty, int[] ownNetPenalty,
+        byte[] foreignWireDir,
         Point start, Point end,
         PinDirection startDir, PinDirection endDir,
         HashSet<Point>? hardBlockBendCells)
@@ -135,13 +135,14 @@ public sealed partial class WireRouter
                 break;
             }
 
-            byte hereMask = foreignWireDir[cx, cy];
+            byte hereMask = foreignWireDir[cellIdx];
             for (int d = 0; d < 4; d++)
             {
                 int nx = worldX + s_dx[d];
                 int ny = worldY + s_dy[d];
                 if (!TryIndex(bounds, nx, ny, out int ix, out int iy)) continue;
-                if (blocked[ix, iy]) continue;
+                int nCell = (iy * width) + ix;
+                if (blocked[nCell]) continue;
 
                 bool bending = d != dirInt;
 
@@ -162,21 +163,21 @@ public sealed partial class WireRouter
                         bendCost += ForeignBendOnWirePenalty;
                 }
 
-                byte enteredMask = foreignWireDir[ix, iy];
+                byte enteredMask = foreignWireDir[nCell];
                 int parallelCost = MovingParallelToForeignMask(enteredMask, d)
                     ? ForeignParallelPenalty : 0;
                 int vertexTransitCost = (enteredMask & ForeignVertex) != 0
                     ? ForeignVertexTransitPenalty : 0;
 
                 int stepCost = StepCost
-                             + foreignWirePenalty[ix, iy]
-                             + ownNetPenalty[ix, iy]
+                             + foreignWirePenalty[nCell]
+                             + ownNetPenalty[nCell]
                              + parallelCost
                              + vertexTransitCost
                              + bendCost;
                 int ng = g + stepCost;
 
-                int nextIdx = ((iy * width) + ix) * 4 + d;
+                int nextIdx = nCell * 4 + d;
                 int existingPlus1 = scratch.GetBestGPlus1(nextIdx);
                 if (existingPlus1 != 0 && ng + 1 >= existingPlus1) continue;
 
@@ -197,9 +198,9 @@ public sealed partial class WireRouter
     // heuristic when the net sprawls, but still never worse than the old
     // Dijkstra behaviour (h = 0 degenerates to exactly that).
     private static List<Point>? SearchToAnyCell(
-        Rectangle bounds, SearchScratch scratch, bool[,] blocked,
-        int[,] foreignWirePenalty, int[,] ownNetPenalty,
-        byte[,] foreignWireDir,
+        Rectangle bounds, SearchScratch scratch, bool[] blocked,
+        int[] foreignWirePenalty, int[] ownNetPenalty,
+        byte[] foreignWireDir,
         Point start, PinDirection startDir, HashSet<Point> targetCells,
         HashSet<Point>? hardBlockBendCells)
     {
@@ -259,13 +260,14 @@ public sealed partial class WireRouter
                 break;
             }
 
-            byte hereMask = foreignWireDir[cx, cy];
+            byte hereMask = foreignWireDir[cellIdx];
             for (int d = 0; d < 4; d++)
             {
                 int nx = worldX + s_dx[d];
                 int ny = worldY + s_dy[d];
                 if (!TryIndex(bounds, nx, ny, out int ix, out int iy)) continue;
-                if (blocked[ix, iy]) continue;
+                int nCell = (iy * width) + ix;
+                if (blocked[nCell]) continue;
 
                 bool bending = d != dirInt;
 
@@ -283,21 +285,21 @@ public sealed partial class WireRouter
                         bendCost += ForeignBendOnWirePenalty;
                 }
 
-                byte enteredMask = foreignWireDir[ix, iy];
+                byte enteredMask = foreignWireDir[nCell];
                 int parallelCost = MovingParallelToForeignMask(enteredMask, d)
                     ? ForeignParallelPenalty : 0;
                 int vertexTransitCost = (enteredMask & ForeignVertex) != 0
                     ? ForeignVertexTransitPenalty : 0;
 
                 int stepCost = StepCost
-                             + foreignWirePenalty[ix, iy]
-                             + ownNetPenalty[ix, iy]
+                             + foreignWirePenalty[nCell]
+                             + ownNetPenalty[nCell]
                              + parallelCost
                              + vertexTransitCost
                              + bendCost;
                 int ng = g + stepCost;
 
-                int nextIdx = ((iy * width) + ix) * 4 + d;
+                int nextIdx = nCell * 4 + d;
                 int existingPlus1 = scratch.GetBestGPlus1(nextIdx);
                 if (existingPlus1 != 0 && ng + 1 >= existingPlus1) continue;
 

@@ -19,7 +19,7 @@ public sealed partial class WireRouter
         Schematic schematic,
         IReadOnlyList<Connection> connections,
         Dictionary<Connection, IReadOnlyList<Point>> polylines,
-        Rectangle bounds, SearchScratch scratch, bool[,] bodyBlocked,
+        Rectangle bounds, SearchScratch scratch, bool[] bodyBlocked,
         HashSet<Point> junctionsSet)
     {
         // Net id per connection via the same union-find used at routing
@@ -100,15 +100,16 @@ public sealed partial class WireRouter
         Schematic schematic,
         Connection conn, Point blockedBend,
         Dictionary<Connection, IReadOnlyList<Point>> polylines,
-        Rectangle bounds, SearchScratch scratch, bool[,] bodyBlocked,
+        Rectangle bounds, SearchScratch scratch, bool[] bodyBlocked,
         Dictionary<Connection, int> netIdOf)
     {
         // Build cost grids reflecting every committed polyline EXCEPT
         // this one. This lets the retry place a vertex anywhere this
         // wire's old polyline used to occupy.
-        var foreignWirePenalty = new int[bounds.Width, bounds.Height];
-        var foreignWireDir = new byte[bounds.Width, bounds.Height];
-        var ownNetPenalty = new int[bounds.Width, bounds.Height];
+        int cellCount = bounds.Width * bounds.Height;
+        var foreignWirePenalty = new int[cellCount];
+        var foreignWireDir = new byte[cellCount];
+        var ownNetPenalty = new int[cellCount];
 
         // Pre-seed pin cells (same as the main pass: active items only).
         foreach (var item in schematic.ActiveItems)
@@ -136,7 +137,7 @@ public sealed partial class WireRouter
 
         var hardBlock = new HashSet<Point> { blockedBend };
 
-        var blocked = (bool[,])bodyBlocked.Clone();
+        var blocked = (bool[])bodyBlocked.Clone();
         CarveCorridor(blocked, bounds, conn.A);
         CarveCorridor(blocked, bounds, conn.B);
 
