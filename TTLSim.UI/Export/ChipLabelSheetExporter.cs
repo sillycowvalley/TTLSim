@@ -65,7 +65,7 @@ public static class ChipLabelSheetExporter
     /// <summary>Tint of the big chip name behind the pin names: a gray
     /// level from 0.0 (black) to 1.0 (white). Lower = darker / more
     /// prominent, higher = fainter. The single knob for that colour.</summary>
-    private const double PartNumberGray = 0.64;
+    private const double PartNumberGray = 0.78;
     private const double PartNumberWidthFraction = 0.62;
     private const double PartNumberLengthFraction = 0.88;
 
@@ -100,7 +100,7 @@ public static class ChipLabelSheetExporter
             .Where(d => d.Definition is ChipPartDefinition { To92: false })
             .GroupBy(d => d.Definition is ChipPartDefinition cp
                           && Device.Identifiers.Gal.Contains(cp.PartNumber)
-                ? d.FullPartNumber + "\n" + (d.Program ?? "")
+                ? d.FullPartNumber + "\n" + (d.Program ?? "") + "\n" + UnitLabel(d)
                 : d.FullPartNumber)
             .Select(g => BuildGroup(g.ToList()))
             .OrderBy(g => g.DisplayName, StringComparer.OrdinalIgnoreCase)
@@ -177,9 +177,15 @@ public static class ChipLabelSheetExporter
 
         bool isGal = Device.Identifiers.Gal.Contains(chip.PartNumber);
 
-        // Gray in-sticker text: the IC type. For a GAL that is the bare
-        // device (16V8, 20V8) -- the design name identifies the group in the
-        // caption, not on the sticker.
+        // Gray in-sticker text, in precedence order for a GAL:
+        //   1. the unit's user label -- populated at JEDEC import and freely
+        //      editable, so it is the authoritative user-facing name;
+        //   2. the cleaned design name from the fuse-map header
+        //      ("PLD1_ALU" -> "1 ALU") for older projects whose label was
+        //      never populated;
+        //   3. the bare device type (16V8, 22V10) for unprogrammed or
+        //      nameless parts.
+        // The full design name stays in the caption for traceability.
         string labelText = isGal && chip.PartNumber.StartsWith("GAL", StringComparison.Ordinal)
             ? chip.PartNumber.Substring(3)
             : first.FullPartNumber;
@@ -188,6 +194,8 @@ public static class ChipLabelSheetExporter
             string program = first.Program!;
             displayName = TTLSim.Chips.Pld.GalJedecHeader.TryParseDesignName(program)
                           ?? displayName;
+            labelText = TTLSim.Chips.Pld.GalJedecHeader.TryParseDisplayName(program)
+                        ?? labelText;
 
             var derived = TTLSim.Chips.Pld.GalPinModel.TryDerive(chip.PartNumber, program);
             var headerNames = TTLSim.Chips.Pld.GalJedecHeader.TryParsePinNames(program);
@@ -209,7 +217,29 @@ public static class ChipLabelSheetExporter
             if (designatorNote.Length == 0) designatorNote = null;
         }
 
+        // Highest precedence: the unit's user label (see above). Grouping
+        // already keys GALs on this label, so every device in the group
+        // shares it.
+        if (isGal)
+        {
+            string userLabel = UnitLabel(first);
+            if (userLabel.Length > 0) labelText = userLabel;
+        }
+
         return new LabelGroup(displayName, labelText, chip, devices.Count, overrides, designatorNote);
+    }
+
+    /// <summary>The user label of the device's chip unit (the free-text
+    /// label drawn beside the symbol, populated at JEDEC import), trimmed;
+    /// empty when unlabelled.</summary>
+    private static string UnitLabel(Device device)
+    {
+        foreach (var unit in device.Units)
+        {
+            if (unit is ChipUnit)
+                return unit.Label.Trim();
+        }
+        return "";
     }
 
     // ------------------------------------------------------------------ shelf layout

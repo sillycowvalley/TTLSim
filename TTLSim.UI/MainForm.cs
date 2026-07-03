@@ -806,6 +806,26 @@ public sealed class MainForm : Form
             }
 
             dev.Program = text;
+
+            // Populate the unit's user label from the design name in the
+            // JEDEC header (generic PLD/GAL prefix stripped, underscores to
+            // spaces: "PLD1_ALU" -> "1 ALU") so the canvas identifies the
+            // programmed part at a glance. Import is authoritative: a header
+            // that carries a name replaces any existing label; a header
+            // without one leaves the label untouched.
+            string? displayName = TTLSim.Chips.Pld.GalJedecHeader.TryParseDisplayName(text);
+            if (displayName is not null)
+            {
+                foreach (var unit in dev.Units)
+                {
+                    if (unit is TTLSim.UI.Components.ChipUnit)
+                    {
+                        unit.Label = displayName;
+                        break;
+                    }
+                }
+            }
+
             dirty = true;
             UpdateTitle();
             propertyGrid.Refresh();

@@ -428,10 +428,13 @@ CALL → RET counts up then down, once each, cleanly.
   cycle. The data stack has no such case — `/DSTK_CS` is wired from `/DSP_EN` directly,
   no pin spent.
 - Timing margin: /WE deasserts at the cycle-ending edge; the address moves only after counter-plus-mux propagation, while /WE rises after one PLD propagation delay — /WE is high before the address moves. Enormous margin at demo clock rates; only a very fast clock would want a bounded write pulse.
-- **High-clock provision — quarter-cycle WRPH.** WRPH = /CLK gives write addresses half a period to settle: ample at demo clocks, and typical-silicon clean to ~5 MHz, but worst-case-datasheet timing at 4 MHz nicks the half-window on the BP-adder write path. The provision is to narrow WRPH to the **final quarter-cycle** — one AND of /CLK with the 2× tap the clock divider chain already carries — giving every write
-  address 3T/4 of settle. One gate, one net, and it upgrades all phase-gated writes
-  (return-stack lanes, data stack, D-mem) together. Not fitted until the clock target
-  demands it.
+- **Clock ceiling — WRPH = /CLK is final.** The half-cycle window is the write
+  discipline, full stop: no quarter-cycle narrowing, no 2× tap, no sub-cycle phases —
+  those reintroduce multi-phase clocking through the back door and undercut the
+  single-cycle-per-instruction claim. The consequence is a hard clock ceiling: writes
+  are worst-case-datasheet clean to ~4 MHz (typical silicon to ~5 MHz), set by the
+  BP-adder write path's address settle into the half-period. If the machine ever wants
+  to run faster, the fix is shortening that path, not subdividing the cycle.
 
 ## Data-in and lane sources
 

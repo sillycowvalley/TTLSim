@@ -80,6 +80,36 @@ public static class GalJedecHeader
     }
 
     /// <summary>
+    /// The design name cleaned for display on the canvas and on chip labels:
+    /// a generic "PLD"/"GAL" prefix is stripped (self-evident on a GAL) and
+    /// underscores become spaces -- "PLD1_ALU" -> "1 ALU", "GAL3_POINTERS"
+    /// -> "3 POINTERS". Null when the header has no name or nothing but the
+    /// generic prefix remains.
+    /// </summary>
+    public static string? TryParseDisplayName(string? jedecText)
+    {
+        string? name = TryParseDesignName(jedecText);
+        return name is null ? null : CleanDesignName(name);
+    }
+
+    /// <summary>See <see cref="TryParseDisplayName"/>; exposed for callers
+    /// that already hold the raw design name.</summary>
+    public static string? CleanDesignName(string name)
+    {
+        string cleaned = name;
+        foreach (string prefix in new[] { "PLD", "GAL" })
+        {
+            if (cleaned.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                cleaned = cleaned.Substring(prefix.Length);
+                break;
+            }
+        }
+        cleaned = cleaned.Replace('_', ' ').Trim();
+        return cleaned.Length == 0 ? null : cleaned;
+    }
+
+    /// <summary>
     /// The design-specification region: from just after STX (or the start of
     /// the text when unframed) to the first '*' field. Null for empty input
     /// or when no header text precedes the fields.

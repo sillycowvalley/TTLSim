@@ -60,10 +60,11 @@ A B C D E F G H I K L M N O P Q R S T U V W X Y Z
 a b c d e f h i k l m n o p q r s t u v x y
 ```
 
-- **`=` is synthesized**, not recovered: Grant's sheet never used it, but the
-  '181's `A=B` pin needs it. Built to Arial metrics (advance 1196, two bars,
-  x 154–1042, y 438–602 and 834–998 font units). Visually indistinguishable at
-  label sizes.
+- **`=` and `_` are synthesized**, not recovered: Grant's sheet never used
+  them, but the '181's `A=B` pin needs `=` and GAL design names like
+  `GAL3_POINTERS` need `_`. Both built to Arial metrics (`=`: advance 1196,
+  bars at y 438–602 and 834–998; `_`: advance 1139, bar at y -300..-150).
+  Visually indistinguishable at label sizes.
 - **Missing**: `J j g w z q` and all punctuation not listed. Rule: when a new
   chip's pin name needs a missing character, synthesize that one glyph to Arial
   metrics and add it to `VectorFont.json` (as done for `=`). Never substitute a
@@ -126,16 +127,37 @@ common body length, minus nothing — the pitch centring absorbs the rest.
 
 ### Pin-name typography
 
-- Base size **4.0 pt** (matches Grant's originals).
-- **Per-row shrink-to-fit**: if left + right names + 2×1.2 pt insets + 2.0 pt
-  centre gap exceed the label width, step the row's size down by 0.2 pt (floor
-  2.4 pt) until it fits. Rows are independent — only crowded rows shrink.
-- **End-row clamping**: each row's text is vertically centred on its pin row,
-  then clamped so glyph extents stay inside the border with 0.2 mm clearance —
-  cap height (0.716 em) above the baseline, slash descender (0.21 em) below.
-  With minimum-body lengths the top and bottom rows shift inward 0.2–0.5 mm;
-  all other rows stay dead-centred on their pins. (This fixed the truncated
-  `/CLR`/`VCC`/`GND` rows seen in the second print test.)
+- Base size **4.0 pt** (matches Grant's originals); the fitting size is
+  computed directly from 1 pt measurements (widths scale linearly).
+- **Uniform size per label (two passes)**: pass 1 resolves every row's
+  layout (single line or underscore split, normal or tight inset) and its
+  natural fit size; pass 2 draws all rows at the label-wide **minimum** of
+  those sizes, so every pin name on one sticker shares a single font size —
+  the most crowded row sets it. Row layouts chosen in pass 1 are kept
+  (smaller text always still fits its layout).
+- **The gray chip-name tint is one class-wide constant**:
+  `PartNumberGray` at the top of `ChipLabelSheetExporter.cs` — a gray level
+  from 0.0 (black) to 1.0 (white); currently 0.78. Lower is darker/more
+  prominent, higher is fainter.
+- **Tiered fit per row** (each row independent):
+  - *Tier 1 (normal)*: single line, 1.2 pt edge insets — used whenever the
+    row fits at ≥ 3.2 pt.
+  - *Tier 2 (crowded)*: insets tighten to **0.5 pt**, and a name containing
+    an underscore **splits onto two lines** at its first underscore, the
+    underscore dropped (`IOADDR_SEL` → `IOADDR` over `SEL`). Two-line text
+    is capped at 3.0 pt so the block fits the 7.2 pt row. The row draws
+    whichever of single-line-tight vs split yields the **larger** text
+    (`C_WE` stays one line at 3.5 pt rather than splitting to 3.0).
+  - Floor 2.4 pt. Rows with long non-underscored names (`PCSEL0`) land at
+    the floor with tight insets — small but non-colliding.
+- **End-row/block clamping**: each name's whole block (one or two lines) is
+  vertically centred on its pin row, then clamped inside the border with
+  0.2 mm clearance — cap height (0.716 em) above the top baseline, slash
+  descender (0.21 em) below the bottom one. Only rows at the label ends
+  shift, by 0.2–0.5 mm.
+- Validated: zero left/right collisions across the GAL3_POINTERS /
+  GAL4_FLOW pin sets (previously the shrink loop stopped at the floor and
+  let long rows print jammed).
 
 ### Naming conventions
 
@@ -192,6 +214,9 @@ If skinny-DIP LS181 stock appears, add a narrow-24 row to the length table.
 `VectorFont.json` as an **Embedded Resource**) produces the BOM label sheet
 for the current schematic:
 
+- Group captions render at 4.0 pt (pin-text size); the layout reserves each
+  caption's width so a long caption (`GAL3_POINTERS (U8)`) can never overlap
+  the next group.
 - One label per physical chip **including duplicates**, grouped by
   `Device.FullPartNumber` with a `"3 x 74HC157"` caption per group
   (continuation caption repeats after a row/page wrap so split groups stay
@@ -241,9 +266,27 @@ symbol; the label exporter applies the same for stickers. Old `.jed` files
 without the block (WinCUPL, earlier BlinkyJED) degrade gracefully to roles.
 
 In the exporter, GALs additionally group by part number **plus fuse map**
-(differently-programmed GAL16V8s never share a label), display the design
-name in gray instead of the generic part number, and carry their schematic
-designators in the group caption (`GAL1_ALU (U3)`).
+(differently-programmed GAL16V8s never share a label). The full design name
+and designators live in the group caption (`PLD1_ALU (U1)`); the gray
+in-sticker text is the **cleaned display name** — generic `PLD`/`GAL`
+prefix stripped, underscores to spaces (`PLD1_ALU` → `1 ALU`) — falling
+back to the bare IC type (`16V8`, `22V10`) for unprogrammed parts or
+nameless fuse maps. `GalJedecHeader.TryParseDisplayName` /
+`CleanDesignName` own that cleaning.
+
+JEDEC import also **populates the unit's user label** (the free-text label
+drawn bold beside the symbol) with the same cleaned display name, so the
+canvas identifies each programmed GAL at a glance. Import is authoritative:
+a header carrying a name replaces any existing label; a header without one
+leaves the label untouched.
+
+**The label field is the single source of truth for the sticker.** The gray
+in-sticker text takes, in precedence order: (1) the unit's user label —
+populated at import, freely editable afterwards; (2) the cleaned header
+display name, for older projects whose label was never populated; (3) the
+bare IC type. GAL grouping keys on part number + fuse map + unit label, so
+a hand-renamed GAL gets its own sticker even alongside an identically
+programmed twin.
 
 Round-trip validated against a real BlinkyJED `.jed`: fuse area
 byte-identical after insertion, all names recovered, active-low conversion
