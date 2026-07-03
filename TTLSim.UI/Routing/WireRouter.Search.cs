@@ -442,7 +442,7 @@ public sealed partial class WireRouter
     /// comparison and move is a native long compare/copy. The low-bits
     /// state index also makes ties break deterministically by state.
     /// f and state index are both non-negative, so the packing preserves
-    /// ordering.
+    /// ordering. (A 4-ary variant was measured and was not an improvement.)
     /// </summary>
     private sealed class SearchQueue
     {
