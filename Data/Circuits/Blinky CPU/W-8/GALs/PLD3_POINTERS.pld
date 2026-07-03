@@ -1,0 +1,135 @@
+Name      PLD3_POINTERS ;
+PartNo    BLINKY-PLD-03 ;
+Date      2026-07-03 ;
+Revision  01 ;
+Designer  Michael ;
+Company   Blinky ;
+Assembly  Blinky ;
+Location  U_DEC3 ;
+Device    g22v10 ;
+
+// -----------------------------------------------------------------
+// PLD 3 of 5 -- both stack pointers and EVERY phase-gated write
+// strobe in the machine. This is the one device that takes CLK as a
+// combinational input (pin 1, no registered outputs), so all four
+// WRPH = /CLK strobes are emitted here directly:
+//   /DSTK_WE, /RSTK_WE, /DMEM_WE, /IO_WR
+// (repartition: /DMEM_WE moves here from PLD 2, /IO_WR from PLD 4;
+// RDIN_SEL1..0 move to PLD 4 in exchange -- they are level selects
+// and never needed the clock).
+//
+// '191 sense: D//U pin LOW = count UP. So the UD outputs are
+// 0 = up (push), 1 = down (pop), and the EN outputs drive /CTEN
+// (active low). RSP_UD doubles as the '157 address-mux steer:
+// up -> write at RSP, down -> read at RSP-1.
+//
+// /RSTK_CS is an explicit output, NOT derived from /RSP_EN: R@
+// reads the SRAM at RSP-1 with the counter DISABLED, so select and
+// count-enable differ on exactly that opcode. The data stack has no
+// such case: /DSTK_CS is wired from /DSP_EN directly, no pin spent.
+//
+// Interrupt entry: the '257 pair jams INT = 0x0300 (jam-only CTL
+// member 3) onto the decode inputs. INT pushes the return word like
+// CALL/BRK do -- it appears in the RSP/RSTK terms below. 13th input
+// (L0) on macrocell pin 14.
+// -----------------------------------------------------------------
+
+PIN 1  = CLK ;   // system clock, combinational input
+PIN 2  = IB ;    // IR15
+PIN 3  = OP6 ;    // IR14 .. opcode
+PIN 4  = OP5 ;
+PIN 5  = OP4 ;
+PIN 6  = OP3 ;
+PIN 7  = OP2 ;
+PIN 8  = OP1 ;
+PIN 9  = OP0 ;    // IR8
+PIN 10 = L3 ;    // IR3 .. sub-op nibble
+PIN 11 = L2 ;
+PIN 13 = L1 ;
+PIN 14 = L0 ;    // IR0 (macrocell pin as 13th input)
+
+PIN 23 = RSP_UD ;
+PIN 22 = !RSP_EN ;
+PIN 21 = DSP_UD ;
+PIN 20 = !DSP_EN ;     // 12 terms -> 14-term cell
+PIN 19 = !DSTK_WE ;
+PIN 18 = !RSTK_WE ;
+PIN 17 = !RSTK_CS ;
+PIN 16 = !DMEM_WE ;
+PIN 15 = !IO_WR ;
+
+// DSP moves on every instruction with a non-zero stack delta.
+DSP_EN =
+      !IB & !OP6 & !OP5 &  OP4 & !L3 & !L2               // ADD ADC SUB XOR
+    # !IB & !OP6 & !OP5 &  OP4 &  L3 & !L2 & !L1 & !L0   // AND
+    # !IB & !OP6 & !OP5 &  OP4 &  L3 &  L2 & !L1 & !L0   // OR
+    # !IB & !OP6 &  OP5 & !OP4 & !OP3 & !OP2               // DUP OVER TUCK R@
+    # !IB & !OP6 &  OP5 & !OP4 & !OP3 &  OP2 & !OP1 & !OP0   // R>
+    # !IB & !OP6 &  OP5 & !OP4 &  OP3 & !OP2 & !OP1         // DROP, NIP
+    # !IB & !OP6 &  OP5 & !OP4 &  OP3 & !OP2 &  OP1 & !OP0   // >R
+    # !IB & !OP6 &  OP5 &  OP4 & !OP3 & !OP2 & !OP1         // PUSH#, IN#
+    # !IB & !OP6 &  OP5 &  OP4 &  OP3 & !OP2 & !OP1 & !OP0   // OUT#
+    # !IB &  OP6 & !OP5 & !OP4 & !OP3 & !OP2 & !OP1 &  OP0   // LOCAL@
+    # !IB &  OP6 & !OP5 & !OP4 &  OP3 & !OP2 & !OP1 & !OP0   // LOCAL!
+    #  IB &  OP6 ;                                     // LOAD, STORE
+
+// 1 = down. The pop set: binary ALU, DROP/NIP/>R, OUT#, LOCAL!, STORE.
+DSP_UD =
+      !IB & !OP6 & !OP5 &  OP4 & !L3 & !L2               // ADD ADC SUB XOR
+    # !IB & !OP6 & !OP5 &  OP4 &  L3 & !L2 & !L1 & !L0   // AND
+    # !IB & !OP6 & !OP5 &  OP4 &  L3 &  L2 & !L1 & !L0   // OR
+    # !IB & !OP6 &  OP5 & !OP4 &  OP3 & !OP2 & !OP1         // DROP, NIP
+    # !IB & !OP6 &  OP5 & !OP4 &  OP3 & !OP2 &  OP1 & !OP0   // >R
+    # !IB & !OP6 &  OP5 &  OP4 &  OP3 & !OP2 & !OP1 & !OP0   // OUT#
+    # !IB &  OP6 & !OP5 & !OP4 &  OP3 & !OP2 & !OP1 & !OP0   // LOCAL!
+    #  IB &  OP6 &  OP5 ;                               // STORE
+
+// RSP counts on CALL, RET, BRK, INT, RTI, >R, R> -- never on R@.
+RSP_EN =
+      !IB & !OP6 & !OP5 & !OP4 & !OP3 & !OP2 &  OP1         // RET, INT
+    # !IB & !OP6 & !OP5 & !OP4 & !OP3 &  OP2 & !OP1         // BRK, RTI
+    # !IB & !OP6 &  OP5 & !OP4 & !OP3 &  OP2 & !OP1 & !OP0   // R>
+    # !IB & !OP6 &  OP5 & !OP4 &  OP3 & !OP2 &  OP1 & !OP0   // >R
+    #  IB & !OP6 &  OP5 ;                               // CALL
+
+// 1 = down (pop): RET, RTI, R>. R@ sets it too -- with RSP_EN
+// deasserted it only steers the address mux to RSP-1 for the read.
+RSP_UD =
+      !IB & !OP6 & !OP5 & !OP4 & !OP3 & !OP2 &  OP1 & !OP0   // RET
+    # !IB & !OP6 & !OP5 & !OP4 & !OP3 &  OP2 & !OP1 &  OP0   // RTI
+    # !IB & !OP6 &  OP5 & !OP4 & !OP3 & !OP2 &  OP1 &  OP0   // R@
+    # !IB & !OP6 &  OP5 & !OP4 & !OP3 &  OP2 & !OP1 & !OP0 ; // R>
+
+// SRAM selected on every push, pop and R@ cycle.
+RSTK_CS =
+      !IB & !OP6 & !OP5 & !OP4 & !OP3 & !OP2 &  OP1         // RET, INT
+    # !IB & !OP6 & !OP5 & !OP4 & !OP3 &  OP2 & !OP1         // BRK, RTI
+    # !IB & !OP6 &  OP5 & !OP4 & !OP3 & !OP2 &  OP1 &  OP0   // R@
+    # !IB & !OP6 &  OP5 & !OP4 & !OP3 &  OP2 & !OP1 & !OP0   // R>
+    # !IB & !OP6 &  OP5 & !OP4 &  OP3 & !OP2 &  OP1 & !OP0   // >R
+    #  IB & !OP6 &  OP5 ;                               // CALL
+
+// ---- Phase-gated strobes: WRPH = /CLK, second half of the cycle.
+
+// Data-stack write: every push spills (old NOS, or old TOS on TUCK).
+DSTK_WE = !CLK & (
+      !IB & !OP6 &  OP5 & !OP4 & !OP3 & !OP2               // DUP OVER TUCK R@
+    # !IB & !OP6 &  OP5 & !OP4 & !OP3 &  OP2 & !OP1 & !OP0   // R>
+    # !IB & !OP6 &  OP5 &  OP4 & !OP3 & !OP2 & !OP1         // PUSH#, IN#
+    # !IB &  OP6 & !OP5 & !OP4 & !OP3 & !OP2 & !OP1 &  OP0   // LOCAL@
+    #  IB &  OP6 & !OP5 ) ;                             // LOAD
+
+// Return-stack write: CALL, BRK, INT, >R.
+RSTK_WE = !CLK & (
+      !IB & !OP6 & !OP5 & !OP4 & !OP3 & !OP2 &  OP1 &  OP0   // INT
+    # !IB & !OP6 & !OP5 & !OP4 & !OP3 &  OP2 & !OP1 & !OP0   // BRK
+    # !IB & !OP6 &  OP5 & !OP4 &  OP3 & !OP2 &  OP1 & !OP0   // >R
+    #  IB & !OP6 &  OP5 ) ;                             // CALL
+
+// D-memory write: STORE, LOCAL!.
+DMEM_WE = !CLK & (
+      !IB &  OP6 & !OP5 & !OP4 &  OP3 & !OP2 & !OP1 & !OP0   // LOCAL!
+    #  IB &  OP6 &  OP5 ) ;                             // STORE
+
+// Port write: OUT# only.
+IO_WR = !CLK & !IB & !OP6 & OP5 & OP4 & OP3 & !OP2 & !OP1 & !OP0 ;

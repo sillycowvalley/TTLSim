@@ -1,0 +1,117 @@
+Name      PLD5_FLOW ;
+PartNo    BLINKY-PLD-05 ;
+Date      2026-07-03 ;
+Revision  01 ;
+Designer  Michael ;
+Company   Blinky ;
+Assembly  Blinky ;
+Location  U_DEC5 ;
+Device    g22v10 ;
+
+// -----------------------------------------------------------------
+// PLD 5 of 5 -- NEXTPC source select and the whole interrupt
+// subsystem: the registered device (pin 1 = system clock).
+//
+// Repartition: N/Z/C and BSEL leave this device entirely (BSEL was
+// their only consumer here; it lives on PLD 4 now). That frees the
+// pins for the two inputs RTI genuinely needs -- ILANE (the saved
+// I bit, BP-lane bit 14, straight off the return-stack SRAM) and
+// /RES (so the async-reset product term can fire on warm reset,
+// not just power-up) -- and a macrocell for NMI_SYNC, which makes
+// the NMI pend a TRUE edge latch:
+//
+//   NMI_SYNC.d = NMI                (synchronizer / previous level)
+//   NMI_PEND.d = NMI & !NMI_SYNC    (one-cycle pend on the rising
+//                                    edge; consumed by the entry
+//                                    cycle it triggers; no
+//                                    retrigger while the line is
+//                                    held high)
+//
+// The I flag is stored INVERTED, as IBAR (1 = interrupts enabled):
+// the 22V10 AR term clears every register to 0, so reset lands on
+// IBAR = 0 = masked -- I = 1 on reset for free, and warm reset also
+// clears both pends and the synchronizer. BRK_FORCE reads IBAR
+// directly. The front-panel I LED is IBAR with inverted wiring.
+//
+// Entry jam: BRK_FORCE selects the '257 pair, which jams
+// INT = 0x0300 (jam-only CTL member 3) onto the decode inputs --
+// NOT the BRK pattern. The one-member distinction is what gives
+// hardware entry its raw-PC push (RDIN = 01 on PLD 4) and B = 0
+// (B = IR[10], a plain wire) with zero extra decode inputs.
+// Software BRK (0x0400, fetched) pushes PC+1 with B = 1.
+//
+// Vectors: no VEC_EN output. The '139 half that decodes PCSEL into
+// the three NEXTPC 3-state enables yields the vector enable as its
+// fourth decode (Y3 = PCSEL 11). The vector address lines are
+// bit 1 = NMI_PEND and bit 0 = NMI_PENDB (the registered
+// complement, below), so NMI vectors to 0x0002 and IRQ/BRK to
+// 0x0001 with no inverter package.
+//
+// PCSEL: 00 adder, 01 IR[12:0] (JUMP, CALL), 10 RTOS (RET, RTI),
+// 11 vector (BRK, INT).
+// -----------------------------------------------------------------
+
+PIN 1  = CLK ;    // system clock (registered macrocells)
+PIN 2  = IB ;     // IR15
+PIN 3  = OP6 ;     // IR14 .. opcode
+PIN 4  = OP5 ;
+PIN 5  = OP4 ;
+PIN 6  = OP3 ;
+PIN 7  = OP2 ;
+PIN 8  = OP1 ;
+PIN 9  = OP0 ;     // IR8
+PIN 10 = IRQ ;    // raw request lines
+PIN 11 = NMI ;
+PIN 13 = ILANE ;  // saved I: BP-lane bit 14, from the return-stack SRAM
+PIN 14 = RESB ;   // /RESET net (macrocell pin as 12th input; active low)
+
+PIN 23 = PCSEL1 ;
+PIN 22 = PCSEL0 ;
+PIN 21 = BRK_FORCE ;
+PIN 20 = IBAR ;        // registered; 9 terms -> 14-term cell
+PIN 19 = NMI_PEND ;    // registered
+PIN 18 = NMI_SYNC ;    // registered
+PIN 17 = IRQ_PEND ;    // registered
+PIN 16 = NMI_PENDB ;   // combinational complement, vector bit 0
+// PIN 15 spare
+
+// NEXTPC source select.
+PCSEL1 =
+      !IB & !OP6 & !OP5 & !OP4 & !OP3 & !OP2 &  OP1         // RET, INT
+    # !IB & !OP6 & !OP5 & !OP4 & !OP3 &  OP2 & !OP1 ;       // BRK, RTI
+
+PCSEL0 =
+       IB & !OP6                                       // JUMP, CALL
+    # !IB & !OP6 & !OP5 & !OP4 & !OP3 & !OP2 &  OP1 &  OP0   // INT
+    # !IB & !OP6 & !OP5 & !OP4 & !OP3 &  OP2 & !OP1 & !OP0 ; // BRK
+
+// Insert an entry cycle: NMI always, IRQ only while unmasked.
+BRK_FORCE = NMI_PEND # IRQ_PEND & IBAR ;
+
+// Level-sampled IRQ; the I mask does the gating in BRK_FORCE.
+IRQ_PEND.d  = IRQ ;
+IRQ_PEND.ar = !RESB ;
+
+// NMI synchronizer + true edge latch.
+NMI_SYNC.d  = NMI ;
+NMI_SYNC.ar = !RESB ;
+
+NMI_PEND.d  = NMI & !NMI_SYNC ;
+NMI_PEND.ar = !RESB ;
+
+NMI_PENDB = !NMI_PEND ;
+
+// The interrupt mask, inverted (IBAR = 1 means IRQs enabled).
+// Set on CLI; loaded from the saved lane on RTI; cleared by SEI,
+// BRK and INT (no term = register loads 0); held everywhere else.
+IBAR.d =
+      !IB & !OP6 & !OP5 & !OP4 & !OP3 &  OP2 &  OP1 & !OP0           // CLI
+    # !IB & !OP6 & !OP5 & !OP4 & !OP3 &  OP2 & !OP1 &  OP0 & !ILANE  // RTI, saved I = 0
+    # IBAR &  IB                                              // hold: super-ops
+    # IBAR &  OP6                                              // hold: FRM, BR
+    # IBAR &  OP5                                              // hold: STK, MEM
+    # IBAR &  OP4                                              // hold: ALU
+    # IBAR &  OP3                                              // hold: CTL 8-F
+    # IBAR & !OP2 & !OP1                                        // hold: NOP, HALT
+    # IBAR &  OP1 & !OP0 ;                                      // hold: RET (CLI sets anyway)
+IBAR.ar = !RESB ;

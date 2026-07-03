@@ -1,0 +1,109 @@
+Name      PLD4_FRAME ;
+PartNo    BLINKY-PLD-04 ;
+Date      2026-07-03 ;
+Revision  01 ;
+Designer  Michael ;
+Company   Blinky ;
+Assembly  Blinky ;
+Location  U_DEC4 ;
+Device    g22v10 ;
+
+// -----------------------------------------------------------------
+// PLD 4 of 5 -- BP / frame control, D-address and I/O selects,
+// clock run, the return-stack data-in select, and BSEL (the branch
+// taken decision). Repartition notes:
+//
+//   - This device never needed the sub-op nibble, which frees
+//     exactly the four pins that N, Z, C and BSEL/RDIN need. The
+//     flags move HERE from PLD 5: BSEL is their only consumer in
+//     the control fabric (conditional branches never leave
+//     PCSEL = 00; taken-ness lives entirely in BSEL).
+//   - RDIN_SEL1..0 move here from PLD 3 (level selects, no clock).
+//   - /IO_WR moves to PLD 3 (phase-gated). /IO_RD is a level read
+//     and stays.
+//
+// Exactly full: 12 inputs, 10 outputs.
+//
+// Branch encoding (ratified): family 101, IR[10:9] = flag select
+// (01 Z, 10 C, 11 N), IR[8] = polarity (0 = taken if set), member
+// 0 = BRA. In pin terms below: OP2 OP1 = select, OP0 = polarity.
+//
+// RDIN_SEL (return-stack PC-lane data-in):
+//   00 = PC+1 (CALL, BRK)   01 = raw PC (INT -- hardware entry,
+//   the displaced instruction re-executes)   10 = TOS (>R).
+// The B lane bit needs NO output here: B = IR[10] wired straight
+// to the BP-lane data-in (BRK 0x04 has IR[10] = 1, INT 0x03 has
+// IR[10] = 0; don't-care on CALL / >R, which never read it back).
+//
+// CLK_RUN: low stops the clock on HALT; NMI_PEND overrides so an
+// NMI wakes a HALTed machine. Written as the negation of the halt
+// term -- the compiler De Morgans it onto a 16-term cell.
+// -----------------------------------------------------------------
+
+PIN 1  = IB ;    // IR15
+PIN 2  = OP6 ;    // IR14 .. opcode
+PIN 3  = OP5 ;
+PIN 4  = OP4 ;
+PIN 5  = OP3 ;
+PIN 6  = OP2 ;
+PIN 7  = OP1 ;
+PIN 8  = OP0 ;    // IR8
+PIN 9  = N ;     // flags
+PIN 10 = Z ;
+PIN 11 = C ;
+PIN 13 = NMIP ;  // NMI_PEND from PLD 5
+
+PIN 23 = BP_LD ;
+PIN 22 = BP_SRC ;
+PIN 21 = DADDR_S1 ;
+PIN 20 = DADDR_S0 ;
+PIN 19 = BSEL ;        // 7 terms -> 16-term cell
+PIN 18 = CLK_RUN ;     // 9 terms after De Morgan -> 16-term cell
+PIN 17 = !IO_RD ;
+PIN 16 = IOADDR_SEL ;
+PIN 15 = RDIN_SEL1 ;
+PIN 14 = RDIN_SEL0 ;
+
+// BP loads on ENTER (adder), RET and RTI (saved lane) only --
+// never on R> / R@.
+BP_LD =
+      !IB &  OP6 & !OP5 & !OP4 & !OP3 & !OP2 & !OP1 & !OP0   // ENTER
+    # !IB & !OP6 & !OP5 & !OP4 & !OP3 & !OP2 &  OP1 & !OP0   // RET
+    # !IB & !OP6 & !OP5 & !OP4 & !OP3 &  OP2 & !OP1 &  OP0 ; // RTI
+
+// 0 = BP adder (ENTER), 1 = saved-BP lane (RET, RTI).
+BP_SRC =
+      !IB & !OP6 & !OP5 & !OP4 & !OP3 & !OP2 &  OP1 & !OP0   // RET
+    # !IB & !OP6 & !OP5 & !OP4 & !OP3 &  OP2 & !OP1 &  OP0 ; // RTI
+
+// D-address mux: 00 IR[12:0], 01 TOS zero-ext, 10 BP + offset.
+DADDR_S1 =
+      !IB &  OP6 & !OP5 & !OP4 & !OP3 & !OP2 & !OP1 &  OP0   // LOCAL@
+    # !IB &  OP6 & !OP5 & !OP4 &  OP3 & !OP2 & !OP1 & !OP0 ; // LOCAL!
+
+DADDR_S0 =
+      !IB & !OP6 &  OP5 &  OP4 & !OP3 & !OP2 &  OP1 & !OP0 ; // FETCH
+
+// Taken branch: BRA unconditionally; conditionals per flag XOR
+// polarity. Selects the sign-extended offset onto the PC adder.
+BSEL =
+      !IB &  OP6 & !OP5 &  OP4 & !OP3 & !OP2 & !OP1 & !OP0        // BRA
+    # !IB &  OP6 & !OP5 &  OP4 & !OP3 & !OP2 &  OP1 & !OP0 &  Z   // BEQ
+    # !IB &  OP6 & !OP5 &  OP4 & !OP3 & !OP2 &  OP1 &  OP0 & !Z   // BNE
+    # !IB &  OP6 & !OP5 &  OP4 & !OP3 &  OP2 & !OP1 & !OP0 &  C   // BCS
+    # !IB &  OP6 & !OP5 &  OP4 & !OP3 &  OP2 & !OP1 &  OP0 & !C   // BCC
+    # !IB &  OP6 & !OP5 &  OP4 & !OP3 &  OP2 &  OP1 & !OP0 &  N   // BMI
+    # !IB &  OP6 & !OP5 &  OP4 & !OP3 &  OP2 &  OP1 &  OP0 & !N ; // BPL
+
+// High unless HALTed with no NMI pending.
+CLK_RUN = !( !IB & !OP6 & !OP5 & !OP4 & !OP3 & !OP2 & !OP1 & OP0 & !NMIP ) ;
+
+// Port read: IN #port and stack-form IN.
+IO_RD = !IB & !OP6 & OP5 & OP4 & !OP3 & !OP2 & OP0 ;
+
+// Port-number mux: 1 = TOS (stack-form IN), 0 = IR[7:0].
+IOADDR_SEL = !IB & !OP6 & OP5 & OP4 & !OP3 & !OP2 & OP1 & OP0 ;
+
+// Return-stack PC-lane data-in select.
+RDIN_SEL1 = !IB & !OP6 &  OP5 & !OP4 &  OP3 & !OP2 &  OP1 & !OP0 ; // >R: TOS
+RDIN_SEL0 = !IB & !OP6 & !OP5 & !OP4 & !OP3 & !OP2 &  OP1 &  OP0 ; // INT: raw PC

@@ -186,11 +186,11 @@ decode inert):
 | 0x00       | NOP      | 0x20       | DUP    | 0x30       | PUSH #imm   | 0x40       | ENTER k      | 0x50      | BRA   |
 | 0x01       | HALT     | 0x21       | OVER   | 0x31       | IN #port    | 0x41       | LOCAL@ off   | 0x52      | BEQ   |
 | 0x02       | RET      | 0x22       | TUCK   | 0x32       | FETCH       | 0x48       | LOCAL! off   | 0x53      | BNE   |
-| 0x04       | BRK      | 0x23       | R@     | 0x33       | IN          |            |              | 0x54      | BCS   |
-| 0x05       | RTI      | 0x24       | R>     | 0x38       | OUT #port   |            |              | 0x55      | BCC   |
-| 0x06       | CLI      | 0x25       | SWAP   |            |             |            |              | 0x56      | BMI   |
-| 0x07       | SEI      | 0x28       | DROP   |            |             |            |              | 0x57      | BPL   |
-|            |          | 0x29       | NIP    |            |             |            |              |           |       |
+| 0x03       | *(INT)*  | 0x23       | R@     | 0x33       | IN          |            |              | 0x54      | BCS   |
+| 0x04       | BRK      | 0x24       | R>     | 0x38       | OUT #port   |            |              | 0x55      | BCC   |
+| 0x05       | RTI      | 0x25       | SWAP   |            |             |            |              | 0x56      | BMI   |
+| 0x06       | CLI      | 0x28       | DROP   |            |             |            |              | 0x57      | BPL   |
+| 0x07       | SEI      | 0x29       | NIP    |            |             |            |              |           |       |
 |            |          | 0x2A       | >R     |            |             |            |              |           |       |
 
 The ALU family is the single opcode **0x10** (members 0x11–0x1F are canonicalised to 0x10 —
@@ -209,8 +209,13 @@ The placements are **not aesthetic** — they buy shared cubes:
   differ only in IR[8], so `taken` in the flow PLD is `(sel = 00) OR (flag XOR IR[8])` —
   seven small terms, and the far-conditional idiom's pairing is literally one bit.
 - **I from a raw bit.** CLI/SEI differ only in IR[8]: on the SEI/CLI cube, **I ← IR[8]**.
-- **Cheap BRK jam.** BRK's word is **0x0400** — a single high line among fifteen grounds
-  on the BRK-force '257 pattern inputs.
+- **`(INT)` — the jam-only member.** CTL member 3 (word **0x0300**) is never fetched or
+  assembled: it is the pattern the BRK-force '257s jam onto the decode inputs on a
+  hardware interrupt-entry cycle. The one-member distinction from BRK (0x0400) is what
+  gives hardware entry its raw-PC push (`RDIN = 01`) and **B = 0** while software BRK
+  pushes PC+1 with B = 1 — with zero extra decode inputs. B itself is not a decode
+  output at all: **B = IR[10]**, a plain wire to the BP-lane data-in (1 on BRK's
+  pattern, 0 on INT's, don't-care on CALL/`>R` which never read it back).
 - **NOP = 0x0000.** The all-zero instruction word is NOP.
 
 ## CALL / RET semantics
@@ -417,8 +422,11 @@ CALL → RET counts up then down, once each, cleanly.
   Verified: zero spurious writes under worst-case packing.
 - The RSP_EN qualification in the push term is **mandatory**: with `>R` in the
   instruction set, RSP_UD alone does not identify a push.
-- `/CS` is driven directly by `RSP_EN` (both active-low) — the RAM is selected exactly
-  on push/pop/R@ cycles and its bus is high-Z on every idle cycle.
+- `/RSTK_CS` is its own PLD output rather than a copy of `/RSP_EN`: `R@` reads the SRAM
+  at RSP−1 with the counter **disabled**, so select and count-enable differ on exactly
+  that opcode. The RAM is selected on push/pop/R@ cycles and high-Z on every idle
+  cycle. The data stack has no such case — `/DSTK_CS` is wired from `/DSP_EN` directly,
+  no pin spent.
 - Timing margin: /WE deasserts at the cycle-ending edge; the address moves only after counter-plus-mux propagation, while /WE rises after one PLD propagation delay — /WE is high before the address moves. Enormous margin at demo clock rates; only a very fast clock would want a bounded write pulse.
 - **High-clock provision — quarter-cycle WRPH.** WRPH = /CLK gives write addresses half a period to settle: ample at demo clocks, and typical-silicon clean to ~5 MHz, but worst-case-datasheet timing at 4 MHz nicks the half-window on the BP-adder write path. The provision is to narrow WRPH to the **final quarter-cycle** — one AND of /CLK with the 2× tap the clock divider chain already carries — giving every write
   address 3T/4 of settle. One gate, one net, and it upgrades all phase-gated writes
@@ -434,7 +442,10 @@ CALL → RET counts up then down, once each, cleanly.
 - **PC lane bits 15:13:** the live N/Z/C flags, always driven.
 - **BP lane:** current **BP** (bits 12:0, always driven — writing BP on `>R` is
   harmless), the **I** flag, and **B** = 1 for `BRK`, 0 for hardware IRQ/NMI (and
-  don't-care on CALL/`>R`, which RET/R> never read back as flags).
+  don't-care on CALL/`>R`, which RET/R> never read back as flags). B is wired directly
+  from **IR[10]** — 1 on BRK's pattern (0x0400), 0 on the jammed INT (0x0300) — no
+  decode output. The lane's saved-I bit feeds back to the flow PLD as `ILANE` for the
+  RTI restore.
 - **BP restore is RET/RTI-only.** `R>` and `R@` move data and must not load BP; the BP
   register's load-enable asserts on RET, RTI, and ENTER only.
 - Mixing `>R` data with return words is the standard Forth-machine discipline hazard:
@@ -539,10 +550,10 @@ The PC clear *is* the reset vector.
 
 | Block                | Part             | Role                                                                                                                                                                                                                                                                                                                                               |
 | -------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Flow / interrupt GAL | **22V10**        | PLD 5 of the complement below. Wide inputs take opcode + I-bit + N/Z/C + the raw IRQ/NMI lines; the 16-term middle macrocells take `PCSEL` (fattest output) and the BRK-force enable; **registered macrocells hold the IRQ sampler, the NMI edge latch, and the I flag** (pin 1 = system clock), with the async-reset term setting I = 1 on reset. |
-| BRK-force            | '257 ×2          | Jams the BRK opcode pattern onto the decode-input side of the IR on an interrupt-entry cycle.                                                                                                                                                                                                                                                      |
-| Flag restore mux     | '157             | Second source (stack-read bits) into the N/Z/C flip-flops, load-enabled on RTI.                                                                                                                                                                                                                                                                    |
-| Vector driver        | 1 buffer enable  | Tied lines onto the NEXTPC bus.                                                                                                                                                                                                                                                                                                                    |
+| Flow / interrupt GAL | **22V10**        | PLD 5 of the complement below. Inputs: opcode + I-bit + raw IRQ/NMI + `ILANE` (the saved-I lane bit) + `/RES` (pin 1 = system clock). **Registered macrocells hold the IRQ sampler, the NMI synchronizer + true-edge pend, and the I flag stored inverted (`IBAR`)** — the async-reset term clears everything, which lands on I = 1 and no pending requests on both power-up *and* warm reset. N/Z/C do not feed this device: `BSEL`, their only control consumer, lives on PLD 4. |
+| BRK-force            | '257 ×2          | Jams **INT (0x0300)** — the jam-only CTL member 3, not the BRK pattern — onto the decode-input side of the IR on an interrupt-entry cycle. The member distinction from BRK (0x0400) supplies raw-PC push vs PC+1 and B = 0 vs 1.                                                                                                                     |
+| Flag restore mux     | '157             | Second source (stack-read bits) into the N/Z/C flip-flops, load-enabled on RTI. The saved-I bit goes straight to PLD 5 as `ILANE` instead; B is bare IR[10].                                                                                                                                                                                       |
+| Vector driver        | 1 buffer enable  | Tied to `NMI_PEND` (bit 1) / `NMI_PENDB` (bit 0), enabled by the PCSEL '139's Y3 decode — NMI → 0x0002, IRQ/BRK → 0x0001.                                                                                                                                                                                                                          |
 | PC-lane data-in      | (existing '257s) | Carries the raw-PC source alongside PC+1 and TOS.                                                                                                                                                                                                                                                                                                  |
 
 **Net: ~4–5 ICs; the flow PLD is one of the five 22V10s below.** The lane spare bits are what make
@@ -556,27 +567,49 @@ product-term budget per output remove the term squeeze everywhere, and the wider
 absorbs the discrete glue — the strobe '00 and the '191 polarity inverters disappear into
 the equations.
 
-| PLD                                | Role                                                                                                                   | Outputs (~)                                                                                           | Inputs |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------ |
-| 1 — ALU / shift                    | `ALU_S3..S0`, `ALU_M`, `ALU_Cn`, `C_SRC`, `TOS_M1`, `TOS_M0` (9)                                                       | I-bit + opcode + sub-op + **C** (13 — one spare macrocell pin serves as the 13th input)               |        |
-| 2 — stack-top / D-mem              | `TOS_SRC2..0`, `NOS_LD`, `NOS_SRC`, `SDIN_SEL` (TUCK), `NZ_WE`, `C_WE`, `DMEM_CS`, `DMEM_WE` (10)                      | I-bit + opcode + sub-op (12)                                                                          |        |
-| 3 — pointers / strobes             | `DSP_EN`, `DSP_UD`, `RSP_EN`, `RSP_UD`, `RDIN_SEL1..0`, plus the **phase-gated `/WE` strobes emitted directly** (9–10) | I-bit + opcode + sub-op + **CLK** as a combinational input                                            |        |
-| 4 — BP / frame / I-O               | `BP_LD`, `BP_SRC`, `DADDR_S1..0`, `IO_RD`, `IO_WR`, `IOADDR_SEL`, `CLK_RUN` (8)                                        | I-bit + opcode + sub-op + `NMI_PEND` (the HALT-wake override)                                         |        |
-| 5 — flow / interrupts (registered) | `PCSEL1..0`, `BSEL` (offset-mux select), `BRK_FORCE`, `VEC_EN`, `IRQ_PEND` (reg), `NMI_PEND` (reg), `I` (reg) (8)      | pin 1 = CLK; I-bit + opcode + N, Z, C + raw IRQ, NMI (13 — two unused macrocell pins serve as inputs) |        |
+| PLD                                | Role                             | Outputs (pins 23→14)                                                                                                                                | Inputs                                                                                            |
+| ---------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| 1 — ALU / shift                    | '181 select, '194 mode, carries  | `ALU_S3..S0`, `TOS_M1`, `TOS_M0`, `ALU_M`, `/ALU_CN`, `C_SRC` (9); **C** in on pin 14                                                                | I-bit + opcode + sub-op + **C** (13)                                                              |
+| 2 — stack-top / D-mem              | TOS/NOS/flag/D-mem selects       | `TOS_SRC2..0`, `NOS_LD`, `NOS_SRC`, `NZ_WE`, `C_WE`, `SDIN_SEL` (TUCK), `/DMEM_CS` (9); one spare                                                    | I-bit + opcode + sub-op (12)                                                                      |
+| 3 — pointers / write strobes       | both stack pointers, all strobes | `RSP_UD`, `/RSP_EN`, `DSP_UD`, `/DSP_EN`, **all four phase-gated strobes** `/DSTK_WE`, `/RSTK_WE`, `/DMEM_WE`, `/IO_WR`, plus `/RSTK_CS` (9); L0 in on pin 14 | pin 1 = **CLK** (combinational) + I-bit + opcode + sub-op (13)                                    |
+| 4 — BP / frame / I-O / branch      | BP, D-addr, I/O, BSEL, RDIN      | `BP_LD`, `BP_SRC`, `DADDR_S1..0`, `BSEL`, `CLK_RUN`, `/IO_RD`, `IOADDR_SEL`, `RDIN_SEL1..0` (10) — exactly full                                       | I-bit + opcode + **N, Z, C** + `NMI_PEND` (12) — **sub-op not needed**                            |
+| 5 — flow / interrupts (registered) | NEXTPC select, interrupt state   | `PCSEL1..0`, `BRK_FORCE`, `IBAR` (reg), `NMI_PEND` (reg), `NMI_SYNC` (reg), `IRQ_PEND` (reg), `NMI_PENDB` (8); `/RES` in on pin 14; one spare        | pin 1 = CLK; I-bit + opcode + raw IRQ, NMI + `ILANE` + `/RES` (13)                                |
+
+The partition follows three rules the pin budget forces:
+
+- **Every phase-gated strobe lives on the one device that takes CLK.** `/DMEM_WE` and
+  `/IO_WR` sit beside the stack strobes on PLD 3; `RDIN_SEL1..0` (level selects that
+  never needed the clock) move to PLD 4 in exchange.
+- **PLD 4 never needed the sub-op nibble** — nothing on it reads the ALU class — which
+  frees exactly the pins that N/Z/C and `BSEL` need. The flags leave PLD 5 entirely:
+  `BSEL` was their only consumer there (branches never leave PCSEL = 00).
+- **PLD 5 spends the freed pins on what RTI and reset genuinely need**: `ILANE` (the
+  saved-I lane bit, straight off the BP-lane SRAM) for the I restore, and `/RES` so the
+  async-reset product term fires on warm reset, not just power-up. The freed macrocell
+  hosts `NMI_SYNC`, making the NMI pend a **true edge latch**
+  (`NMI_PEND.d = NMI & !NMI_SYNC` — one-cycle pend, consumed by the entry cycle, no
+  retrigger while the line is held). **I is stored inverted (`IBAR`)**: AR clears every
+  register to 0, which is I = 1 and no pending requests; `BRK_FORCE = NMI_PEND #
+  IRQ_PEND & IBAR` reads it directly. The front-panel I LED is IBAR with inverted
+  wiring.
 
 Input budgeting is the design rule: a 22V10 offers 12 dedicated inputs (11 when pin 1 is
-the clock for registered outputs), and each unused macrocell pin adds one more. Pure
-decode PLDs need exactly the 12-line instruction field; the two over-budget devices (1
-and 5) run ≤9 outputs and reclaim macrocell pins as inputs. `ALU_Cn` lives on PLD 1 —
-not the flow PLD — because it needs the sub-op lines (ADC vs SUB) plus C, and PLD 1
-already has both. The registered pending/I states feed back internally, costing no pins.
+the clock), and each unused macrocell pin adds one more. `ALU_Cn` lives on PLD 1 — not
+the flow PLD — because it needs the sub-op lines (ADC vs SUB) plus C, and PLD 1 already
+has both. The registered pending/IBAR states feed back internally, costing no pins.
+Term placement respects the 22V10's graded budget (8-10-12-14-16-16-14-12-10-8, pins
+23→14): the fat outputs — `TOS_M1/M0` (13/14 terms), `NOS_LD` (13), `/DSP_EN` (12),
+`IBAR` (9), `CLK_RUN` (9 after De Morgan), `BSEL` (7) — sit on the 14/16-term middle
+cells; everything else is ≤8 terms.
 
 The **N/Z/C flip-flops stay discrete ('74s)** deliberately: absorbing them would need
 result bit 7, A=B, Cn+4, Q0, Q7, and the three stack-read bits as inputs — ~11 pins for
 3 outputs, an input footprint that packs with nothing and would force a sixth device.
 
-The derived-strobe pattern (/CS and /WE derived from pointer signals rather than decoded
-— the DSTK/RSTK template) remains the standing technique for reclaiming outputs.
+The derived-strobe pattern survives where it still holds: `/DSTK_CS` is wired from
+`/DSP_EN` directly (the data stack is accessed exactly when DSP moves). `/RSTK_CS` is an
+explicit output because `R@` reads without counting — select and enable differ on that
+one opcode.
 BlinkyJED, TTLSim, and the WinCUPL cross-check chain all support the 22V10, so every
 device verifies the same way: BlinkyJED compile, fuse-for-fuse cross-check, JED import
 into the sim, full IR sweep, JEDTester on silicon — one `GalDef`, one stock line.
@@ -595,10 +628,14 @@ sequential-flow default, so idle and reserved instructions decode to all-zero se
 | 10    | RTOS (PC lane)| RET, RTI                                                   |
 | 11    | vector        | interrupt / BRK entry                                      |
 
-`VEC_EN` = (PCSEL = 11), emitted directly by PLD 5 so the vector buffer needs no external
-decode; one '139 half decodes the other three 3-state enables. **`BSEL`**: 0 = constant +1,
-1 = sign-extended IR[7:0]. Taken-vs-not-taken lives entirely in `BSEL`; conditional
-branches never leave PCSEL = 00.
+There is no `VEC_EN` output: one '139 half decodes PCSEL into the four active-low
+enables — Y0–Y2 drive the adder / IR / RTOS 3-state buffers and **Y3 (PCSEL = 11) is the
+vector-driver enable**, for free. The vector address lines behind that buffer are
+**bit 1 = NMI_PEND, bit 0 = NMI_PENDB** (its registered complement, a spare-macrocell
+output on PLD 5), so NMI vectors to 0x0002 and IRQ/BRK to 0x0001 with no inverter
+package. **`BSEL`** (PLD 4): 0 = constant +1, 1 = sign-extended IR[7:0].
+Taken-vs-not-taken lives entirely in `BSEL`; conditional branches never leave
+PCSEL = 00.
 
 **`TOS_M1..0`** (PLD 1) — raw '194 mode pins (physical truth table, no re-encoding):
 
@@ -625,7 +662,7 @@ branches never leave PCSEL = 00.
 gates the write. **`SDIN_SEL`** (stack data-in '257): 0 = NOS (normal push spills old
 NOS), 1 = TOS (TUCK).
 
-**`RDIN_SEL1..0`** (PLD 3) — return-stack PC-lane data-in:
+**`RDIN_SEL1..0`** (PLD 4) — return-stack PC-lane data-in:
 
 | Value | Source              | Used by                                  |
 | ----- | ------------------- | ---------------------------------------- |

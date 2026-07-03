@@ -1,0 +1,131 @@
+Name      PLD2_STACKTOP ;
+PartNo    BLINKY-PLD-02 ;
+Date      2026-07-03 ;
+Revision  01 ;
+Designer  Michael ;
+Company   Blinky ;
+Assembly  Blinky ;
+Location  U_DEC2 ;
+Device    g22v10 ;
+
+// -----------------------------------------------------------------
+// PLD 2 of 5 -- TOS source select, NOS control, TUCK write select,
+// per-flag latch enables, D-memory chip select. Pure decode: the
+// full 12-line instruction field, no flags, no clock.
+//
+// /DMEM_WE is NOT on this device: every phase-gated write strobe
+// lives on PLD 3 (the device that takes CLK). This device emits the
+// level select /DMEM_CS only. One spare macrocell (pin 14).
+//
+// TOS_SRC (valid only while TOS_M = 11 on PLD 1):
+//   000 ALU  001 NOS  010 IR[7:0]  011 D-mem  100 I/O  101 RTOS
+// NOS_SRC: 0 = old TOS (push spill / SWAP), 1 = stack[DSP-1] read.
+// SDIN_SEL: stack data-in '257 -- 0 = NOS (normal spill), 1 = TOS
+//   (TUCK writes old TOS while NOS holds).
+// NZ_WE: every live ALU sub-op, plus RTI (the '157 restore path).
+// C_WE: ADD ADC SUB CMP + the five shifts, plus RTI. Logic ops
+//   preserve C; reserved nibbles A/D are truly inert.
+// -----------------------------------------------------------------
+
+PIN 1  = IB ;    // IR15
+PIN 2  = OP6 ;    // IR14 .. opcode
+PIN 3  = OP5 ;
+PIN 4  = OP4 ;
+PIN 5  = OP3 ;
+PIN 6  = OP2 ;
+PIN 7  = OP1 ;
+PIN 8  = OP0 ;    // IR8
+PIN 9  = L3 ;    // IR3 .. sub-op nibble
+PIN 10 = L2 ;
+PIN 11 = L1 ;
+PIN 13 = L0 ;    // IR0
+
+PIN 23 = TOS_SRC2 ;
+PIN 22 = TOS_SRC1 ;
+PIN 21 = TOS_SRC0 ;
+PIN 20 = NOS_LD ;      // 13 terms -> 14-term cell
+PIN 19 = NOS_SRC ;
+PIN 18 = NZ_WE ;
+PIN 17 = C_WE ;
+PIN 16 = SDIN_SEL ;
+PIN 15 = !DMEM_CS ;
+// PIN 14 spare
+
+// I/O and RTOS sources (bit 2): IN#, IN, R@, R>.
+TOS_SRC2 =
+      !IB & !OP6 &  OP5 &  OP4 & !OP3 & !OP2 &  OP0        // IN#, IN
+    # !IB & !OP6 &  OP5 & !OP4 & !OP3 & !OP2 &  OP1 &  OP0  // R@
+    # !IB & !OP6 &  OP5 & !OP4 & !OP3 &  OP2 & !OP1 & !OP0 ;// R>
+
+// IR and D-mem sources (bit 1): PUSH#, FETCH, LOCAL@, LOAD.
+TOS_SRC1 =
+      !IB & !OP6 &  OP5 &  OP4 & !OP3 & !OP2 & !OP0        // PUSH#, FETCH
+    # !IB &  OP6 & !OP5 & !OP4 & !OP3 & !OP2 & !OP1 &  OP0  // LOCAL@
+    #  IB &  OP6 & !OP5 ;                              // LOAD
+
+// NOS, D-mem and RTOS sources (bit 0).
+TOS_SRC0 =
+      !IB & !OP6 &  OP5 & !OP4 & !OP3 & !OP2 &  OP0        // OVER, R@
+    # !IB & !OP6 &  OP5 & !OP4 & !OP3 &  OP2 & !OP1        // R>, SWAP
+    # !IB & !OP6 &  OP5 & !OP4 &  OP3 & !OP2 & !OP0        // DROP, >R
+    # !IB & !OP6 &  OP5 &  OP4 & !OP3 & !OP2 &  OP1 & !OP0  // FETCH
+    # !IB & !OP6 &  OP5 &  OP4 &  OP3 & !OP2 & !OP1 & !OP0  // OUT#
+    # !IB &  OP6 & !OP5 & !OP4 & !OP3 & !OP2 & !OP1 &  OP0  // LOCAL@
+    # !IB &  OP6 & !OP5 & !OP4 &  OP3 & !OP2 & !OP1 & !OP0  // LOCAL!
+    #  IB &  OP6 ;                                    // LOAD, STORE
+
+// NOS changes on every push except TUCK, every pop, and SWAP.
+NOS_LD =
+      !IB & !OP6 & !OP5 &  OP4 & !L3 & !L2               // ADD ADC SUB XOR
+    # !IB & !OP6 & !OP5 &  OP4 &  L3 & !L2 & !L1 & !L0   // AND
+    # !IB & !OP6 & !OP5 &  OP4 &  L3 &  L2 & !L1 & !L0   // OR
+    # !IB & !OP6 &  OP5 & !OP4 & !OP3 & !OP2 & !OP1         // DUP, OVER
+    # !IB & !OP6 &  OP5 & !OP4 & !OP3 & !OP2 &  OP1 &  OP0   // R@
+    # !IB & !OP6 &  OP5 & !OP4 & !OP3 &  OP2 & !OP1         // R>, SWAP
+    # !IB & !OP6 &  OP5 & !OP4 &  OP3 & !OP2 & !OP1         // DROP, NIP
+    # !IB & !OP6 &  OP5 & !OP4 &  OP3 & !OP2 &  OP1 & !OP0   // >R
+    # !IB & !OP6 &  OP5 &  OP4 & !OP3 & !OP2 & !OP1         // PUSH#, IN#
+    # !IB & !OP6 &  OP5 &  OP4 &  OP3 & !OP2 & !OP1 & !OP0   // OUT#
+    # !IB &  OP6 & !OP5 & !OP4 & !OP3 & !OP2 & !OP1 &  OP0   // LOCAL@
+    # !IB &  OP6 & !OP5 & !OP4 &  OP3 & !OP2 & !OP1 & !OP0   // LOCAL!
+    #  IB &  OP6 ;                                     // LOAD, STORE
+
+// Pops read stack[DSP-1] into NOS.
+NOS_SRC =
+      !IB & !OP6 & !OP5 &  OP4 & !L3 & !L2               // ADD ADC SUB XOR
+    # !IB & !OP6 & !OP5 &  OP4 &  L3 & !L2 & !L1 & !L0   // AND
+    # !IB & !OP6 & !OP5 &  OP4 &  L3 &  L2 & !L1 & !L0   // OR
+    # !IB & !OP6 &  OP5 & !OP4 &  OP3 & !OP2 & !OP1         // DROP, NIP
+    # !IB & !OP6 &  OP5 & !OP4 &  OP3 & !OP2 &  OP1 & !OP0   // >R
+    # !IB & !OP6 &  OP5 &  OP4 &  OP3 & !OP2 & !OP1 & !OP0   // OUT#
+    # !IB &  OP6 & !OP5 & !OP4 &  OP3 & !OP2 & !OP1 & !OP0   // LOCAL!
+    #  IB &  OP6 &  OP5 ;                               // STORE
+
+// TUCK only: write old TOS at DSP+1 while NOS holds.
+SDIN_SEL = !IB & !OP6 & OP5 & !OP4 & !OP3 & !OP2 & OP1 & !OP0 ;
+
+// N/Z latch on every live ALU sub-op, and on RTI (restore).
+NZ_WE =
+      !IB & !OP6 & !OP5 &  OP4 & !L3                     // subs 0-7
+    # !IB & !OP6 & !OP5 &  OP4 &  L3 & !L2 & !L1         // 8, 9
+    # !IB & !OP6 & !OP5 &  OP4 &  L3 & !L2 &  L1 &  L0   // B
+    # !IB & !OP6 & !OP5 &  OP4 &  L3 &  L2 & !L1 & !L0   // C
+    # !IB & !OP6 & !OP5 &  OP4 &  L3 &  L2 &  L1         // E, F
+    # !IB & !OP6 & !OP5 & !OP4 & !OP3 &  OP2 & !OP1 &  OP0 ; // RTI
+
+// C latches only where it is defined, and on RTI.
+C_WE =
+      !IB & !OP6 & !OP5 &  OP4 & !L3 & !L2 & !L1         // ADD, ADC
+    # !IB & !OP6 & !OP5 &  OP4 & !L3 & !L2 &  L1 & !L0   // SUB
+    # !IB & !OP6 & !OP5 &  OP4 &  L3 & !L2 & !L1 &  L0   // CMP
+    # !IB & !OP6 & !OP5 &  OP4 & !L3 &  L2 &  L1         // SHL, SHR
+    # !IB & !OP6 & !OP5 &  OP4 &  L3 & !L2 &  L1 &  L0   // ASR
+    # !IB & !OP6 & !OP5 &  OP4 &  L3 &  L2 &  L1         // ROL, ROR
+    # !IB & !OP6 & !OP5 & !OP4 & !OP3 &  OP2 & !OP1 &  OP0 ; // RTI
+
+// D-memory selected on FETCH, LOCAL@, LOCAL!, LOAD, STORE.
+DMEM_CS =
+      !IB & !OP6 &  OP5 &  OP4 & !OP3 & !OP2 &  OP1 & !OP0   // FETCH
+    # !IB &  OP6 & !OP5 & !OP4 & !OP3 & !OP2 & !OP1 &  OP0   // LOCAL@
+    # !IB &  OP6 & !OP5 & !OP4 &  OP3 & !OP2 & !OP1 & !OP0   // LOCAL!
+    #  IB &  OP6 ;                                     // LOAD, STORE

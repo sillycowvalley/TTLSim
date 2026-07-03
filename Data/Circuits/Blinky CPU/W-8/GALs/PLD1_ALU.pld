@@ -1,0 +1,136 @@
+Name      PLD1_ALU ;
+PartNo    BLINKY-PLD-01 ;
+Date      2026-07-03 ;
+Revision  01 ;
+Designer  Michael ;
+Company   Blinky ;
+Assembly  Blinky ;
+Location  U_DEC1 ;
+Device    g22v10 ;
+
+// -----------------------------------------------------------------
+// PLD 1 of 5 -- ALU function select, '194 TOS mode, carry-in, carry
+// source. 13 inputs (I-bit + opcode + sub-op + C): the 13th input,
+// C, lands on macrocell pin 14.
+//
+// Opcode map (ratified): family = OP6..OP4, member = OP3..OP0.
+//   CTL=000 ALU=001 STK=010 MEM=011 FRM=100 BR=101; I=1 super-ops
+//   use OP6..OP5 as the op (00 JUMP, 01 CALL, 10 LOAD, 11 STORE) and
+//   OP4..OP0 as address bits -- super-op decode must never read them.
+// ALU sub-op nibble (L3..L0, unchanged from the verified rows):
+//   ADD=0 ADC=1 SUB=2 XOR=3 NOT=4 TST=5 SHL=6 SHR=7
+//   AND=8 CMP=9 ASR=B OR=C ROL=E ROR=F ; A, D reserved (idle).
+//
+// '181 select codes ('181 active-high convention):
+//   ADD/ADC = 1001 arith    SUB/XOR/CMP = 0110 (M differs)
+//   AND = 1011 logic        OR = 1110 logic
+//   NOT = 0000 logic        TST = 1111 logic (F = A)
+// ALU_CN drives the '181 Cn pin (active-low carry inject, so the
+// pin idles HIGH): SUB -> L, CMP -> L, ADC -> complement of C.
+// Declared !ALU_CN so the equation lists the *inject* terms.
+//
+// TOS_M1/M0 are the raw '194 mode pins: 00 hold, 01 shift right,
+// 10 shift left, 11 parallel load. The load term list is the full
+// ratified TOS-write set; reserved members decode to hold.
+// C_SRC: 1 = '194 shifted-out bit, 0 = '181 Cn+4 chain.
+// -----------------------------------------------------------------
+
+PIN 1  = IB ;    // IR15, the I-bit
+PIN 2  = OP6 ;    // IR14 .. opcode
+PIN 3  = OP5 ;
+PIN 4  = OP4 ;
+PIN 5  = OP3 ;
+PIN 6  = OP2 ;
+PIN 7  = OP1 ;
+PIN 8  = OP0 ;    // IR8
+PIN 9  = L3 ;    // IR3 .. sub-op nibble
+PIN 10 = L2 ;
+PIN 11 = L1 ;
+PIN 13 = L0 ;    // IR0
+PIN 14 = C ;     // C flag (macrocell pin as 13th input)
+
+PIN 23 = ALU_S3 ;
+PIN 22 = ALU_S2 ;
+PIN 21 = ALU_S1 ;
+PIN 20 = ALU_S0 ;
+PIN 19 = TOS_M1 ;   // 13 terms -> 16-term cell
+PIN 18 = TOS_M0 ;   // 14 terms -> 16-term cell
+PIN 17 = ALU_M ;
+PIN 16 = !ALU_CN ;
+PIN 15 = C_SRC ;
+
+// ALU family cube: I=0, family 001.
+// A = !IB & !OP6 & !OP5 & OP4  (written out in each equation).
+
+ALU_S3 = !IB & !OP6 & !OP5 & OP4 & (
+      !L3 & !L2 & !L1              // 0,1: ADD, ADC (1001)
+    # !L3 &  L2 & !L1 &  L0        // 5:   TST (1111)
+    #  L3 & !L2 & !L1 & !L0        // 8:   AND (1011)
+    #  L3 &  L2 & !L1 & !L0 ) ;    // C:   OR  (1110)
+
+ALU_S2 = !IB & !OP6 & !OP5 & OP4 & (
+      !L3 & !L2 &  L1              // 2,3: SUB, XOR (0110)
+    # !L3 &  L2 & !L1 &  L0        // 5:   TST
+    #  L3 & !L2 & !L1 &  L0        // 9:   CMP (0110)
+    #  L3 &  L2 & !L1 & !L0 ) ;    // C:   OR
+
+ALU_S1 = !IB & !OP6 & !OP5 & OP4 & (
+      !L3 & !L2 &  L1              // 2,3: SUB, XOR
+    #  L3 & !L2 & !L1              // 8,9: AND, CMP
+    # !L3 &  L2 & !L1 &  L0        // 5:   TST
+    #  L3 &  L2 & !L1 & !L0 ) ;    // C:   OR
+
+ALU_S0 = !IB & !OP6 & !OP5 & OP4 & (
+      !L3 & !L2 & !L1              // 0,1: ADD, ADC
+    # !L3 &  L2 & !L1 &  L0        // 5:   TST
+    #  L3 & !L2 & !L1 & !L0 ) ;    // 8:   AND
+
+ALU_M = !IB & !OP6 & !OP5 & OP4 & (
+      !L3 &  L2 & !L1              // 4,5: NOT, TST
+    # !L3 & !L2 &  L1 &  L0        // 3:   XOR
+    #  L3 & !L2 & !L1 & !L0        // 8:   AND
+    #  L3 &  L2 & !L1 & !L0 ) ;    // C:   OR
+
+// Carry inject (pin low): SUB, CMP always; ADC when C = 0.
+ALU_CN = !IB & !OP6 & !OP5 & OP4 & (
+      !L3 & !L2 &  L1 & !L0        // 2: SUB
+    #  L3 & !L2 & !L1 &  L0        // 9: CMP
+    # !L3 & !L2 & !L1 &  L0 & !C ) ; // 1: ADC, inject when C clear
+
+C_SRC = !IB & !OP6 & !OP5 & OP4 & (
+      !L3 &  L2 &  L1              // 6,7: SHL, SHR
+    #  L3 &  L2 &  L1              // E,F: ROL, ROR
+    #  L3 & !L2 &  L1 &  L0 ) ;    // B:   ASR
+
+// '194 mode. Shifts: left = SHL, ROL (x110); right = SHR, ROR
+// (x111) and ASR (1011). Loads: every ratified TOS write.
+TOS_M1 =
+      !IB & !OP6 & !OP5 & OP4 &  L2 &  L1 & !L0                 // SHL, ROL
+    # !IB & !OP6 & !OP5 & OP4 & !L3 & !L2                       // ALU 0-3
+    # !IB & !OP6 & !OP5 & OP4 & !L3 &  L2 & !L1 & !L0           // NOT
+    # !IB & !OP6 & !OP5 & OP4 &  L3 & !L2 & !L1 & !L0           // AND
+    # !IB & !OP6 & !OP5 & OP4 &  L3 &  L2 & !L1 & !L0           // OR
+    # !IB & !OP6 &  OP5 & !OP4 & !OP3 & !OP2 &  OP0                // OVER, R@
+    # !IB & !OP6 &  OP5 & !OP4 & !OP3 &  OP2 & !OP1                // R>, SWAP
+    # !IB & !OP6 &  OP5 & !OP4 &  OP3 & !OP2 & !OP0                // DROP, >R
+    # !IB & !OP6 &  OP5 &  OP4 & !OP3 & !OP2                      // PUSH IN# FETCH IN
+    # !IB & !OP6 &  OP5 &  OP4 &  OP3 & !OP2 & !OP1 & !OP0          // OUT#
+    # !IB &  OP6 & !OP5 & !OP4 & !OP3 & !OP2 & !OP1 &  OP0          // LOCAL@
+    # !IB &  OP6 & !OP5 & !OP4 &  OP3 & !OP2 & !OP1 & !OP0          // LOCAL!
+    #  IB &  OP6 ;                                            // LOAD, STORE
+
+TOS_M0 =
+      !IB & !OP6 & !OP5 & OP4 &  L2 &  L1 &  L0                 // SHR, ROR
+    # !IB & !OP6 & !OP5 & OP4 &  L3 & !L2 &  L1 &  L0           // ASR
+    # !IB & !OP6 & !OP5 & OP4 & !L3 & !L2                       // ALU 0-3
+    # !IB & !OP6 & !OP5 & OP4 & !L3 &  L2 & !L1 & !L0           // NOT
+    # !IB & !OP6 & !OP5 & OP4 &  L3 & !L2 & !L1 & !L0           // AND
+    # !IB & !OP6 & !OP5 & OP4 &  L3 &  L2 & !L1 & !L0           // OR
+    # !IB & !OP6 &  OP5 & !OP4 & !OP3 & !OP2 &  OP0                // OVER, R@
+    # !IB & !OP6 &  OP5 & !OP4 & !OP3 &  OP2 & !OP1                // R>, SWAP
+    # !IB & !OP6 &  OP5 & !OP4 &  OP3 & !OP2 & !OP0                // DROP, >R
+    # !IB & !OP6 &  OP5 &  OP4 & !OP3 & !OP2                      // PUSH IN# FETCH IN
+    # !IB & !OP6 &  OP5 &  OP4 &  OP3 & !OP2 & !OP1 & !OP0          // OUT#
+    # !IB &  OP6 & !OP5 & !OP4 & !OP3 & !OP2 & !OP1 &  OP0          // LOCAL@
+    # !IB &  OP6 & !OP5 & !OP4 &  OP3 & !OP2 & !OP1 & !OP0          // LOCAL!
+    #  IB &  OP6 ;                                            // LOAD, STORE
