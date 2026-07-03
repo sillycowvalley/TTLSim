@@ -104,11 +104,9 @@ public sealed partial class WireRouter
 
         scratch.Reset();
         int width = bounds.Width;
-        var bestG = scratch.BestG;          // g + 1; 0 = unvisited
-        var predecessor = scratch.Predecessor;   // state index + 1; 0 = none
 
         int startIdx = ((startIy * width) + startIx) * 4 + (int)startDir;
-        bestG[startIdx] = 1;   // g = 0
+        scratch.Visit(startIdx, 1, 0);   // g = 0, no predecessor
 
         int Heuristic(int worldX, int worldY)
             => (Math.Abs(worldX - end.X) + Math.Abs(worldY - end.Y)) * StepCost;
@@ -121,7 +119,7 @@ public sealed partial class WireRouter
         while (queue.TryDequeue(out var entry, out _))
         {
             (int stateIdx, int g) = entry;
-            if (g + 1 > bestG[stateIdx]) continue;   // stale entry
+            if (g + 1 > scratch.GetBestGPlus1(stateIdx)) continue;   // stale entry
 
             int dirInt = stateIdx & 3;
             int cellIdx = stateIdx >> 2;
@@ -178,11 +176,10 @@ public sealed partial class WireRouter
                 int ng = g + stepCost;
 
                 int nextIdx = ((iy * width) + ix) * 4 + d;
-                int existingPlus1 = bestG[nextIdx];
+                int existingPlus1 = scratch.GetBestGPlus1(nextIdx);
                 if (existingPlus1 != 0 && ng + 1 >= existingPlus1) continue;
 
-                bestG[nextIdx] = ng + 1;
-                predecessor[nextIdx] = stateIdx + 1;
+                scratch.Visit(nextIdx, ng + 1, stateIdx + 1);
                 queue.Enqueue((nextIdx, ng), ng + Heuristic(nx, ny));
             }
         }
@@ -210,11 +207,9 @@ public sealed partial class WireRouter
 
         scratch.Reset();
         int width = bounds.Width;
-        var bestG = scratch.BestG;          // g + 1; 0 = unvisited
-        var predecessor = scratch.Predecessor;   // state index + 1; 0 = none
 
         int startIdx = ((startIy * width) + startIx) * 4 + (int)startDir;
-        bestG[startIdx] = 1;   // g = 0
+        scratch.Visit(startIdx, 1, 0);   // g = 0, no predecessor
 
         // Bounding box of the target cells, in world coordinates.
         int tMinX = int.MaxValue, tMinY = int.MaxValue;
@@ -246,7 +241,7 @@ public sealed partial class WireRouter
         while (queue.TryDequeue(out var entry, out _))
         {
             (int stateIdx, int g) = entry;
-            if (g + 1 > bestG[stateIdx]) continue;   // stale entry
+            if (g + 1 > scratch.GetBestGPlus1(stateIdx)) continue;   // stale entry
 
             int dirInt = stateIdx & 3;
             int cellIdx = stateIdx >> 2;
@@ -301,11 +296,10 @@ public sealed partial class WireRouter
                 int ng = g + stepCost;
 
                 int nextIdx = ((iy * width) + ix) * 4 + d;
-                int existingPlus1 = bestG[nextIdx];
+                int existingPlus1 = scratch.GetBestGPlus1(nextIdx);
                 if (existingPlus1 != 0 && ng + 1 >= existingPlus1) continue;
 
-                bestG[nextIdx] = ng + 1;
-                predecessor[nextIdx] = stateIdx + 1;
+                scratch.Visit(nextIdx, ng + 1, stateIdx + 1);
                 queue.Enqueue((nextIdx, ng), ng + Heuristic(nx, ny));
             }
         }
@@ -324,6 +318,9 @@ public sealed partial class WireRouter
             : (mask & ForeignV) != 0;
     }
 
+    // Runs immediately after the same leg's search, so every state on the
+    // predecessor chain was Visit()ed in the current generation — the raw
+    // Predecessor reads below are valid without a generation check.
     private static List<Point>? BacktraceCells(
         SearchScratch scratch, Rectangle bounds, int startIdx, int endIdx)
     {
@@ -375,29 +372,57 @@ public sealed partial class WireRouter
     /// Decode: dir = index &amp; 3, cell = index &gt;&gt; 2, ix = cell % Width,
     /// iy = cell / Width.
     ///
-    /// Both arrays use 0 as "empty" so Reset is a plain memset:
     ///   - BestG stores g + 1 (0 = unvisited).
     ///   - Predecessor stores the predecessor's state index + 1 (0 = none).
+    ///
+    /// GENERATION STAMPING: BestG and Predecessor are only valid for a
+    /// state whose Generation entry equals the current generation. Reset
+    /// is therefore a counter increment, not a full-grid memset -- once
+    /// the A* heuristic made each leg touch only a narrow cone of cells,
+    /// the per-leg Array.Clear of the whole grid became a measurable cost
+    /// in its own right (Buffer._ZeroMemory in profiles). Callers must go
+    /// through GetBestGPlus1 / Visit rather than the arrays directly.
     ///
     /// One instance is allocated per RouteAll and shared by every leg's
     /// search; Reset() runs at the top of each search.
     /// </summary>
     private sealed class SearchScratch
     {
-        public readonly int[] BestG;
+        private readonly int[] BestG;
         public readonly int[] Predecessor;
+        private readonly int[] generation;
+        private int currentGeneration;
 
         public SearchScratch(Rectangle bounds)
         {
             int states = bounds.Width * bounds.Height * 4;
             BestG = new int[states];
             Predecessor = new int[states];
+            generation = new int[states];
+            currentGeneration = 0;
         }
 
         public void Reset()
         {
-            Array.Clear(BestG);
-            Array.Clear(Predecessor);
+            if (currentGeneration == int.MaxValue)
+            {
+                // Practically unreachable, but keep the wraparound sound.
+                Array.Clear(generation);
+                currentGeneration = 0;
+            }
+            currentGeneration++;
+        }
+
+        /// <summary>g + 1 for the state, or 0 if unvisited this leg.</summary>
+        public int GetBestGPlus1(int stateIdx)
+            => generation[stateIdx] == currentGeneration ? BestG[stateIdx] : 0;
+
+        /// <summary>Record g + 1 and predecessor (+1) for the state.</summary>
+        public void Visit(int stateIdx, int gPlus1, int predecessorPlus1)
+        {
+            generation[stateIdx] = currentGeneration;
+            BestG[stateIdx] = gPlus1;
+            Predecessor[stateIdx] = predecessorPlus1;
         }
     }
 }
