@@ -81,11 +81,11 @@ public sealed partial class WireRouter
     // equal-cost routes the tie-break order differs, so geometry may vary,
     // but the result is still deterministic and cost-optimal.
     //
-    // The queue element carries (stateIdx, g); the queue PRIORITY is
-    // f = g + h. Carrying g in the element keeps the stale-entry test
-    // identical to the old Dijkstra form (g + 1 > bestG) instead of
-    // recovering g from the f priority, which is where A* conversions
-    // classically go wrong.
+    // The open set is the packed-long heap in SearchScratch (see
+    // SearchQueue): priority is f = g + h. g is not carried in the queue;
+    // it is recovered from the scratch best-g on dequeue, and an entry is
+    // stale iff its f exceeds the current best g plus h for its state --
+    // i.e. the state was improved after this entry was pushed.
     private static List<Point>? Search(
         Rectangle bounds, SearchScratch scratch, bool[,] blocked,
         int[,] foreignWirePenalty, int[,] ownNetPenalty,
@@ -111,22 +111,23 @@ public sealed partial class WireRouter
         int Heuristic(int worldX, int worldY)
             => (Math.Abs(worldX - end.X) + Math.Abs(worldY - end.Y)) * StepCost;
 
-        var queue = new PriorityQueue<(int StateIdx, int G), int>();
-        queue.Enqueue((startIdx, 0), Heuristic(start.X, start.Y));
+        var queue = scratch.Queue;
+        queue.Enqueue(startIdx, Heuristic(start.X, start.Y));
 
         int goal = -1;
 
-        while (queue.TryDequeue(out var entry, out _))
+        while (queue.TryDequeue(out int stateIdx, out int f))
         {
-            (int stateIdx, int g) = entry;
-            if (g + 1 > scratch.GetBestGPlus1(stateIdx)) continue;   // stale entry
-
             int dirInt = stateIdx & 3;
             int cellIdx = stateIdx >> 2;
             int cx = cellIdx % width;
             int cy = cellIdx / width;
             int worldX = cx + bounds.X;
             int worldY = cy + bounds.Y;
+
+            // Every enqueued state has been Visit()ed, so best-g exists.
+            int g = scratch.GetBestGPlus1(stateIdx) - 1;
+            if (f > g + Heuristic(worldX, worldY)) continue;   // stale entry
 
             if (worldX == end.X && worldY == end.Y && dirInt == (int)requiredArrival)
             {
@@ -180,7 +181,7 @@ public sealed partial class WireRouter
                 if (existingPlus1 != 0 && ng + 1 >= existingPlus1) continue;
 
                 scratch.Visit(nextIdx, ng + 1, stateIdx + 1);
-                queue.Enqueue((nextIdx, ng), ng + Heuristic(nx, ny));
+                queue.Enqueue(nextIdx, ng + Heuristic(nx, ny));
             }
         }
 
@@ -233,22 +234,23 @@ public sealed partial class WireRouter
             return (hx + hy) * StepCost;
         }
 
-        var queue = new PriorityQueue<(int StateIdx, int G), int>();
-        queue.Enqueue((startIdx, 0), Heuristic(start.X, start.Y));
+        var queue = scratch.Queue;
+        queue.Enqueue(startIdx, Heuristic(start.X, start.Y));
 
         int goal = -1;
 
-        while (queue.TryDequeue(out var entry, out _))
+        while (queue.TryDequeue(out int stateIdx, out int f))
         {
-            (int stateIdx, int g) = entry;
-            if (g + 1 > scratch.GetBestGPlus1(stateIdx)) continue;   // stale entry
-
             int dirInt = stateIdx & 3;
             int cellIdx = stateIdx >> 2;
             int cx = cellIdx % width;
             int cy = cellIdx / width;
             int worldX = cx + bounds.X;
             int worldY = cy + bounds.Y;
+
+            // Every enqueued state has been Visit()ed, so best-g exists.
+            int g = scratch.GetBestGPlus1(stateIdx) - 1;
+            if (f > g + Heuristic(worldX, worldY)) continue;   // stale entry
 
             if (stateIdx != startIdx
                 && targetCells.Contains(new Point(worldX, worldY)))
@@ -300,7 +302,7 @@ public sealed partial class WireRouter
                 if (existingPlus1 != 0 && ng + 1 >= existingPlus1) continue;
 
                 scratch.Visit(nextIdx, ng + 1, stateIdx + 1);
-                queue.Enqueue((nextIdx, ng), ng + Heuristic(nx, ny));
+                queue.Enqueue(nextIdx, ng + Heuristic(nx, ny));
             }
         }
 
@@ -393,6 +395,9 @@ public sealed partial class WireRouter
         private readonly int[] generation;
         private int currentGeneration;
 
+        /// <summary>Open-set heap, shared across legs; cleared by Reset.</summary>
+        public readonly SearchQueue Queue = new();
+
         public SearchScratch(Rectangle bounds)
         {
             int states = bounds.Width * bounds.Height * 4;
@@ -411,6 +416,7 @@ public sealed partial class WireRouter
                 currentGeneration = 0;
             }
             currentGeneration++;
+            Queue.Clear();
         }
 
         /// <summary>g + 1 for the state, or 0 if unvisited this leg.</summary>
@@ -423,6 +429,72 @@ public sealed partial class WireRouter
             generation[stateIdx] = currentGeneration;
             BestG[stateIdx] = gPlus1;
             Predecessor[stateIdx] = predecessorPlus1;
+        }
+    }
+
+    /// <summary>
+    /// Min-heap open set for the A* searches, replacing
+    /// PriorityQueue&lt;(int,int),int&gt;. Profiling showed the framework
+    /// queue's sift (MoveDownDefaultComparer) as the single largest
+    /// external cost: it moves 12-byte element/priority pairs and calls a
+    /// comparer per comparison. Here each entry is ONE long -- priority f
+    /// in the high 32 bits, state index in the low 32 -- so every sift
+    /// comparison and move is a native long compare/copy. The low-bits
+    /// state index also makes ties break deterministically by state.
+    /// f and state index are both non-negative, so the packing preserves
+    /// ordering.
+    /// </summary>
+    private sealed class SearchQueue
+    {
+        private long[] heap = new long[1024];
+        private int count;
+
+        public void Clear() => count = 0;
+
+        public void Enqueue(int stateIdx, int f)
+        {
+            if (count == heap.Length)
+                Array.Resize(ref heap, count * 2);
+
+            long key = ((long)f << 32) | (uint)stateIdx;
+            int i = count++;
+            while (i > 0)
+            {
+                int parent = (i - 1) >> 1;
+                if (heap[parent] <= key) break;
+                heap[i] = heap[parent];
+                i = parent;
+            }
+            heap[i] = key;
+        }
+
+        public bool TryDequeue(out int stateIdx, out int f)
+        {
+            if (count == 0)
+            {
+                stateIdx = 0;
+                f = 0;
+                return false;
+            }
+
+            long top = heap[0];
+            stateIdx = (int)(uint)top;
+            f = (int)(top >> 32);
+
+            long last = heap[--count];
+            int i = 0;
+            while (true)
+            {
+                int child = i * 2 + 1;
+                if (child >= count) break;
+                int right = child + 1;
+                if (right < count && heap[right] < heap[child]) child = right;
+                if (heap[child] >= last) break;
+                heap[i] = heap[child];
+                i = child;
+            }
+            heap[i] = last;
+            return true;
         }
     }
 }
