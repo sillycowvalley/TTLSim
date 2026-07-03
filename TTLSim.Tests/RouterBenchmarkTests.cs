@@ -31,7 +31,7 @@ public class RouterBenchmarkTests
 {
     private const string BenchmarkFile = "Blinky_PC_-_4_Bit_-_CALL.ttlproj";
     private const int WarmupIterations = 3;
-    private const int TimedIterations = 50;
+    private const int TimedIterations =  50;
 
     private readonly ITestOutputHelper output;
 

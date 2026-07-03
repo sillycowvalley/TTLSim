@@ -433,68 +433,138 @@ public sealed partial class WireRouter
     }
 
     /// <summary>
-    /// Min-heap open set for the A* searches, replacing
-    /// PriorityQueue&lt;(int,int),int&gt;. Profiling showed the framework
-    /// queue's sift (MoveDownDefaultComparer) as the single largest
-    /// external cost: it moves 12-byte element/priority pairs and calls a
-    /// comparer per comparison. Here each entry is ONE long -- priority f
-    /// in the high 32 bits, state index in the low 32 -- so every sift
-    /// comparison and move is a native long compare/copy. The low-bits
-    /// state index also makes ties break deterministically by state.
-    /// f and state index are both non-negative, so the packing preserves
-    /// ordering. (A 4-ary variant was measured and was not an improvement.)
+    /// Bucket-queue (Dial's algorithm) open set for the A* searches,
+    /// replacing the binary heap whose sift-down was ~33% of routing time
+    /// (memory latency walking a large heap). Priorities are small
+    /// non-negative integers, and with the consistent Manhattan heuristic
+    /// the dequeued f never decreases — so states live in a circular array
+    /// of buckets indexed by (f &amp; mask): O(1) enqueue, O(1) dequeue plus a
+    /// bounded scan past empty buckets, no sifting at all.
+    ///
+    /// Step costs here are NOT statically bounded (wire penalties stack
+    /// per cell), so no fixed span is assumed: the live f-span
+    /// (maxF − minF) is tracked, and the ring doubles and redistributes on
+    /// the rare enqueue that would exceed it. While the span invariant
+    /// holds, each bucket holds exactly one f value, which is what lets
+    /// redistribution reconstruct each bucket's f.
+    ///
+    /// Within one bucket (equal f) states pop LIFO — deterministic, but a
+    /// different tie-break than the heap's, so equal-cost routes may land
+    /// in different (equally good) places than the heap version produced.
     /// </summary>
     private sealed class SearchQueue
     {
-        private long[] heap = new long[1024];
-        private int count;
+        private int[]?[] buckets = new int[]?[256];
+        private int[] counts = new int[256];
+        private int mask = 255;
+        private int minF;
+        private int maxF;
+        private int total;
 
-        public void Clear() => count = 0;
+        public void Clear()
+        {
+            // counts can only be non-zero when entries remain (a search
+            // that broke at its goal leaves the rest of the open set
+            // behind). All-zero counts stay all-zero, so skip the wipe
+            // when the queue drained naturally.
+            if (total > 0)
+                Array.Clear(counts);
+            total = 0;
+        }
 
         public void Enqueue(int stateIdx, int f)
         {
-            if (count == heap.Length)
-                Array.Resize(ref heap, count * 2);
-
-            long key = ((long)f << 32) | (uint)stateIdx;
-            int i = count++;
-            while (i > 0)
+            if (total == 0)
             {
-                int parent = (i - 1) >> 1;
-                if (heap[parent] <= key) break;
-                heap[i] = heap[parent];
-                i = parent;
+                minF = f;
+                maxF = f;
             }
-            heap[i] = key;
+            else
+            {
+                // Existing entries are positioned relative to the CURRENT
+                // minF; capture it before updating so Grow can reconstruct
+                // their f values correctly even on the defensive f < minF
+                // path (which a consistent heuristic never takes).
+                int anchor = minF;
+                if (f < minF) minF = f;
+                if (f > maxF) maxF = f;
+                if (maxF - minF > mask)
+                    Grow(anchor);
+            }
+
+            int idx = f & mask;
+            var bucket = buckets[idx];
+            if (bucket is null)
+                buckets[idx] = bucket = new int[8];
+            else if (counts[idx] == bucket.Length)
+            {
+                Array.Resize(ref bucket, bucket.Length * 2);
+                buckets[idx] = bucket;
+            }
+            bucket[counts[idx]++] = stateIdx;
+            total++;
         }
 
         public bool TryDequeue(out int stateIdx, out int f)
         {
-            if (count == 0)
+            if (total == 0)
             {
                 stateIdx = 0;
                 f = 0;
                 return false;
             }
 
-            long top = heap[0];
-            stateIdx = (int)(uint)top;
-            f = (int)(top >> 32);
-
-            long last = heap[--count];
-            int i = 0;
-            while (true)
+            int idx = minF & mask;
+            while (counts[idx] == 0)
             {
-                int child = i * 2 + 1;
-                if (child >= count) break;
-                int right = child + 1;
-                if (right < count && heap[right] < heap[child]) child = right;
-                if (heap[child] >= last) break;
-                heap[i] = heap[child];
-                i = child;
+                minF++;
+                idx = minF & mask;
             }
-            heap[i] = last;
+
+            stateIdx = buckets[idx]![--counts[idx]];
+            f = minF;
+            total--;
             return true;
+        }
+
+        /// <summary>
+        /// Double the ring until the current span fits, redistributing the
+        /// existing entries. Rare: only fires when one leg's f-span exceeds
+        /// every span seen before. While the old invariant held, bucket b's
+        /// single f value is reconstructible as <paramref name="anchor"/>
+        /// (the minF the entries were positioned against) plus b's offset
+        /// from the anchor's old slot, modulo the old size.
+        /// </summary>
+        private void Grow(int anchor)
+        {
+            int oldSize = mask + 1;
+            int oldMask = mask;
+            var oldBuckets = buckets;
+            var oldCounts = counts;
+
+            int newSize = oldSize;
+            while (maxF - minF > newSize - 1)
+                newSize *= 2;
+
+            buckets = new int[]?[newSize];
+            counts = new int[newSize];
+            mask = newSize - 1;
+
+            for (int b = 0; b < oldSize; b++)
+            {
+                int n = oldCounts[b];
+                if (n == 0) continue;
+
+                int f = anchor + (((b - (anchor & oldMask)) + oldSize) & oldMask);
+                int idx = f & mask;
+
+                var src = oldBuckets[b]!;
+                var dst = buckets[idx];
+                if (dst is null || dst.Length < n)
+                    buckets[idx] = dst = new int[Math.Max(8, n)];
+                Array.Copy(src, dst, n);
+                counts[idx] = n;
+            }
         }
     }
 }
