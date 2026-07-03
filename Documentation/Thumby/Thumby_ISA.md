@@ -1,14 +1,14 @@
-# Thumby ISA v2 — The Liberated Encoding
+# Thumby ISA — The Liberated Encoding
 
-**PROPOSED — NOT RATIFIED.** Supersedes the Thumb-shaped v1 draft.
+**PROPOSED — NOT RATIFIED.**
 
 ## Design thesis
 
-v1 inherited Thumb's format map, and with it Thumb's central concession: Thumb is a
-compression codec for ARM's 32-bit ISA, contorted to fit, and the first thing it threw
-overboard was ARM's signature feature — the barrel shifter as a free modifier on every
-data-processing instruction. v2 abandons Thumb fidelity entirely. ARM remains the
-*motivation*; the encoding is designed clean-sheet around the actual hardware:
+Thumb is a compression codec for ARM's 32-bit ISA, contorted to fit, and the first
+thing it threw overboard was ARM's signature feature — the barrel shifter as a free
+modifier on every data-processing instruction. This encoding abandons Thumb fidelity
+entirely. ARM remains the *motivation*; the encoding is designed clean-sheet around
+the actual hardware:
 
 - a 74181 ALU (4 slices, with lookahead carry provided by a GAL16V8 standing in for
   the unobtainable 74182 — see "Carry architecture" below) whose 16 logic / 16
@@ -216,7 +216,7 @@ shifter is in the address path because it is in *every* path.
 | 0 | `STR Rd, [Rb, #imm6]` | mem[Rb + imm6] = Rd |
 | 1 | `LDR Rd, [Rb, #imm6]` | Rd = mem[Rb + imm6] |
 
-imm6 is a word offset, 0–63 — double v1's struct-field reach (the bit came from
+imm6 is a word offset, 0–63 — generous struct-field reach (the bit came from
 dropping Thumb's byte flag).
 
 **Scaled register offset** (bit 13 = 1):
@@ -343,25 +343,25 @@ FLAG_WE guard does, letting the S/M lines stay unqualified. The condition evalua
 is its own small GAL (NZCV + cond4 → taken). Sequencer: 2 flip-flops + one GAL
 (FETCH, EXEC, MEM; PUSH/POP would add the iterating state).
 
-## What v2 gave up vs v1 (the honest ledger)
+## Deliberate omissions (the honest ledger)
 
-- The three-operand ADD/SUB format is gone — everything is destructive except
+- There is no three-operand ADD/SUB format — everything is destructive except
   MOV/MVN. The non-destructive MOVs absorb most of the pain (positioning a value and
   shifting it are now the same instruction).
-- RSB never existed in the '181 and now has no slot to fake it in.
-- Thumb's format map is no longer a crib; this document is the only map.
+- RSB never existed in the '181 and has no slot to fake it in.
+- Thumb's format map is not a crib; this document is the only map.
 
-## What v2 gained
+## Design highlights
 
 - The inline barrel shift on **all twelve** two-operand ALU ops — ARM's signature
-  feature, the thing v1 mourned.
+  feature, preserved rather than sacrificed.
 - The scaled-index addressing mode — ARM's fourth modifier seat, recovered free.
-- imm6 memory offsets (was imm5), a clean 16-row op space with no escape-format
-  contortions, JALR, and a coherent 2-bit class map a front panel can decode by eye.
+- imm6 memory offsets, a clean 16-row op space with no escape-format contortions,
+  JALR, and a coherent 2-bit class map a front panel can decode by eye.
 
 ## Idiom gallery (now with single-instruction entries)
 
-| Task | v2 code |
+| Task | Code |
 |---|---|
 | ×5 | `ADD r0, r0, LSL #2` |
 | ×10 | `ADD r0, r0, LSL #2` ; `MOV.LSL r0, r0, #1` |
