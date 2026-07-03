@@ -30,8 +30,18 @@ incrementality.
 
 Clock, reset, and single-step come from the existing **Clock and Reset board**; the
 **Breakpoint board** likewise already exists. Both are finished PCBs, not build stages.
+Their panel controls and indicators reach the front panel as breakout wires from the
+boards' own component footprints (populated with lead wires instead of on-board parts).
 Programs live in the two 28C64 EEPROMs — Harvard, no loader, the PC clear is the reset
 vector.
+
+The **front panel** follows the same incremental discipline: fully drilled at stage 0
+(the drill template fixes every hole), then populated stage by stage. An indicator is
+fitted in the stage its signal first exists — the new LEDs of each stage are that
+stage's primary test instrument. Each LED group's '541 buffer (and the panel's own
+logic: the '14 debounce pair, the IRQ-ack '74, input pull-ups, and the IR bicolour
+gating '08s) populates alongside its group. The panel population schedule is tabulated
+after the stages.
 
 The write strobes are **WRPH = /CLK, final** — the quarter-cycle provision is dropped
 from the design. Consequence accepted: every phase-gated write gets a half-period of
@@ -52,10 +62,20 @@ integration.
 nets; all five 22V10 sockets; the NEXTPC '139 PCSEL decoder; the Breakpoint board's
 13-bit PC tap header (undriven until stage 1) and halt hookup into the clock-run path.
 
+**Panel:** drill the complete panel from the template — every hole, all stages, now.
+Populate only the CLOCK cluster (POWER, OSC, RUN MODE, STEP MODE, RESET LEDs; POWER
+toggle; STEP / STEP MODE / RUN MODE / RESET buttons), wired as breakouts from the Clock
+board's footprints, and the BREAKPOINT cluster (BP EN + BPC..BP0) from the Breakpoint
+board's footprints. The Breakpoint board's three now-unused comparator inputs (the
+dropped BPD–BPF positions) tie low to match the undriven PC lines. Every other hole
+stays empty. The RUN LED position stays empty too — CLK_RUN is a PLD 4 output and does
+not exist until stage 1.
+
 **Verify:** clean clock at demo and MHz rates on the CPU rails, single-step produces
 exactly one edge at the far end of the distribution, reset asserts/releases cleanly,
 breakpoint comparator toggles its FF on a jumpered address match through the new
-header.
+header — all of it read and driven from the panel, which is the point of populating
+these two clusters first.
 
 Integrating the Breakpoint board first is deliberate: every later stage's debugging is
 cheaper with halt-on-address available from the first fetch.
@@ -86,6 +106,11 @@ BP-lane SRAM sockets stay empty; BP-lane data-in nets are wired (rule 2) but und
 reset state, BRK_FORCE never asserts). PLD 3 — RSP_UD, /RSP_EN, /RSTK_CS, /RSTK_WE with
 the ratified strobe form `/WE = !(push · /CLK)`, push qualified by RSP_EN. PLD 4 —
 RDIN_SEL pinned to 00 (PC+1), everything else inert.
+
+**Panel:** PC (13), IR (16 bicolour, with the role-gating '08s and the role term
+`A = I OR (IR14 · /IR13)` — pure IR decode, so it is complete from day one), RTOS (13),
+RSP (8), RUN, and PCSEL (SEQ/JMP/RET live; the VEC LED is populated but dark until
+stage 8). Their '541 buffers fit with them.
 
 **Test program:** straight-line NOPs → JUMP forward/back → CALL/RET one level → nested
 CALL to depth 8 → worst-case back-to-back CALL→RET. Watch on the panel: PC, IR, RTOS,
@@ -142,6 +167,8 @@ flag FFs play no part in the data movement). C simply isn't latched yet.
 don't-cares confirmed. PLD 2 — TOS_SRC (010 = IR[7:0] and 001 = NOS paths live; ALU,
 D-mem, I/O, RTOS inputs strapped), NOS_LD/NOS_SRC for the SWAP exchange.
 
+**Panel:** TOS (8) and NOS (8) with their '541s — the walking-bit demo is the TOS row's first workout.
+
 **Test program:** PUSH walking values, SWAP round-trip, then the classic walking-bit:
 PUSH #1, SHL in a loop, watch the bit traverse the TOS LEDs; ASR on 0x80 to confirm
 sign fill; ROL/ROR wrap. This is also where the split of IR[7:0] onto the data path vs
@@ -166,6 +193,8 @@ SDIN_SEL for TUCK, TOS_SRC 101 (RTOS[7:0]). **4** — RDIN_SEL 10 (>R). The pop-
 optimization (op[11] = 1 ⇔ ΔDSP −1 in families 2/3/4) lands here as the DSP_UD cube.
 
 **Instructions live:** DUP, OVER, TUCK, DROP, NIP, >R, R>, R@.
+
+**Panel:** DSP (8). With RSP already fitted, both depth displays are now live for the LIFO tests.
 
 **Test program:** push a known sequence deep enough to spill through NOS into SRAM,
 pop it back, verify LIFO order on TOS/NOS/DSP LEDs. Exercise each of the eight ops
@@ -197,6 +226,8 @@ equation change; its N/Z/C inputs now see real flags.
 **Instructions live:** all 14 ALU sub-ops — ADD, ADC, SUB, XOR, NOT, TST, SHL, SHR
 (now with C capture), AND, CMP, ASR, OR, ROL, ROR. Conditional branches now run against
 live flags.
+
+**Panel:** FLAGS N, Z, C (the I position stays empty until stage 8 — IBAR is held in reset state until then and would show nothing useful).
 
 **Test program:**
 - Arithmetic: ADD/SUB with and without carry/borrow; ADC chain summing two 16-bit
@@ -230,6 +261,8 @@ failure here is in the flag capture, not the adder or BSEL.
 **Instructions live:** LOAD addr, STORE addr (super-ops), FETCH (stack form, low-256
 reach — exercises the TOS side of the address mux).
 
+**Panel:** D-ADDR (13) off the 3:1 mux output — from here on, every memory-class instruction shows *where* it touched, not just what arrived in TOS.
+
 **Test program:** STORE/LOAD round-trip at low and high addresses (13-bit reach —
 address above 0xFF proves the super-op path is genuinely wide); FETCH against an
 address computed at run time; then a self-checking memory fill: write pattern i^0xFF
@@ -256,6 +289,8 @@ BP_SRC, DADDR_S 10. **3** — the BP-lane /WE joins the phase-gated strobe set (
 
 **Instructions live:** ENTER k, LOCAL@ off, LOCAL! off. RET's semantics widen: pop
 {PC, BP}.
+
+**Panel:** BP (13) — the recursion-depth display, fitted exactly when the register it watches comes to exist. The Hanoi acceptance test is also its acceptance test: BP breathing with recursion depth while RSP mirrors it.
 
 **Test program, in order:**
 1. **Regression first:** the entire stage-1 flow suite, unmodified. RET now pops both
@@ -289,6 +324,8 @@ HALT), RDIN_SEL 01 (raw PC on hardware entry).
 
 **Instructions live:** BRK, RTI, SEI, CLI.
 
+**Panel:** the I flag LED (driven from IBAR through a spare '14 section), IRQ PEND and NMI PEND, and the IRQ / NMI buttons with their RC + '14 debounce and the IRQ-ack '74. The already-fitted VEC LED lights for the first time on the first BRK.
+
 **Bring-up order inside the stage — synchronous first:**
 1. **BRK** — software-triggered, zero async hazard. Verifies the whole vector path,
    dual-lane state push (PC+1, flags, BP, I, B=1), and handler entry at 0x0001.
@@ -306,21 +343,44 @@ settled front-panel states in single-step — pending LED, entry, handler, RTI.
 
 ## Stage 9 — I/O and final integration
 
-**Populate:** '138 port decode, port-number '157 (TOS vs IR[7:0]), the 8×8 LED matrix
-(8× '374 row latches, ports 0–7), '244 switch port, '374 status port.
+**Populate:** '138 port decode, port-number '157 (TOS vs IR[7:0]), the single 8-bit
+output port ('374, driving the panel OUT LEDs), the '244 input port (panel toggles),
+the '374 status port, and the IRQ-ack port strobe (clears the panel button's '74 —
+this write is the reference implementation of the machine's interrupt-ack convention).
 
 **PLDs revised:** **3** — /IO_WR (last phase-gated strobe). **4** — /IO_RD, IOADDR_SEL.
 **2** — TOS_SRC 100 (I/O data in).
 
 **Instructions live:** IN (stack form), IN #port, OUT #port.
 
-**Test programs:** port round-trip (OUT then IN on a loopback); the DUP…OUT broadcast
-idiom across the matrix rows; switches → compute → matrix. Then the full-suite
-regression: every stage's program, one image. Wire a timer-class device onto IRQ and
-the panic button onto NMI, and the demo program — Hanoi on the matrix, interruptible —
-is the machine's acceptance test.
+**Panel:** OUT (8) and the INPUT PORT toggles (8) with their pull-ups — the last empty holes. The panel is complete in the same stage the machine is.
+
+**Test programs:** output-port walking bit on the OUT LEDs; input toggles → compute →
+output (switches in, sum out); the IRQ round trip in full — button press, PEND LED,
+handler, ack write clears the latch, RTI. Then the full-suite regression: every
+stage's program, one image. The acceptance demo is Hanoi, interruptible — BP breathing
+on the panel, move count on the OUT LEDs, the IRQ button live throughout.
 
 ---
+
+## Front panel population schedule
+
+| Stage | Panel additions | Panel logic fitted with them |
+| --- | --- | --- |
+| 0 | CLOCK cluster (5 LEDs, POWER toggle, 4 buttons); BREAKPOINT cluster (BP EN + BPC..BP0) | breakout wiring from the two existing boards; '688 spare inputs tied low |
+| 1 | PC, RTOS (13 ea); IR (16 bicolour); RSP (8); RUN; PCSEL (VEC dark) | group '541s; IR role-gating '08s + role term |
+| 2 | — (branch activity shows on PC / PCSEL) | — |
+| 3 | TOS, NOS (8 ea) | group '541s |
+| 4 | DSP (8) | '541 |
+| 5 | FLAGS N, Z, C | flag taps |
+| 6 | D-ADDR (13) | '541 off the 3:1 mux output |
+| 7 | BP (13) | '541 |
+| 8 | I flag; IRQ PEND, NMI PEND; IRQ + NMI buttons | '14 debounce (2 sections; 1 more inverts IBAR for the I LED); IRQ-ack '74 |
+| 9 | OUT (8); INPUT PORT toggles (8) | input pull-ups; panel complete |
+
+Every hole exists from stage 0; population order is signal-existence order. An LED that
+would show nothing meaningful yet stays out — an empty hole is honest, a dead LED is
+ambiguous.
 
 ## Stage / PLD revision matrix
 
