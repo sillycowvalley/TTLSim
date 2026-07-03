@@ -29,6 +29,7 @@ internal static class Program
         // Keep the console window open when launched from Explorer or a shortcut.
         // Skipped when input is redirected (piped or scripted), where there is no
         // interactive key to wait for and Console.ReadKey would otherwise throw.
+        /*
         if (!Console.IsInputRedirected)
         {
             Console.WriteLine();
@@ -36,6 +37,7 @@ internal static class Program
             Console.ReadKey(intercept: true);
             Console.WriteLine();
         }
+        */
 
         return exitCode;
     }

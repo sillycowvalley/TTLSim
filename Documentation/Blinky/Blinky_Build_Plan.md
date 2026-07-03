@@ -28,25 +28,37 @@ incrementality.
 5. **Only re-burn PLDs whose equations changed.** The stage tables below list exactly
    which of the five devices each stage revises.
 
-Reset during development is Mega-driven `/RESET` (DS1813 in the stand-alone build).
+Clock, reset, and single-step come from the existing **Clock and Reset board**; the
+**Breakpoint board** likewise already exists. Both are finished PCBs, not build stages.
 Programs live in the two 28C64 EEPROMs — Harvard, no loader, the PC clear is the reset
 vector.
 
+The write strobes are **WRPH = /CLK, final** — the quarter-cycle provision is dropped
+from the design. Consequence accepted: every phase-gated write gets a half-period of
+address settle, which is clean at demo rates and to ~5 MHz typical silicon; the
+worst-case BP-adder write path sets the ceiling. No divider taps or gates are reserved
+for a narrower window.
+
 ---
 
-## Stage 0 — Infrastructure
+## Stage 0 — Infrastructure and board integration
 
-**Populate:** power distribution; clock oscillator + divider chain (including the 2×
-tap the quarter-cycle WRPH provision will want — one gate held in reserve, not fitted);
-run/halt/single-step controls; Mega `/RESET` header; all five 22V10 sockets; the NEXTPC
-'139 PCSEL decoder; the hardware breakpoint ('688 ×2 on the 13-bit PC + '00 + '74).
+**Existing PCBs in:** the Clock and Reset board (clock source, divider, run/halt/
+single-step, `/RESET`) and the Breakpoint board ('688 ×2 on the 13-bit PC + '00 + '74)
+connect to the new build. Neither is constructed here — this stage is their
+integration.
 
-**Verify:** clean clock at demo and MHz rates, single-step produces exactly one edge,
-reset asserts/releases cleanly, breakpoint comparator toggles its FF on a jumpered
-address match. No CPU exists yet — this stage is scope-and-meter work.
+**Populate on the CPU build:** power distribution; the clock/reset/step distribution
+nets; all five 22V10 sockets; the NEXTPC '139 PCSEL decoder; the Breakpoint board's
+13-bit PC tap header (undriven until stage 1) and halt hookup into the clock-run path.
 
-The breakpoint goes in first deliberately: it is already proven, and every later stage's
-debugging is cheaper with halt-on-address available from the first fetch.
+**Verify:** clean clock at demo and MHz rates on the CPU rails, single-step produces
+exactly one edge at the far end of the distribution, reset asserts/releases cleanly,
+breakpoint comparator toggles its FF on a jumpered address match through the new
+header.
+
+Integrating the Breakpoint board first is deliberate: every later stage's debugging is
+cheaper with halt-on-address available from the first fetch.
 
 ---
 
