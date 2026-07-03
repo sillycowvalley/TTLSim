@@ -55,19 +55,24 @@ public static class ChipLabelSheetExporter
 
     // ---- typography (Chip_Labels.md section 2) --------------------------
     private const double PinNameSize = 4.0;          // matches Grant Searle's originals
-    private const double PinNameFloor = 2.4;         // shrink-to-fit lower bound
-    private const double PinNameStep = 0.2;
-    private const double EdgeInset = 1.2;            // name to label edge
+    private const double PinNameFloor = 2.4;         // fit lower bound
+    private const double ComfortableSize = 3.2;      // below this, tier-2 fitting kicks in
+    private const double TwoLineMaxSize = 3.0;       // two lines must fit the 7.2 pt row
+    private const double EdgeInset = 1.2;            // name to label edge (normal rows)
+    private const double TightInset = 0.5;           // name to label edge (crowded rows)
     private const double CentreGap = 2.0;            // min gap between the two columns
     private const double BorderClearance = 0.55;     // 0.2 mm glyph-to-border clearance
-    private const double PartNumberGray = 0.78;      // light gray, behind the pin names
+    /// <summary>Tint of the big chip name behind the pin names: a gray
+    /// level from 0.0 (black) to 1.0 (white). Lower = darker / more
+    /// prominent, higher = fainter. The single knob for that colour.</summary>
+    private const double PartNumberGray = 0.64;
     private const double PartNumberWidthFraction = 0.62;
     private const double PartNumberLengthFraction = 0.88;
 
     // ---- sheet layout ----------------------------------------------------
     private const double GapInsideGroup = 8.0;       // between duplicate labels
     private const double GapBetweenGroups = 18.0;
-    private const double CaptionSize = 6.0;
+    private const double CaptionSize = 4.0;
     private const double CaptionGap = 3.0;           // caption to label top
     private const double ShelfGap = 16.0;            // vertical gap between layout rows
 
@@ -116,17 +121,21 @@ public static class ChipLabelSheetExporter
                 : string.Format(CultureInfo.InvariantCulture, "{0} x {1}", group.Count, group.DisplayName);
             if (group.DesignatorNote is not null)
                 caption += " (" + group.DesignatorNote + ")";
+            double captionWidth = font.MeasureText(caption, CaptionSize);
 
             for (int i = 0; i < group.Count; i++)
             {
                 (double x, double slotTop, bool startedRow) = layout.Place(width, slotHeight);
 
                 // Caption above the first label of the group, and again after
-                // any row/page wrap so a split group stays identified.
+                // any row/page wrap so a split group stays identified. The
+                // caption can be wider than the label, so its extent is
+                // reserved -- the next group starts past it, never under it.
                 if (i == 0 || startedRow)
                 {
                     layout.Ops.Append("0 0 0 rg\n");
                     font.AppendTextOps(layout.Ops, caption, x, slotTop - CaptionSize, CaptionSize);
+                    layout.ReserveRight(x + captionWidth);
                 }
 
                 DrawLabel(layout.Ops, font, group,
@@ -144,6 +153,7 @@ public static class ChipLabelSheetExporter
 
     private sealed record LabelGroup(
         string DisplayName,
+        string LabelText,
         ChipPartDefinition Definition,
         int Count,
         Dictionary<int, string>? PinNameOverrides,
@@ -166,6 +176,13 @@ public static class ChipLabelSheetExporter
         string? designatorNote = null;
 
         bool isGal = Device.Identifiers.Gal.Contains(chip.PartNumber);
+
+        // Gray in-sticker text: the IC type. For a GAL that is the bare
+        // device (16V8, 20V8) -- the design name identifies the group in the
+        // caption, not on the sticker.
+        string labelText = isGal && chip.PartNumber.StartsWith("GAL", StringComparison.Ordinal)
+            ? chip.PartNumber.Substring(3)
+            : first.FullPartNumber;
         if (isGal && !string.IsNullOrWhiteSpace(first.Program))
         {
             string program = first.Program!;
@@ -192,7 +209,7 @@ public static class ChipLabelSheetExporter
             if (designatorNote.Length == 0) designatorNote = null;
         }
 
-        return new LabelGroup(displayName, chip, devices.Count, overrides, designatorNote);
+        return new LabelGroup(displayName, labelText, chip, devices.Count, overrides, designatorNote);
     }
 
     // ------------------------------------------------------------------ shelf layout
@@ -238,13 +255,22 @@ public static class ChipLabelSheetExporter
             return (placedX, shelfTop, startedRow);
         }
 
-        public void EndGroup() => x += GapBetweenGroups - GapInsideGroup;
+        // Rightmost caption extent on the current shelf; the next group must
+        // start past it even when its labels are narrower than the caption.
+        private double reservedRight;
+
+        public void ReserveRight(double rightEdge) =>
+            reservedRight = Math.Max(reservedRight, rightEdge);
+
+        public void EndGroup() =>
+            x = Math.Max(x + GapBetweenGroups - GapInsideGroup, reservedRight + GapBetweenGroups);
 
         private void StartShelf()
         {
             shelfTop -= shelfHeight + ShelfGap;
             x = Margin;
             shelfHeight = 0;
+            reservedRight = 0;
         }
 
         private void StartPage()
@@ -254,6 +280,7 @@ public static class ChipLabelSheetExporter
             x = Margin;
             shelfTop = PageHeight - Margin;
             shelfHeight = 0;
+            reservedRight = 0;
         }
     }
 
@@ -287,7 +314,7 @@ public static class ChipLabelSheetExporter
         LabelGroup group, double x, double yTop)
     {
         ChipPartDefinition chip = group.Definition;
-        string partName = group.DisplayName;
+        string partName = group.LabelText;
         int rows = (chip.PinCount + 1) / 2;
         (double width, double height) = LabelSize(chip);
         double yBottom = yTop - height;
@@ -327,6 +354,12 @@ public static class ChipLabelSheetExporter
         double pinSpan = (rows - 1) * RowPitch;
         double firstRowCentreY = yTop - (height - pinSpan) / 2;
 
+        // Pass 1: resolve each row's layout (single line or underscore
+        // split, normal or tight inset) and its natural fit size.
+        // Pass 2 draws every row at the label-wide MINIMUM of those sizes,
+        // so all pin names on one label share a single font size -- the
+        // most crowded row sets it (Chip_Labels.md section 2).
+        var rowPlans = new List<(double CentreY, string[] Left, string[] Right, double Inset, double Size)>();
         for (int row = 0; row < rows; row++)
         {
             double centreY = firstRowCentreY - row * RowPitch;
@@ -334,31 +367,124 @@ public static class ChipLabelSheetExporter
             string right = PrintableName(namesByNumber, chip.PinCount - row);
             if (left.Length == 0 && right.Length == 0) continue;
 
-            // Per-row shrink-to-fit.
-            double size = PinNameSize;
-            while (size > PinNameFloor &&
-                   font.MeasureText(left, size) + font.MeasureText(right, size)
-                       + 2 * EdgeInset + CentreGap > width)
+            double unitLeft = font.MeasureText(left, 1.0);
+            double unitRight = font.MeasureText(right, 1.0);
+            double SizeFor(double uL, double uR, double inset)
             {
-                size -= PinNameStep;
+                double available = width - 2 * inset - CentreGap;
+                double total = uL + uR;
+                return total <= 0 ? PinNameSize
+                    : Math.Min(PinNameSize, available / total);
             }
 
-            // Vertical centring, then the end-row border clamp: cap height
-            // above the baseline, slash descender below, plus clearance.
-            double baseline = centreY - size * LabelVectorFont.CapHeightEm / 2;
-            double capTop = LabelVectorFont.CapHeightEm * size;
-            double descender = LabelVectorFont.DescenderEm * size;
-            if (baseline + capTop > yTop - BorderClearance)
-                baseline = yTop - BorderClearance - capTop;
-            if (baseline - descender < yBottom + BorderClearance)
-                baseline = yBottom + BorderClearance + descender;
+            // Tier 1: a single line at the normal edge inset, when it stays
+            // comfortably readable.
+            double plain = SizeFor(unitLeft, unitRight, EdgeInset);
+            if (plain >= ComfortableSize)
+            {
+                rowPlans.Add((centreY, new[] { left }, new[] { right }, EdgeInset, plain));
+                continue;
+            }
 
-            if (left.Length > 0)
-                font.AppendTextOps(ops, left, x + EdgeInset, baseline, size);
-            if (right.Length > 0)
-                font.AppendTextOps(ops, right,
-                    x + width - EdgeInset - font.MeasureText(right, size), baseline, size);
+            // Tier 2: crowded row. Names move to the tight inset, and a name
+            // containing '_' splits onto two lines at the first underscore
+            // (the underscore itself is dropped) -- "IOADDR_SEL" becomes
+            // "IOADDR" over "SEL". The row takes whichever way yields the
+            // larger text.
+            string[] leftLines = SplitAtUnderscore(left);
+            string[] rightLines = SplitAtUnderscore(right);
+            bool anySplit = leftLines.Length > 1 || rightLines.Length > 1;
+
+            double singleSize = Math.Max(PinNameFloor,
+                SizeFor(unitLeft, unitRight, TightInset));
+            double splitSize = Math.Max(PinNameFloor, Math.Min(TwoLineMaxSize,
+                SizeFor(MaxUnitWidth(font, leftLines), MaxUnitWidth(font, rightLines), TightInset)));
+
+            if (anySplit && splitSize > singleSize)
+                rowPlans.Add((centreY, leftLines, rightLines, TightInset, splitSize));
+            else
+                rowPlans.Add((centreY, new[] { left }, new[] { right }, TightInset, singleSize));
         }
+
+        // Pass 2: uniform size = the smallest natural fit on this label.
+        double uniformSize = PinNameSize;
+        foreach (var plan in rowPlans)
+            uniformSize = Math.Min(uniformSize, plan.Size);
+
+        foreach (var plan in rowPlans)
+        {
+            DrawPinText(ops, font, plan.Left, uniformSize, x, yTop, yBottom,
+                plan.CentreY, width, plan.Inset, alignRight: false);
+            DrawPinText(ops, font, plan.Right, uniformSize, x, yTop, yBottom,
+                plan.CentreY, width, plan.Inset, alignRight: true);
+        }
+    }
+
+    /// <summary>
+    /// Draw one pin's name as one or two stacked lines, vertically centred
+    /// on its row, with the whole block clamped inside the label border
+    /// (cap height above the top baseline, slash descender below the bottom
+    /// one, plus clearance). Lines left-align at the inset or right-align to
+    /// the opposite edge.
+    /// </summary>
+    private static void DrawPinText(StringBuilder ops, LabelVectorFont font,
+        string[] lines, double size, double x, double yTop, double yBottom,
+        double centreY, double width, double inset, bool alignRight)
+    {
+        if (lines.Length == 0 || (lines.Length == 1 && lines[0].Length == 0)) return;
+
+        double capTop = LabelVectorFont.CapHeightEm * size;
+        double descender = LabelVectorFont.DescenderEm * size;
+        double lineGap = lines.Length > 1 ? 0.35 * size : 0;
+
+        // Baselines, top line first, centred as a block on the row.
+        var baselines = new double[lines.Length];
+        if (lines.Length == 1)
+        {
+            baselines[0] = centreY - capTop / 2;
+        }
+        else
+        {
+            baselines[0] = centreY + lineGap / 2;
+            baselines[1] = centreY - lineGap / 2 - capTop;
+        }
+
+        // Clamp the block inside the border, shifting all lines together.
+        double blockTop = baselines[0] + capTop;
+        double blockBottom = baselines[baselines.Length - 1] - descender;
+        double shift = 0;
+        if (blockTop > yTop - BorderClearance) shift = (yTop - BorderClearance) - blockTop;
+        if (blockBottom + shift < yBottom + BorderClearance)
+            shift = (yBottom + BorderClearance) - blockBottom;
+
+        foreach (var pair in lines.Select((text, i) => (text, i)))
+        {
+            if (pair.text.Length == 0) continue;
+            double textX = alignRight
+                ? x + width - inset - font.MeasureText(pair.text, size)
+                : x + inset;
+            font.AppendTextOps(ops, pair.text, textX, baselines[pair.i] + shift, size);
+        }
+    }
+
+    /// <summary>
+    /// Split a pin name at its first underscore into two lines, dropping the
+    /// underscore ("IOADDR_SEL" -> "IOADDR", "SEL"). Names without an
+    /// interior underscore stay as one line.
+    /// </summary>
+    private static string[] SplitAtUnderscore(string name)
+    {
+        int idx = name.IndexOf('_');
+        if (idx <= 0 || idx >= name.Length - 1) return new[] { name };
+        return new[] { name.Substring(0, idx), name.Substring(idx + 1) };
+    }
+
+    private static double MaxUnitWidth(LabelVectorFont font, string[] lines)
+    {
+        double max = 0;
+        foreach (string line in lines)
+            max = Math.Max(max, font.MeasureText(line, 1.0));
+        return max;
     }
 
     private static string PrintableName(Dictionary<int, string> namesByNumber, int pinNumber)
