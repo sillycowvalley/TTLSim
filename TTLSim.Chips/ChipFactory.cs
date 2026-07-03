@@ -423,6 +423,8 @@ public sealed class ChipFactory : IChipFactory
             "245" => TryCreateHc245(device, pinToNet),
             "273" => TryCreateHc273(device, pinToNet),
             "283" => TryCreateHc283(device, pinToNet),
+            "374" => TryCreateHc374(device, pinToNet),
+            "377" => TryCreateHc377(device, pinToNet),
             "541" => TryCreateHc541(device, pinToNet),
             "688" => TryCreateHc688(device, pinToNet),
             "DS1813" => TryCreateDs1813(pinToNet),
@@ -761,6 +763,66 @@ public sealed class ChipFactory : IChipFactory
             delayPs: TtlTiming.ResolvePs(device));
     }
 
+    private IChip? TryCreateHc374(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        // Same policy as the '273: /OE (pin 1) and CLK (pin 11) are required
+        // -- a floating clock or output enable on a bus register is a real
+        // fault. The eight D inputs and eight Q outputs are OPTIONAL: a
+        // partially-used '374 leaves the spare pins open. An unconnected D
+        // gets a local stand-in net that reads as Low; an unconnected Q gets
+        // a stand-in that drives nothing. Floating-input diagnostics (TTL011)
+        // still flag genuinely unwired pins at design time.
+        if (!pinToNet.TryGetValue(1, out Net? oeN) || oeN is null) return null;
+        if (!pinToNet.TryGetValue(11, out Net? clkN) || clkN is null) return null;
+
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);
+
+        return new Hc374(
+            oeN: oeN, clkN: clkN,
+            d0: Opt(3, "d0-nc"), d1: Opt(4, "d1-nc"),
+            d2: Opt(7, "d2-nc"), d3: Opt(8, "d3-nc"),
+            d4: Opt(13, "d4-nc"), d5: Opt(14, "d5-nc"),
+            d6: Opt(17, "d6-nc"), d7: Opt(18, "d7-nc"),
+            q0: Opt(2, "q0-nc"), q1: Opt(5, "q1-nc"),
+            q2: Opt(6, "q2-nc"), q3: Opt(9, "q3-nc"),
+            q4: Opt(12, "q4-nc"), q5: Opt(15, "q5-nc"),
+            q6: Opt(16, "q6-nc"), q7: Opt(19, "q7-nc"),
+            label: "374", logger: logger,
+            delayPs: TtlTiming.ResolvePs(device));
+    }
+
+    private IChip? TryCreateHc377(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        // Same policy as the '273/'374: /EN (pin 1) and CLK (pin 11) are
+        // required -- a floating clock or enable on a register is a real
+        // fault. The eight D inputs and eight Q outputs are OPTIONAL: a
+        // partially-used '377 leaves the spare pins open. An unconnected D
+        // gets a local stand-in net that reads as Low; an unconnected Q gets
+        // a stand-in that drives nothing. Floating-input diagnostics (TTL011)
+        // still flag genuinely unwired pins at design time.
+        if (!pinToNet.TryGetValue(1, out Net? enN) || enN is null) return null;
+        if (!pinToNet.TryGetValue(11, out Net? clkN) || clkN is null) return null;
+
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);
+
+        return new Hc377(
+            enN: enN, clkN: clkN,
+            d0: Opt(3, "d0-nc"), d1: Opt(4, "d1-nc"),
+            d2: Opt(7, "d2-nc"), d3: Opt(8, "d3-nc"),
+            d4: Opt(13, "d4-nc"), d5: Opt(14, "d5-nc"),
+            d6: Opt(17, "d6-nc"), d7: Opt(18, "d7-nc"),
+            q0: Opt(2, "q0-nc"), q1: Opt(5, "q1-nc"),
+            q2: Opt(6, "q2-nc"), q3: Opt(9, "q3-nc"),
+            q4: Opt(12, "q4-nc"), q5: Opt(15, "q5-nc"),
+            q6: Opt(16, "q6-nc"), q7: Opt(19, "q7-nc"),
+            label: "377", logger: logger,
+            delayPs: TtlTiming.ResolvePs(device));
+    }
+
     private IChip? TryCreateHc283(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
     {
         // C4 (pin 9) is the carry-out cascade pin and is OPTIONAL -- the
@@ -850,7 +912,7 @@ public sealed class ChipFactory : IChipFactory
     {
         // Box-chip ICs (per-unit dispatch in CreateForUnit).
         "47" or "74" or "139" or "153" or "157" or "161" or "163" or "173" or "181" or "191"
-            or "244" or "245" or "257" or "273" or "283" or "541" or "688" or "7seg-ca"
+            or "244" or "245" or "257" or "273" or "283" or "374" or "377" or "541" or "688" or "7seg-ca"
             => true,
         // Reset supervisor (per-unit dispatch in CreateForUnit).
         "DS1813"

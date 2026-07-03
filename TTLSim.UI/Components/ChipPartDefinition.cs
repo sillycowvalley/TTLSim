@@ -794,6 +794,31 @@ public sealed record ChipPartDefinition(
         IsSeries74: true
         );
 
+    /// <summary>74HC374 octal D flip-flop with 3-state outputs, 20-pin DIP.
+    /// Positive-edge clock; /OE high puts Q0..Q7 in high-Z -- the register
+    /// still clocks underneath, so re-enabling reveals whatever was latched
+    /// meanwhile. Same D/Q interleave as the '273 (only pin 1 differs);
+    /// the '574 is the flow-through-pinout variant. Physical stock is the
+    /// HCT374 (HC374 unobtainable) -- a drop-in here.</summary>
+    public static readonly ChipPartDefinition Ic74374 = new(
+        PartNumber: "374", PinCount: 20, PowerPin: 20, GroundPin: 10,
+        BodyWidth: 8,
+        Pins: new ChipPin[]
+        {
+        new("/OE", 1),              new("VCC", 20),
+        new("Q0",  2, Out),         new("Q7",  19, Out),
+        new("D0",  3),              new("D7",  18),
+        new("D1",  4),              new("D6",  17),
+        new("Q1",  5, Out),         new("Q6",  16, Out),
+        new("Q2",  6, Out),         new("Q5",  15, Out),
+        new("D2",  7),              new("D5",  14),
+        new("D3",  8),              new("D4",  13),
+        new("Q3",  9, Out),         new("Q4",  12, Out),
+        new("GND", 10),             new("CLK", 11),
+        },
+        IsSeries74: true
+        );
+
     // ---- Counters ------------------------------------------------------
 
     /// <summary>74HC161 presettable synchronous 4-bit binary counter with

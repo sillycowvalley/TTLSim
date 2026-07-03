@@ -43,7 +43,7 @@ public sealed class LibraryPanel : UserControl
     private static readonly HashSet<string> SimulatedChipIdentifiers = new(StringComparer.Ordinal)
     {
         "00", "02", "04", "08", "10", "14", "20", "30", "32", "86",
-        "47", "74", "139", "153", "157", "161", "163", "173", "181", "191", "244", "245", "257", "273", "283", "390", "393", "541", "688",
+        "47", "74", "139", "153", "157", "161", "163", "173", "181", "191", "244", "245", "257", "273", "283", "374", "377", "390", "393", "541", "688",
         "DS1813",
         "7seg-ca",
         "NE555", "NE556",
@@ -207,6 +207,7 @@ public sealed class LibraryPanel : UserControl
         AddBoxPart(registers, ChipPartDefinition.Ic74273, "Octal D Register, /CLR");
         AddBoxPart(registers, ChipPartDefinition.Ic74299, "8-bit Universal Shift Register");
         AddBoxPart(registers, ChipPartDefinition.Ic74373, "Octal D Latch, 3-state");
+        AddBoxPart(registers, ChipPartDefinition.Ic74374, "Octal D Register, 3-state");
         AddBoxPart(registers, ChipPartDefinition.Ic74377, "Octal D Register, /EN");
         AddBoxPart(registers, ChipPartDefinition.Ic74574, "Octal D Register, 3-state");
         AddBoxPart(registers, ChipPartDefinition.Ic74595, "8-bit Shift Register, 3-state");
