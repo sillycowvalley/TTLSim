@@ -1,6 +1,6 @@
 # TTL Blinky CPU — Master Reference
 
-> **This is the single authoritative Blinky document.** It defines the current state of the architecture: super-op encoding with a 13-bit address space, relative conditional branches, the SRAM-backed return stack with hardware base-pointer call frames, the interrupt subsystem (NMI / IRQ / BRK), and an all-22V10 control complement.
+> **This is the single authoritative Blinky document.** It defines the current state of the architecture: super-op encoding with a 13-bit address space, relative conditional branches, the SRAM-backed return stack with hardware base-pointer call frames, the interrupt subsystem (NMI / IRQ / BRK), an all-22V10 control complement, and the ratified opcode map and select encodings (indexed in the Appendix).
 
 A minimal-but-honest TTL CPU aimed at "blinking lights" aesthetics: every LED on the front panel means something, every clock tick is one instruction, and the architecture is
 interesting enough to be more than a toy.
@@ -161,6 +161,57 @@ Covered above: `JUMP`, `CALL`, `LOAD`, `STORE`. Note **writes are immediate-form
 
 Reads keep both forms: stack-form `FETCH` and `IN` take a run-time-computed address/port from TOS (genuinely ΔDSP = 0 — the value read replaces the address), and the immediate/super-op forms are denser for fixed accesses. **Writes are immediate-form only** (`STORE addr`, `OUT #port`): a clean stack-form write `( data addr -- )` is a forbidden −2 on the single-port stack, and a −1 compromise leaves a dangling operand on every write.
 Run-time-computed write targets are unrolled to fixed addresses/ports, mapped to fixed ports, or handled through frame locals.
+
+## I = 0 opcode map
+
+The 7-bit opcode field splits into a **3-bit family** (bits 14:12) and a **4-bit member**
+(bits 11:8). Family detection is a single 3-input cube per family; member decode reuses the
+nibble idiom proven on the bring-up board. Six families are live, two reserved.
+
+| Family | Bits 14:12 | Name                            | Members                                        |
+| ------ | ---------- | ------------------------------- | ---------------------------------------------- |
+| 0      | 000        | CTL — control / interrupt       | NOP, HALT, RET, BRK, RTI, CLI, SEI             |
+| 1      | 001        | ALU                             | one opcode; sub-op in **operand[3:0]** (§ALU)  |
+| 2      | 010        | STK — stack / return stack      | DUP, OVER, TUCK, R@, R>, SWAP, DROP, NIP, >R   |
+| 3      | 011        | MEM — memory / I-O / immediate  | PUSH #, IN #, FETCH, IN, OUT #                 |
+| 4      | 100        | FRM — frame                     | ENTER, LOCAL@, LOCAL!                          |
+| 5      | 101        | BR — relative branch            | BRA, BEQ, BNE, BCS, BCC, BMI, BPL              |
+| 6–7    | 11x        | reserved                        | decode inert                                   |
+
+Member assignments (opcode shown as the 7-bit hex value; unlisted members are reserved,
+decode inert):
+
+| CTL (0x0m) |          | STK (0x2m) |        | MEM (0x3m) |             | FRM (0x4m) |              | BR (0x5m) |       |
+| ---------- | -------- | ---------- | ------ | ---------- | ----------- | ---------- | ------------ | --------- | ----- |
+| 0x00       | NOP      | 0x20       | DUP    | 0x30       | PUSH #imm   | 0x40       | ENTER k      | 0x50      | BRA   |
+| 0x01       | HALT     | 0x21       | OVER   | 0x31       | IN #port    | 0x41       | LOCAL@ off   | 0x52      | BEQ   |
+| 0x02       | RET      | 0x22       | TUCK   | 0x32       | FETCH       | 0x48       | LOCAL! off   | 0x53      | BNE   |
+| 0x04       | BRK      | 0x23       | R@     | 0x33       | IN          |            |              | 0x54      | BCS   |
+| 0x05       | RTI      | 0x24       | R>     | 0x38       | OUT #port   |            |              | 0x55      | BCC   |
+| 0x06       | CLI      | 0x25       | SWAP   |            |             |            |              | 0x56      | BMI   |
+| 0x07       | SEI      | 0x28       | DROP   |            |             |            |              | 0x57      | BPL   |
+|            |          | 0x29       | NIP    |            |             |            |              |           |       |
+|            |          | 0x2A       | >R     |            |             |            |              |           |       |
+
+The ALU family is the single opcode **0x10** (members 0x11–0x1F are canonicalised to 0x10 —
+op[11:8] is don't-care in decode); the sub-op nibble stays in operand[3:0] exactly as the
+verified rows implement, with L3/L2 doubling as the shifter fill-mux select.
+
+The placements are **not aesthetic** — they buy shared cubes:
+
+- **Pop bit.** Within families 2/3/4, **op[11] = 1 ⇔ ΔDSP = −1** (DROP, NIP, >R, OUT #,
+  LOCAL! all sit at member 8+; every push or ΔDSP-0 member sits below 8). `DSP_UD` for
+  these families is one literal, not a member enumeration. (Family 1's pops remain
+  sub-op-determined; families 0 and 5 never touch DSP.)
+- **Branch condition from raw bits.** In the BR family, **IR[10:9]** selects the flag
+  (01 = Z, 10 = C, 11 = N) and **IR[8]** is the polarity (0 = branch if set, 1 = branch if
+  clear); member 0 (IR[10:9] = 00) is the unconditional BRA. The inverse-branch pairs
+  differ only in IR[8], so `taken` in the flow PLD is `(sel = 00) OR (flag XOR IR[8])` —
+  seven small terms, and the far-conditional idiom's pairing is literally one bit.
+- **I from a raw bit.** CLI/SEI differ only in IR[8]: on the SEI/CLI cube, **I ← IR[8]**.
+- **Cheap BRK jam.** BRK's word is **0x0400** — a single high line among fifteen grounds
+  on the BRK-force '257 pattern inputs.
+- **NOP = 0x0000.** The all-zero instruction word is NOP.
 
 ## CALL / RET semantics
 
@@ -530,6 +581,73 @@ BlinkyJED, TTLSim, and the WinCUPL cross-check chain all support the 22V10, so e
 device verifies the same way: BlinkyJED compile, fuse-for-fuse cross-check, JED import
 into the sim, full IR sweep, JEDTester on silicon — one `GalDef`, one stock line.
 
+## Select / mux encodings
+
+Binary assignments for every multi-bit select. Convention: value 0 / 00 is the hot
+sequential-flow default, so idle and reserved instructions decode to all-zero selects.
+
+**`PCSEL1..0`** (PLD 5) — NEXTPC source:
+
+| Value | Source        | Used by                                                    |
+| ----- | ------------- | ---------------------------------------------------------- |
+| 00    | PC adder      | sequential flow, all relative branches (`BSEL` picks the addend) |
+| 01    | IR[12:0]      | JUMP, CALL                                                 |
+| 10    | RTOS (PC lane)| RET, RTI                                                   |
+| 11    | vector        | interrupt / BRK entry                                      |
+
+`VEC_EN` = (PCSEL = 11), emitted directly by PLD 5 so the vector buffer needs no external
+decode; one '139 half decodes the other three 3-state enables. **`BSEL`**: 0 = constant +1,
+1 = sign-extended IR[7:0]. Taken-vs-not-taken lives entirely in `BSEL`; conditional
+branches never leave PCSEL = 00.
+
+**`TOS_M1..0`** (PLD 1) — raw '194 mode pins (physical truth table, no re-encoding):
+
+| Value | '194 mode     | Used by            |
+| ----- | ------------- | ------------------ |
+| 00    | hold          | idle / non-TOS ops |
+| 01    | shift right   | SHR, ASR, ROR      |
+| 10    | shift left    | SHL, ROL           |
+| 11    | parallel load | every TOS write    |
+
+**`TOS_SRC2..0`** (PLD 2) — TOS parallel-load source (meaningful only when TOS_M = 11):
+
+| Value | Source            | Used by                              |
+| ----- | ----------------- | ------------------------------------ |
+| 000   | ALU F outputs     | ADD, ADC, SUB, XOR, NOT, AND, OR     |
+| 001   | NOS               | SWAP, OVER, DROP, NIP-hold path      |
+| 010   | IR[7:0]           | PUSH #imm                            |
+| 011   | D-mem data out    | LOAD, FETCH, LOCAL@                  |
+| 100   | I/O data in       | IN, IN #port                         |
+| 101   | RTOS[7:0]         | R@, R>                               |
+| 11x   | reserved          |                                      |
+
+**`NOS_SRC`**: 0 = old TOS (push spill / SWAP), 1 = stack[DSP−1] read (pops). `NOS_LD`
+gates the write. **`SDIN_SEL`** (stack data-in '257): 0 = NOS (normal push spills old
+NOS), 1 = TOS (TUCK).
+
+**`RDIN_SEL1..0`** (PLD 3) — return-stack PC-lane data-in:
+
+| Value | Source              | Used by                                  |
+| ----- | ------------------- | ---------------------------------------- |
+| 00    | PC+1 (adder)        | CALL, BRK                                |
+| 01    | raw PC              | hardware IRQ / NMI entry (re-execute)    |
+| 10    | TOS, zero-extended  | >R                                       |
+| 11    | reserved            |                                          |
+
+**`DADDR_S1..0`** (PLD 4) — D-address 3:1 mux:
+
+| Value | Source                          | Used by             |
+| ----- | ------------------------------- | ------------------- |
+| 00    | IR[12:0]                        | LOAD, STORE         |
+| 01    | TOS, zero-extended              | FETCH               |
+| 10    | BP + sign-extended IR[7:0]      | LOCAL@, LOCAL!      |
+| 11    | reserved                        |                     |
+
+**`BP_SRC`**: 0 = BP adder output (ENTER), 1 = saved-BP lane read (RET, RTI). `BP_LD`
+asserts on ENTER/RET/RTI only. **`IOADDR_SEL`**: 0 = IR[7:0] (IN #/OUT #), 1 = TOS
+(stack-form IN). **`C_SRC`**: 0 = '181 carry chain (high Cn+4), 1 = shifted-out bit (the
+'194 end taps).
+
 ---
 
 # 9. Memory & I/O
@@ -594,7 +712,7 @@ Core CPU and memory subsystem (all-HC baseline; see Sourcing):
 | **Core total**                                                                                                                        | **~70–73** |
 
 Optional peripherals (matrix, switches, status) add ~10. The hardware breakpoint ('688
-comparator ×2 for the 13-bit PC + '00 + '74, proven on the W = 4 board) adds 4.
+comparator ×2 for the 13-bit PC + '00 + '74, proven on the bring-up board) adds 4.
 
 ---
 
@@ -604,7 +722,7 @@ Stock tracked in `ChipInventory.md` (all-HC baseline; "in transit" = ordered, co
 available).
 
 - **22V10** is the single PLD type machine-wide (ATF22V10C class); the GAL16V8 stock
-  stays with the W = 4 board.
+  stays with the bring-up board.
 - **'191** for all stack pointers (HC169 unobtainable). Direction sense: '191 D//U
   LOW = up (absorbed in the PLD equations); count enable is active-low /CTEN; load is
   asynchronous — which is what makes the /LOAD-low reset idiom work.
@@ -630,3 +748,63 @@ available).
   immediate/super-op form only.
 - **Interrupt priority encoder / multiple IRQ vectors** — one IRQ line, one vector; the handler polls device status ports. Additional request lines cost 22V10 inputs the
   budget doesn't owe.
+
+---
+
+# Appendix — Opcode Index
+
+Alphabetical, every mnemonic. Word patterns: `aaaa` = 13-bit absolute address (word =
+base | addr), `oo` = signed 8-bit offset, `ii` = 8-bit immediate, `pp` = 8-bit port,
+`kk` = unsigned 8-bit count. Flags column lists what the instruction *writes*.
+
+| Mnemonic     | Word          | ΔDSP | Flags   | Effect                                          |
+| ------------ | ------------- | ---- | ------- | ------------------------------------------------ |
+| `>R`         | 0x2A00        | −1   | —       | `( a -- )` push a to return stack (PC lane)      |
+| `ADC`        | 0x1001        | −1   | N Z C   | `( a b -- b+a+C )`                               |
+| `ADD`        | 0x1000        | −1   | N Z C   | `( a b -- b+a )`                                 |
+| `AND`        | 0x1008        | −1   | N Z     | `( a b -- b&a )` — C preserved                   |
+| `ASR`        | 0x100B        | 0    | N Z C   | `( a -- a>>1 )` sign fill; C ← old bit 0         |
+| `BCC oo`     | 0x55oo        | 0    | —       | PC ← PC+1+oo if C = 0                            |
+| `BCS oo`     | 0x54oo        | 0    | —       | PC ← PC+1+oo if C = 1                            |
+| `BEQ oo`     | 0x52oo        | 0    | —       | PC ← PC+1+oo if Z = 1                            |
+| `BMI oo`     | 0x56oo        | 0    | —       | PC ← PC+1+oo if N = 1                            |
+| `BNE oo`     | 0x53oo        | 0    | —       | PC ← PC+1+oo if Z = 0                            |
+| `BPL oo`     | 0x57oo        | 0    | —       | PC ← PC+1+oo if N = 0                            |
+| `BRA oo`     | 0x50oo        | 0    | —       | PC ← PC+1+oo (unconditional, relocatable)        |
+| `BRK`        | 0x0400        | 0    | I ← 1   | push `{PC+1,N,Z,C}` `{BP,I,B=1}`; PC ← 0x0001    |
+| `CALL aaaa`  | 0xA000\|aaaa  | 0    | —       | push `{PC+1, BP}`; PC ← aaaa                     |
+| `CLI`        | 0x0600        | 0    | I ← 0   | unmask IRQ                                       |
+| `CMP`        | 0x1009        | 0    | N Z C   | `( a b -- a b )` flags of TOS−NOS; C = TOS ≥ NOS |
+| `DROP`       | 0x2800        | −1   | —       | `( a -- )`                                       |
+| `DUP`        | 0x2000        | +1   | —       | `( a -- a a )`                                   |
+| `ENTER kk`   | 0x40kk        | 0    | —       | BP ← BP + kk (reserve frame)                     |
+| `FETCH`      | 0x3200        | 0    | —       | `( addr -- m )` D-mem read, addr = TOS (low 256) |
+| `HALT`       | 0x0100        | 0    | —       | stop clock (NMI wakes)                           |
+| `IN`         | 0x3300        | 0    | —       | `( port -- value )` port from TOS                |
+| `IN #pp`     | 0x31pp        | +1   | —       | `( -- value )` read port pp                      |
+| `JUMP aaaa`  | 0x8000\|aaaa  | 0    | —       | PC ← aaaa                                        |
+| `LOAD aaaa`  | 0xC000\|aaaa  | +1   | —       | `( -- m )` push D-mem[aaaa]                      |
+| `LOCAL! oo`  | 0x48oo        | −1   | —       | `( a -- )` pop → D-mem[BP+oo]                    |
+| `LOCAL@ oo`  | 0x41oo        | +1   | —       | `( -- m )` push D-mem[BP+oo]                     |
+| `NIP`        | 0x2900        | −1   | —       | `( a b -- b )`                                   |
+| `NOP`        | 0x0000        | 0    | —       | —                                                |
+| `NOT`        | 0x1004        | 0    | N Z     | `( a -- ~a )` — C preserved                      |
+| `OR`         | 0x100C        | −1   | N Z     | `( a b -- b\|a )` — C preserved                  |
+| `OUT #pp`    | 0x38pp        | −1   | —       | `( d -- )` write TOS to port pp                  |
+| `OVER`       | 0x2100        | +1   | —       | `( a b -- a b a )`                               |
+| `PUSH #ii`   | 0x30ii        | +1   | —       | `( -- ii )`                                      |
+| `R>`         | 0x2400        | +1   | —       | `( -- r )` pop return stack (PC lane low 8)      |
+| `R@`         | 0x2300        | +1   | —       | `( -- r )` copy return-stack top, no pop         |
+| `RET`        | 0x0200        | 0    | —       | pop `{PC, BP}`; flags untouched                  |
+| `ROL`        | 0x100E        | 0    | N Z C   | `( a -- rol a )` wrap; C ← old bit 7             |
+| `ROR`        | 0x100F        | 0    | N Z C   | `( a -- ror a )` wrap; C ← old bit 0             |
+| `RTI`        | 0x0500        | 0    | N Z C I | pop both lanes; PC, BP, flags all restored       |
+| `SEI`        | 0x0700        | 0    | I ← 1   | mask IRQ                                         |
+| `SHL`        | 0x1006        | 0    | N Z C   | `( a -- a<<1 )` zero fill; C ← old bit 7         |
+| `SHR`        | 0x1007        | 0    | N Z C   | `( a -- a>>1 )` zero fill; C ← old bit 0         |
+| `STORE aaaa` | 0xE000\|aaaa  | −1   | —       | `( a -- )` pop → D-mem[aaaa]                     |
+| `SUB`        | 0x1002        | −1   | N Z C   | `( a b -- b−a )`; C = no borrow                  |
+| `SWAP`       | 0x2500        | 0    | —       | `( a b -- b a )`                                 |
+| `TST`        | 0x1005        | 0    | N Z     | `( a -- a )` flags of TOS — C preserved          |
+| `TUCK`       | 0x2200        | +1   | —       | `( a b -- b a b )`                               |
+| `XOR`        | 0x1003        | −1   | N Z     | `( a b -- b^a )` — C preserved                   |

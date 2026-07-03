@@ -30,4 +30,12 @@
    <EmbeddedResource Include="Persistence\EasyEDA\Resources\*.json" />
  </ItemGroup>
 
+   <ItemGroup>
+     <None Remove="VectorFont.json" />
+   </ItemGroup>
+
+   <ItemGroup>
+     <EmbeddedResource Include="VectorFont.json" />
+   </ItemGroup>
+
 </Project>
