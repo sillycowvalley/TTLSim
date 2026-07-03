@@ -1,6 +1,6 @@
-# TTL Blinky CPU — Master Reference (W = 8)
+# TTL Blinky CPU — Master Reference
 
-> **This is the single authoritative Blinky (W = 8) document.** It defines the current state of the architecture: super-op encoding with a 13-bit address space, relative conditional branches, the SRAM-backed return stack with hardware base-pointer call frames, the interrupt subsystem (NMI / IRQ / BRK), and an all-22V10 control complement.
+> **This is the single authoritative Blinky document.** It defines the current state of the architecture: super-op encoding with a 13-bit address space, relative conditional branches, the SRAM-backed return stack with hardware base-pointer call frames, the interrupt subsystem (NMI / IRQ / BRK), and an all-22V10 control complement.
 
 A minimal-but-honest TTL CPU aimed at "blinking lights" aesthetics: every LED on the front panel means something, every clock tick is one instruction, and the architecture is
 interesting enough to be more than a toy.
@@ -21,7 +21,7 @@ vectored interrupts.**
 
 | Bus / Width         | Size                       | Notes                                                        |
 | ------------------- | -------------------------- | ------------------------------------------------------------ |
-| Data bus (D)        | 8 bits                     | ALU and data width (`W = 8`)                                 |
+| Data bus (D)        | 8 bits                     | ALU and data width                                           |
 | Instruction bus (I) | 16 bits                    | Fixed-width instructions, single-cycle fetch                 |
 | I-address bus (PC)  | 13 bits                    | 8K instructions                                              |
 | D-address bus       | 13 bits                    | 8K data cells                                                |
@@ -148,7 +148,7 @@ Covered above: `JUMP`, `CALL`, `LOAD`, `STORE`. Note **writes are immediate-form
 
 | Family              | Instructions                                                        | Operand field                        | Flags                                                       | Notes                                                                                                                                                   |
 | ------------------- | ------------------------------------------------------------------- | ------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ALU                 | ADD, ADC, SUB, XOR, NOT, TST, SHL, SHR, AND, CMP, ASR, OR, ROL, ROR | sub-op nibble (§ALU)      | N/Z every op; C only arith/shift/CMP — logic ops preserve C | TOS,NOS → TOS. ADC reads C. TST/CMP set flags without writing TOS. SBC and NEG unallocated (nibbles A/D reserved).                                      |
+| ALU                 | ADD, ADC, SUB, XOR, NOT, TST, SHL, SHR, AND, CMP, ASR, OR, ROL, ROR | sub-op nibble (§ALU)                 | N/Z every op; C only arith/shift/CMP — logic ops preserve C | TOS,NOS → TOS. ADC reads C. TST/CMP set flags without writing TOS. SBC and NEG unallocated (nibbles A/D reserved).                                      |
 | Stack               | DUP, DROP, SWAP, OVER, NIP, TUCK                                    | —                                    | none                                                        | ROT is a macro (`>R SWAP R> SWAP`), never an opcode — not single-cycle on a single-port stack.                                                          |
 | Return stack        | >R, R>, R@                                                          | —                                    | none                                                        | Move 8-bit values between stacks; see §Return Stack for lane semantics.                                                                                 |
 | Frame               | LOCAL@ off, LOCAL! off, ENTER k                                     | signed 8-bit offset / unsigned count | none                                                        | BP-relative locals; §Call Frames.                                                                                                                       |
@@ -369,6 +369,10 @@ CALL → RET counts up then down, once each, cleanly.
 - `/CS` is driven directly by `RSP_EN` (both active-low) — the RAM is selected exactly
   on push/pop/R@ cycles and its bus is high-Z on every idle cycle.
 - Timing margin: /WE deasserts at the cycle-ending edge; the address moves only after counter-plus-mux propagation, while /WE rises after one PLD propagation delay — /WE is high before the address moves. Enormous margin at demo clock rates; only a very fast clock would want a bounded write pulse.
+- **High-clock provision — quarter-cycle WRPH.** WRPH = /CLK gives write addresses half a period to settle: ample at demo clocks, and typical-silicon clean to ~5 MHz, but worst-case-datasheet timing at 4 MHz nicks the half-window on the BP-adder write path. The provision is to narrow WRPH to the **final quarter-cycle** — one AND of /CLK with the 2× tap the clock divider chain already carries — giving every write
+  address 3T/4 of settle. One gate, one net, and it upgrades all phase-gated writes
+  (return-stack lanes, data stack, D-mem) together. Not fitted until the clock target
+  demands it.
 
 ## Data-in and lane sources
 
@@ -482,13 +486,13 @@ The PC clear *is* the reset vector.
 
 ## Hardware
 
-| Block                | Part             | Role                                                                                                                                                                                                                                                                                                                                                   |
-| -------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Block                | Part             | Role                                                                                                                                                                                                                                                                                                                                               |
+| -------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Flow / interrupt GAL | **22V10**        | PLD 5 of the complement below. Wide inputs take opcode + I-bit + N/Z/C + the raw IRQ/NMI lines; the 16-term middle macrocells take `PCSEL` (fattest output) and the BRK-force enable; **registered macrocells hold the IRQ sampler, the NMI edge latch, and the I flag** (pin 1 = system clock), with the async-reset term setting I = 1 on reset. |
-| BRK-force            | '257 ×2          | Jams the BRK opcode pattern onto the decode-input side of the IR on an interrupt-entry cycle.                                                                                                                                                                                                                                                          |
-| Flag restore mux     | '157             | Second source (stack-read bits) into the N/Z/C flip-flops, load-enabled on RTI.                                                                                                                                                                                                                                                                        |
-| Vector driver        | 1 buffer enable  | Tied lines onto the NEXTPC bus.                                                                                                                                                                                                                                                                                                                        |
-| PC-lane data-in      | (existing '257s) | Carries the raw-PC source alongside PC+1 and TOS.                                                                                                                                                                                                                                                                                                      |
+| BRK-force            | '257 ×2          | Jams the BRK opcode pattern onto the decode-input side of the IR on an interrupt-entry cycle.                                                                                                                                                                                                                                                      |
+| Flag restore mux     | '157             | Second source (stack-read bits) into the N/Z/C flip-flops, load-enabled on RTI.                                                                                                                                                                                                                                                                    |
+| Vector driver        | 1 buffer enable  | Tied lines onto the NEXTPC bus.                                                                                                                                                                                                                                                                                                                    |
+| PC-lane data-in      | (existing '257s) | Carries the raw-PC source alongside PC+1 and TOS.                                                                                                                                                                                                                                                                                                  |
 
 **Net: ~4–5 ICs; the flow PLD is one of the five 22V10s below.** The lane spare bits are what make
 this cheap: state save/restore needs no extra stack width, no extra cycle, and no extra
@@ -501,13 +505,13 @@ product-term budget per output remove the term squeeze everywhere, and the wider
 absorbs the discrete glue — the strobe '00 and the '191 polarity inverters disappear into
 the equations.
 
-| PLD | Role | Outputs (~) | Inputs |
-| --- | --- | --- | --- |
-| 1 — ALU / shift | `ALU_S3..S0`, `ALU_M`, `ALU_Cn`, `C_SRC`, `TOS_M1`, `TOS_M0` (9) | I-bit + opcode + sub-op + **C** (13 — one spare macrocell pin serves as the 13th input) |
-| 2 — stack-top / D-mem | `TOS_SRC2..0`, `NOS_LD`, `NOS_SRC`, `SDIN_SEL` (TUCK), `NZ_WE`, `C_WE`, `DMEM_CS`, `DMEM_WE` (10) | I-bit + opcode + sub-op (12) |
-| 3 — pointers / strobes | `DSP_EN`, `DSP_UD`, `RSP_EN`, `RSP_UD`, `RDIN_SEL1..0`, plus the **phase-gated `/WE` strobes emitted directly** (9–10) | I-bit + opcode + sub-op + **CLK** as a combinational input |
-| 4 — BP / frame / I-O | `BP_LD`, `BP_SRC`, `DADDR_S1..0`, `IO_RD`, `IO_WR`, `IOADDR_SEL`, `CLK_RUN` (8) | I-bit + opcode + sub-op + `NMI_PEND` (the HALT-wake override) |
-| 5 — flow / interrupts (registered) | `PCSEL1..0`, `BSEL` (offset-mux select), `BRK_FORCE`, `VEC_EN`, `IRQ_PEND` (reg), `NMI_PEND` (reg), `I` (reg) (8) | pin 1 = CLK; I-bit + opcode + N, Z, C + raw IRQ, NMI (13 — two unused macrocell pins serve as inputs) |
+| PLD                                | Role                                                                                                                   | Outputs (~)                                                                                           | Inputs |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------ |
+| 1 — ALU / shift                    | `ALU_S3..S0`, `ALU_M`, `ALU_Cn`, `C_SRC`, `TOS_M1`, `TOS_M0` (9)                                                       | I-bit + opcode + sub-op + **C** (13 — one spare macrocell pin serves as the 13th input)               |        |
+| 2 — stack-top / D-mem              | `TOS_SRC2..0`, `NOS_LD`, `NOS_SRC`, `SDIN_SEL` (TUCK), `NZ_WE`, `C_WE`, `DMEM_CS`, `DMEM_WE` (10)                      | I-bit + opcode + sub-op (12)                                                                          |        |
+| 3 — pointers / strobes             | `DSP_EN`, `DSP_UD`, `RSP_EN`, `RSP_UD`, `RDIN_SEL1..0`, plus the **phase-gated `/WE` strobes emitted directly** (9–10) | I-bit + opcode + sub-op + **CLK** as a combinational input                                            |        |
+| 4 — BP / frame / I-O               | `BP_LD`, `BP_SRC`, `DADDR_S1..0`, `IO_RD`, `IO_WR`, `IOADDR_SEL`, `CLK_RUN` (8)                                        | I-bit + opcode + sub-op + `NMI_PEND` (the HALT-wake override)                                         |        |
+| 5 — flow / interrupts (registered) | `PCSEL1..0`, `BSEL` (offset-mux select), `BRK_FORCE`, `VEC_EN`, `IRQ_PEND` (reg), `NMI_PEND` (reg), `I` (reg) (8)      | pin 1 = CLK; I-bit + opcode + N, Z, C + raw IRQ, NMI (13 — two unused macrocell pins serve as inputs) |        |
 
 Input budgeting is the design rule: a 22V10 offers 12 dedicated inputs (11 when pin 1 is
 the clock for registered outputs), and each unused macrocell pin adds one more. Pure
@@ -570,24 +574,24 @@ then the one-cycle entry as a settled state — displays no accumulator machine 
 
 Core CPU and memory subsystem (all-HC baseline; see Sourcing):
 
-| Block                                                                                                                                                     | Chips      |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| ALU (2× '181 + Cn ripple inverter)                                                                                                                        | 2–3        |
-| TOS (2× '194) + fill mux ('153) + NOS ('374)                                                                                                              | 4          |
-| TUCK write-select ('257 ×2 on stack data-in)                                                                                                              | 2          |
-| Data stack SRAM + DSP ('191 ×2)                                                                                                                           | 3          |
+| Block                                                                                                                                 | Chips      |
+| ------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| ALU (2× '181 + Cn ripple inverter)                                                                                                    | 2–3        |
+| TOS (2× '194) + fill mux ('153) + NOS ('374)                                                                                          | 4          |
+| TUCK write-select ('257 ×2 on stack data-in)                                                                                          | 2          |
+| Data stack SRAM + DSP ('191 ×2)                                                                                                       | 3          |
 | Return stack SRAM ×4 (two 16-bit lanes) + RSP ('191 ×2) + RSP−1 decrementer ('283 ×2) + address mux ('157 ×2) + PC-lane data-in muxes | ~12        |
-| PC register ('377 ×2) + PC adder ('283 ×4) + offset mux/sign-extend ('157 ×2)                                                                             | 8          |
-| NEXTPC 3-state bus drivers + vector enable                                                                                                                | 3          |
-| BP register ('377 ×2) + source mux ('157 ×4) + BP adder ('283 ×4)                                                                                         | 10         |
-| D-address 3:1 mux (13-bit)                                                                                                                                | ~4         |
-| Instruction register ('374 ×2) + BRK-force ('257 ×2)                                                                                                      | 4          |
-| Flag flip-flops + RTI restore mux                                                                                                                         | 3          |
-| Decode / control (**22V10 ×5**)                                                                                                                           | 5          |
-| I-memory (2× 8K×8) + D-memory (1)                                                                                                                         | 3          |
-| I/O decode ('138s) + port-number mux ('157)                                                                                                               | 3–4        |
-| Bus drivers, clock/reset/single-step                                                                                                                      | 4–5        |
-| **Core total**                                                                                                                                            | **~70–73** |
+| PC register ('377 ×2) + PC adder ('283 ×4) + offset mux/sign-extend ('157 ×2)                                                         | 8          |
+| NEXTPC 3-state bus drivers + vector enable                                                                                            | 3          |
+| BP register ('377 ×2) + source mux ('157 ×4) + BP adder ('283 ×4)                                                                     | 10         |
+| D-address 3:1 mux (13-bit)                                                                                                            | ~4         |
+| Instruction register ('374 ×2) + BRK-force ('257 ×2)                                                                                  | 4          |
+| Flag flip-flops + RTI restore mux                                                                                                     | 3          |
+| Decode / control (**22V10 ×5**)                                                                                                       | 5          |
+| I-memory (2× 8K×8) + D-memory (1)                                                                                                     | 3          |
+| I/O decode ('138s) + port-number mux ('157)                                                                                           | 3–4        |
+| Bus drivers, clock/reset/single-step                                                                                                  | 4–5        |
+| **Core total**                                                                                                                        | **~70–73** |
 
 Optional peripherals (matrix, switches, status) add ~10. The hardware breakpoint ('688
 comparator ×2 for the 13-bit PC + '00 + '74, proven on the W = 4 board) adds 4.

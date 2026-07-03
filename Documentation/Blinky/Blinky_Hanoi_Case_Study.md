@@ -186,18 +186,18 @@ selection. And the call machinery itself costs 18 cycles against 3.
 
 Internal nodes 255, leaf calls 256.
 
-| Metric                   | Blinky                    | 65C02                                            |
-| ------------------------ | ------------------------- | ------------------------------------------------ |
-| Cycles per instruction   | always 1                  | 2–7                                              |
-| Cycles per internal node | 26                        | 120                                              |
-| Cycles per leaf call     | 7                         | 12                                               |
-| Average cycles per move  | 33                        | 132                                              |
-| Total cycles             | 8,422                     | 33,672                                           |
-| **Run time @ 4 MHz**     | **2.1 ms**                | **8.4 ms**                                       |
-| Moves per second @ 4 MHz | ~121,000                  | ~30,300                                          |
-| Code size                | 62 bytes (31 instr)       | 63 bytes (~34 instr)                             |
-| Recursion depth limit    | 256 levels (return stack) | ~42 levels (6 bytes/level of the 256-byte stack) |
-| **Relative speed**       | **4.0×**                  | 1×                                               |
+| Metric                          | Blinky                                   | 65C02                                            |
+| ------------------------------- | ---------------------------------------- | ------------------------------------------------ |
+| Cycles per instruction          | always 1                                 | 2–7                                              |
+| Cycles per internal node        | 26                                       | 120                                              |
+| Cycles per leaf call            | 7                                        | 12                                               |
+| Average cycles per move         | 33                                       | 132                                              |
+| Total cycles                    | 8,422                                    | 33,672                                           |
+| **Run time @ 4 MHz**            | **2.1 ms**                               | **8.4 ms**                                       |
+| Moves per second @ 4 MHz        | ~121,000                                 | ~30,300                                          |
+| Code size (of the 13-bit space) | 31 instruction slots of 8,192 (62 bytes) | ~34 instructions across 63 addresses of 8,192    |
+| Recursion depth limit           | 256 levels (return stack)                | ~42 levels (6 bytes/level of the 256-byte stack) |
+| **Relative speed**              | **4.0×**                                 | 1×                                               |
 
 ## Advantages and disadvantages
 
@@ -212,15 +212,21 @@ Internal nodes 255, leaf calls 256.
   legible: the BP LEDs breathe with recursion depth in real time.
 - **Depth.** 256 return-stack levels and a frame region of 4 cells/level in 8K of
   D-memory, against the 65C02's ~42 levels before its 256-byte stack wraps.
+- **Address space is spent in instructions, not bytes.** One PC value = one
+  instruction: the 13-bit space holds 8,192 instructions, where the byte-addressed
+  65C02 fits ~4,000 in the same window (~2 addresses per instruction). The identical
+  signed 8-bit branch offset therefore reaches ±127 instructions against the 65C02's
+  ±127 bytes (~±60 instructions), and every address is a valid instruction boundary —
+  the 6502's jump-into-an-operand failure mode cannot exist.
 
-**Where it loses, honestly:**
+**Where Blinky loses:**
 
 - **Argument marshalling is paid twice.** Every call pushes four values (`LOCAL@` ×4)
   that the callee immediately stores (`LOCAL!` ×4) — 8 cycles per call of pure copying
   that a machine passing arguments in registers, or reading the caller's frame
   directly, would avoid. It is the price of the pure-stack calling convention, and it
   is most of what remains of the 26-cycle node.
-- **Instruction fetch bandwidth.** Every instruction is 16 bits — two memory devices on the I-bus against the 65C02's one. (Code *density* comes out even here — 62 vs 63 bytes — because 65C02 instructions average ~2 bytes too; the cost is bus width, not bytes.)
+- **Instruction fetch bandwidth.** Every instruction is 16 bits — two memory devices on the I-bus against the 65C02's one. The cost is bus width, not address-space economy (see the wins list).
 - **The equal-clock framing flatters Blinky.** 4 MHz is within the HC + 22V10 critical
   path, but production 65C02s clock to 14 MHz. At maximum rated clocks the 4.0×
   architectural advantage shrinks to roughly 1.2–1.5× in wall-clock time. The ISA wins;
