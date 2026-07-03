@@ -93,6 +93,8 @@ public static class TtlTiming
         ["HC:157"] = new(30_000),  // quad 2:1 mux
         ["LS:181"] = new(30_000),
         ["HC:181"] = new(45_000),  // ALU (single '181, worst path)
+        ["LS:182"] = new(22_000),
+        ["HC:182"] = new(40_000),  // carry lookahead generator
         ["LS:244"] = new(18_000),
         ["HC:244"] = new(30_000),  // octal buffer
         ["LS:245"] = new(12_000),

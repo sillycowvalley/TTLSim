@@ -330,11 +330,17 @@ public sealed class Hc181 : IChip
             return (sum >= 15, sum >= 16);
         }
 
-        // SUBTRACT: F = A minus B minus 1.
-        // P=LOW when F <= 0 (i.e. A <= B); G=LOW when F < 0 (i.e. A < B).
+        // SUBTRACT: F = A + /B + Cn (A minus B minus 1, plus injected carry).
+        // P=LOW when A >= B (A + /B >= 15); G=LOW when A > B (A + /B >= 16).
+        // These satisfy the cascade identity "carry-out = G + P.carry-in"
+        // against this model's Cn+4 (which is 1 iff A + /B + Cn >= 16) --
+        // the identity a '182 (or the GAL-182) relies on. "A <= B / A < B"
+        // is the ACTIVE-LOW-data description of the same pin condition;
+        // applying it to the recovered active-high values inverts the
+        // polarity and breaks '182-carried subtraction.
         if (!modeLogic && s == 0b0110)
         {
-            return (a <= b, a < b);
+            return (a >= b, a > b);
         }
 
         // Every other operation: derive a defined value from the per-bit
