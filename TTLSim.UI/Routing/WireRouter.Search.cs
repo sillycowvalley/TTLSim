@@ -14,6 +14,23 @@ public sealed partial class WireRouter
         PinDirection.Left, PinDirection.Right, PinDirection.Up, PinDirection.Down
     };
 
+    // Per-direction step deltas indexed by (int)PinDirection. Built from
+    // DirToDelta at type initialisation so the mapping can never drift from
+    // the switch; the hot search loop indexes these arrays instead of
+    // calling DirToDelta (which profiling showed was not being inlined).
+    private static readonly int[] s_dx = new int[4];
+    private static readonly int[] s_dy = new int[4];
+
+    static WireRouter()
+    {
+        foreach (var dir in s_directions)
+        {
+            var (dx, dy) = DirToDelta(dir);
+            s_dx[(int)dir] = dx;
+            s_dy[(int)dir] = dy;
+        }
+    }
+
     private static (int dx, int dy) DirToDelta(PinDirection dir) => dir switch
     {
         PinDirection.Left => (-1, 0),
@@ -54,6 +71,21 @@ public sealed partial class WireRouter
             blocked[ix, iy] = false;
     }
 
+    // A* search to a single pin. The heuristic is Manhattan distance to the
+    // end cell times StepCost. It is ADMISSIBLE (never overestimates)
+    // because every real step costs at least StepCost -- all penalties
+    // (bend, foreign-wire, parallel, vertex-transit) are additions on top
+    // of it -- and it is CONSISTENT because one step changes the Manhattan
+    // distance by at most 1 while costing at least StepCost. So the search
+    // finds exactly the same minimal-cost routes Dijkstra did; among
+    // equal-cost routes the tie-break order differs, so geometry may vary,
+    // but the result is still deterministic and cost-optimal.
+    //
+    // The queue element carries (stateIdx, g); the queue PRIORITY is
+    // f = g + h. Carrying g in the element keeps the stale-entry test
+    // identical to the old Dijkstra form (g + 1 > bestG) instead of
+    // recovering g from the f priority, which is where A* conversions
+    // classically go wrong.
     private static List<Point>? Search(
         Rectangle bounds, SearchScratch scratch, bool[,] blocked,
         int[,] foreignWirePenalty, int[,] ownNetPenalty,
@@ -78,14 +110,18 @@ public sealed partial class WireRouter
         int startIdx = ((startIy * width) + startIx) * 4 + (int)startDir;
         bestG[startIdx] = 1;   // g = 0
 
-        var queue = new PriorityQueue<int, int>();
-        queue.Enqueue(startIdx, 0);
+        int Heuristic(int worldX, int worldY)
+            => (Math.Abs(worldX - end.X) + Math.Abs(worldY - end.Y)) * StepCost;
+
+        var queue = new PriorityQueue<(int StateIdx, int G), int>();
+        queue.Enqueue((startIdx, 0), Heuristic(start.X, start.Y));
 
         int goal = -1;
 
-        while (queue.TryDequeue(out int stateIdx, out int dequeuedG))
+        while (queue.TryDequeue(out var entry, out _))
         {
-            if (dequeuedG + 1 > bestG[stateIdx]) continue;   // stale entry
+            (int stateIdx, int g) = entry;
+            if (g + 1 > bestG[stateIdx]) continue;   // stale entry
 
             int dirInt = stateIdx & 3;
             int cellIdx = stateIdx >> 2;
@@ -100,17 +136,15 @@ public sealed partial class WireRouter
                 break;
             }
 
-            int g = dequeuedG;
             byte hereMask = foreignWireDir[cx, cy];
-            foreach (var dir in s_directions)
+            for (int d = 0; d < 4; d++)
             {
-                var (dx, dy) = DirToDelta(dir);
-                int nx = worldX + dx;
-                int ny = worldY + dy;
+                int nx = worldX + s_dx[d];
+                int ny = worldY + s_dy[d];
                 if (!TryIndex(bounds, nx, ny, out int ix, out int iy)) continue;
                 if (blocked[ix, iy]) continue;
 
-                bool bending = (int)dir != dirInt;
+                bool bending = d != dirInt;
 
                 // Hard-block bends at specified cells. Transit through
                 // the cell is still allowed — only bend-at-cell is
@@ -130,7 +164,7 @@ public sealed partial class WireRouter
                 }
 
                 byte enteredMask = foreignWireDir[ix, iy];
-                int parallelCost = MovingParallelToForeignMask(enteredMask, dir)
+                int parallelCost = MovingParallelToForeignMask(enteredMask, d)
                     ? ForeignParallelPenalty : 0;
                 int vertexTransitCost = (enteredMask & ForeignVertex) != 0
                     ? ForeignVertexTransitPenalty : 0;
@@ -143,13 +177,13 @@ public sealed partial class WireRouter
                              + bendCost;
                 int ng = g + stepCost;
 
-                int nextIdx = ((iy * width) + ix) * 4 + (int)dir;
+                int nextIdx = ((iy * width) + ix) * 4 + d;
                 int existingPlus1 = bestG[nextIdx];
                 if (existingPlus1 != 0 && ng + 1 >= existingPlus1) continue;
 
                 bestG[nextIdx] = ng + 1;
                 predecessor[nextIdx] = stateIdx + 1;
-                queue.Enqueue(nextIdx, ng);
+                queue.Enqueue((nextIdx, ng), ng + Heuristic(nx, ny));
             }
         }
 
@@ -158,6 +192,12 @@ public sealed partial class WireRouter
             : null;
     }
 
+    // A* search to any cell of an already-routed net. The heuristic is
+    // Manhattan distance to the BOUNDING RECTANGLE of the target cells
+    // (zero inside it), times StepCost -- admissible because no target
+    // cell is closer than its bounding box. Weaker than the single-target
+    // heuristic when the net sprawls, but still never worse than the old
+    // Dijkstra behaviour (h = 0 degenerates to exactly that).
     private static List<Point>? SearchToAnyCell(
         Rectangle bounds, SearchScratch scratch, bool[,] blocked,
         int[,] foreignWirePenalty, int[,] ownNetPenalty,
@@ -176,14 +216,37 @@ public sealed partial class WireRouter
         int startIdx = ((startIy * width) + startIx) * 4 + (int)startDir;
         bestG[startIdx] = 1;   // g = 0
 
-        var queue = new PriorityQueue<int, int>();
-        queue.Enqueue(startIdx, 0);
+        // Bounding box of the target cells, in world coordinates.
+        int tMinX = int.MaxValue, tMinY = int.MaxValue;
+        int tMaxX = int.MinValue, tMaxY = int.MinValue;
+        foreach (var t in targetCells)
+        {
+            if (t.X < tMinX) tMinX = t.X;
+            if (t.Y < tMinY) tMinY = t.Y;
+            if (t.X > tMaxX) tMaxX = t.X;
+            if (t.Y > tMaxY) tMaxY = t.Y;
+        }
+        bool haveTargets = tMinX != int.MaxValue;
+
+        int Heuristic(int worldX, int worldY)
+        {
+            if (!haveTargets) return 0;
+            int hx = worldX < tMinX ? tMinX - worldX
+                   : worldX > tMaxX ? worldX - tMaxX : 0;
+            int hy = worldY < tMinY ? tMinY - worldY
+                   : worldY > tMaxY ? worldY - tMaxY : 0;
+            return (hx + hy) * StepCost;
+        }
+
+        var queue = new PriorityQueue<(int StateIdx, int G), int>();
+        queue.Enqueue((startIdx, 0), Heuristic(start.X, start.Y));
 
         int goal = -1;
 
-        while (queue.TryDequeue(out int stateIdx, out int dequeuedG))
+        while (queue.TryDequeue(out var entry, out _))
         {
-            if (dequeuedG + 1 > bestG[stateIdx]) continue;   // stale entry
+            (int stateIdx, int g) = entry;
+            if (g + 1 > bestG[stateIdx]) continue;   // stale entry
 
             int dirInt = stateIdx & 3;
             int cellIdx = stateIdx >> 2;
@@ -199,17 +262,15 @@ public sealed partial class WireRouter
                 break;
             }
 
-            int g = dequeuedG;
             byte hereMask = foreignWireDir[cx, cy];
-            foreach (var dir in s_directions)
+            for (int d = 0; d < 4; d++)
             {
-                var (dx, dy) = DirToDelta(dir);
-                int nx = worldX + dx;
-                int ny = worldY + dy;
+                int nx = worldX + s_dx[d];
+                int ny = worldY + s_dy[d];
                 if (!TryIndex(bounds, nx, ny, out int ix, out int iy)) continue;
                 if (blocked[ix, iy]) continue;
 
-                bool bending = (int)dir != dirInt;
+                bool bending = d != dirInt;
 
                 if (bending && hardBlockBendCells is not null
                     && hardBlockBendCells.Contains(new Point(worldX, worldY)))
@@ -226,7 +287,7 @@ public sealed partial class WireRouter
                 }
 
                 byte enteredMask = foreignWireDir[ix, iy];
-                int parallelCost = MovingParallelToForeignMask(enteredMask, dir)
+                int parallelCost = MovingParallelToForeignMask(enteredMask, d)
                     ? ForeignParallelPenalty : 0;
                 int vertexTransitCost = (enteredMask & ForeignVertex) != 0
                     ? ForeignVertexTransitPenalty : 0;
@@ -239,13 +300,13 @@ public sealed partial class WireRouter
                              + bendCost;
                 int ng = g + stepCost;
 
-                int nextIdx = ((iy * width) + ix) * 4 + (int)dir;
+                int nextIdx = ((iy * width) + ix) * 4 + d;
                 int existingPlus1 = bestG[nextIdx];
                 if (existingPlus1 != 0 && ng + 1 >= existingPlus1) continue;
 
                 bestG[nextIdx] = ng + 1;
                 predecessor[nextIdx] = stateIdx + 1;
-                queue.Enqueue(nextIdx, ng);
+                queue.Enqueue((nextIdx, ng), ng + Heuristic(nx, ny));
             }
         }
 
@@ -254,10 +315,10 @@ public sealed partial class WireRouter
             : null;
     }
 
-    private static bool MovingParallelToForeignMask(byte mask, PinDirection dir)
+    private static bool MovingParallelToForeignMask(byte mask, int dirInt)
     {
         if (mask == 0) return false;
-        bool horizontal = dir == PinDirection.Left || dir == PinDirection.Right;
+        bool horizontal = s_dx[dirInt] != 0;
         return horizontal
             ? (mask & ForeignH) != 0
             : (mask & ForeignV) != 0;
@@ -302,7 +363,7 @@ public sealed partial class WireRouter
     }
 
     /// <summary>
-    /// Flat-array storage for the per-leg Dijkstra search, replacing the
+    /// Flat-array storage for the per-leg A* search, replacing the
     /// previous Dictionary&lt;State,int&gt; / Dictionary&lt;State,State&gt; pair.
     /// The search state is (cell, direction); with the grid bounds known
     /// up front, every state maps to a dense index:
