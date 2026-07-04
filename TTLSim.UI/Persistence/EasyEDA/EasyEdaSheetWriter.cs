@@ -440,9 +440,10 @@ internal static class EasyEDASheetWriter
         // (verified against the hand-flipped reference at rotation 0 -- see
         // the EasyEDAPlacement doc). Pre-negate the catalogue locals in the
         // symbol frame, BEFORE rotation, so the anchor solve and every pin
-        // world position agree with the flipped rendering. Composition with
-        // rotation is assumed mirror-first; the reference only covers R0,
-        // so verify 90/180/270 by round-trip before relying on them.
+        // world position agree with the flipped rendering. The emitted
+        // rotation is negated when mirrored to match EasyEDA's
+        // mirror-AFTER-rotation renderer semantics -- see emitRotDeg below,
+        // verified against the hand-flipped rot-90 H6 reference.
         bool mirrored = item is HeaderOutputUnit mirroredHeader && mirroredHeader.Mirrored;
         Point MirrorLocal(Point pt) => mirrored ? new Point(-pt.X, pt.Y) : pt;
 
@@ -474,7 +475,20 @@ internal static class EasyEDASheetWriter
                 componentY + localRotated.Y);
         }
 
-        return new EasyEDAPlacement(componentX, componentY, easyEdaRotDeg, ttlSimRotDeg, pinWorlds, mirrored);
+        // The pin-world math above encodes TTLSim's drawing intent: mirror
+        // across the long axis in the SYMBOL frame, then rotate. EasyEDA's
+        // renderer applies the mirror flag AFTER rotation, as a world-space
+        // X flip about the anchor -- so for the same net transform the
+        // record must carry the NEGATED rotation:
+        //   Rotate(r) . MirrorX  ==  MirrorX . Rotate((360 - r) % 360)
+        // Verified against the hand-flipped H6 reference (Headers.epro vs
+        // Flipped_Vertical.epro, July 2026): flipping a rot-90 header in
+        // EasyEDA rewrote the record to rot 270 + mirror 1. At rotations 0
+        // and 180 the two compositions coincide, which is why the earlier
+        // R0-only reference could not expose the difference.
+        int emitRotDeg = mirrored ? (360 - easyEdaRotDeg) % 360 : easyEdaRotDeg;
+
+        return new EasyEDAPlacement(componentX, componentY, emitRotDeg, ttlSimRotDeg, pinWorlds, mirrored);
     }
 
     /// <summary>
