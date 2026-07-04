@@ -418,6 +418,7 @@ public sealed class ChipFactory : IChipFactory
             "163" => TryCreateHc163(device, pinToNet),
             "173" => TryCreateHc173(device, pinToNet),
             "181" => TryCreateHc181(device, pinToNet),
+            "182" => TryCreateHc182(device, pinToNet),
             "191" => TryCreateHc191(device, pinToNet),
             "244" => TryCreateHc244(device, pinToNet),
             "245" => TryCreateHc245(device, pinToNet),
@@ -494,6 +495,35 @@ public sealed class ChipFactory : IChipFactory
             cnP4: Get(17),
             b3: Get(18), a3: Get(19), b2: Get(20), a2: Get(21),
             b1: Get(22), a1: Get(23),
+            delayPs: TtlTiming.ResolvePs(device));
+    }
+
+    private static IChip? TryCreateHc182(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        // Required: the nine inputs -- /G1(1) /P1(2) /G0(3) /P0(4) /G3(5)
+        // /P3(6) Cn(13) /G2(14) /P2(15). Unused /P and /G inputs must be
+        // tied HIGH (not asserted) in the schematic, as on the real part.
+        // All five outputs are individually OPTIONAL: a two-slice cascade
+        // uses only Cn+x, and the group /G and /P outputs only feed a
+        // further lookahead level (cf. the '191 cascade pins).
+        int[] needed = { 1, 2, 3, 4, 5, 6, 13, 14, 15 };
+        foreach (int p in needed)
+            if (!pinToNet.TryGetValue(p, out Net? n) || n is null) return null;
+
+        Net Get(int pin) => pinToNet[pin];
+        Net Optional(int pin, string name) =>
+            pinToNet.TryGetValue(pin, out Net? net) && net is not null
+                ? net : new Net(-1, name);
+
+        return new Hc182(
+            g1: Get(1), p1: Get(2), g0: Get(3), p0: Get(4),
+            g3: Get(5), p3: Get(6),
+            pGrp: Optional(7, "pgrp-unconnected"),
+            cnZ: Optional(9, "cnz-unconnected"),
+            gGrp: Optional(10, "ggrp-unconnected"),
+            cnY: Optional(11, "cny-unconnected"),
+            cnX: Optional(12, "cnx-unconnected"),
+            cn: Get(13), g2: Get(14), p2: Get(15),
             delayPs: TtlTiming.ResolvePs(device));
     }
 
@@ -911,7 +941,7 @@ public sealed class ChipFactory : IChipFactory
     public bool IsSimulated(BuildDevice device) => device.PartIdentifier switch
     {
         // Box-chip ICs (per-unit dispatch in CreateForUnit).
-        "47" or "74" or "139" or "153" or "157" or "161" or "163" or "173" or "181" or "191"
+        "47" or "74" or "139" or "153" or "157" or "161" or "163" or "173" or "181" or "182" or "191"
             or "244" or "245" or "257" or "273" or "283" or "374" or "377" or "541" or "688" or "7seg-ca"
             => true,
         // Reset supervisor (per-unit dispatch in CreateForUnit).
