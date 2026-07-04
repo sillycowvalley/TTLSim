@@ -2,8 +2,8 @@
   "profiles": {
     "BlinkyASM": {
       "commandName": "Project",
-      "commandLineArgs": ".\\Source\\calls.asm -o .\\Output\\calls.hex",
-      "workingDirectory": "D:\\Repos\\TTLSim\\Data"
+      "commandLineArgs": ".\\Source\\boot.asm -o .\\Output\\boot.hex",
+      "workingDirectory": "D:\\Repos\\TTLSim\\Data\\Circuits\\Blinky CPU"
     }
   }
 }

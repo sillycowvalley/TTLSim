@@ -95,6 +95,23 @@ public sealed class SimulationController
             buildResult.ErrorCount, buildResult.WarningCount,
             simulator?.Chips.Count ?? 0, buildResult.NetTable?.Nets.Count ?? 0);
 
+        // Verbose-only: mirror every build diagnostic into the log file, not
+        // just the OutputPanel (SIMULATOR.md section 6). LogDebug is filtered
+        // out unless verbose logging is on (Help -> Verbose Logging); the
+        // Verbose guard also skips the loop entirely when it isn't.
+        if (buildResult.Diagnostics.Count > 0 && Logging.Log.Verbose)
+        {
+            foreach (Diagnostic d in buildResult.Diagnostics)
+            {
+                string location =
+                    d.PinNumber is int p && d.ItemId is not null ? $"pin {p}" :
+                    d.NetId is int n ? $"net {n}" :
+                    d.GridPoint is { } g ? $"({g.X},{g.Y})" : "";
+                log.LogDebug("  {Severity} {Code}: {Message} {Location}",
+                    d.Severity, d.Code, d.Message, location);
+            }
+        }
+
         SetState(buildResult.Succeeded ? SimState.Built : SimState.Edit);
         return buildResult;
     }
