@@ -654,7 +654,13 @@ How the exporter handles them (`EasyEdaSheetWriter`):
 - **Net names.** Per group: net-flag name (VCC/GND) wins, then the
   label's `BitName` ("PC5", "CLK0"), else unnamed. Multi-bit ports fall
   out for free — each bit is its own group with its own per-bit name,
-  which is precisely how the reference carries buses electrically.
+  which is precisely how the reference carries buses electrically. The
+  visible NET text is rotated to run ALONG its wire (0 on horizontal
+  stubs, 90 on vertical — the ATTR record's rotation field, which
+  EasyEDA itself writes for labels on vertical wires; the editor UI has
+  no manual rotate for these, but the field renders). Bus range names
+  sit one cell beyond the trunk on the far side from the wires, along
+  the trunk, so they clear the mid-port bit labels.
 - **Diagnostics.** `EDA004` (warning) fires when one group carries two
   different label names (ordinal-first wins) or a label sits on a power
   net (the flag name wins and the visible text shows it).

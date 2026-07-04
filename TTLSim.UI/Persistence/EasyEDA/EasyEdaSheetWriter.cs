@@ -176,6 +176,7 @@ internal static class EasyEDASheetWriter
         var groupFlagName = new string?[netGroups.Count];
         var groupLabelName = new string?[netGroups.Count];
         var groupLabelPos = new PointF?[netGroups.Count];
+        var groupLabelRot = new int[netGroups.Count];
         for (int gi = 0; gi < netGroups.Count; gi++)
         {
             var group = netGroups[gi];
@@ -200,6 +201,14 @@ internal static class EasyEDASheetWriter
             groupLabelName[gi] = chosen;
             Pin chosenPin = labelPins.First(p => NameOf(p) == chosen);
             groupLabelPos[gi] = GridToEasyEda(chosenPin.WorldPosition);
+            // Label text runs ALONG the wire it names: horizontal stubs
+            // (pins facing Left/Right) keep rotation 0; vertical stubs
+            // (Up/Down) rotate 90 -- exactly what EasyEDA itself writes
+            // for labels on vertical wires in the hand-drawn reference.
+            // Pin.Direction is world-space, so port rotation and mirroring
+            // are already applied.
+            groupLabelRot[gi] =
+                chosenPin.Direction is PinDirection.Up or PinDirection.Down ? 90 : 0;
 
             var connIds = group.Select(c => c.Id).ToList();
             if (names.Count > 1)
@@ -331,7 +340,7 @@ internal static class EasyEDASheetWriter
 
             if (segments.Count == 0) continue;  // degenerate net
             EmitWireFromSegments(sb, segments, netName, hex, idGen,
-                labelPos: groupLabelPos[gi]);
+                labelPos: groupLabelPos[gi], labelRot: groupLabelRot[gi]);
         }
 
         // ---- emit BUS graphics for multi-bit net-label ports ----
@@ -740,13 +749,17 @@ internal static class EasyEDASheetWriter
                 AppendRecord(sb, "BUSENTRY", idGen.NewAttrId(), busId,
                     seq++, e.X, e.Y, tickRot);
 
-            // Colon-range name, visible at the trunk midpoint; text rotated
-            // 90 on a vertical trunk (the reference's b19 convention).
+            // Colon-range name, visible, text along the trunk (rotated 90
+            // when vertical). Placed one cell BEYOND the trunk on the far
+            // side from the wires (the same offset direction that placed
+            // the trunk beyond the wire ends), so the name clears the
+            // per-bit labels at the mid-port pins instead of sitting on
+            // the trunk line among them.
             string range =
                 $"{label.Label}[{label.StartBit}:{label.StartBit + label.Width - 1}]";
             float midAlong = (min + max) / 2f;
-            float nameX = trunkVertical ? fixedX : midAlong;
-            float nameY = trunkVertical ? midAlong : fixedY;
+            float nameX = (trunkVertical ? fixedX : midAlong) + dx;
+            float nameY = (trunkVertical ? midAlong : fixedY) + dy;
             AppendRecord(sb, "ATTR", idGen.NewAttrId(), busId,
                 "NET", range, 0, 1, nameX, nameY,
                 trunkVertical ? 90 : 0, StyleDefault, 0);
@@ -1287,7 +1300,7 @@ internal static class EasyEDASheetWriter
     private static void EmitWireFromSegments(StringBuilder sb,
         List<List<float>> segments,
         string? netName, string hexColor, IdGenerator idGen,
-        PointF? labelPos = null)
+        PointF? labelPos = null, int labelRot = 0)
     {
         string styleId = idGen.NewLineStyleId();
         AppendRecord(sb, "LINESTYLE", styleId, hexColor, null, null, null, null);
@@ -1300,12 +1313,14 @@ internal static class EasyEDASheetWriter
 
         // Net label: the NET ATTR is emitted VISIBLE (the field after the
         // name/value pair: 0 hidden, 1 shown) and positioned at the label
-        // pin. That IS the net label on the EasyEDA sheet -- there is no
+        // pin, rotated to run ALONG its wire (0 horizontal, 90 vertical --
+        // the same convention EasyEDA writes for labels on vertical wires).
+        // That IS the net label on the EasyEDA sheet -- there is no
         // other record. Shape measured from the Nets_and_Buses.epro
         // reference:  ["ATTR",id,wireId,"NET","WE",0,1,x,y,rot,"st1",0]
         if (labelPos is PointF lp)
             AppendRecord(sb, "ATTR", idGen.NewAttrId(), wireId,
-                "NET", netName ?? "", 0, 1, lp.X, lp.Y, 0, StyleDefault, 0);
+                "NET", netName ?? "", 0, 1, lp.X, lp.Y, labelRot, StyleDefault, 0);
         else
             AppendRecord(sb, "ATTR", idGen.NewAttrId(), wireId,
                 "NET", netName ?? "", 0, 0, null, null, 0, StyleDefault, 0);
