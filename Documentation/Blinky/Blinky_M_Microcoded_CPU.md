@@ -1,6 +1,6 @@
 # Blinky-M — A Microcoded Dual-Stack TTL CPU
 
-**Rev 11 — core decisions ratified; remaining items in §11. Working title.**
+**Rev 12 — core decisions ratified; remaining items in §11. Working title.**
 
 ---
 
@@ -200,7 +200,7 @@ split. The stack forms take the port from TOS the same way.
 | ALU → data bus | '541 ×1 | A and B are latched, so the ALU output is stable while driving |
 | TOS | '194 ×2 + '153 + '541 | shifts act on TOS in place; the '153 on the '194 serial pins selects the fill (zero / sign / wrap) from raw IR bits [3:2]; the S-pins derive from TOSMODE + IR[0] (direction) in glue; '541 drives TOS onto the bus; LEDs off the '194 Qs |
 | Flags | '377 ×1 + '157 ×3 + '541 ×1 + Z-detect glue ('30 + '04) | N/Z/C/I in one register; '157 #1 selects ALU-derived vs stack-restored (RTI) inputs; '157 #2 taps the outgoing shift bit (Q7 vs Q0, steered by IR[0]) and selects the C input ('181 Cn+4 vs shift bit, C_SRC = TOSMODE-shift); '157 #3 is **hold-feedback** — the '377's clock enable is common, so per-flag masking is D = WE ? new : Q per flag (NZ_WE / C_WE / the I paths steer it). Shifts write C only — N/Z held. The '541 drives the flags byte onto the bus for the interrupt-entry push; its **B input is /INTP** (registered): BRK pushes B = 1, hardware entry pushes B = 0, zero decode |
-| Interrupt latches | '74 ×2 | IRQ level sample; NMI synchroniser + true-edge pend (pend = NMI AND NOT sync — one-shot, no retrigger while held); the fourth flop **registers INTP**, sampled on the fetch edge, so the entry sequence cannot be torn when ISET clears the pending condition mid-sequence |
+| Interrupt latches | '74 ×2 | IRQ level sample; NMI synchroniser + true-edge pend (pend = NMI AND NOT sync — one-shot, no retrigger while held); the fourth flop **registers INTP**, sampled on the TRST edge entering T0, so the entry sequence cannot be torn when ISET clears the pending condition mid-sequence |
 | IR | '377 ×1 | opcode byte only |
 | BP | '377 ×1 + '541 ×1 | 8-bit (ratified); frames/globals in page 0. LOCAL@/LOCAL! run A ← BP, B ← offset, ALU → ADRlo, then a page-0x00 access |
 | Memory | W24512 SRAM ×1, 28C64 boot ×1, '10 select glue ×1 | /EEPROM = NAND(A15,A14,A13); /SRAM = NAND(/EEPROM, /IO-match) — see §3 |
@@ -225,8 +225,8 @@ Variable T-states per instruction is literally this one bit.
 A12..A5 = opcode      IR[7:0] when T ≠ 0; live data bus when T = 0 ('257 bypass, §2)
 A4..A2  = T[2:0]      T-state
 A1      = COND        '151 output: flag selected by IR[2:1], polarity by IR[0]
-A0      = INTP        registered interrupt pending — sampled at the fetch edge
-                      from NMI_PEND OR (IRQ_PEND AND I=0)
+A0      = INTP        registered interrupt pending — sampled on the TRST edge
+                      entering T0, from NMI_PEND OR (IRQ_PEND AND I=0)
 ```
 
 COND is consumed only at T ≥ 1 (branch decisions), by which point IR is latched — the
@@ -467,8 +467,8 @@ single register-to-register hop across one bus.
   push PC-lo, PC-hi, flags byte, BP into the frame lanes; set I; load PC from the
   vector driver. There is no jam hardware; the "forced instruction" is an address
   bit.
-- **INTP is registered** — sampled into the spare interrupt-'74 flop on the fetch
-  edge — so the whole entry sequence runs from stable INTP=1 rows even after ISET
+- **INTP is registered** — sampled into the spare interrupt-'74 flop on the TRST
+  edge entering T0 — so the whole entry sequence runs from stable INTP=1 rows even after ISET
   clears the pending condition at T4.
 - **Raw PC vs PC+n falls out of ordering.** Hardware entry runs before the fetch
   increments PC, so the interrupted instruction's own address is pushed and it
@@ -526,7 +526,7 @@ its halt on T=0 so it stops on instruction boundaries.
 | A / B | 8 + 8 | ALU operands; during any binary ALU op, B is NOS |
 | DSP / RSP | 8 + 8 | DSP = operand depth; RSP = **call depth** (one count per frame) |
 | BP | 8 | frame base |
-| ADR | 16 | current data address |
+| ABUS | 16 | the address bus — always driven (ASEL has no idle code), so it shows every access: fetches, stack traffic, data |
 | FLAGS | 4 | N, Z, C, I |
 | T-state | 3 + 1×8 decoded | which microstep is executing (ratified) |
 | INT | 3 | IRQ pending, NMI pending, **INTP** — the live μROM address bit (ratified) |
@@ -558,6 +558,14 @@ counts regenerated from the BlinkyMGen listing.
    nothing in the current design forecloses it.
 2. μword headroom: all 32 lines assigned. The escape valve is a fifth 28C64 on the
    same address lines — note for the PCB: leave a footprint.
+3. **PC-hi reset load mechanism.** §3/§5 say the high '161 pair "async-loads 0xE0
+   with parallel inputs strapped" — but the '161 load is synchronous, and the same
+   parallel inputs must carry the data bus for JUMP/CALL/RET byte loads, so they
+   cannot be strapped. Candidate fix: 10k pull resistors patterning **0xE0 onto the
+   data bus**, the SRC '138 disabled during reset (G1 = /RST) so the bus floats to
+   the pattern, and both PC /LOADs asserted through the reset OR — the first clock
+   edge under reset loads 0xE000. Unratified; the stage-0 bring-up sidesteps it by
+   resetting PC to 0x0000 with the boot program assembled there.
 
 ---
 

@@ -410,8 +410,10 @@ public sealed class ChipFactory : IChipFactory
         {
             "47" => TryCreateLs47(pinToNet),
             "74" => TryCreateHc74(device, pinToNet),
+            "138" => TryCreateHc138(device, pinToNet),
             "139" => TryCreateHc139(device, pinToNet),
             "153" => TryCreateHc153(device, pinToNet),
+            "154" => TryCreateHc154(device, pinToNet),
             "157" => TryCreateHc157(device, pinToNet),
             "257" => TryCreateHc257(device, pinToNet),
             "161" => TryCreateHc161(device, pinToNet),
@@ -679,6 +681,63 @@ public sealed class ChipFactory : IChipFactory
             delayPs: TtlTiming.ResolvePs(device));
     }
 
+    private IChip? TryCreateHc138(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        // Required pins are the INPUTS only: 1..3 A0..A2 and 4..6 the three
+        // enables (/E1, /E2, E3). The eight /Y outputs are OPTIONAL -- an
+        // address decoder routinely leaves unused selects open, and an open
+        // output must never block instantiation (cf. the '161 Q outputs and
+        // the '283 carry-out). TTL011 still flags genuinely unwired INPUTS
+        // at design time.
+        int[] needed = { 1, 2, 3, 4, 5, 6 };
+        foreach (int p in needed)
+            if (!pinToNet.TryGetValue(p, out Net? n) || n is null) return null;
+
+        Net Get(int pin) => pinToNet[pin];
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);   // local stand-in, drives nothing
+
+        return new Hc138(
+            a0: Get(1), a1: Get(2), a2: Get(3),
+            e1N: Get(4), e2N: Get(5), e3: Get(6),
+            y7N: Opt(7, "y7-nc"), y6N: Opt(9, "y6-nc"),
+            y5N: Opt(10, "y5-nc"), y4N: Opt(11, "y4-nc"),
+            y3N: Opt(12, "y3-nc"), y2N: Opt(13, "y2-nc"),
+            y1N: Opt(14, "y1-nc"), y0N: Opt(15, "y0-nc"),
+            label: "138", logger: logger,
+            delayPs: TtlTiming.ResolvePs(device));
+    }
+
+    private IChip? TryCreateHc154(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        // Required pins are the INPUTS only: 18/19 the two enables and
+        // 20..23 A3..A0. The sixteen /Y outputs are OPTIONAL -- same
+        // decoder precedent as the '138.
+        int[] needed = { 18, 19, 20, 21, 22, 23 };
+        foreach (int p in needed)
+            if (!pinToNet.TryGetValue(p, out Net? n) || n is null) return null;
+
+        Net Get(int pin) => pinToNet[pin];
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);   // local stand-in, drives nothing
+
+        return new Hc154(
+            y0N: Opt(1, "y0-nc"), y1N: Opt(2, "y1-nc"),
+            y2N: Opt(3, "y2-nc"), y3N: Opt(4, "y3-nc"),
+            y4N: Opt(5, "y4-nc"), y5N: Opt(6, "y5-nc"),
+            y6N: Opt(7, "y6-nc"), y7N: Opt(8, "y7-nc"),
+            y8N: Opt(9, "y8-nc"), y9N: Opt(10, "y9-nc"),
+            y10N: Opt(11, "y10-nc"), y11N: Opt(13, "y11-nc"),
+            y12N: Opt(14, "y12-nc"), y13N: Opt(15, "y13-nc"),
+            y14N: Opt(16, "y14-nc"), y15N: Opt(17, "y15-nc"),
+            e0N: Get(18), e1N: Get(19),
+            a3: Get(20), a2: Get(21), a1: Get(22), a0: Get(23),
+            label: "154", logger: logger,
+            delayPs: TtlTiming.ResolvePs(device));
+    }
+
     private IChip? TryCreateHc161(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
     {
         // Same pinout as the '163. Required pins are the INPUTS only:
@@ -941,7 +1000,7 @@ public sealed class ChipFactory : IChipFactory
     public bool IsSimulated(BuildDevice device) => device.PartIdentifier switch
     {
         // Box-chip ICs (per-unit dispatch in CreateForUnit).
-        "47" or "74" or "139" or "153" or "157" or "161" or "163" or "173" or "181" or "182" or "191"
+        "47" or "74" or "138" or "139" or "153" or "154" or "157" or "161" or "163" or "173" or "181" or "182" or "191"
             or "244" or "245" or "257" or "273" or "283" or "374" or "377" or "541" or "688" or "7seg-ca"
             => true,
         // Reset supervisor (per-unit dispatch in CreateForUnit).
