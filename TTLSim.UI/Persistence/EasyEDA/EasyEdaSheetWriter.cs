@@ -334,6 +334,13 @@ internal static class EasyEDASheetWriter
                 labelPos: groupLabelPos[gi]);
         }
 
+        // ---- emit BUS graphics for multi-bit net-label ports ----
+        // Cosmetic grouping only: connectivity rides entirely on the
+        // per-bit wire NET names emitted above. Record shapes and geometry
+        // measured from the Nets_and_Buses.epro reference -- see
+        // EasyEDA_Export.md §5 "Net labels".
+        EmitNetLabelBuses(sb, schematic, idGen);
+
         // ---- emit No-Connect flags for floating pins ----
         // Every pin not present in any Connection is intentionally left open
         // in TTLSim (connectivity is validated upstream by the simulator and
@@ -627,6 +634,123 @@ internal static class EasyEDASheetWriter
         return item is Unit unit
             ? EasyEDACatalogue.LookupForDevice(unit.Device)
             : EasyEDACatalogue.LookupForStandaloneItem(item);
+    }
+
+    // ------------------------------------------------------ bus graphics
+
+    /// <summary>
+    /// Emit BUS + BUSENTRY records for every active multi-bit net-label
+    /// port with two or more wired pins. Cosmetic grouping only -- the
+    /// electrical fusion is carried by the per-bit wire NET names -- but it
+    /// renders the port as EasyEDA's thick bus bar with entry ticks, which
+    /// is how the same design reads when drawn in EasyEDA by hand.
+    ///
+    /// Geometry, measured from the Nets_and_Buses.epro reference (all four
+    /// orientations, 104/104 entries):
+    ///   - Each BUSENTRY sits AT a wire endpoint; its rotation is the
+    ///     direction from the wire end toward the trunk (0 = +x, 90 = +y,
+    ///     180 = -x, 270 = -y in sheet coordinates).
+    ///   - The trunk runs exactly 10 px (one grid cell) away along that
+    ///     axis, spanning first-to-last entry with no overhang; entries
+    ///     sit 10 px apart -- our port pin pitch after scaling.
+    ///   - The bus NET ATTR is VISIBLE at the trunk midpoint, colon-range
+    ///     syntax ("D[0:7]", not "D[0..7]"), text rotated 90 on a
+    ///     vertical trunk. Per-bit wires keep their own visible names.
+    ///
+    /// Our exported stubs end at the label pin and TTLSim draws its
+    /// bracket one cell inward of the pins, so the trunk lands exactly on
+    /// the bracket line: entries at the existing wire endpoints, trunk one
+    /// cell beyond on the pins' inward side. No wire trimming. The tick
+    /// rotation derives from Pin.Direction (world, so rotation and
+    /// mirroring are already applied): the trunk sits OPPOSITE the pin's
+    /// outward direction. All pins of one port share an edge, so the
+    /// first pin's direction speaks for the port.
+    /// </summary>
+    private static void EmitNetLabelBuses(StringBuilder sb,
+        Schematic schematic, IdGenerator idGen)
+    {
+        foreach (var item in schematic.Items)
+        {
+            if (item is not NetLabelItem label) continue;
+            if (!schematic.IsItemActive(label)) continue;
+            if (label.Width < 2) continue;
+            if (string.IsNullOrWhiteSpace(label.Label)) continue;
+
+            // Only wired pins get entry ticks; the trunk spans them. A
+            // port with fewer than two wired pins gets no bus -- a
+            // zero-length trunk is meaningless and the single wire's own
+            // visible bit name already tells the story.
+            var wiredEnds = new List<PointF>();
+            foreach (var pin in label.Pins)
+            {
+                bool wired = false;
+                foreach (var c in schematic.Connections)
+                {
+                    if ((c.A == pin || c.B == pin) && schematic.IsConnectionActive(c))
+                    { wired = true; break; }
+                }
+                if (wired) wiredEnds.Add(GridToEasyEda(pin.WorldPosition));
+            }
+            if (wiredEnds.Count < 2) continue;
+
+            // Trunk offset and tick rotation from the port's world pin
+            // direction: the trunk sits one cell OPPOSITE the outward
+            // direction (i.e. beyond the wire ends, where TTLSim draws the
+            // bracket). Sheet coordinates are Y-up, so TTLSim's Up/Down
+            // invert. Rotation convention measured from the reference:
+            // 0 = tick points +x, 90 = +y, 180 = -x, 270 = -y.
+            PinDirection outward = label.Pins[0].Direction;
+            (float dx, float dy, int tickRot) = outward switch
+            {
+                PinDirection.Left => (+10f, 0f, 0),     // wires from the left; trunk right
+                PinDirection.Right => (-10f, 0f, 180),  // mirrored: trunk left
+                PinDirection.Up => (0f, -10f, 270),     // TTLSim up = sheet -y
+                _ => (0f, +10f, 90),                    // PinDirection.Down
+            };
+            bool trunkVertical = dx != 0f;
+
+            // Trunk endpoints: the fixed (perpendicular) coordinate is the
+            // shared pin coordinate plus the offset; the running coordinate
+            // spans first-to-last wired entry, exactly as the reference
+            // draws it (no overhang).
+            float fixedX = wiredEnds[0].X + dx;
+            float fixedY = wiredEnds[0].Y + dy;
+            float min = float.MaxValue, max = float.MinValue;
+            foreach (var e in wiredEnds)
+            {
+                float along = trunkVertical ? e.Y : e.X;
+                if (along < min) min = along;
+                if (along > max) max = along;
+            }
+
+            var segment = trunkVertical
+                ? new List<float> { fixedX, min, fixedX, max }
+                : new List<float> { min, fixedY, max, fixedY };
+
+            // Bus line style: width 2, per the reference's st8.
+            string styleId = idGen.NewLineStyleId();
+            AppendRecord(sb, "LINESTYLE", styleId, null, 0, null, 2, 0);
+
+            string busId = idGen.NewBusId();
+            AppendRecord(sb, "BUS", busId,
+                new List<List<float>> { segment }, styleId, 0);
+
+            int seq = 0;
+            foreach (var e in wiredEnds)
+                AppendRecord(sb, "BUSENTRY", idGen.NewAttrId(), busId,
+                    seq++, e.X, e.Y, tickRot);
+
+            // Colon-range name, visible at the trunk midpoint; text rotated
+            // 90 on a vertical trunk (the reference's b19 convention).
+            string range =
+                $"{label.Label}[{label.StartBit}:{label.StartBit + label.Width - 1}]";
+            float midAlong = (min + max) / 2f;
+            float nameX = trunkVertical ? fixedX : midAlong;
+            float nameY = trunkVertical ? midAlong : fixedY;
+            AppendRecord(sb, "ATTR", idGen.NewAttrId(), busId,
+                "NET", range, 0, 1, nameX, nameY,
+                trunkVertical ? 90 : 0, StyleDefault, 0);
+        }
     }
 
     // ----------------------------------------------------------- emission
@@ -1275,6 +1399,7 @@ internal static class EasyEDASheetWriter
         public string NewComponentId() => $"e{next++}";
         public string NewAttrId() => $"e{next++}";
         public string NewWireId() => $"e{next++}";
+        public string NewBusId() => $"b{next++}";
         public string NewLineStyleId() => $"st{nextStyle++}";
     }
 }

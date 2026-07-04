@@ -237,8 +237,9 @@ EasyEDA Pro; there is no separate record or component. Measured from the
 
 The same reference gives the **bus** record shapes (thick trunk, entry
 ticks, colon-range name). These are graphical grouping only — the
-electrical fusion is carried entirely by the per-wire bit names — and the
-exporter deliberately does NOT emit them (see "Net labels" in §5):
+electrical fusion is carried entirely by the per-wire bit names — and
+the exporter emits them for multi-bit net-label ports (see "Net labels"
+in §5 for the geometry rules):
 
 ```
 ["BUS",id,[[x1,y1,x2,y2],...], lineStyleRef, 0]      -- line width 2
@@ -661,13 +662,20 @@ How the exporter handles them (`EasyEdaSheetWriter`):
   one net id for the coincident-corner check — a corner between two
   same-named clusters is same-net sharing, not a collision.
 
-**Buses are deliberately not emitted as BUS/BUSENTRY records.** The
-reference proves the thick trunk and entry ticks are graphical grouping
-only: two physically separate `D[0:7]` buses fuse because their stubs
-carry per-bit NET names, and the range name uses colon syntax
-(`D[0:7]`, not `D[0..7]`). Per-bit names on the wires — which the
-exporter already emits — are the whole electrical story; the bar is
-cosmetics. One measured quirk worth knowing when reading hand-drawn
+**Buses.** Multi-bit ports (width ≥ 2, two or more wired pins) emit
+EasyEDA's bus graphics: one `BUS` trunk per port plus a `BUSENTRY` tick
+per wired pin and a visible colon-range `NET` ATTR (`D[0:7]`, not
+`D[0..7]`) at the trunk midpoint. This is cosmetic grouping only — the
+electrical fusion is carried entirely by the per-bit wire NET names,
+which remain visible on their stubs. Geometry (measured from the
+`Nets_and_Buses.epro` reference, all four orientations): each entry
+sits AT a wire endpoint with rotation pointing toward the trunk
+(0 = +x, 90 = +y, 180 = −x, 270 = −y); the trunk runs exactly one grid
+cell (10 px) beyond the wire ends on the pins' inward side — where
+TTLSim draws the port bracket — spanning first-to-last wired entry with
+no overhang, line width 2. No wire trimming is needed: our stubs
+already end at the label pins. Ports with fewer than two wired pins
+emit no bus. One measured quirk worth knowing when reading hand-drawn
 references: EasyEDA's own bit-name derivation produced `A0]`…`A17]`
 (trailing bracket) in the reference file. TTLSim never depends on that
 derivation because it names every bit explicitly.
