@@ -112,6 +112,20 @@
         "function2": null,
         "frequencyHz1": null,
         "frequencyHz2": null
+      },
+      {
+        "id": "10f5cb2a138b424eacb1ed2d38ab2d59",
+        "designator": "U1",
+        "partKind": "chip",
+        "partIdentifier": "00",
+        "family": "HC",
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
       }
     ],
     "units": [
@@ -226,9 +240,74 @@
         "layer": 0,
         "switchClosed": null,
         "mirrored": true
+      },
+      {
+        "id": "a608c3f64e0447a1b97eece2524ba69e",
+        "deviceId": "10f5cb2a138b424eacb1ed2d38ab2d59",
+        "unitLetter": "",
+        "position": {
+          "x": 41,
+          "y": 48
+        },
+        "label": "",
+        "rotation": 0,
+        "layer": 0,
+        "switchClosed": null,
+        "mirrored": null
       }
     ],
-    "items": [],
+    "items": [
+      {
+        "type": "netlabel",
+        "id": "9898228d494743c790e23a95352bab1e",
+        "label": "WE",
+        "position": {
+          "x": 34,
+          "y": 36
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Black",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "332a5c45052d4e79a75d16f271f52b14",
+        "label": "D",
+        "position": {
+          "x": 34,
+          "y": 44
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 4,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Black",
+        "fontSize": null,
+        "textColor": null
+      }
+    ],
     "connections": [
       {
         "id": "3cfa150a7edf41ff8098b3eb38cd44a5",
@@ -481,6 +560,76 @@
           "external": false
         },
         "color": "Cyan"
+      },
+      {
+        "id": "223094f4760e4b0bbe916756c89d669e",
+        "a": {
+          "itemId": "a608c3f64e0447a1b97eece2524ba69e",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "9898228d494743c790e23a95352bab1e",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "fe668fc077f4401fbc972716e108c09f",
+        "a": {
+          "itemId": "a608c3f64e0447a1b97eece2524ba69e",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "332a5c45052d4e79a75d16f271f52b14",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "14aefd6bc7794d73b56bc0c4872405ad",
+        "a": {
+          "itemId": "a608c3f64e0447a1b97eece2524ba69e",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "332a5c45052d4e79a75d16f271f52b14",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "623a650060a9408fbc09259054aac654",
+        "a": {
+          "itemId": "a608c3f64e0447a1b97eece2524ba69e",
+          "pinNumber": 4,
+          "external": false
+        },
+        "b": {
+          "itemId": "332a5c45052d4e79a75d16f271f52b14",
+          "pinNumber": 3,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "d9fb4b13e3a74da691400b25c17572a2",
+        "a": {
+          "itemId": "a608c3f64e0447a1b97eece2524ba69e",
+          "pinNumber": 5,
+          "external": false
+        },
+        "b": {
+          "itemId": "332a5c45052d4e79a75d16f271f52b14",
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": null
       }
     ],
     "links": [],
@@ -493,10 +642,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 4.135619,
+    "zoom": 3.5961907,
     "pan": {
-      "x": 6,
-      "y": -160
+      "x": 38,
+      "y": -306
     }
   }
 }

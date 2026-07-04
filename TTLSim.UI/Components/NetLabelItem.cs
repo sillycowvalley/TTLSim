@@ -94,14 +94,18 @@ public sealed class NetLabelItem : SchematicItem
     private const int BoxWidth = 4;
 
     /// <summary>
-    /// Extra cells of router keep-out beyond the box on the TEXT side (the
-    /// side away from the pins' facing), sized so bit names up to about
-    /// three characters stay clear of routed wires. Applied at R0/R180
-    /// only, where the names run horizontally away from the pins; at
-    /// R90/R270 the upright names form a single text row beside the pins,
-    /// already inside the box's own margin.
+    /// R0/R180 router keep-out on the wire-approach side of the pin column:
+    /// one cell keeps foreign wires off the blobs without wasting space
+    /// (the connecting wire's own corridor is carved by the router).
     /// </summary>
-    private const int TextKeepOutCells = 2;
+    private const int PinSideCells = 1;
+
+    /// <summary>
+    /// R0/R180 router keep-out on the TEXT side of the pin column: the stub
+    /// plus room for bit names up to about three characters (names start
+    /// 1.3 cells inward of the pin).
+    /// </summary>
+    private const int TextSideCells = 3;
 
     private int width;
     private int startBit;
@@ -286,28 +290,39 @@ public sealed class NetLabelItem : SchematicItem
     }
 
     /// <summary>
-    /// The visual box, plus <see cref="TextKeepOutCells"/> extra cells on
-    /// the TEXT side (away from the pins' facing, selected by Mirrored) at
-    /// R0/R180 only -- that is the orientation where bit names run
-    /// horizontally away from the pins and need the keep-out. At R90/R270
-    /// the upright names form a single text row beside the pins, already
-    /// inside the box's own margin, so the plain box is the whole
-    /// footprint. The R0/R180 extension makes the rect ASYMMETRIC about the
-    /// pivot, so R180 must map it through the pivot rather than reuse the
-    /// unrotated rect; <see cref="RotateCell"/> matches Pin.WorldPosition's
-    /// convention exactly.
+    /// Router keep-out, anchored to the pin column rather than the box. At
+    /// R0/R180 it spans <see cref="PinSideCells"/> on the wire-approach side
+    /// and <see cref="TextSideCells"/> on the text side (sides selected by
+    /// Mirrored) -- tight against the blobs, just enough for three-character
+    /// names. At R90/R270 the upright names form a single text row beside
+    /// the pins, already inside the box's own margin, so the plain box is
+    /// the whole footprint. The R0/R180 rect is ASYMMETRIC about the pivot,
+    /// so R180 must map it through the pivot rather than reuse the unrotated
+    /// rect; <see cref="RotateCell"/> matches Pin.WorldPosition's convention
+    /// exactly.
     /// </summary>
     public override Rectangle RoutingBounds
     {
         get
         {
             bool sideways = Rotation == Rotation.R90 || Rotation == Rotation.R270;
-            int extra = sideways ? 0 : TextKeepOutCells;
 
-            int left = Position.X - (mirrored ? extra : 0);
-            var unrotated = new Rectangle(
-                left, Position.Y,
-                Size.Width + extra, Size.Height);
+            Rectangle unrotated;
+            if (sideways)
+            {
+                unrotated = new Rectangle(
+                    Position.X, Position.Y, Size.Width, Size.Height);
+            }
+            else
+            {
+                int pinX = Position.X + PinColumn;
+                int left = mirrored
+                    ? pinX - TextSideCells
+                    : pinX - PinSideCells;
+                unrotated = new Rectangle(
+                    left, Position.Y,
+                    PinSideCells + TextSideCells, Size.Height);
+            }
 
             if (Rotation == Rotation.R0) return unrotated;
 

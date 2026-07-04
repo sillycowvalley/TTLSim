@@ -469,6 +469,39 @@ public static class EasyEDACatalogue
     private const string Dip16Reference3dModelTransform =
         "787.4,311.8104,0,0,0,0,-0.003,0.001,-118.11";
 
+    // ---------------------------------------------------- DIP-18 ICs
+    //
+    // Identical scheme to DIP-14 / DIP-16 / DIP-20: single-PART box symbol,
+    // one shared footprint (dip-18.efoo, the 0.3" DIP-18 body -- 7.62 mm
+    // lead spacing -- lifted verbatim from the DIP-18.epro reference, a
+    // PA1517G-D18-T placement), one shared .esym template (dip-18.esym)
+    // cloned per chip via SymbolTemplateTokens, and per-chip-type device +
+    // symbol entries synthesised inline with deterministic UUIDs. No
+    // per-chip EasyEDA library data is needed; pin names come from each
+    // chip's ChipPartDefinition. Covers the box-drawn 18-pin
+    // ChipPartDefinitions (2114, ...) -- first user is the 2114 1Kx4 SRAM.
+    //
+    // The .esym is drawn at 20px pin pitch (matching ChipUnit's PinPitch)
+    // so the router's pins line up exactly -- the same pitch fix applied to
+    // DIP-8/DIP-14/DIP-16/DIP-20. NOTE: the reference save also contained a
+    // BLOB (.eblob) with the 3D model mesh -- that is an artefact of
+    // EasyEDA's Save-As-Local (offline snapshot), NOT part of the export
+    // pattern. As with every other part, only the 3D Model UUID / Title /
+    // Transform attributes ship; EasyEDA resolves the mesh from its cloud
+    // library by UUID on import.
+    internal const string Dip18FootprintUuid = "dcb37c45a02445ac";
+
+    // PA1517G-D18-T reference device attributes, used as the shared template
+    // for every synthesised DIP-18 device (decorative per EasyEDA_Export.md
+    // §2). The 3D Model is the DIP-18 model, shared across all DIP-18 chips.
+    private const string Dip18ReferenceSupplierPart = "C127026";
+    private const string Dip18ReferenceManufacturer = "UTC";
+    private const string Dip18Reference3dModelUuid = "f4d2489ed27243178ef9432c3b3a46b5";
+    private const string Dip18Reference3dModelTitle =
+        "DIP-18_L23.0-W6.5-H3.5-LS7.62-P2.54";
+    private const string Dip18Reference3dModelTransform =
+        "914.959,311.8104,0,0,0,0,-1.654,-5.906,-118.11";
+
     // ---------------------------------------------------- DIP-20 ICs
     //
     // Identical scheme to DIP-14 / DIP-16: single-PART box symbol, one
@@ -1060,6 +1093,7 @@ public static class EasyEDACatalogue
             ChipPartDefinition cp when cp.PinCount == 14 => BuildDip14Part(device, cp),
 
             ChipPartDefinition cp when cp.PinCount == 16 => BuildDip16Part(device, cp),
+            ChipPartDefinition cp when cp.PinCount == 18 => BuildDip18Part(device, cp),
 
             ChipPartDefinition cp when cp.PinCount == 20 => BuildDip20Part(device, cp),
 
@@ -1797,6 +1831,163 @@ public static class EasyEDACatalogue
             ["custom_tags"] = "[\"Logic\"]",
             ["title"] = chipName,
             ["version"] = "1681885513",
+            ["type"] = 2,
+        };
+        return fragment.ToJsonString();
+    }
+
+    // ---------------------------------------------------- DIP-18 synthesis
+    //
+    // 20px pin pitch, matching ChipUnit's PinPitch (same pitch fix as
+    // DIP-8/DIP-14/DIP-16/DIP-20). dip-18.esym: pins 1..9 DOWN the left
+    // edge at x=-50, y = +80,+60,+40,+20,0,-20,-40,-60,-80; pins 10..18 UP
+    // the right edge at x=+50, y = -80..+80 (the DIP mirror); body half
+    // height 92. ChipUnit lays its canvas pins out the same way, so pin
+    // number N in TTL Sim maps to pin number N in the symbol.
+    private static readonly Dictionary<int, Point> Dip18PinLocals = new()
+    {
+        [1] = new Point(-50, 80),
+        [2] = new Point(-50, 60),
+        [3] = new Point(-50, 40),
+        [4] = new Point(-50, 20),
+        [5] = new Point(-50, 0),
+        [6] = new Point(-50, -20),
+        [7] = new Point(-50, -40),
+        [8] = new Point(-50, -60),
+        [9] = new Point(-50, -80),
+        [10] = new Point(50, -80),
+        [11] = new Point(50, -60),
+        [12] = new Point(50, -40),
+        [13] = new Point(50, -20),
+        [14] = new Point(50, 0),
+        [15] = new Point(50, 20),
+        [16] = new Point(50, 40),
+        [17] = new Point(50, 60),
+        [18] = new Point(50, 80),
+    };
+
+    private static CataloguePart BuildDip18Part(Device device, ChipPartDefinition cp)
+    {
+        // Displayed chip name -- "2114", etc.
+        string chipName = device.FullPartNumber;
+
+        // Deterministic per-chip-type UUIDs so re-exports are byte-stable
+        // (doc §7), keyed on the full part name. Namespaced "dip18-" so they
+        // never collide with the other DIP derivations.
+        string symbolUuid = DeterministicUuid("dip18-symbol:" + chipName);
+        string deviceUuid = DeterministicUuid("dip18-device:" + chipName);
+
+        // Symbol template tokens: part title, displayed symbol name, and
+        // the 18 pin names. Active-low '/' -> '#' (EasyEDA overbar).
+        var tokens = new Dictionary<string, string>
+        {
+            ["@@PART_TITLE@@"] = chipName + ".1",
+            ["@@SYMBOL_NAME@@"] = chipName,
+        };
+        foreach (var pin in cp.Pins)
+            tokens[$"@@PIN_{pin.Number}_NAME@@"] = ToEasyEdaPinName(pin.Name);
+
+        // All 18 pins must be enumerated, or the template ships a literal
+        // "@@PIN_n_NAME@@" string into the .esym.
+        for (int n = 1; n <= 18; n++)
+            if (!tokens.ContainsKey($"@@PIN_{n}_NAME@@"))
+                throw new NotImplementedException(
+                    $"EasyEDA export: DIP-18 chip '{chipName}' is missing a " +
+                    $"definition for pin {n}. All 18 pins must be enumerated in " +
+                    "its ChipPartDefinition before it can be exported.");
+
+        return new CataloguePart(
+            DeviceUuid: deviceUuid,
+            SymbolUuid: symbolUuid,
+            SymbolResourceName: "dip-18.esym",
+            FootprintUuid: Dip18FootprintUuid,
+            FootprintResourceName: "dip-18.efoo",
+            PartTitle: chipName + ".1",
+            PinLocalPositions: Dip18PinLocals,
+            SymbolTemplateTokens: tokens,
+            InlineDeviceJson: BuildDip18DeviceFragment(chipName, symbolUuid),
+            InlineSymbolJson: BuildDip18SymbolFragment(chipName),
+            EmitTemplatedName: true,
+            // Same label layout as DIP-16, raised to clear the taller DIP-18
+            // body (half-height 92, body top at +92; designator at +100 --
+            // the DIP-16 rule, half + 8; Rot90/270 x at -(half + 10)).
+            //   R0/R180:  labels ABOVE the body, text horizontal.
+            //   R90/R270: labels to the LEFT (rotated span x[-92,92]
+            //     y[-50,50]), TEXT ROTATED 90 reading along the body.
+            // The body is symmetric, so each rotation pair shares one value.
+            LabelOffsets: new LabelOffsetsByRotation(
+                Rot0: new LabelOffsetSet(new(-40, +100), new(-20, +100), default),
+                Rot90: new LabelOffsetSet(new(-102, -20), new(-102, -2), default, TextRotationDeg: 90),
+                Rot180: new LabelOffsetSet(new(-40, +100), new(-20, +100), default),
+                Rot270: new LabelOffsetSet(new(-102, -20), new(-102, -2), default, TextRotationDeg: 90)));
+    }
+
+    /// <summary>
+    /// Synthesise a DIP-18 device fragment for project.json. Same shape as
+    /// the DIP-16 version, using the PA1517G-D18-T reference's decorative
+    /// attributes (shared template, per §2) and overwriting the chip-
+    /// specific fields. The 3D Model is the shared DIP-18 model.
+    /// </summary>
+    private static string BuildDip18DeviceFragment(string chipName, string symbolUuid)
+    {
+        var attrs = new System.Text.Json.Nodes.JsonObject
+        {
+            ["Supplier Part"] = Dip18ReferenceSupplierPart,
+            ["Manufacturer"] = Dip18ReferenceManufacturer,
+            ["Manufacturer Part"] = chipName,
+            ["Supplier Footprint"] = "DIP-18",
+            ["JLCPCB Part Class"] = "Extended Part",
+            ["Supplier"] = "LCSC",
+            ["Add into BOM"] = "yes",
+            ["Convert to PCB"] = "yes",
+            ["Symbol"] = symbolUuid,
+            ["Designator"] = "U?",
+            ["Footprint"] = Dip18FootprintUuid,
+            ["3D Model"] = Dip18Reference3dModelUuid,
+            ["3D Model Title"] = Dip18Reference3dModelTitle,
+            ["3D Model Transform"] = Dip18Reference3dModelTransform,
+            ["Name"] = "={Manufacturer Part}",
+            ["Description"] = "DIP-18 IC",
+        };
+
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["title"] = chipName,
+            ["attributes"] = attrs,
+            ["description"] = "DIP-18 IC",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["images"] = new System.Text.Json.Nodes.JsonArray(""),
+            ["source"] = "b787ab6149aa6d78|0819f05c4eef4c71ace90d822a990e87",
+            ["version"] = "1660160780",
+            ["custom_tags"] = "[\"Logic\"]",
+        };
+
+        return fragment.ToJsonString();
+    }
+
+    /// <summary>
+    /// Synthesise a DIP-18 symbol fragment for project.json (type:2). Source
+    /// id reuses the device reference pair -- decorative per §2 (the PA1517
+    /// reference symbol's own header carries no source id).
+    /// </summary>
+    private static string BuildDip18SymbolFragment(string chipName)
+    {
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["source"] = "b787ab6149aa6d78|0819f05c4eef4c71ace90d822a990e87",
+            ["desc"] = "",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["custom_tags"] = "[\"Logic\"]",
+            ["title"] = chipName,
+            ["version"] = "1660160780",
             ["type"] = 2,
         };
         return fragment.ToJsonString();

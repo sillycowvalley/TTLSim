@@ -146,6 +146,15 @@ public static class EasyEDAExporter
         {
             if (item is Unit) continue;          // covered via Devices above
             if (item is ICosmeticItem) continue;   // cosmetic — no catalogue entry, not exported
+            // Net labels have no catalogue entry, no embedded resource, and
+            // no manifest entry: their entire EasyEDA presence is the visible
+            // NET ATTR the sheet writer emits on the wire. This skip is the
+            // exporter-side TWIN of the sheet writer's placeable filter --
+            // any item type that exports without a component must be skipped
+            // in BOTH enumerations, and this one runs first (step 1 of
+            // Export), so missing it here throws before the sheet writer's
+            // guards ever execute.
+            if (item is NetLabelItem) continue;
             if (!schematic.IsItemActive(item)) continue;   // invisible layer — not exported
             CataloguePart part = EasyEDACatalogue.LookupForStandaloneItem(item);
             if (result.ContainsKey(part.SymbolUuid)) continue;

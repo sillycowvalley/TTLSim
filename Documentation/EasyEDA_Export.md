@@ -640,6 +640,12 @@ How the exporter handles them (`EasyEdaSheetWriter`):
 - **Not placed.** `NetLabelItem` joins cosmetic items in the placeable
   filter: no COMPONENT, no ATTRs, no No-Connect flags (spare port bits
   are invisible to EasyEDA, which is correct — they exist only to tie).
+  There are TWO enumeration sites that must both skip any item type
+  that exports without a component: the sheet writer's placeable
+  filter AND `EasyEdaExporter.CollectUsedParts` (no catalogue part, no
+  embedded resource, no manifest entry). The exporter's runs FIRST —
+  miss it there and export throws before the sheet writer's guards
+  execute.
 - **Wire endpoints.** `WorldPinPosition` answers a label pin with its
   own scaled TTLSim position, so the endpoint snap is a no-op there: no
   extender segments, and EDA002 cannot fire. The exported stub simply
