@@ -32,8 +32,13 @@ namespace TTLSim.UI.Components;
 ///     that the debug routing-bounds rectangle is offset from the body
 ///     centre by half a cell after rotation -- harmless, since it's a
 ///     debug annotation only.
-///   * Pin numbers sit inside the body, left-aligned just past the pin
-///     edge, reading inward.
+///   * Pin numbers are drawn UPRIGHT at every rotation: they render in a
+///     screen-aligned pass (outside the rotation transform, like the
+///     designator and the oscillator's labels), each anchored to its
+///     pin's WorldPosition and extending INWARD past the body edge. At
+///     R0 this lands exactly where the old in-transform rendering did;
+///     at R90/R270 the numbers stay readable instead of rotating with
+///     the body.
 ///   * The designator label is placed to match EasyEDA's H5/H6/H7/H8:
 ///     above the body for vertical orientations (R0/R180), to the right
 ///     of the body for horizontal orientations (R90/R270).
@@ -220,10 +225,8 @@ public sealed class HeaderOutputUnit : Unit
 
         using var pinBrush = new SolidBrush(ctx.PinColor);
         using var stubPen = new Pen(ctx.ForegroundColor, 1.0f);
-        using var numberBrush = new SolidBrush(ctx.ForegroundColor);
 
         float dotRadius = p * 0.30f;
-        float numberInsetX = p * 0.30f;
 
         for (int i = 0; i < pinCount; i++)
         {
@@ -236,17 +239,9 @@ public sealed class HeaderOutputUnit : Unit
             // Pin terminal dot at the outer endpoint.
             g.FillEllipse(pinBrush, pinOuterX - 2, rowY - 2, 4, 4);
 
-            // Pin number on the pin-side half of the body: left-aligned just
-            // inside the left body edge when unmirrored, right-aligned just
-            // inside the right body edge when mirrored.
-            string numText = pinNumber.ToString();
-            var numSize = g.MeasureString(numText, ctx.PinFont);
-            float numX = mirrored
-                ? bodyRightX - numberInsetX - numSize.Width
-                : bodyLeftX + numberInsetX;
-            g.DrawString(numText, ctx.PinFont, numberBrush,
-                numX,
-                rowY - numSize.Height / 2f);
+            // Pin numbers are NOT drawn here: they render upright in
+            // DrawLabels (screen-aligned, outside this transform), anchored
+            // to each pin's WorldPosition.
 
             // State indicator on the far (non-pin) half of the body.
             Signal? sig = ctx.SignalStateProvider?.Invoke(this, pinNumber);
@@ -271,21 +266,61 @@ public sealed class HeaderOutputUnit : Unit
     }
 
     /// <summary>
+    /// Origin for an upright (screen-aligned) text box anchored to a pin:
+    /// the box sits <paramref name="insetPx"/> pixels INWARD from the pin
+    /// endpoint (opposite the pin's outward world direction) and is
+    /// centred across the pin row/column. At R0 this reproduces the old
+    /// in-transform placement exactly; at 90/270 the text stays upright
+    /// beside its (now horizontal) pin.
+    /// </summary>
+    private static PointF UprightTextOrigin(
+        Point world, PinDirection outward, float insetPx, SizeF text, int p)
+    {
+        float wx = world.X * p, wy = world.Y * p;
+        return outward switch
+        {
+            PinDirection.Left => new PointF(wx + insetPx, wy - text.Height / 2f),
+            PinDirection.Right => new PointF(wx - insetPx - text.Width, wy - text.Height / 2f),
+            PinDirection.Up => new PointF(wx - text.Width / 2f, wy + insetPx),
+            _ => new PointF(wx - text.Width / 2f, wy - insetPx - text.Height),
+        };
+    }
+
+    /// <summary>
     /// Designator placement matches EasyEDA's header symbols:
     ///   * Vertical body (R0 / R180): designator sits ABOVE the body,
     ///     left edge aligned with the body's left edge (like H5 and H7).
     ///   * Horizontal body (R90 / R270): designator sits to the RIGHT of
-    ///     the body, top edge aligned with the body's top edge (like H6
+    ///     the body, top aligned with the body's top edge (like H6
     ///     and H8).
     /// "Above" / "right" / "top" are all in screen space; the label text
     /// itself is screen-axis-aligned (Unit.Draw resets the rotation
     /// transform before DrawLabels runs). Mirroring does not move the
     /// designator: the body occupies the same cells either way.
+    ///
+    /// Pin numbers also render here (screen-aligned, so they stay upright
+    /// at every rotation), one per pin, anchored inward of each pin's
+    /// WorldPosition -- which is SwapR90R270-aware and Mirrored-aware, so
+    /// the numbers land on the body side of their pins in every
+    /// combination without special cases.
     /// </summary>
     protected override void DrawLabels(Graphics g, RenderContext ctx)
     {
         int p = ctx.GridPitch;
 
+        // ---- upright pin numbers ----
+        using var numberBrush = new SolidBrush(ctx.ForegroundColor);
+        float numberInset = StubCells * p + p * 0.30f;   // just past the body edge
+        foreach (var pin in Pins)
+        {
+            string numText = pin.Number.ToString();
+            var numSize = g.MeasureString(numText, ctx.PinFont);
+            var origin = UprightTextOrigin(
+                pin.WorldPosition, pin.Direction, numberInset, numSize, p);
+            g.DrawString(numText, ctx.PinFont, numberBrush, origin.X, origin.Y);
+        }
+
+        // ---- designator (+ optional Label) ----
         // Effective rotation: swap R90/R270 to match the header's visual
         // flip in DrawShape, so the corners we compute below land where
         // the body is actually drawn.

@@ -37,6 +37,17 @@ namespace TTLSim.UI.Components;
 /// </para>
 ///
 /// <para>
+/// All text is drawn UPRIGHT at every rotation: bit names render in a
+/// screen-aligned pass (outside the rotation transform, like the oscillator's
+/// labels), each anchored to its pin's WorldPosition and extending inward
+/// past the bracket -- pixel-identical to the old rendering at rotation 0.
+/// The range header ("D[4..7]") is centred above the rotated extent. Note
+/// that at 90/270 the pin columns are one cell apart, so long bit names on a
+/// wide rotated port will overlap horizontally -- inherent to upright text at
+/// that pitch; keep rotated ports' names short or the port at 0/180.
+/// </para>
+///
+/// <para>
 /// Pin identity rules (same as the header's Mirrored feature): pins are added,
 /// relocated, or kept -- never destroyed while a Connection may reference
 /// them. Growing Width appends fresh pins on the current pin edge. Shrinking
@@ -244,8 +255,15 @@ public sealed class NetLabelItem : SchematicItem
         ApplyRotationTransform(g, ctx);
         DrawShape(g, ctx);
         g.Restore(state);
+
+        DrawText(g, ctx);
     }
 
+    /// <summary>
+    /// Geometry only (stubs, terminal dots, bracket, sim-state dots) --
+    /// drawn inside the rotation transform. Text renders upright in
+    /// <see cref="DrawText"/> after the transform is restored.
+    /// </summary>
     private void DrawShape(Graphics g, RenderContext ctx)
     {
         int p = ctx.GridPitch;
@@ -256,16 +274,14 @@ public sealed class NetLabelItem : SchematicItem
         // itself never moves.
         int pinOuterX = mirrored ? rightX : leftX;
         int bracketX = mirrored ? rightX - p : leftX + p;
-        // Serifs and the range header extend TOWARD the pins.
+        // Serifs extend TOWARD the pins.
         int towardPins = mirrored ? +1 : -1;
 
         Color ink = Selected ? ctx.SelectedColor : Color.ToColor();
         using var pen = new Pen(ink, 1.2f);
         using var pinBrush = new SolidBrush(ctx.PinColor);
-        using var textBrush = new SolidBrush(ink);
 
         float dotRadius = p * 0.30f;
-        float textInsetX = p * 0.30f;
 
         for (int pinNumber = 1; pinNumber <= width; pinNumber++)
         {
@@ -275,19 +291,6 @@ public sealed class NetLabelItem : SchematicItem
             // at the outer end -- the same visual grammar as every other pin.
             g.DrawLine(pen, pinOuterX, rowY, bracketX, rowY);
             g.FillEllipse(pinBrush, pinOuterX - 2, rowY - 2, 4, 4);
-
-            // Per-bit name on the text side of the bracket ("D4"): to the
-            // right of it when unmirrored, right-aligned to its left when
-            // mirrored. Drawn inside the rotation transform, like the
-            // header's pin numbers, so it follows the body.
-            string bit = BitName(pinNumber);
-            var bitSize = g.MeasureString(bit, ctx.PinFont);
-            float bitX = mirrored
-                ? bracketX - textInsetX - bitSize.Width
-                : bracketX + textInsetX;
-            g.DrawString(bit, ctx.PinFont, textBrush,
-                bitX,
-                rowY - bitSize.Height / 2f);
 
             // Sim-mode per-bit state dot on the far (text) side, matching
             // the header's per-pin indicator.
@@ -305,8 +308,8 @@ public sealed class NetLabelItem : SchematicItem
         }
 
         // Bracket: for a bus port (width > 1), a vertical bar spanning the
-        // pin rows with half-cell serifs toward the pins, plus the range
-        // header ("D[4..7]") above the bar. A width-1 label needs neither.
+        // pin rows with half-cell serifs toward the pins. A width-1 label
+        // needs neither. The range header renders upright in DrawText.
         if (width > 1)
         {
             int topRowY = (Position.Y + 1) * p;
@@ -315,17 +318,67 @@ public sealed class NetLabelItem : SchematicItem
             g.DrawLine(pen, bracketX, topRowY - p / 2, bracketX, bottomRowY + p / 2);
             g.DrawLine(pen, bracketX, topRowY - p / 2, serifX, topRowY - p / 2);
             g.DrawLine(pen, bracketX, bottomRowY + p / 2, serifX, bottomRowY + p / 2);
+        }
+    }
 
+    /// <summary>
+    /// All text, drawn upright (screen-aligned, outside the rotation
+    /// transform): one bit name per pin, anchored inward of the pin's
+    /// WorldPosition just past the bracket -- pixel-identical to the old
+    /// in-transform rendering at rotation 0 -- and, for a bus port, the
+    /// range header centred above the rotated extent.
+    /// </summary>
+    private void DrawText(Graphics g, RenderContext ctx)
+    {
+        int p = ctx.GridPitch;
+        Color ink = Selected ? ctx.SelectedColor : Color.ToColor();
+        using var textBrush = new SolidBrush(ink);
+
+        // Bit names: one cell of stub plus the old 0.3-cell inset past the
+        // bracket, extending inward (opposite each pin's world direction).
+        float textInset = p + p * 0.30f;
+        foreach (var pin in Pins)
+        {
+            string bit = BitName(pin.Number);
+            var bitSize = g.MeasureString(bit, ctx.PinFont);
+            var origin = UprightTextOrigin(
+                pin.WorldPosition, pin.Direction, textInset, bitSize, p);
+            g.DrawString(bit, ctx.PinFont, textBrush, origin.X, origin.Y);
+        }
+
+        // Range header for a bus port, centred above the rotated visual
+        // extent -- the oscillator-designator pattern, readable at every
+        // rotation.
+        if (width > 1)
+        {
             string name = string.IsNullOrWhiteSpace(Label) ? "?" : Label;
             string range = $"{name}[{startBit}..{startBit + width - 1}]";
             var rangeSize = g.MeasureString(range, ctx.LabelFont);
-            float rangeX = mirrored
-                ? bracketX + p / 2f - rangeSize.Width
-                : bracketX - p / 2f;
+            var b = Bounds;   // rotated extent, grid units
+            float cx = (b.X + b.Width / 2f) * p;
+            float topY = b.Y * p;
             g.DrawString(range, ctx.LabelFont, textBrush,
-                rangeX,
-                topRowY - p / 2f - rangeSize.Height);
+                cx - rangeSize.Width / 2f, topY - rangeSize.Height);
         }
+    }
+
+    /// <summary>
+    /// Origin for an upright (screen-aligned) text box anchored to a pin:
+    /// the box sits <paramref name="insetPx"/> pixels INWARD from the pin
+    /// endpoint (opposite the pin's outward world direction) and is
+    /// centred across the pin row/column.
+    /// </summary>
+    private static PointF UprightTextOrigin(
+        Point world, PinDirection outward, float insetPx, SizeF text, int p)
+    {
+        float wx = world.X * p, wy = world.Y * p;
+        return outward switch
+        {
+            PinDirection.Left => new PointF(wx + insetPx, wy - text.Height / 2f),
+            PinDirection.Right => new PointF(wx - insetPx - text.Width, wy - text.Height / 2f),
+            PinDirection.Up => new PointF(wx - text.Width / 2f, wy + insetPx),
+            _ => new PointF(wx - text.Width / 2f, wy - insetPx - text.Height),
+        };
     }
 
     private void ApplyRotationTransform(Graphics g, RenderContext ctx)
