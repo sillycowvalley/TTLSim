@@ -78,7 +78,8 @@ second mirrored LED) round-trips through Export → Import → EasyEDA's
 bindings.
 
 Implemented parts: **resistor**, **LED**, **VCC** (power net flag), **GND**
-(ground net flag), **headers** (2/4/6/8-pin, 1×N, 2.54 mm pitch), **switch**
+(ground net flag), **headers** (2/3/4/6/8-pin, 1×N, 2.54 mm pitch, optionally
+mirrored across the long axis — see §5), **switch**
 (SPST rocker, off-board via 2P header — see §5), **pushbutton** (SPST
 momentary tactile, off-board via 2P header — see §5). Other parts in the
 catalogue throw `NotImplementedException` from `EasyEDACatalogue` until
@@ -190,7 +191,15 @@ rather than authoring our own.
 ["FONTSTYLE","st4",null,...]              -- styles referenced below
 
 -- A placed regular component (resistor):
-["COMPONENT",id,"PartTitle.1",worldX,worldY,rotationDeg,0,{},0]
+["COMPONENT",id,"PartTitle.1",worldX,worldY,rotationDeg,mirror,{},0]
+```
+
+The field after `rotationDeg` is the **mirror flag**: `0` = normal, `1` =
+flipped across the vertical axis through the component anchor, applied
+**after** rotation in world space. See "Headers: mirroring" in §5 for the
+semantics and the emit rule.
+
+```
 ["ATTR",id,parentComponentId,"Symbol",     symbolUuid,...,"st6",0]
 ["ATTR",id,parentComponentId,"Designator", "R1",...,"st6",0]
 ["ATTR",id,parentComponentId,"Name", null, ...,"st4",0]
@@ -552,6 +561,48 @@ These three pieces have to stay consistent: if any later part also
 uses `Pin.SwapR90R270`, its `CataloguePart` must also set
 `MatchesEasyEdaRotationSense: true`, and if its `DrawShape` doesn't
 do the extra 180 it'll visually disagree with where the pins are.
+
+### Headers: mirroring (flip across the long axis)
+
+`HeaderOutputUnit.Mirrored` flips a header across its long axis on the
+TTLSim canvas — pins exit from the opposite edge of the body, pin order
+and numbering unchanged. The export maps this onto EasyEDA's native
+flip via the COMPONENT record's **mirror field** (the field after
+rotation): `0` = normal, `1` = flipped across the vertical axis
+through the component anchor.
+
+**Renderer semantics** (measured, not inferred — both from §0
+reference-pair diffs):
+
+- At rotation 0, setting the flag negates each pin's local X about the
+  anchor, Y untouched. Only that one field changes.
+  (`Headers.epro` vs `Headers_Flipped.epro`.)
+- The mirror is applied **after** rotation, as a world-space X flip.
+  Flipping a rot-90 header vertically in EasyEDA rewrites the record
+  to **rot 270 + mirror 1** — rotation negated, flag set.
+  (`Headers.epro` vs `Flipped_Vertical.epro`, H6.)
+
+**Emit rule** in `ComputePlacement` / `EmitComponent`:
+
+1. Pin-world math is **mirror-first**: negate the catalogue pin-local
+   X in the symbol frame, then `RotatePoint` as usual. This encodes
+   TTLSim's drawing intent (mirror across the long axis, then rotate)
+   and keeps wire snapping and No-Connect positions on the flipped
+   pin endpoints for free.
+2. The emitted rotation is **negated when mirrored**:
+   `emitRot = (360 - r) % 360`, alongside `mirror = 1`. The two
+   compositions are the same transform —
+   `Rotate(r)·MirrorX == MirrorX·Rotate(360 - r)` — but EasyEDA's
+   renderer only speaks the mirror-after-rotation form. At rotations
+   0 and 180 the compositions coincide, so an R0-only reference
+   cannot expose the difference; the H6 pair was needed to pin it
+   down.
+
+The anchor is solved by the exporter as usual (EasyEDA's own flip
+pivot moves the anchor in hand-flipped files; irrelevant to us).
+`LabelOffsets` are reused unchanged for mirrored placements: measured
+drift in the references was ≤5 EasyEDA px (8-pin designator) or zero
+(4-pin), below hand-tuning tolerance.
 
 ### Headers: Name label styling
 

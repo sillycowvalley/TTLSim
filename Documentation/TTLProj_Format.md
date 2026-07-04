@@ -136,7 +136,8 @@ current catalogue.)
   "label": "NAND",
   "rotation": 0,
   "layer": 0,
-  "switchClosed": null
+  "switchClosed": null,
+  "mirrored": null
 }
 ```
 
@@ -150,6 +151,7 @@ current catalogue.)
 | `rotation` | int | `0` / `90` / `180` / `270`. |
 | `layer` | int | Index into `layers`. Usually `0`. |
 | `switchClosed` | bool? | SPST switch / SPDT switch units only. `false` for an open SPST (or SPDT throw A), `true` for closed (throw B). **Null for everything else.** When generating from scratch, default switches to `false`. |
+| `mirrored` | bool? | Header units only. `true` flips the header across its long axis so the pins exit from the opposite edge of the body; pin order, pin numbering, and ribbon-link mapping are unchanged. **Null for everything else.** Null or absent loads as `false`, so files written before the feature are unaffected. |
 
 ---
 
@@ -345,7 +347,8 @@ A single 74HC00 with its power pins wired and one gate input pulled to VCC.
         "label": "NAND",
         "rotation": 0,
         "layer": 0,
-        "switchClosed": null
+        "switchClosed": null,
+        "mirrored": null
       }
     ],
     "items": [
