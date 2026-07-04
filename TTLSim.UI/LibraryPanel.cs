@@ -132,6 +132,11 @@ public sealed class LibraryPanel : UserControl
         AddPart(io, "Header out, 4-pin", HeaderPartDefinition.HeaderOut4);
         AddPart(io, "Header out, 6-pin", HeaderPartDefinition.HeaderOut6);
         AddPart(io, "Header out, 8-pin", HeaderPartDefinition.HeaderOut8);
+        // Net label / bus port: standalone SchematicItem (symbol factory
+        // payload, like the power rails). Width and StartBit are set in the
+        // property grid after placement; the drop default is a width-1 label
+        // with an empty (tie-nothing) name.
+        AddSymbol(io, "Net label / bus port", () => new NetLabelItem());
         io.Expand();
 
         var power = tree.Nodes.Add("Power");

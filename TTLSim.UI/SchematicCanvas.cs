@@ -164,9 +164,13 @@ public sealed partial class SchematicCanvas : Control
             // Built over ACTIVE connections only, to match the router: a hidden
             // wire produces no polyline and is electrically absent, so it must
             // not bridge two visible nets into one id (which would hide a real
-            // cross-net corner between them).
+            // cross-net corner between them). Net-label ties are included as
+            // pseudo-connections (indices past the real ones) so two clusters
+            // joined only by same-named labels share one net id and their
+            // coincidences never surface as false EDA003 errors.
             var activeConns = Schematic.ActiveConnections.ToList();
-            var parent = new int[activeConns.Count];
+            var ties = Schematic.NetLabelTiePairs().ToList();
+            var parent = new int[activeConns.Count + ties.Count];
             for (int i = 0; i < parent.Length; i++) parent[i] = i;
             int Find(int x)
             {
@@ -174,15 +178,22 @@ public sealed partial class SchematicCanvas : Control
                 return x;
             }
             var pinToConn = new Dictionary<Pin, int>();
+            void Touch(Pin pin, int index)
+            {
+                if (pinToConn.TryGetValue(pin, out int j))
+                { int ra = Find(index), rb = Find(j); if (ra != rb) parent[ra] = rb; }
+                else pinToConn[pin] = index;
+            }
             for (int i = 0; i < activeConns.Count; i++)
             {
                 var c = activeConns[i];
-                if (pinToConn.TryGetValue(c.A, out int j1))
-                { int ra = Find(i), rb = Find(j1); if (ra != rb) parent[ra] = rb; }
-                else pinToConn[c.A] = i;
-                if (pinToConn.TryGetValue(c.B, out int j2))
-                { int ra = Find(i), rb = Find(j2); if (ra != rb) parent[ra] = rb; }
-                else pinToConn[c.B] = i;
+                Touch(c.A, i);
+                Touch(c.B, i);
+            }
+            for (int t = 0; t < ties.Count; t++)
+            {
+                Touch(ties[t].A, activeConns.Count + t);
+                Touch(ties[t].B, activeConns.Count + t);
             }
             var netIdOf = new Dictionary<Connection, int>(activeConns.Count);
             for (int i = 0; i < activeConns.Count; i++)

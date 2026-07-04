@@ -127,13 +127,19 @@ public sealed class ItemDto
     // Null on VCC/GND/CLK and on older files; the loader auto-assigns when missing.
     public string? Designator { get; set; }
 
-    // Cosmetic rectangle (Type "rect"). Null on every other item type.
+    // Cosmetic rectangle (Type "rect") and net label / bus port (Type
+    // "netlabel") share Width; Height and the colour fields are rect-only.
     // Colours are stored as TTLColor enum names ("Grey", "Blue", ...).
     public int? Width { get; set; }
     public int? Height { get; set; }
     public bool? Filled { get; set; }
     public string? FillColor { get; set; }
     public string? BorderColor { get; set; }
+
+    // Net label / bus port (Type "netlabel"): bit carried by pin 1; pin k
+    // carries StartBit + k - 1. Null on every other item type and on files
+    // written before the feature; null loads as 0.
+    public int? StartBit { get; set; }
 
     // Cosmetic text label (Type "text"). The text itself rides on Label above.
     public float? FontSize { get; set; }

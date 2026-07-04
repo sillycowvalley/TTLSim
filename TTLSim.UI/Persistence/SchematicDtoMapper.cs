@@ -395,6 +395,7 @@ public static class SchematicDtoMapper
                 CanOscillator => "canosc",
                 RectangleItem => "rect",
                 TextLabelItem => "text",
+                NetLabelItem => "netlabel",
                 _ => throw new InvalidOperationException(
                     $"No standalone-item discriminator for {item.GetType().Name}")
             }
@@ -421,6 +422,11 @@ public static class SchematicDtoMapper
         {
             dto.FontSize = text.FontSize;
             dto.TextColor = text.TextColor.ToString();
+        }
+        if (item is NetLabelItem netLabel)
+        {
+            dto.Width = netLabel.Width;
+            dto.StartBit = netLabel.StartBit;
         }
 
         if (item is IDesignatedItem des)
@@ -894,9 +900,17 @@ public static class SchematicDtoMapper
             FontSize = dto.FontSize ?? 4.0f,
             TextColor = ParseTtlColor(dto.TextColor)
         },
+        // Object initialisers assign in written order: StartBit first so the
+        // Width grow builds pins with their final bits. The item has no
+        // ConnectionProbe yet, and growth never needs one.
+        "netlabel" => new NetLabelItem
+        {
+            StartBit = dto.StartBit ?? 0,
+            Width = dto.Width ?? 1
+        },
         _ => throw new System.IO.InvalidDataException(
             $"Unknown standalone item type '{dto.Type}'. " +
-            "Expected 'vcc', 'gnd', 'clock', 'canosc', 'canosc8', 'rect', or 'text'.")
+            "Expected 'vcc', 'gnd', 'clock', 'canosc', 'canosc8', 'rect', 'text', or 'netlabel'.")
     };
 
     private static TTLColor ParseTtlColor(string? name) =>

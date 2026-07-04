@@ -43,8 +43,17 @@ public sealed class Schematic
     /// </summary>
     public List<Layer> Layers { get; } = new() { new Layer("Default", visible: true) };
 
-    public void Add(SchematicItem item) => Items.Add(item);
-    public void Remove(SchematicItem item) => Items.Remove(item);
+    public void Add(SchematicItem item)
+    {
+        Items.Add(item);
+        InstallNetLabelProbe(item);
+    }
+
+    public void Remove(SchematicItem item)
+    {
+        Items.Remove(item);
+        if (item is NetLabelItem label) label.ConnectionProbe = null;
+    }
 
     public void Add(Connection connection) => Connections.Add(connection);
     public void Remove(Connection connection) => Connections.Remove(connection);
@@ -98,6 +107,63 @@ public sealed class Schematic
             Layers.Clear();
             Layers.AddRange(other.Layers);
         }
+        // Bulk add bypasses Add(SchematicItem), so install the net-label
+        // connection probes here -- CopyFrom is the load path's single entry.
+        foreach (var item in Items)
+            InstallNetLabelProbe(item);
+    }
+
+    /// <summary>
+    /// Give a net label its connection probe: "is this pin an endpoint of any
+    /// Connection in THIS schematic". The Width setter consults it before
+    /// shrinking; without a probe (an item not yet in any schematic, or one
+    /// added through a path that missed this) shrinks refuse -- fail safe.
+    /// </summary>
+    private void InstallNetLabelProbe(SchematicItem item)
+    {
+        if (item is not NetLabelItem label) return;
+        label.ConnectionProbe = pin =>
+        {
+            foreach (var c in Connections)
+                if (c.A == pin || c.B == pin) return true;
+            return false;
+        };
+    }
+
+    /// <summary>
+    /// Synthetic pin pairs tying every active net label's pins by
+    /// (name, absolute bit): pin k of a label carries bit StartBit + k - 1,
+    /// and all active pins sharing a (name, bit) key anywhere on the
+    /// schematic are one electrical net. Pairs are chained (p0-p1, p1-p2, ...)
+    /// -- any union-find closes the chain transitively.
+    ///
+    /// <para>Every net-identity consumer MUST take these: the simulator's
+    /// build input, the router's grouping and retry passes, and the canvas's
+    /// coincident-corner detection. Empty label names tie nothing; inactive
+    /// (hidden-layer) labels contribute nothing, matching how hidden wires
+    /// are electrically absent.</para>
+    /// </summary>
+    public IEnumerable<(Pin A, Pin B)> NetLabelTiePairs()
+    {
+        var byNameAndBit = new Dictionary<(string Name, int Bit), List<Pin>>();
+        foreach (var item in Items)
+        {
+            if (item is not NetLabelItem label) continue;
+            if (!IsItemActive(label)) continue;
+            if (string.IsNullOrWhiteSpace(label.Label)) continue;
+
+            foreach (var pin in label.Pins)
+            {
+                var key = (label.Label, label.BitOfPin(pin.Number));
+                if (!byNameAndBit.TryGetValue(key, out var list))
+                    byNameAndBit[key] = list = new List<Pin>();
+                list.Add(pin);
+            }
+        }
+
+        foreach (var list in byNameAndBit.Values)
+            for (int i = 1; i < list.Count; i++)
+                yield return (list[i - 1], list[i]);
     }
 
     /// <summary>

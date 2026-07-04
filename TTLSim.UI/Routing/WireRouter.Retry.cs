@@ -18,6 +18,7 @@ public sealed partial class WireRouter
     private static void TryFixCollisions(
         Schematic schematic,
         IReadOnlyList<Connection> connections,
+        IReadOnlyList<(Pin A, Pin B)> netLabelTies,
         Dictionary<Connection, IReadOnlyList<Point>> polylines,
         Rectangle bounds, SearchScratch scratch, bool[] bodyBlocked,
         HashSet<Point> junctionsSet)
@@ -26,8 +27,10 @@ public sealed partial class WireRouter
         // time, so "same net" matches the routing groups. Built over the
         // ACTIVE connections only: an inactive (hidden) wire is electrically
         // absent and must not bridge two visible nets into one id, which would
-        // mask a real cross-net corner between them.
-        var netIdOf = BuildNetIdMap(connections);
+        // mask a real cross-net corner between them. Net-label ties are
+        // included so two clusters joined only by name share one id -- their
+        // coincidences are same-net, never EDA003.
+        var netIdOf = BuildNetIdMap(connections, netLabelTies);
 
         var collisions = CoincidentCornerDetector.Detect(
             connections, new RouteResult(polylines, junctionsSet.ToList()),

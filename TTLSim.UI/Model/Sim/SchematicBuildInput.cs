@@ -275,6 +275,19 @@ public sealed class SchematicBuildInput : IBuildInput
                     yield return (new PinRef(link.A.Id, i), new PinRef(link.B.Id, i));
             }
 
+            // Net labels / bus ports: every active label pin sharing a
+            // (name, bit) key is one net, tied with no drawn wire -- the
+            // helper yields chained synthetic pin-pairs that NetTable unions
+            // exactly like the header-link pairs above. Label pins belong to
+            // no BuildDevice or BuildItem; NetTable accepts arbitrary PinRefs
+            // and the builder's diagnostics only walk declared devices, so
+            // the extra pins are inert beyond their net-tying effect.
+            // Activity (hidden layers) and empty-name skipping are handled
+            // inside NetLabelTiePairs.
+            foreach (var (a, b) in schematic.NetLabelTiePairs())
+                yield return (new PinRef(a.Owner!.Id, a.Number),
+                              new PinRef(b.Owner!.Id, b.Number));
+
             // Device-internal bonds for the 4-pin breadboard pushbutton: its two
             // legs per terminal (pins 1&2 and 3&4) are physically common, so union
             // them here. The doubled legs then share their terminal's net -- the

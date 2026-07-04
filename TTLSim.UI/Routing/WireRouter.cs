@@ -121,7 +121,13 @@ public sealed partial class WireRouter : IConnectionRouter
             foreach (var pin in item.Pins)
                 SetBit(foreignWireDir, bounds, pin.WorldPosition, ForeignPinSeed);
 
-        var groups = GroupByPin(activeConnections);
+        // Net-label ties: same-(name, bit) label pins are one net with no
+        // drawn wire. Computed once and fed to grouping (so tied clusters
+        // share ownNetPenalty and one net id) and to the retry pass (so a
+        // tied pair is never a false cross-net coincident corner).
+        var netLabelTies = schematic.NetLabelTiePairs().ToList();
+
+        var groups = GroupByPin(activeConnections, netLabelTies);
 
         // Restored declaration-order routing — the constraint-based
         // ordering experiment helped some schematics and hurt others.
@@ -150,7 +156,7 @@ public sealed partial class WireRouter : IConnectionRouter
         // route traverses. Detect those and try to reroute the wire that
         // owns the vertex with that cell hard-blocked from being a bend.
         // Take the new route only if it doesn't introduce more collisions.
-        TryFixCollisions(schematic, activeConnections, polylines,
+        TryFixCollisions(schematic, activeConnections, netLabelTies, polylines,
             bounds, scratch, bodyBlocked,
             junctionsSet);
 
