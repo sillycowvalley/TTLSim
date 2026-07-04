@@ -79,7 +79,8 @@ bindings.
 
 Implemented parts: **resistor**, **LED**, **VCC** (power net flag), **GND**
 (ground net flag), **headers** (2/3/4/6/8-pin, 1×N, 2.54 mm pitch, optionally
-mirrored across the long axis — see §5), **switch**
+mirrored across the long axis — see §5), **net labels / bus ports** (no
+component — a visible NET ATTR on the wire; see "Net labels" in §5), **switch**
 (SPST rocker, off-board via 2P header — see §5), **pushbutton** (SPST
 momentary tactile, off-board via 2P header — see §5). Other parts in the
 catalogue throw `NotImplementedException` from `EasyEDACatalogue` until
@@ -221,7 +222,28 @@ semantics and the emit rule.
 ["LINESTYLE",styleId,"#RRGGBB",null,null,null,null]
 ["WIRE",id,[[x1,y1,x2,y2,...],[...]], styleId, 0]
 ["ATTR",id,parentWireId,"Relevance","[]",...]
-["ATTR",id,parentWireId,"NET",netName,...]   -- empty or "VCC"/"GND"
+["ATTR",id,parentWireId,"NET",netName,0,visible,x,y,rot,styleRef,0]
+```
+
+The wire's NET ATTR doubles as the **net label**: `visible` 0 is the
+ordinary hidden name (empty or "VCC"/"GND"); `visible` 1 with a position
+and rotation renders the name on the sheet — that IS a net label in
+EasyEDA Pro; there is no separate record or component. Measured from the
+`Nets_and_Buses.epro` reference:
+
+```
+["ATTR","e184","w1","NET","WE",0,1,410,575,0,"st1",0]
+```
+
+The same reference gives the **bus** record shapes (thick trunk, entry
+ticks, colon-range name). These are graphical grouping only — the
+electrical fusion is carried entirely by the per-wire bit names — and the
+exporter deliberately does NOT emit them (see "Net labels" in §5):
+
+```
+["BUS",id,[[x1,y1,x2,y2],...], lineStyleRef, 0]      -- line width 2
+["BUSENTRY",id,parentBusId,seq,x,y,rotDeg]           -- wire-side endpoint
+["ATTR",id,parentBusId,"NET","D[0:7]",0,1,x,y,rot,styleRef,0]  -- colon range
 ```
 
 Each WIRE's segments must be **axis-aligned**: each inner array is a
@@ -603,6 +625,46 @@ pivot moves the anchor in hand-flipped files; irrelevant to us).
 `LabelOffsets` are reused unchanged for mirrored placements: measured
 drift in the references was ≤5 EasyEDA px (8-pin designator) or zero
 (4-pin), below hand-tuning tolerance.
+
+### Net labels (and why buses emit no BUS records)
+
+A TTLSim `NetLabelItem` (net label / bus port) has **no EasyEDA
+component**. Its entire presence on the exported sheet is the wire's
+NET ATTR emitted visible and positioned at the label pin (record shape
+in §3). Same-named nets fuse in EasyEDA purely by that name — the
+`Nets_and_Buses.epro` reference shows four disconnected `WE` stubs
+becoming one net this way, which is EasyEDA's own idiom for labels.
+
+How the exporter handles them (`EasyEdaSheetWriter`):
+
+- **Not placed.** `NetLabelItem` joins cosmetic items in the placeable
+  filter: no COMPONENT, no ATTRs, no No-Connect flags (spare port bits
+  are invisible to EasyEDA, which is correct — they exist only to tie).
+- **Wire endpoints.** `WorldPinPosition` answers a label pin with its
+  own scaled TTLSim position, so the endpoint snap is a no-op there: no
+  extender segments, and EDA002 cannot fire. The exported stub simply
+  ends at the label text, exactly as a hand-drawn EasyEDA label does.
+- **Net names.** Per group: net-flag name (VCC/GND) wins, then the
+  label's `BitName` ("PC5", "CLK0"), else unnamed. Multi-bit ports fall
+  out for free — each bit is its own group with its own per-bit name,
+  which is precisely how the reference carries buses electrically.
+- **Diagnostics.** `EDA004` (warning) fires when one group carries two
+  different label names (ordinal-first wins) or a label sits on a power
+  net (the flag name wins and the visible text shows it).
+- **EDA003 ids.** Groups joined only by a shared label name collapse to
+  one net id for the coincident-corner check — a corner between two
+  same-named clusters is same-net sharing, not a collision.
+
+**Buses are deliberately not emitted as BUS/BUSENTRY records.** The
+reference proves the thick trunk and entry ticks are graphical grouping
+only: two physically separate `D[0:7]` buses fuse because their stubs
+carry per-bit NET names, and the range name uses colon syntax
+(`D[0:7]`, not `D[0..7]`). Per-bit names on the wires — which the
+exporter already emits — are the whole electrical story; the bar is
+cosmetics. One measured quirk worth knowing when reading hand-drawn
+references: EasyEDA's own bit-name derivation produced `A0]`…`A17]`
+(trailing bracket) in the reference file. TTLSim never depends on that
+derivation because it names every bit explicitly.
 
 ### Headers: Name label styling
 

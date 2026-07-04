@@ -26,21 +26,26 @@ namespace TTLSim.UI.Components;
 /// a "?" placeholder), so freshly dropped labels can never silently short.
 /// A width-1 label with StartBit 0 displays its bare name ("/CS", never
 /// "/CS0"); a width-1 tap of a higher bit keeps the digit ("D4"), and every
-/// bus-port pin is always numbered. Display only -- the electrical tie key is
-/// always (name, absolute bit).
+/// bus-port pin is always numbered. The per-bit names are the ONLY text drawn
+/// -- there is no range-header designator. Display only -- the electrical tie
+/// key is always (name, absolute bit).
 /// </para>
 ///
 /// <para>
 /// Geometry: the bounding box is a fixed <see cref="BoxWidth"/> cells wide and
 /// the PINS SIT ON ITS VERTICAL CENTRE COLUMN, so the rotation pivot (the box
-/// centre, per <see cref="SchematicItem"/>) always lands on the pin column. A
-/// width-1 label therefore rotates exactly about its connection blob; a wider
-/// bus port rotates about the middle of its pin column. Height is width + 1
-/// rounded up to EVEN (the HeaderOutputUnit rule) so the pivot stays on an
-/// integer cell. The stub, bracket, and text extend one side of the pin
-/// column; long bit names may overhang the box -- a cosmetic overhang, like
-/// the capacitor's plates. RoutingBounds is the default (the visual Bounds),
-/// so the router keep-out -- and the debug pink -- hugs the symbol.
+/// centre, per <see cref="SchematicItem"/>) always lands on the pin column.
+/// Height is EXACTLY width + 1: pins on rows 1..width with the standard one
+/// unit of margin at each end. No even-rounding -- the pivot row H / 2 =
+/// (width + 1) / 2 is an integer for every width and always lands on a pin
+/// row, so a width-1 label rotates exactly about its connection blob and a
+/// wider port rotates about the middle pin of its column. (The
+/// HeaderOutputUnit even-height rule is NOT needed here: it exists to centre
+/// a pivot on a box whose pins hug one edge; with the pins already on the
+/// centre column, rounding would only add a phantom extra pin row on
+/// even widths.) The stub and text extend one side of the pin column; long
+/// bit names may overhang the box -- a cosmetic overhang, like the
+/// capacitor's plates.
 /// </para>
 ///
 /// <para>
@@ -58,9 +63,7 @@ namespace TTLSim.UI.Components;
 /// All text is drawn UPRIGHT at every rotation: bit names render in a
 /// screen-aligned pass (outside the rotation transform, like the oscillator's
 /// labels), each anchored to its pin's WorldPosition and extending inward
-/// past the bracket. The range header ("D[4..7]") is centred above the
-/// rotated extent -- which, with the pins on the centre column, means centred
-/// on the pin column. Note that at 90/270 the pin columns are one cell apart,
+/// past the bracket. Note that at 90/270 the pin columns are one cell apart,
 /// so long bit names on a wide rotated port will overlap horizontally --
 /// inherent to upright text at that pitch; keep rotated ports' names short or
 /// the port at 0/180.
@@ -77,15 +80,6 @@ namespace TTLSim.UI.Components;
 /// reads back unchanged, so the recorded SetPropertyCommand is a harmless
 /// no-op.
 /// </para>
-///
-/// <para>
-/// COMPATIBILITY NOTE: files written when the box was 6 cells wide with pins
-/// on the outer edges load fine (Position semantics are unchanged), but each
-/// label's pin blobs move relative to Position -- 2 cells inward for an
-/// unmirrored label, 4 cells inward for a mirrored one. Connections are
-/// logical (pin references), so wires simply reroute; the labels themselves
-/// may want a one-time nudge.
-/// </para>
 /// </summary>
 public sealed class NetLabelItem : SchematicItem
 {
@@ -98,6 +92,16 @@ public sealed class NetLabelItem : SchematicItem
     /// is always on the pin column.
     /// </summary>
     private const int BoxWidth = 4;
+
+    /// <summary>
+    /// Extra cells of router keep-out beyond the box on the TEXT side (the
+    /// side away from the pins' facing), sized so bit names up to about
+    /// three characters stay clear of routed wires. Applied at R0/R180
+    /// only, where the names run horizontally away from the pins; at
+    /// R90/R270 the upright names form a single text row beside the pins,
+    /// already inside the box's own margin.
+    /// </summary>
+    private const int TextKeepOutCells = 2;
 
     private int width;
     private int startBit;
@@ -266,23 +270,71 @@ public sealed class NetLabelItem : SchematicItem
 
     /// <summary>
     /// Bounding box: fixed <see cref="BoxWidth"/> cells wide, pins on the
-    /// centre column. Height is width + 1 rounded up to EVEN, the same rule
-    /// as HeaderOutputUnit, so the rotation pivot lands on an integer cell --
-    /// and, with the pins centred, ON THE PIN COLUMN: a width-1 label pivots
-    /// exactly about its connection blob. The box never moves when Mirrored
-    /// toggles -- only which side the stub and text sit on.
+    /// centre column. Height is EXACTLY width + 1 -- pins on rows 1..width
+    /// with one unit of margin at each end, no even-rounding. The pivot row
+    /// (width + 1) / 2 is always an integer and always a pin row: a width-1
+    /// label pivots exactly about its connection blob. (Rounding the height
+    /// up to even, as HeaderOutputUnit does, would add a phantom extra pin
+    /// row on every EVEN width -- the header needs it because its pins hug
+    /// one edge of the box; ours sit on the pivot column already.) The box
+    /// never moves when Mirrored toggles -- only which side the stub and
+    /// text sit on.
     /// </summary>
     private void ApplySizeForWidth()
     {
-        int boxHeight = width + 1;
-        if ((boxHeight & 1) != 0) boxHeight++;
-        Size = new Size(BoxWidth, boxHeight);
+        Size = new Size(BoxWidth, width + 1);
     }
 
-    // RoutingBounds is deliberately NOT overridden: the default (the visual
-    // Bounds) is already the right keep-out. The box spans two cells either
-    // side of the pin column, so wires get clearance from the stubs without
-    // any extra inflation -- and the debug pink hugs the symbol.
+    /// <summary>
+    /// The visual box, plus <see cref="TextKeepOutCells"/> extra cells on
+    /// the TEXT side (away from the pins' facing, selected by Mirrored) at
+    /// R0/R180 only -- that is the orientation where bit names run
+    /// horizontally away from the pins and need the keep-out. At R90/R270
+    /// the upright names form a single text row beside the pins, already
+    /// inside the box's own margin, so the plain box is the whole
+    /// footprint. The R0/R180 extension makes the rect ASYMMETRIC about the
+    /// pivot, so R180 must map it through the pivot rather than reuse the
+    /// unrotated rect; <see cref="RotateCell"/> matches Pin.WorldPosition's
+    /// convention exactly.
+    /// </summary>
+    public override Rectangle RoutingBounds
+    {
+        get
+        {
+            bool sideways = Rotation == Rotation.R90 || Rotation == Rotation.R270;
+            int extra = sideways ? 0 : TextKeepOutCells;
+
+            int left = Position.X - (mirrored ? extra : 0);
+            var unrotated = new Rectangle(
+                left, Position.Y,
+                Size.Width + extra, Size.Height);
+
+            if (Rotation == Rotation.R0) return unrotated;
+
+            Point a = RotateCell(unrotated.Left, unrotated.Top);
+            Point b = RotateCell(unrotated.Right, unrotated.Bottom);
+            return Rectangle.FromLTRB(
+                Math.Min(a.X, b.X), Math.Min(a.Y, b.Y),
+                Math.Max(a.X, b.X), Math.Max(a.Y, b.Y));
+        }
+    }
+
+    /// <summary>
+    /// Rotate one grid point about the pivot by the item's current rotation,
+    /// using the same clockwise convention as <see cref="Pin.WorldPosition"/>.
+    /// </summary>
+    private Point RotateCell(int x, int y)
+    {
+        int dx = x - Pivot.X;
+        int dy = y - Pivot.Y;
+        return Rotation switch
+        {
+            Rotation.R90 => new Point(Pivot.X - dy, Pivot.Y + dx),
+            Rotation.R180 => new Point(Pivot.X - dx, Pivot.Y - dy),
+            Rotation.R270 => new Point(Pivot.X + dy, Pivot.Y - dx),
+            _ => new Point(x, y)
+        };
+    }
 
     public override void Draw(Graphics g, RenderContext ctx)
     {
@@ -342,7 +394,7 @@ public sealed class NetLabelItem : SchematicItem
 
         // Bracket: for a bus port (width > 1), a vertical bar spanning the
         // pin rows with half-cell serifs toward the pins. A width-1 label
-        // needs neither. The range header renders upright in DrawText.
+        // needs neither.
         if (width > 1)
         {
             int topRowY = (Position.Y + 1) * p;
@@ -357,9 +409,8 @@ public sealed class NetLabelItem : SchematicItem
     /// <summary>
     /// All text, drawn upright (screen-aligned, outside the rotation
     /// transform): one bit name per pin, anchored inward of the pin's
-    /// WorldPosition just past the bracket, and, for a bus port, the range
-    /// header centred above the rotated extent -- which, with the pins on
-    /// the centre column, is centred on the pin column.
+    /// WorldPosition just past the bracket. The per-bit names are the only
+    /// text a label carries -- no range-header designator is drawn.
     /// </summary>
     private void DrawText(Graphics g, RenderContext ctx)
     {
@@ -377,21 +428,6 @@ public sealed class NetLabelItem : SchematicItem
             var origin = UprightTextOrigin(
                 pin.WorldPosition, pin.Direction, textInset, bitSize, p);
             g.DrawString(bit, ctx.PinFont, textBrush, origin.X, origin.Y);
-        }
-
-        // Range header for a bus port, centred above the rotated visual
-        // extent -- the oscillator-designator pattern, readable at every
-        // rotation.
-        if (width > 1)
-        {
-            string name = string.IsNullOrWhiteSpace(Label) ? "?" : Label;
-            string range = $"{name}[{startBit}..{startBit + width - 1}]";
-            var rangeSize = g.MeasureString(range, ctx.LabelFont);
-            var b = Bounds;   // rotated extent, grid units
-            float cx = (b.X + b.Width / 2f) * p;
-            float topY = b.Y * p;
-            g.DrawString(range, ctx.LabelFont, textBrush,
-                cx - rangeSize.Width / 2f, topY - rangeSize.Height);
         }
     }
 

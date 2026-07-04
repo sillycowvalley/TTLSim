@@ -76,10 +76,17 @@ internal static class EasyEDASheetWriter
 
         // Cosmetic items (rectangles, text labels) have no electrical presence
         // and no catalogue entry -- they are dropped from EasyEDA export
-        // entirely. Filtering here keeps them out of placement, component
-        // emission, wires, and No-Connect flags in one place.
+        // entirely. Net labels are also NOT placed: a net label has no EasyEDA
+        // component at all -- its entire EasyEDA existence is the visible NET
+        // ATTR on the wire that ends at its pin (measured from the
+        // Nets_and_Buses.epro reference; see EasyEDA_Export.md). Its pins DO
+        // terminate wires, handled in WorldPinPosition and the net-naming
+        // path below. Filtering here keeps placement, component emission, and
+        // No-Connect flags label-free in one place.
         var placeable = schematic.Items.Where(
-            item => item is not ICosmeticItem && schematic.IsItemActive(item));
+            item => item is not ICosmeticItem
+                 && item is not NetLabelItem
+                 && schematic.IsItemActive(item));
 
         foreach (var item in placeable)
         {
@@ -159,15 +166,88 @@ internal static class EasyEDASheetWriter
         // appearing as a shared endpoint between segments inside that record.
         var netGroups = GroupConnectionsByNet(activeConnections);
 
+        // ---- per-group net-label info ------------------------------------
+        // A net label's entire EasyEDA presence is a visible NET ATTR on its
+        // wire (measured: Nets_and_Buses.epro reference). For each group,
+        // collect the label pins: they determine the exported NET name (net
+        // flags win), the position of the visible NET text (at the first
+        // label pin of the chosen name), and EDA004 diagnostics when names
+        // disagree. groupLabelName also drives the EDA003 id collapse below.
+        var groupFlagName = new string?[netGroups.Count];
+        var groupLabelName = new string?[netGroups.Count];
+        var groupLabelPos = new PointF?[netGroups.Count];
+        for (int gi = 0; gi < netGroups.Count; gi++)
+        {
+            var group = netGroups[gi];
+            foreach (var conn in group)
+                groupFlagName[gi] ??= NetFlagNameForPin(conn.A) ?? NetFlagNameForPin(conn.B);
+
+            var labelPins = new List<Pin>();
+            foreach (var conn in group)
+            {
+                if (conn.A.Owner is NetLabelItem) labelPins.Add(conn.A);
+                if (conn.B.Owner is NetLabelItem) labelPins.Add(conn.B);
+            }
+            if (labelPins.Count == 0) continue;
+
+            static string NameOf(Pin p) => ((NetLabelItem)p.Owner!).BitName(p.Number);
+
+            var names = new SortedSet<string>(StringComparer.Ordinal);
+            foreach (var p in labelPins) names.Add(NameOf(p));
+
+            // Deterministic choice under conflict: ordinal-first name wins.
+            string chosen = names.Min!;
+            groupLabelName[gi] = chosen;
+            Pin chosenPin = labelPins.First(p => NameOf(p) == chosen);
+            groupLabelPos[gi] = GridToEasyEda(chosenPin.WorldPosition);
+
+            var connIds = group.Select(c => c.Id).ToList();
+            if (names.Count > 1)
+            {
+                diagnostics.Add(new TTLSim.Core.Diagnostic(
+                    TTLSim.Core.DiagnosticSeverity.Warning,
+                    "EDA004",
+                    $"Net {DescribeNet(group)} carries {names.Count} different " +
+                    $"net-label names ({string.Join(", ", names)}). " +
+                    $"'{chosen}' will name the exported net; the others are " +
+                    "ignored. Rename the labels to agree, or remove the wire " +
+                    "joining them.",
+                    ConnectionIds: connIds));
+            }
+            if (groupFlagName[gi] is string flag && flag != chosen)
+            {
+                diagnostics.Add(new TTLSim.Core.Diagnostic(
+                    TTLSim.Core.DiagnosticSeverity.Warning,
+                    "EDA004",
+                    $"Net label '{chosen}' sits on power net '{flag}'. The net " +
+                    $"exports as '{flag}' (net flags take precedence); the " +
+                    "visible label text will show that name.",
+                    ConnectionIds: connIds));
+            }
+        }
+
         // ---- EDA003: cross-net coincident wire corners --------------------
         // Detection lives in Routing.CoincidentCornerDetector so the canvas
         // can show the same warnings live, before export. See its summary
         // for why these cells matter (EasyEDA infers a junction → silent
         // net merge).
         {
+            // Effective net ids: groups joined only by a shared label name
+            // are ONE electrical net (EasyEDA fuses them by name), so they
+            // collapse to one id here -- a corner between them is same-net
+            // sharing, not a collision.
+            var effectiveId = new int[netGroups.Count];
+            var idByLabelName = new Dictionary<string, int>(StringComparer.Ordinal);
+            for (int gi = 0; gi < netGroups.Count; gi++)
+            {
+                effectiveId[gi] = gi;
+                if (groupLabelName[gi] is not string name) continue;
+                if (idByLabelName.TryGetValue(name, out int first)) effectiveId[gi] = first;
+                else idByLabelName[name] = gi;
+            }
             var netIdOf = new Dictionary<Connection, int>(activeConnections.Count);
             for (int netId = 0; netId < netGroups.Count; netId++)
-                foreach (var c in netGroups[netId]) netIdOf[c] = netId;
+                foreach (var c in netGroups[netId]) netIdOf[c] = effectiveId[netId];
 
             var corners = Routing.CoincidentCornerDetector.Detect(
                 activeConnections, routes, c => netIdOf[c]);
@@ -231,9 +311,12 @@ internal static class EasyEDASheetWriter
         // one electrical net. See EasyEDA_Export.md §6.1 -- the "stylistic
         // only" caveat there is wrong; per-net emission is required for
         // Update-PCB-from-Schematic to track connectivity correctly.
-        foreach (var group in netGroups)
+        for (int gi = 0; gi < netGroups.Count; gi++)
         {
-            string? netName = NetNameForGroup(group);
+            var group = netGroups[gi];
+            // Name precedence: net flag (VCC/GND), then net label, then
+            // unnamed. Both were resolved per group above.
+            string? netName = groupFlagName[gi] ?? groupLabelName[gi];
             // Colour: first connection wins. The EDA001 diagnostic above
             // already warns when a net's connections disagree on colour.
             string hex = WireColorToHex(group[0].Color);
@@ -247,7 +330,8 @@ internal static class EasyEDASheetWriter
             }
 
             if (segments.Count == 0) continue;  // degenerate net
-            EmitWireFromSegments(sb, segments, netName, hex, idGen);
+            EmitWireFromSegments(sb, segments, netName, hex, idGen,
+                labelPos: groupLabelPos[gi]);
         }
 
         // ---- emit No-Connect flags for floating pins ----
@@ -346,27 +430,27 @@ internal static class EasyEDASheetWriter
         return NetNameForPin(conn.A) ?? NetNameForPin(conn.B);
     }
 
-    /// <summary>
-    /// Net name for an entire net group: scan every pin in the group and
-    /// return the first netflag name found (VCC / GND / etc). Returns null
-    /// for unnamed signal nets. Used now that we emit one WIRE per net --
-    /// a netflag attached to only one Connection of a multi-pin net still
-    /// has to tag the resulting WIRE, so we resolve the name at net
-    /// granularity rather than per-Connection.
-    /// </summary>
-    private static string? NetNameForGroup(IReadOnlyList<Connection> group)
-    {
-        foreach (var conn in group)
-        {
-            string? n = NetNameForPin(conn.A) ?? NetNameForPin(conn.B);
-            if (n != null) return n;
-        }
-        return null;
-    }
-
     private static string? NetNameForPin(Pin pin)
     {
+        // Net label: the pin's bit name ("PC5", "CLK0") IS its net name --
+        // this is how same-named labels fuse in EasyEDA, exactly as measured
+        // in the Nets_and_Buses.epro reference. Checked BEFORE the catalogue
+        // lookup: labels have no catalogue entry and the lookup would throw.
+        if (pin.Owner is NetLabelItem label)
+            return label.BitName(pin.Number);
+
+        return NetFlagNameForPin(pin);
+    }
+
+    /// <summary>
+    /// Net-flag (VCC/GND) name only -- the catalogue-backed half of
+    /// <see cref="NetNameForPin"/>, used where flag precedence matters.
+    /// Null for net labels (no catalogue entry) and ordinary parts.
+    /// </summary>
+    private static string? NetFlagNameForPin(Pin pin)
+    {
         if (pin.Owner is not SchematicItem item) return null;
+        if (item is NetLabelItem) return null;
         // Resolve via the catalogue directly; results are deterministic
         // per device/item, and the catalogue carries the IsNetFlag/NetName
         // metadata for power-flag parts.
@@ -514,6 +598,14 @@ internal static class EasyEDASheetWriter
     {
         if (pin.Owner == null)
             throw new InvalidOperationException("Pin has no owner; cannot resolve world position.");
+
+        // Net labels have no placement (no EasyEDA component): the wire simply
+        // ends where TTLSim put the label pin, and the visible NET ATTR there
+        // is the label. Returning the scaled TTLSim position makes the snap in
+        // BuildEasyEdaPolyline a no-op for this endpoint (target == routed
+        // endpoint), so no extender segments appear and EDA002 cannot fire.
+        if (pin.Owner is NetLabelItem)
+            return GridToEasyEda(pin.WorldPosition);
 
         if (!placements.TryGetValue(pin.Owner, out var placement))
             throw new InvalidOperationException(
@@ -1070,7 +1162,8 @@ internal static class EasyEDASheetWriter
     /// </summary>
     private static void EmitWireFromSegments(StringBuilder sb,
         List<List<float>> segments,
-        string? netName, string hexColor, IdGenerator idGen)
+        string? netName, string hexColor, IdGenerator idGen,
+        PointF? labelPos = null)
     {
         string styleId = idGen.NewLineStyleId();
         AppendRecord(sb, "LINESTYLE", styleId, hexColor, null, null, null, null);
@@ -1080,8 +1173,18 @@ internal static class EasyEDASheetWriter
 
         AppendRecord(sb, "ATTR", idGen.NewAttrId(), wireId,
             "Relevance", "[]", 0, 0, null, null, 0, StyleDefault, 0);
-        AppendRecord(sb, "ATTR", idGen.NewAttrId(), wireId,
-            "NET", netName ?? "", 0, 0, null, null, 0, StyleDefault, 0);
+
+        // Net label: the NET ATTR is emitted VISIBLE (the field after the
+        // name/value pair: 0 hidden, 1 shown) and positioned at the label
+        // pin. That IS the net label on the EasyEDA sheet -- there is no
+        // other record. Shape measured from the Nets_and_Buses.epro
+        // reference:  ["ATTR",id,wireId,"NET","WE",0,1,x,y,rot,"st1",0]
+        if (labelPos is PointF lp)
+            AppendRecord(sb, "ATTR", idGen.NewAttrId(), wireId,
+                "NET", netName ?? "", 0, 1, lp.X, lp.Y, 0, StyleDefault, 0);
+        else
+            AppendRecord(sb, "ATTR", idGen.NewAttrId(), wireId,
+                "NET", netName ?? "", 0, 0, null, null, 0, StyleDefault, 0);
     }
 
     private static void EmitWire(StringBuilder sb,
