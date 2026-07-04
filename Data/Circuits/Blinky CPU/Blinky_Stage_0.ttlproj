@@ -2402,7 +2402,7 @@
         "unitLetter": "",
         "position": {
           "x": 75,
-          "y": 247
+          "y": 254
         },
         "label": "EQ0",
         "rotation": 90,
@@ -2415,7 +2415,7 @@
         "unitLetter": "",
         "position": {
           "x": 80,
-          "y": 247
+          "y": 254
         },
         "label": "/P0",
         "rotation": 90,
@@ -2428,7 +2428,7 @@
         "unitLetter": "",
         "position": {
           "x": 85,
-          "y": 247
+          "y": 254
         },
         "label": "/G0",
         "rotation": 90,
@@ -2441,7 +2441,7 @@
         "unitLetter": "",
         "position": {
           "x": 115,
-          "y": 247
+          "y": 254
         },
         "label": "EQ1",
         "rotation": 90,
@@ -2454,7 +2454,7 @@
         "unitLetter": "",
         "position": {
           "x": 120,
-          "y": 247
+          "y": 254
         },
         "label": "/P1",
         "rotation": 90,
@@ -2467,7 +2467,7 @@
         "unitLetter": "",
         "position": {
           "x": 125,
-          "y": 247
+          "y": 254
         },
         "label": "/G1",
         "rotation": 90,
@@ -2480,7 +2480,7 @@
         "unitLetter": "",
         "position": {
           "x": 130,
-          "y": 247
+          "y": 254
         },
         "label": "C8",
         "rotation": 90,
@@ -3507,7 +3507,7 @@
         "label": "",
         "position": {
           "x": 100,
-          "y": 254
+          "y": 261
         },
         "rotation": 0,
         "layer": 0,
@@ -3551,7 +3551,7 @@
         "label": "",
         "position": {
           "x": 140,
-          "y": 254
+          "y": 261
         },
         "rotation": 0,
         "layer": 0,
@@ -3832,28 +3832,6 @@
         "textColor": null
       },
       {
-        "type": "vcc",
-        "id": "vcc5013",
-        "label": "",
-        "position": {
-          "x": 8,
-          "y": 171
-        },
-        "rotation": 0,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": null,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "fontSize": null,
-        "textColor": null
-      },
-      {
         "type": "gnd",
         "id": "gnd5016",
         "label": "",
@@ -3947,7 +3925,7 @@
         "label": "",
         "position": {
           "x": 97,
-          "y": 253
+          "y": 262
         },
         "rotation": 0,
         "layer": 0,
@@ -3969,7 +3947,7 @@
         "label": "",
         "position": {
           "x": 137,
-          "y": 253
+          "y": 260
         },
         "rotation": 0,
         "layer": 0,
@@ -9966,34 +9944,6 @@
         "color": "Red"
       },
       {
-        "id": "c5014",
-        "a": {
-          "itemId": "u0002",
-          "pinNumber": 1,
-          "external": false
-        },
-        "b": {
-          "itemId": "vcc5013",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Red"
-      },
-      {
-        "id": "c5015",
-        "a": {
-          "itemId": "u0002",
-          "pinNumber": 26,
-          "external": false
-        },
-        "b": {
-          "itemId": "vcc5013",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Red"
-      },
-      {
         "id": "c5017",
         "a": {
           "itemId": "u0008",
@@ -10634,10 +10584,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 0.4869869,
+    "zoom": 0.7878919,
     "pan": {
-      "x": 781,
-      "y": -219
+      "x": 329,
+      "y": -61
     }
   }
 }
