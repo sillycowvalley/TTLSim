@@ -97,6 +97,14 @@ public sealed class UnitDto
     public int Layer { get; set; }
 
     public bool? SwitchClosed { get; set; }           // SPST switch units only; null otherwise
+
+    /// <summary>
+    /// Header units only: flipped across the long axis so pins exit from the
+    /// opposite edge (pin order and numbering unchanged). Null on every other
+    /// unit kind and on files written before the feature; null loads as false,
+    /// so every existing .ttlproj is unchanged.
+    /// </summary>
+    public bool? Mirrored { get; set; }
 }
 
 /// <summary>Standalone schematic item (VCC, GND). Devices and units use their own DTOs.</summary>

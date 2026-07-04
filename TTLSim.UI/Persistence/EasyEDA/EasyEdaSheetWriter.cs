@@ -392,13 +392,23 @@ internal static class EasyEDASheetWriter
     /// with how EasyEDA renders the symbol. Per-part label offset tables
     /// key off TtlSimRotationDeg because they were measured against the
     /// user's drawing intent in TTLSim.
+    ///
+    /// Mirrored maps to the COMPONENT record's mirror field (the field
+    /// after rotation: 0 = normal, 1 = flipped across the vertical axis
+    /// through the anchor). Verified against a hand-flipped reference
+    /// (Headers.epro vs Headers_Flipped.epro, July 2026): flipping in
+    /// EasyEDA changed ONLY that field, negating each pin's local X about
+    /// the anchor with Y untouched. ComputePlacement pre-negates the
+    /// catalogue locals to match, so PinWorldPositions (wire snapping,
+    /// No-Connect flags) agree with where EasyEDA renders the flipped pins.
     /// </summary>
     private sealed record EasyEDAPlacement(
         float ComponentX,
         float ComponentY,
         int EasyEdaRotationDeg,
         int TtlSimRotationDeg,
-        Dictionary<int, PointF> PinWorldPositions);
+        Dictionary<int, PointF> PinWorldPositions,
+        bool Mirrored);
 
     /// <summary>
     /// Anchor the EasyEDA component so that its first listed pin lines up
@@ -425,6 +435,17 @@ internal static class EasyEDASheetWriter
             : (360 - ttlSimRotDeg) % 360;
         easyEdaRotDeg = (easyEdaRotDeg + part.EasyEdaRotationOffsetDeg) % 360;
 
+        // Mirrored header: EasyEDA's mirror flag flips the symbol across
+        // the vertical axis through the anchor, negating each pin's local X
+        // (verified against the hand-flipped reference at rotation 0 -- see
+        // the EasyEDAPlacement doc). Pre-negate the catalogue locals in the
+        // symbol frame, BEFORE rotation, so the anchor solve and every pin
+        // world position agree with the flipped rendering. Composition with
+        // rotation is assumed mirror-first; the reference only covers R0,
+        // so verify 90/180/270 by round-trip before relying on them.
+        bool mirrored = item is HeaderOutputUnit mirroredHeader && mirroredHeader.Mirrored;
+        Point MirrorLocal(Point pt) => mirrored ? new Point(-pt.X, pt.Y) : pt;
+
         // Pick the first known pin number for the anchor.
         int anchorPinNumber = part.PinLocalPositions.Keys.First();
 
@@ -434,8 +455,8 @@ internal static class EasyEDASheetWriter
         float anchorWorldX = ttlsimPinWorld.X * Scale;
         float anchorWorldY = -ttlsimPinWorld.Y * Scale;   // EasyEDA Y is up
 
-        // EasyEDA local pin position, rotated to match.
-        Point anchorLocalUnrotated = part.PinLocalPositions[anchorPinNumber];
+        // EasyEDA local pin position (mirrored if flagged), rotated to match.
+        Point anchorLocalUnrotated = MirrorLocal(part.PinLocalPositions[anchorPinNumber]);
         PointF anchorLocalRotated = RotatePoint(anchorLocalUnrotated, easyEdaRotDeg);
 
         // ComponentX/Y is the world position of EasyEDA's origin for this
@@ -447,13 +468,13 @@ internal static class EasyEDASheetWriter
         var pinWorlds = new Dictionary<int, PointF>();
         foreach (var (pinNum, localUnrotated) in part.PinLocalPositions)
         {
-            PointF localRotated = RotatePoint(localUnrotated, easyEdaRotDeg);
+            PointF localRotated = RotatePoint(MirrorLocal(localUnrotated), easyEdaRotDeg);
             pinWorlds[pinNum] = new PointF(
                 componentX + localRotated.X,
                 componentY + localRotated.Y);
         }
 
-        return new EasyEDAPlacement(componentX, componentY, easyEdaRotDeg, ttlSimRotDeg, pinWorlds);
+        return new EasyEDAPlacement(componentX, componentY, easyEdaRotDeg, ttlSimRotDeg, pinWorlds, mirrored);
     }
 
     /// <summary>
@@ -512,9 +533,12 @@ internal static class EasyEDASheetWriter
         // Net Flag COMPONENTs have empty title; regular components carry
         // their PART name with the .N sub-part suffix.
         string componentTitle = part.IsNetFlag ? "" : part.PartTitle;
+        // The field after rotation is EasyEDA's mirror flag (0 = normal,
+        // 1 = flipped across the vertical axis through the anchor).
         AppendRecord(sb, "COMPONENT", componentId, componentTitle,
             placement.ComponentX, placement.ComponentY,
-            placement.EasyEdaRotationDeg, 0, new Dictionary<string, object?>(), 0);
+            placement.EasyEdaRotationDeg, placement.Mirrored ? 1 : 0,
+            new Dictionary<string, object?>(), 0);
 
         if (part.IsNetFlag)
         {

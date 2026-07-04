@@ -370,7 +370,8 @@ public static class SchematicDtoMapper
             SwitchUnit sw => sw.IsClosed,
             SpdtSwitchUnit spdt => spdt.ThrowB,
             _ => (bool?)null
-        }
+        },
+        Mirrored = unit is HeaderOutputUnit hdr ? hdr.Mirrored : (bool?)null
     };
 
     private static ItemDto StandaloneItemToDto(SchematicItem item)
@@ -858,6 +859,11 @@ public static class SchematicDtoMapper
             swUnit.IsClosed = closed;
         if (unit is SpdtSwitchUnit spdt && dto.SwitchClosed is bool pos)
             spdt.ThrowB = pos;
+        // Header mirror flag. Null (older files, non-header units) loads as
+        // false, so every existing .ttlproj is unchanged. The setter relocates
+        // the pins to the mirrored edge in place.
+        if (unit is HeaderOutputUnit header)
+            header.Mirrored = dto.Mirrored ?? false;
 
         device.Units.Add(unit);
         return unit;

@@ -21,13 +21,21 @@ namespace TTLSim.UI.Components;
 /// those two rotations, so the router still sees pin world coordinates
 /// that match where the body is drawn.
 /// </para>
+///
+/// <para>
+/// LocalPosition and LocalDirection are settable: the header's Mirrored
+/// toggle relocates the existing pins to the opposite edge IN PLACE.
+/// Connections, the router, and the ribbon-link strands all hold Pin
+/// object references, so pins must never be rebuilt after construction --
+/// relocating them preserves every reference.
+/// </para>
 /// </summary>
 public sealed class Pin
 {
     public string Name { get; }
-    public int Number { get; }             // e.g. pin 14 on a 7400 (0 if N/A)
-    public Point LocalPosition { get; }    // grid-unit offset from unrotated origin
-    public PinDirection LocalDirection { get; }
+    public int Number { get; }                 // e.g. pin 14 on a 7400 (0 if N/A)
+    public Point LocalPosition { get; set; }   // grid-unit offset from unrotated origin
+    public PinDirection LocalDirection { get; set; }
 
     /// <summary>
     /// When true, R90 and R270 are swapped before being applied to this pin.

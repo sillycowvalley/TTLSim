@@ -3744,94 +3744,6 @@
         "textColor": null
       },
       {
-        "type": "vcc",
-        "id": "vcc5001",
-        "label": "",
-        "position": {
-          "x": 5,
-          "y": 2
-        },
-        "rotation": 0,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": null,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "fontSize": null,
-        "textColor": null
-      },
-      {
-        "type": "vcc",
-        "id": "vcc5004",
-        "label": "",
-        "position": {
-          "x": 43,
-          "y": 2
-        },
-        "rotation": 0,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": null,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "fontSize": null,
-        "textColor": null
-      },
-      {
-        "type": "vcc",
-        "id": "vcc5007",
-        "label": "",
-        "position": {
-          "x": 81,
-          "y": 2
-        },
-        "rotation": 0,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": null,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "fontSize": null,
-        "textColor": null
-      },
-      {
-        "type": "vcc",
-        "id": "vcc5010",
-        "label": "",
-        "position": {
-          "x": 119,
-          "y": 2
-        },
-        "rotation": 0,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": null,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "fontSize": null,
-        "textColor": null
-      },
-      {
         "type": "gnd",
         "id": "gnd5016",
         "label": "",
@@ -9832,118 +9744,6 @@
         "color": "Yellow"
       },
       {
-        "id": "c5002",
-        "a": {
-          "itemId": "051ee47f480045469fd4522c6f95622c",
-          "pinNumber": 1,
-          "external": false
-        },
-        "b": {
-          "itemId": "vcc5001",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Red"
-      },
-      {
-        "id": "c5003",
-        "a": {
-          "itemId": "051ee47f480045469fd4522c6f95622c",
-          "pinNumber": 26,
-          "external": false
-        },
-        "b": {
-          "itemId": "vcc5001",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Red"
-      },
-      {
-        "id": "c5005",
-        "a": {
-          "itemId": "5d7f0018a14f45a09b0b7d717129331e",
-          "pinNumber": 1,
-          "external": false
-        },
-        "b": {
-          "itemId": "vcc5004",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Red"
-      },
-      {
-        "id": "c5006",
-        "a": {
-          "itemId": "5d7f0018a14f45a09b0b7d717129331e",
-          "pinNumber": 26,
-          "external": false
-        },
-        "b": {
-          "itemId": "vcc5004",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Red"
-      },
-      {
-        "id": "c5008",
-        "a": {
-          "itemId": "9727176241d548f5b580e95718d6d50c",
-          "pinNumber": 1,
-          "external": false
-        },
-        "b": {
-          "itemId": "vcc5007",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Red"
-      },
-      {
-        "id": "c5009",
-        "a": {
-          "itemId": "9727176241d548f5b580e95718d6d50c",
-          "pinNumber": 26,
-          "external": false
-        },
-        "b": {
-          "itemId": "vcc5007",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Red"
-      },
-      {
-        "id": "c5011",
-        "a": {
-          "itemId": "91bac01394dc4bcca35013b3f4f3e50d",
-          "pinNumber": 1,
-          "external": false
-        },
-        "b": {
-          "itemId": "vcc5010",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Red"
-      },
-      {
-        "id": "c5012",
-        "a": {
-          "itemId": "91bac01394dc4bcca35013b3f4f3e50d",
-          "pinNumber": 26,
-          "external": false
-        },
-        "b": {
-          "itemId": "vcc5010",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Red"
-      },
-      {
         "id": "c5017",
         "a": {
           "itemId": "u0008",
@@ -10584,10 +10384,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 0.7878919,
+    "zoom": 1.5847318,
     "pan": {
-      "x": 329,
-      "y": -61
+      "x": 251,
+      "y": 418
     }
   }
 }

@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.ComponentModel;
+using System.Drawing;
 using System.Drawing.Drawing2D;
 using TTLSim.Core;
 using TTLSim.UI.Model;
@@ -39,10 +40,27 @@ namespace TTLSim.UI.Components;
 ///
 /// Pin numbering follows the body (pin 1 stays "pin 1" under rotation),
 /// achieved for free via Pin.LocalPosition + the standard rotation transform.
+///
+/// <para>
+/// <see cref="Mirrored"/> flips the header across its LONG axis: the pins
+/// exit from the opposite edge, while pin order, pin numbering, and the
+/// electrical mapping are all unchanged. Because the bounding box is
+/// horizontally symmetric (StubCells == FarSpacerCells), the body
+/// rectangle occupies the same cells mirrored or not -- only the stub
+/// side, the pin-number alignment, and the state-dot side swap. The
+/// existing Pin objects are relocated IN PLACE (Pin.LocalPosition /
+/// LocalDirection are settable) so Connections, ribbon links, and router
+/// caches that hold Pin references stay valid across the toggle. The
+/// main use is face-to-face ribbon-linked header pairs: mirror one side
+/// instead of rotating it 180, and the strands stay parallel with pin 1
+/// aligned to pin 1.
+/// </para>
 /// </summary>
 public sealed class HeaderOutputUnit : Unit
 {
     private readonly int pinCount;
+
+    private bool mirrored;
 
     /// <summary>Body width in grid cells.</summary>
     private const int BodyWidth = 2;
@@ -71,11 +89,36 @@ public sealed class HeaderOutputUnit : Unit
         BuildPins(spec);
     }
 
+    /// <summary>
+    /// Flip the header across its long axis: pins exit from the opposite
+    /// edge of the body. Pin order, numbering, and the electrical mapping
+    /// (including ribbon links, which are always A.i &lt;-&gt; B.i) are
+    /// unchanged -- this is a drawing-side convenience so a face-to-face
+    /// header pair can sit pins-inward without rotating one of them 180.
+    /// Edits go through the property grid's generic SetPropertyCommand
+    /// path, the same way HeaderLink.Reversed does.
+    /// </summary>
+    [Category("Layout")]
+    [DefaultValue(false)]
+    [Description("Flip the header across its long axis so the pins exit from the opposite side. Pin order and numbering are unchanged.")]
+    public bool Mirrored
+    {
+        get => mirrored;
+        set
+        {
+            if (mirrored == value) return;
+            mirrored = value;
+            ApplyPinGeometry();
+        }
+    }
+
     protected override void BuildPins(UnitSpec spec)
     {
         // Pins on the LEFT edge of the bounding box; body starts one cell in.
         // SwapR90R270 = true so this header's pins follow EasyEDA's rotation
-        // sense instead of TTL Sim's default.
+        // sense instead of TTL Sim's default. (A mirrored header relocates
+        // these pins to the RIGHT edge via ApplyPinGeometry -- the Pin
+        // objects themselves are permanent.)
         for (int i = 0; i < pinCount; i++)
         {
             int pinNumber = i + 1;
@@ -85,6 +128,24 @@ public sealed class HeaderOutputUnit : Unit
                 new Point(0, pinNumber),
                 PinDirection.Left,
                 swapR90R270: true));
+        }
+    }
+
+    /// <summary>
+    /// Place every pin on the edge selected by <see cref="Mirrored"/>:
+    /// x = 0 facing Left when unmirrored, x = Size.Width facing Right when
+    /// mirrored. Relocates the EXISTING Pin objects (never rebuilds them)
+    /// so connections and links holding Pin references survive the toggle.
+    /// Row (Y) placement is untouched -- pin order never changes.
+    /// </summary>
+    private void ApplyPinGeometry()
+    {
+        int x = mirrored ? Size.Width : 0;
+        PinDirection dir = mirrored ? PinDirection.Right : PinDirection.Left;
+        foreach (var pin in Pins)
+        {
+            pin.LocalPosition = new Point(x, pin.Number);
+            pin.LocalDirection = dir;
         }
     }
 
@@ -124,9 +185,18 @@ public sealed class HeaderOutputUnit : Unit
         }
 
         int p = ctx.GridPitch;
-        int leftX = Position.X * p;            // pin-endpoint side (outer)
-        int bodyLeftX = leftX + StubCells * p; // where the body rectangle starts
+        int leftX = Position.X * p;                      // left outer edge
+        int rightX = (Position.X + Size.Width) * p;      // right outer edge
+        int bodyLeftX = leftX + StubCells * p;           // where the body rectangle starts
         int bodyW = BodyWidth * p;
+        int bodyRightX = bodyLeftX + bodyW;
+
+        // Pin-endpoint side depends on Mirrored. The body rectangle does
+        // NOT: because StubCells == FarSpacerCells the box is horizontally
+        // symmetric, so the body occupies the same cells either way and
+        // only the stub side swaps.
+        int pinOuterX = mirrored ? rightX : leftX;
+        int pinBodyEdgeX = mirrored ? bodyRightX : bodyLeftX;
 
         // Bounding box height is pinCount + 2 (even, to keep the rotation
         // pivot on an integer cell). The VISIBLE body is one cell shorter
@@ -161,21 +231,28 @@ public sealed class HeaderOutputUnit : Unit
             int rowY = (Position.Y + pinNumber) * p;
 
             // Pin stub: from the outer pin endpoint inward to the body edge.
-            g.DrawLine(stubPen, leftX, rowY, bodyLeftX, rowY);
+            g.DrawLine(stubPen, pinOuterX, rowY, pinBodyEdgeX, rowY);
 
             // Pin terminal dot at the outer endpoint.
-            g.FillEllipse(pinBrush, leftX - 2, rowY - 2, 4, 4);
+            g.FillEllipse(pinBrush, pinOuterX - 2, rowY - 2, 4, 4);
 
-            // Pin number on the pin-side half of the body.
+            // Pin number on the pin-side half of the body: left-aligned just
+            // inside the left body edge when unmirrored, right-aligned just
+            // inside the right body edge when mirrored.
             string numText = pinNumber.ToString();
             var numSize = g.MeasureString(numText, ctx.PinFont);
+            float numX = mirrored
+                ? bodyRightX - numberInsetX - numSize.Width
+                : bodyLeftX + numberInsetX;
             g.DrawString(numText, ctx.PinFont, numberBrush,
-                bodyLeftX + numberInsetX,
+                numX,
                 rowY - numSize.Height / 2f);
 
-            // State indicator on the far half of the body.
+            // State indicator on the far (non-pin) half of the body.
             Signal? sig = ctx.SignalStateProvider?.Invoke(this, pinNumber);
-            float dotX = bodyLeftX + bodyW - p * 0.55f;
+            float dotX = mirrored
+                ? bodyLeftX + p * 0.55f
+                : bodyLeftX + bodyW - p * 0.55f;
             if (sig is Signal s)
             {
                 using var dotBrush = new SolidBrush(SignalColors.For(s));
@@ -202,7 +279,8 @@ public sealed class HeaderOutputUnit : Unit
     ///     and H8).
     /// "Above" / "right" / "top" are all in screen space; the label text
     /// itself is screen-axis-aligned (Unit.Draw resets the rotation
-    /// transform before DrawLabels runs).
+    /// transform before DrawLabels runs). Mirroring does not move the
+    /// designator: the body occupies the same cells either way.
     /// </summary>
     protected override void DrawLabels(Graphics g, RenderContext ctx)
     {
