@@ -24,14 +24,32 @@ namespace TTLSim.UI.Components;
 /// tie bit-for-bit with no wires between them -- ranges may overlap freely and
 /// a width-1 port is a single-bit tap. An EMPTY label ties nothing (drawn with
 /// a "?" placeholder), so freshly dropped labels can never silently short.
+/// A width-1 label with StartBit 0 displays its bare name ("/CS", never
+/// "/CS0"); a width-1 tap of a higher bit keeps the digit ("D4"), and every
+/// bus-port pin is always numbered. Display only -- the electrical tie key is
+/// always (name, absolute bit).
 /// </para>
 ///
 /// <para>
-/// <see cref="Mirrored"/> flips the label across its long axis, exactly like
-/// the header's Mirrored: pins exit from the opposite (right) edge, pin order
-/// and bit numbering unchanged, and the EXISTING Pin objects are relocated in
-/// place (Pin.LocalPosition / LocalDirection are settable) so Connections and
-/// router caches holding Pin references survive the toggle.
+/// Geometry: the bounding box is a fixed <see cref="BoxWidth"/> cells wide and
+/// the PINS SIT ON ITS VERTICAL CENTRE COLUMN, so the rotation pivot (the box
+/// centre, per <see cref="SchematicItem"/>) always lands on the pin column. A
+/// width-1 label therefore rotates exactly about its connection blob; a wider
+/// bus port rotates about the middle of its pin column. Height is width + 1
+/// rounded up to EVEN (the HeaderOutputUnit rule) so the pivot stays on an
+/// integer cell. The stub, bracket, and text extend one side of the pin
+/// column; long bit names may overhang the box -- a cosmetic overhang, like
+/// the capacitor's plates. RoutingBounds is the default (the visual Bounds),
+/// so the router keep-out -- and the debug pink -- hugs the symbol.
+/// </para>
+///
+/// <para>
+/// <see cref="Mirrored"/> flips the label across its long axis: the stub,
+/// bracket, and text swap to the opposite side of the pin column and the pins'
+/// facing direction flips. Because the pins live on the centre column, the
+/// mirror toggle NEVER MOVES A PIN'S WORLD POSITION -- the EXISTING Pin
+/// objects keep their location (only LocalDirection changes), so Connections
+/// and router caches holding Pin references survive the toggle trivially.
 /// <see cref="Color"/> renders the stubs, bracket, and bit names in a wire
 /// palette colour so a label reads as part of the net it names.
 /// </para>
@@ -40,17 +58,18 @@ namespace TTLSim.UI.Components;
 /// All text is drawn UPRIGHT at every rotation: bit names render in a
 /// screen-aligned pass (outside the rotation transform, like the oscillator's
 /// labels), each anchored to its pin's WorldPosition and extending inward
-/// past the bracket -- pixel-identical to the old rendering at rotation 0.
-/// The range header ("D[4..7]") is centred above the rotated extent. Note
-/// that at 90/270 the pin columns are one cell apart, so long bit names on a
-/// wide rotated port will overlap horizontally -- inherent to upright text at
-/// that pitch; keep rotated ports' names short or the port at 0/180.
+/// past the bracket. The range header ("D[4..7]") is centred above the
+/// rotated extent -- which, with the pins on the centre column, means centred
+/// on the pin column. Note that at 90/270 the pin columns are one cell apart,
+/// so long bit names on a wide rotated port will overlap horizontally --
+/// inherent to upright text at that pitch; keep rotated ports' names short or
+/// the port at 0/180.
 /// </para>
 ///
 /// <para>
 /// Pin identity rules (same as the header's Mirrored feature): pins are added,
 /// relocated, or kept -- never destroyed while a Connection may reference
-/// them. Growing Width appends fresh pins on the current pin edge. Shrinking
+/// them. Growing Width appends fresh pins on the centre column. Shrinking
 /// Width removes the doomed trailing pins ONLY if none of them is wired; the
 /// check runs through <see cref="ConnectionProbe"/>, installed by
 /// <see cref="Schematic"/> when the item enters the model. No probe = cannot
@@ -58,11 +77,27 @@ namespace TTLSim.UI.Components;
 /// reads back unchanged, so the recorded SetPropertyCommand is a harmless
 /// no-op.
 /// </para>
+///
+/// <para>
+/// COMPATIBILITY NOTE: files written when the box was 6 cells wide with pins
+/// on the outer edges load fine (Position semantics are unchanged), but each
+/// label's pin blobs move relative to Position -- 2 cells inward for an
+/// unmirrored label, 4 cells inward for a mirrored one. Connections are
+/// logical (pin references), so wires simply reroute; the labels themselves
+/// may want a one-time nudge.
+/// </para>
 /// </summary>
 public sealed class NetLabelItem : SchematicItem
 {
     public const int MinWidth = 1;
     public const int MaxWidth = 16;
+
+    /// <summary>
+    /// Fixed bounding-box width in cells. EVEN, and the pins sit at
+    /// x = BoxWidth / 2 -- the box's centre column -- so the rotation pivot
+    /// is always on the pin column.
+    /// </summary>
+    private const int BoxWidth = 4;
 
     private int width;
     private int startBit;
@@ -122,7 +157,7 @@ public sealed class NetLabelItem : SchematicItem
                     AddPin(MakePin(pinNumber));
                 width = target;
                 ApplySizeForWidth();
-                ApplyPinGeometry();   // new pins onto the current (mirrored?) edge
+                ApplyPinGeometry();   // new pins onto the centre column, current facing
                 return;
             }
 
@@ -151,16 +186,17 @@ public sealed class NetLabelItem : SchematicItem
     }
 
     /// <summary>
-    /// Flip the label across its long axis: pins exit from the opposite
-    /// (right) edge of the body, with the bracket and text mirrored to
-    /// match. Pin order and bit numbering are unchanged -- this is a
-    /// drawing-side convenience, exactly like the header's Mirrored, so a
-    /// label can sit on either side of the thing it taps. Edits go through
-    /// the property grid's generic SetPropertyCommand path.
+    /// Flip the label across its long axis: the stub, bracket, and text move
+    /// to the opposite side of the pin column and the pins face the other
+    /// way. Pin order, bit numbering, and -- because the pins live on the
+    /// box's centre column -- pin WORLD POSITIONS are all unchanged, so a
+    /// label can sit on either side of the thing it taps without disturbing
+    /// its wires. Edits go through the property grid's generic
+    /// SetPropertyCommand path.
     /// </summary>
     [Category("Layout")]
     [DefaultValue(false)]
-    [Description("Flip the label across its long axis so the pins exit from the opposite side. Pin order and bit numbering are unchanged.")]
+    [Description("Flip the label across its long axis so the pins face the opposite side. Pin order, bit numbering, and pin positions are unchanged.")]
     public bool Mirrored
     {
         get => mirrored;
@@ -187,67 +223,66 @@ public sealed class NetLabelItem : SchematicItem
     public int BitOfPin(int pinNumber) => startBit + pinNumber - 1;
 
     /// <summary>
-    /// Display name for one bit: "D4", or "?4" when the label is empty (an
-    /// empty label ties nothing, and the placeholder makes that visible).
+    /// Display name for one bit. A plain width-1 label starting at bit 0 is
+    /// just its name ("/CS", never "/CS0"); a width-1 tap of a higher bit
+    /// keeps the digit ("D4"); every bus-port pin is numbered ("D0".."D7").
+    /// An empty label shows the "?" placeholder (an empty label ties nothing,
+    /// and the placeholder makes that visible). Display only -- the
+    /// electrical tie key is always (name, absolute bit).
     /// </summary>
-    public string BitName(int pinNumber) =>
-        $"{(string.IsNullOrWhiteSpace(Label) ? "?" : Label)}{BitOfPin(pinNumber)}";
+    public string BitName(int pinNumber)
+    {
+        string name = string.IsNullOrWhiteSpace(Label) ? "?" : Label;
+        if (width == 1 && startBit == 0) return name;
+        return $"{name}{BitOfPin(pinNumber)}";
+    }
+
+    /// <summary>Cells from the box's left edge to the pin column: the box's
+    /// vertical centre column, which is also the rotation pivot column.</summary>
+    private int PinColumn => Size.Width / 2;
 
     private Pin MakePin(int pinNumber) =>
         new(pinNumber.ToString(), pinNumber,
-            new Point(mirrored ? Size.Width : 0, pinNumber),
+            new Point(PinColumn, pinNumber),
             mirrored ? PinDirection.Right : PinDirection.Left);
 
     /// <summary>
-    /// Place every pin on the edge selected by <see cref="Mirrored"/>:
-    /// x = 0 facing Left when unmirrored, x = Size.Width facing Right when
-    /// mirrored. Relocates the EXISTING Pin objects (never rebuilds them)
-    /// so connections holding Pin references survive the toggle. Row (Y)
-    /// placement is untouched -- pin order never changes.
+    /// Put every pin on the centre column facing the side selected by
+    /// <see cref="Mirrored"/>. Relocates the EXISTING Pin objects (never
+    /// rebuilds them) so connections holding Pin references survive the
+    /// toggle. Row (Y) placement is untouched -- pin order never changes --
+    /// and since the column is fixed, a mirror toggle changes only the
+    /// facing direction.
     /// </summary>
     private void ApplyPinGeometry()
     {
-        int x = mirrored ? Size.Width : 0;
         PinDirection dir = mirrored ? PinDirection.Right : PinDirection.Left;
         foreach (var pin in Pins)
         {
-            pin.LocalPosition = new Point(x, pin.Number);
+            pin.LocalPosition = new Point(PinColumn, pin.Number);
             pin.LocalDirection = dir;
         }
     }
 
     /// <summary>
-    /// Bounding box: one stub cell on the pin side, text field on the other.
-    /// Height is width + 1 rounded up to EVEN, the same rule as
-    /// HeaderOutputUnit, so the rotation pivot lands on an integer cell.
-    /// The box width is fixed, so mirroring never moves the box -- only
-    /// which edge the pins sit on.
+    /// Bounding box: fixed <see cref="BoxWidth"/> cells wide, pins on the
+    /// centre column. Height is width + 1 rounded up to EVEN, the same rule
+    /// as HeaderOutputUnit, so the rotation pivot lands on an integer cell --
+    /// and, with the pins centred, ON THE PIN COLUMN: a width-1 label pivots
+    /// exactly about its connection blob. The box never moves when Mirrored
+    /// toggles -- only which side the stub and text sit on.
     /// </summary>
     private void ApplySizeForWidth()
     {
         int boxHeight = width + 1;
         if ((boxHeight & 1) != 0) boxHeight++;
-        Size = new Size(6, boxHeight);
+        Size = new Size(BoxWidth, boxHeight);
     }
 
-    public override Rectangle RoutingBounds
-    {
-        get
-        {
-            var unrotated = new Rectangle(
-                Position.X - 1, Position.Y - 1,
-                Size.Width + 2, Size.Height + 2);
-
-            if (Rotation == Rotation.R0 || Rotation == Rotation.R180)
-                return unrotated;
-
-            int cx = Position.X + Size.Width / 2;
-            int cy = Position.Y + Size.Height / 2;
-            int w = unrotated.Height;
-            int h = unrotated.Width;
-            return new Rectangle(cx - w / 2, cy - h / 2, w, h);
-        }
-    }
+    // RoutingBounds is deliberately NOT overridden: the default (the visual
+    // Bounds) is already the right keep-out. The box spans two cells either
+    // side of the pin column, so wires get clearance from the stubs without
+    // any extra inflation -- and the debug pink hugs the symbol.
 
     public override void Draw(Graphics g, RenderContext ctx)
     {
@@ -267,15 +302,14 @@ public sealed class NetLabelItem : SchematicItem
     private void DrawShape(Graphics g, RenderContext ctx)
     {
         int p = ctx.GridPitch;
-        int leftX = Position.X * p;
-        int rightX = (Position.X + Size.Width) * p;
 
-        // Pin-endpoint side and bracket column depend on Mirrored; the box
-        // itself never moves.
-        int pinOuterX = mirrored ? rightX : leftX;
-        int bracketX = mirrored ? rightX - p : leftX + p;
-        // Serifs extend TOWARD the pins.
-        int towardPins = mirrored ? +1 : -1;
+        // Pins sit on the box's centre column. The bracket column sits one
+        // cell INWARD of it -- on the text side, selected by Mirrored -- and
+        // the bracket serifs extend back TOWARD the pins.
+        int pinX = (Position.X + PinColumn) * p;
+        int inward = mirrored ? -1 : +1;
+        int bracketX = pinX + inward * p;
+        int towardPins = -inward;
 
         Color ink = Selected ? ctx.SelectedColor : Color.ToColor();
         using var pen = new Pen(ink, 1.2f);
@@ -288,21 +322,20 @@ public sealed class NetLabelItem : SchematicItem
             int rowY = (Position.Y + pinNumber) * p;
 
             // Stub from the pin endpoint to the bracket column, terminal dot
-            // at the outer end -- the same visual grammar as every other pin.
-            g.DrawLine(pen, pinOuterX, rowY, bracketX, rowY);
-            g.FillEllipse(pinBrush, pinOuterX - 2, rowY - 2, 4, 4);
+            // at the pin endpoint -- the same visual grammar as every other
+            // pin.
+            g.DrawLine(pen, pinX, rowY, bracketX, rowY);
+            g.FillEllipse(pinBrush, pinX - 2, rowY - 2, 4, 4);
 
-            // Sim-mode per-bit state dot on the far (text) side, matching
-            // the header's per-pin indicator.
+            // Sim-mode per-bit state dot drawn ON the pin blob, so the state
+            // reads exactly where the wire lands (it fully covers the black
+            // terminal dot while the sim is running).
             Signal? sig = ctx.SignalStateProvider?.Invoke(this, pinNumber);
             if (sig is Signal s)
             {
-                float dotX = mirrored
-                    ? leftX + p * 0.55f
-                    : rightX - p * 0.55f;
                 using var dotBrush = new SolidBrush(SignalColors.For(s));
                 g.FillEllipse(dotBrush,
-                    dotX - dotRadius, rowY - dotRadius,
+                    pinX - dotRadius, rowY - dotRadius,
                     dotRadius * 2, dotRadius * 2);
             }
         }
@@ -324,9 +357,9 @@ public sealed class NetLabelItem : SchematicItem
     /// <summary>
     /// All text, drawn upright (screen-aligned, outside the rotation
     /// transform): one bit name per pin, anchored inward of the pin's
-    /// WorldPosition just past the bracket -- pixel-identical to the old
-    /// in-transform rendering at rotation 0 -- and, for a bus port, the
-    /// range header centred above the rotated extent.
+    /// WorldPosition just past the bracket, and, for a bus port, the range
+    /// header centred above the rotated extent -- which, with the pins on
+    /// the centre column, is centred on the pin column.
     /// </summary>
     private void DrawText(Graphics g, RenderContext ctx)
     {
@@ -334,7 +367,7 @@ public sealed class NetLabelItem : SchematicItem
         Color ink = Selected ? ctx.SelectedColor : Color.ToColor();
         using var textBrush = new SolidBrush(ink);
 
-        // Bit names: one cell of stub plus the old 0.3-cell inset past the
+        // Bit names: one cell of stub plus a 0.3-cell inset past the
         // bracket, extending inward (opposite each pin's world direction).
         float textInset = p + p * 0.30f;
         foreach (var pin in Pins)
