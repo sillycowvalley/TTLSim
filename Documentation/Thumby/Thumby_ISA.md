@@ -29,10 +29,13 @@ carry source, flag mask)* tuple expanded by a decode GAL.
 - Flags N Z C V. Consumed only by conditional branches and the carry-in of ADC/SBC;
   no predication.
 - Control: fixed short sequencer — FETCH → EXECUTE, with a MEM state appended for
-  memory access: class `10`, and the class `01` PC-relative literal load. No
-  microcode.
-- Reset: PC = 0; registers and flags power up undefined — startup code must
-  establish them.
+  memory access (class `10`, and the class `01` PC-relative literal load) and an
+  INT state for interrupt entry. No microcode.
+- Reset: PC = 0x0000 (the PC counters' asynchronous clear); registers and flags
+  power up undefined — the reset stub must establish them.
+- Interrupts: single level, one IRQ line, sampled at instruction boundaries.
+  Return PC and flags are saved in dedicated shadow hardware, not the register
+  file — no register is sacrificed to interrupt linkage (see Interrupts).
 
 ## Datapath shape
 
@@ -44,7 +47,7 @@ carry source, flag mask)* tuple expanded by a decode GAL.
             +-------+-------+  +-------+--------+
             | A-source mux  |  |  B-source mux  |  ← imm8 / offset8 (class 01, branches)
             | A port / PC+1 |  +-------+--------+  ← A-port tap (SHF only)
-            +-------+-------+          |
+            +-------+-------+          |           ← IPC (RETI)
                     |          +-------+--------+     amount mux: imm4 (class 00) /
                     |          | BARREL SHIFTER |  ←  B-port[3:0] (SHF) / 8 (ORH,
                     |          | LSL LSR ASR ROR|     JA/JAL) / ss (scaled mem) / 0
@@ -101,7 +104,7 @@ rows are the ones to watch — P/G there encode comparisons, not sums.
 | `00` | ALU | op4, inline-shifted register operand |
 | `01` | Immediate | op3 + Rd + imm8 |
 | `10` | Memory | LDR/STR, immediate or scaled-register offset |
-| `11` | Control | branches, JA/JAL, JR/JALR, CLC/SEC, PUSH/POP (reserved) |
+| `11` | Control | branches, JA/JAL, JR/JALR, flag & interrupt ops, PUSH/POP (reserved) |
 
 ---
 
@@ -286,7 +289,7 @@ directly from instruction bits 7:0 — the ∨ is byte concatenation, so no comb
 row is needed, just an 8-bit 2:1 mux on the PC's low-byte load path. Rs sits at
 bits 10:8, so the B-port read address gains a 3-bit 2:1 mux (bits 5:3 / bits 10:8).
 
-**Register branches / flag ops** (`1110`):
+**Register branches / flag & interrupt ops** (`1110`):
 
 ```
  15 14 13 12 | 11 10  9 | 8  7  6 | 5  4  3 | 2  1  0
@@ -299,7 +302,10 @@ bits 10:8, so the B-port read address gains a 3-bit 2:1 mux (bits 5:3 / bits 10:
 | 001 | `JALR Rs` | r7 = PC+1, PC = Rs — long/computed calls |
 | 010 | `CLC` | C = 0 (N Z V untouched; Rs field reserved-zero) |
 | 011 | `SEC` | C = 1 (N Z V untouched; Rs field reserved-zero) |
-| 100–111 | — | **Reserved** |
+| 100 | `RETI` | NZCV ← shadow, IE = 1, PC ← IPC (Rs field reserved-zero) |
+| 101 | `EI` | IE = 1 (Rs field reserved-zero) |
+| 110 | `DI` | IE = 0 (Rs field reserved-zero) |
+| 111 | — | **Reserved** |
 
 **Class `1111`: Reserved** for PUSH/POP register-list:
 
@@ -310,6 +316,60 @@ bits 10:8, so the B-port read address gains a 3-bit 2:1 mux (bits 5:3 / bits 10:
 
 The one instruction that would make the sequencer iterate over data ('148 priority
 encoder walking the mask, one memory cycle per set bit).
+
+## Interrupts
+
+Single level. One active-low IRQ line, open-collector wire-OR across all
+peripherals, two-FF synchronized into the CPU clock domain. Dispatch is polled:
+the ISR reads device status registers to find the source.
+
+**Recognition.** The line is sampled once per instruction, at the FETCH boundary,
+and honoured when the IE flip-flop is set. Worst-case latency is one instruction
+plus the INT state — bounded and small.
+
+**Entry — the INT state.** One sequencer state performs, in parallel:
+
+- **IPC ← PC** — the return address (the not-yet-fetched instruction), captured
+  off the address bus into a dedicated 16-bit latch (2× '574). IPC is not in the
+  register file and is not addressable.
+- **shadow ← NZCV** — the flag shadow (one '175).
+- **IE ← 0** — no nesting; IPC and the shadow are one deep.
+- **PC ← 0x0002** — the IRQ vector, jammed directly by a '541 strapped to the
+  constant and enabled onto the PC load bus only by the INT state. No indirection.
+
+**Return.** `RETI` drives IPC onto the B path (a tri-state leg of the B-source
+mux), through the shifter at amount 0 and the '181's F=B row, into the PC — the
+same route `JR` takes, with a latch in place of a register-file port. Flags
+restore from the shadow and IE sets in the same state.
+
+**Why the shadows are mandatory, not luxury.** The carry discipline makes flag
+state a multi-instruction protocol: an interrupt landing between `SEC` and `SBC`,
+or inside an `ADD`…`ADC` ripple, must not disturb C. The shadow also solves ISR
+register pressure — because flag destruction is harmless on entry, an ISR arriving
+with zero free registers can immediately open a stack frame:
+
+```
+isr:    SEC                 ; flags are shadowed — clobber freely
+        SBC  r6, #4         ; open a frame
+        STR  r0, [r6, #0]
+        STR  r1, [r6, #1]
+        ...
+```
+
+The only standing software contract is that r6 always holds a valid stack
+pointer. No register is sacrificed to interrupt linkage.
+
+**Vector map** (direct jam, no vector table):
+
+| Address | Contents |
+|---|---|
+| 0x0000–0x0001 | Reset stub: `MOV rX, #hi8` ; `JA rX, #lo8` — register clobber is legal only here |
+| 0x0002 | IRQ entry: inline ISR, or a `B isr` trampoline — must clobber nothing |
+| 0x0003 | Reserved: SWI (cond 1111 would trap through the same jam mechanism) |
+| 0x0004 | General code begins |
+
+**Hardware bill:** 2× '574 (IPC), 1× '175 (flag shadow), 1× '541 (vector jam),
+IE plus two synchronizer flops, a few sequencer-GAL terms, three decode rows.
 
 ---
 
@@ -349,6 +409,9 @@ encoder walking the mask, one memory cycle per set bit).
   **post-shifter** B value.
 - **CMP/TST** write flags with the register-file write suppressed: FLAG latching
   and WE are independent controls.
+- **Interrupt shadow** — NZCV is copied to the shadow latch on interrupt entry and
+  restored by `RETI`, so the multi-instruction flag protocols (`SEC`…`SBC`,
+  `ADD`…`ADC`) are interrupt-safe.
 
 ## Decode architecture
 
@@ -359,7 +422,7 @@ above, column-for-column: SHTYPE(2), S3–S0, M, Cn-select(2), WE, FLAG mask(3:
 NZ / C-source / V). The class field gates WE and flag latching (a FLAG_WE guard),
 letting the S/M lines stay unqualified. The condition evaluator
 is its own small GAL (NZCV + cond4 → taken). Sequencer: 2 flip-flops + one GAL
-(FETCH, EXEC, MEM).
+(FETCH, EXEC, MEM, INT — four states, still two flip-flops).
 
 ## Deliberate omissions (the honest ledger)
 
@@ -376,6 +439,8 @@ is its own small GAL (NZCV + cond4 → taken). Sequencer: 2 flip-flops + one GAL
 - The inline barrel shift on **all twelve** two-operand ALU ops — ARM's signature
   feature, preserved rather than sacrificed.
 - The scaled-index addressing mode — ARM's fourth modifier seat, recovered free.
+- Single-level interrupts with hardware PC and flag shadows — zero register cost,
+  and the carry protocols stay interrupt-safe.
 - imm6 memory offsets, ORH for pool-free 16-bit constants, two-instruction absolute
   jumps and calls to anywhere in 64K (JA/JAL), a clean op space with no
   escape-format contortions, and a coherent 2-bit class map a front panel can
@@ -403,3 +468,100 @@ is its own small GAL (NZCV + cond4 → taken). Sequencer: 2 flip-flops + one GAL
 | Multi-word left shift | `ADD lo, lo` ; `ADC hi, hi` — the adder is the chained shifter |
 | Add constant, multi-word | `ADD lo, #imm8` ; `ADC hi, #0` |
 | Galois LFSR step | `MOV.LSR r0, r0, #1` ; `BCC skip` ; `EOR r0, taps` |
+
+## Appendix — Instruction reference
+
+Notation: `#i` = shift amount 0–15; `#imm8` = 0–255; addresses and offsets in
+words. Flags column: C\* = C takes the last bit shifted out when the amount ≠ 0,
+otherwise unchanged; `—` = flags untouched. Registers r0–r7; r6 = SP, r7 = LR by
+convention.
+
+### ALU — class 00
+
+| Syntax | Operation | Flags |
+|---|---|---|
+| `MOV.LSL Rd, Rm, #i` | Rd = Rm << i | N Z C\* |
+| `MOV.LSR Rd, Rm, #i` | Rd = Rm >> i, zero fill | N Z C\* |
+| `MOV.ASR Rd, Rm, #i` | Rd = Rm >> i, sign fill | N Z C\* |
+| `MOV.ROR Rd, Rm, #i` | Rd = Rm ror i | N Z C\* |
+| `ADD Rd, Rm, LSL #i` | Rd = Rd + (Rm << i) | N Z C V |
+| `ADC Rd, Rm, LSL #i` | Rd = Rd + (Rm << i) + C | N Z C V |
+| `ORN Rd, Rm, LSL #i` | Rd = Rd ∨ ¬(Rm << i) | N Z |
+| `SBC Rd, Rm, LSL #i` | Rd = Rd − (Rm << i) − ¬C | N Z C V |
+| `AND Rd, Rm, LSL #i` | Rd = Rd ∧ (Rm << i) | N Z |
+| `ORR Rd, Rm, LSL #i` | Rd = Rd ∨ (Rm << i) | N Z |
+| `EOR Rd, Rm, LSL #i` | Rd = Rd ⊕ (Rm << i) | N Z |
+| `BIC Rd, Rm, LSL #i` | Rd = Rd ∧ ¬(Rm << i) | N Z |
+| `MVN Rd, Rm, LSL #i` | Rd = ¬(Rm << i) | N Z |
+| `CMP Rd, Rm, LSL #i` | Rd − (Rm << i), result discarded | N Z C V |
+| `TST Rd, Rm, LSL #i` | Rd ∧ (Rm << i), result discarded | N Z |
+| `SHF.tt Rd, Rm` | Rd = shift_tt(Rd, Rm[3:0]), tt ∈ {LSL, LSR, ASR, ROR}, amount mod 16 | N Z C\* |
+
+### Immediate — class 01
+
+| Syntax | Operation | Flags |
+|---|---|---|
+| `MOV Rd, #imm8` | Rd = imm8 | N Z |
+| `CMP Rd, #imm8` | Rd − imm8, result discarded | N Z C V |
+| `ADD Rd, #imm8` | Rd = Rd + imm8 | N Z C V |
+| `SBC Rd, #imm8` | Rd = Rd − imm8 − ¬C | N Z C V |
+| `LDR Rd, [PC, #imm8]` | Rd = mem[PC+1 + imm8] | — |
+| `ADR Rd, #imm8` | Rd = PC+1 + imm8 | — |
+| `ORH Rd, #imm8` | Rd = Rd ∨ (imm8 << 8) | N Z |
+| `ADC Rd, #imm8` | Rd = Rd + imm8 + C | N Z C V |
+
+### Memory — class 10
+
+| Syntax | Operation | Flags |
+|---|---|---|
+| `LDR Rd, [Rb, #imm6]` | Rd = mem[Rb + imm6], imm6 = 0–63 | — |
+| `STR Rd, [Rb, #imm6]` | mem[Rb + imm6] = Rd | — |
+| `LDR Rd, [Rb, Ro, LSL #ss]` | Rd = mem[Rb + (Ro << ss)], ss = 0–3 | — |
+| `STR Rd, [Rb, Ro, LSL #ss]` | mem[Rb + (Ro << ss)] = Rd | — |
+
+### Control — class 11
+
+| Syntax | Operation | Flags |
+|---|---|---|
+| `B<cond> label` | if cond: PC = PC+1 + offset8, reach ±128 | — |
+| `BAL label` (`B label`) | unconditional relative branch, reach ±128 | — |
+| `JA Rs, #imm8` | PC = (Rs << 8) ∨ imm8 | — |
+| `JAL Rs, #imm8` | r7 = PC+1; PC = (Rs << 8) ∨ imm8 | — |
+| `JR Rs` | PC = Rs | — |
+| `JALR Rs` | r7 = PC+1; PC = Rs | — |
+| `CLC` | C = 0 | C |
+| `SEC` | C = 1 | C |
+| `RETI` | NZCV ← shadow; IE = 1; PC ← IPC | N Z C V |
+| `EI` | IE = 1 | — |
+| `DI` | IE = 0 | — |
+
+### Condition codes
+
+| cond | Test | cond | Test | cond | Test | cond | Test |
+|---|---|---|---|---|---|---|---|
+| EQ | Z | MI | N | HI | C ∧ ¬Z | GT | ¬Z ∧ N=V |
+| NE | ¬Z | PL | ¬N | LS | ¬C ∨ Z | LE | Z ∨ N≠V |
+| CS | C | VS | V | GE | N=V | AL | always |
+| CC | ¬C | VC | ¬V | LT | N≠V | | |
+
+### Aliases and standard sequences
+
+| Write | Get |
+|---|---|
+| `MOV Rd, Rm` | `MOV.LSL Rd, Rm, #0` |
+| `RET` | `JR r7` |
+| `B label` | `BAL label` |
+| `ROL Rd, Rm, #n` | `MOV.ROR Rd, Rm, #(16−n)` — C differs: bit out the bottom |
+| subtract | `SEC` ; `SBC` |
+| 16-bit constant | `MOV Rd, #lo8` ; `ORH Rd, #hi8` |
+| far jump / call | `MOV rX, #hi8` ; `JA rX, #lo8` (or `JAL`) |
+| carry ripple | `ADC Rd, #0` |
+
+### Memory map fixtures
+
+| Address | Contents |
+|---|---|
+| 0x0000–0x0001 | Reset stub |
+| 0x0002 | IRQ entry |
+| 0x0003 | Reserved (SWI) |
+| 0x0004 | Code |
