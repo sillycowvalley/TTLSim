@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlinkyASM", "BlinkyASM\Blin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlinkJED", "BlinkJED\BlinkJED.csproj", "{1A4553F1-F3D4-45C5-949E-167B1EE7D3FB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlinkyMGen", "BlinkyGen\BlinkyMGen.csproj", "{8082C524-091C-4DC8-BE14-1F40180DE5DB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,10 @@ Global
 		{1A4553F1-F3D4-45C5-949E-167B1EE7D3FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A4553F1-F3D4-45C5-949E-167B1EE7D3FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A4553F1-F3D4-45C5-949E-167B1EE7D3FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8082C524-091C-4DC8-BE14-1F40180DE5DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8082C524-091C-4DC8-BE14-1F40180DE5DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8082C524-091C-4DC8-BE14-1F40180DE5DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8082C524-091C-4DC8-BE14-1F40180DE5DB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

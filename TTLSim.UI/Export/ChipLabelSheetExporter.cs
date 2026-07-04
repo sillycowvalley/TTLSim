@@ -101,7 +101,7 @@ public static class ChipLabelSheetExporter
             .GroupBy(d => d.Definition is ChipPartDefinition cp
                           && Device.Identifiers.Gal.Contains(cp.PartNumber)
                 ? d.FullPartNumber + "\n" + (d.Program ?? "") + "\n" + UnitLabel(d)
-                : d.FullPartNumber)
+                : d.FullPartNumber + "\n" + UnitLabel(d))
             .Select(g => BuildGroup(g.ToList()))
             .OrderBy(g => g.DisplayName, StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -210,23 +210,34 @@ public static class ChipLabelSheetExporter
                         overrides[kv.Key] = kv.Value;
             }
 
-            designatorNote = string.Join(" ", devices
-                .Select(d => d.Designator)
-                .Where(d => !string.IsNullOrEmpty(d))
-                .OrderBy(d => d, StringComparer.OrdinalIgnoreCase));
-            if (designatorNote.Length == 0) designatorNote = null;
+            designatorNote = DesignatorNote(devices);
         }
 
-        // Highest precedence: the unit's user label (see above). Grouping
-        // already keys GALs on this label, so every device in the group
-        // shares it.
-        if (isGal)
+        // Highest precedence for the sticker text on ANY chip -- GAL, EEPROM,
+        // logic alike: the unit's user label (populated at JEDEC import for
+        // GALs, typed by the user for anything else). Grouping keys on this
+        // label, so every device in the group shares it. A labelled group
+        // also carries its designators in the caption, since a custom name
+        // identifies specific chips rather than a generic part.
+        string userLabel = UnitLabel(first);
+        if (userLabel.Length > 0)
         {
-            string userLabel = UnitLabel(first);
-            if (userLabel.Length > 0) labelText = userLabel;
+            labelText = userLabel;
+            designatorNote ??= DesignatorNote(devices);
         }
 
         return new LabelGroup(displayName, labelText, chip, devices.Count, overrides, designatorNote);
+    }
+
+    /// <summary>Space-joined, ordered designators of a group's devices, or
+    /// null when none carry one.</summary>
+    private static string? DesignatorNote(List<Device> devices)
+    {
+        string note = string.Join(" ", devices
+            .Select(d => d.Designator)
+            .Where(d => !string.IsNullOrEmpty(d))
+            .OrderBy(d => d, StringComparer.OrdinalIgnoreCase));
+        return note.Length == 0 ? null : note;
     }
 
     /// <summary>The user label of the device's chip unit (the free-text

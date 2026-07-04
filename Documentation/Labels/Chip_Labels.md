@@ -280,13 +280,16 @@ canvas identifies each programmed GAL at a glance. Import is authoritative:
 a header carrying a name replaces any existing label; a header without one
 leaves the label untouched.
 
-**The label field is the single source of truth for the sticker.** The gray
-in-sticker text takes, in precedence order: (1) the unit's user label —
-populated at import, freely editable afterwards; (2) the cleaned header
-display name, for older projects whose label was never populated; (3) the
-bare IC type. GAL grouping keys on part number + fuse map + unit label, so
-a hand-renamed GAL gets its own sticker even alongside an identically
-programmed twin.
+**The label field is the single source of truth for the sticker — on every
+chip, not only GALs.** The gray in-sticker text takes, in precedence order:
+(1) the unit's user label (populated at JEDEC import for GALs, typed by the
+user for EEPROMs or anything else); (2) for GALs, the cleaned header
+display name, covering older projects whose label was never populated;
+(3) the part number / bare IC type. Grouping keys every chip on part number
++ unit label (GALs additionally on fuse map), so two 28C16s labelled
+`MC ROM0` and `MC ROM1` get separate stickers while unlabelled twins still
+group. A labelled group carries its designators in the caption — a custom
+name identifies specific chips, so the caption says which.
 
 Round-trip validated against a real BlinkyJED `.jed`: fuse area
 byte-identical after insertion, all names recovered, active-low conversion
