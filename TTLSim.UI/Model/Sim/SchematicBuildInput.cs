@@ -96,11 +96,34 @@ public sealed class SchematicBuildInput : IBuildInput
                         // it); every other chip uses its static ChipPin.Role.
                         var roles = GalRoles(dev, cp)
                             ?? cp.Pins.ToDictionary(p => p.Number, p => p.Role);
+
+                        // No-connect pins: a pin named "NC" has no bond wire on
+                        // the die -- it is neither an input nor an output, so it
+                        // joins neither list. Without this, an NC pin's default
+                        // ChipPinRole.Input makes TTL011 flag it as a floating
+                        // CMOS input (28C64 pins 1/26, 28C128 pin 1, 6264 pin 1,
+                        // W24512 pins 1/2, 7420 pins 3/11, 7430 pins 9/10/13).
+                        // "NC" is already the catalogue-wide convention -- the
+                        // label exporter prints NC blank, and GalPinModel labels
+                        // unprogrammed OLMCs "NC" -- so the name is the single
+                        // source of truth; no per-chip definition changes needed.
+                        // (GALs are unaffected: a programmed GAL's roles come
+                        // from GalRoles, and no static GAL pin is named "NC".)
+                        // A wire drawn to an NC pin still forms a net via
+                        // Connections; the pin is merely exempt from the
+                        // floating-input and dangling-output diagnostics.
+                        var ncPins = new HashSet<int>();
+                        foreach (ChipPin cpin in cp.Pins)
+                            if (cpin.Name == "NC")
+                                ncPins.Add(cpin.Number);
+
                         var inputList = new List<int>();
                         var outputList = new List<int>();
                         foreach (Pin p in u.Pins)
                         {
                             if (p.Number == cp.PowerPin || p.Number == cp.GroundPin)
+                                continue;
+                            if (ncPins.Contains(p.Number))
                                 continue;
                             if (roles.TryGetValue(p.Number, out var role) &&
                                 role == ChipPinRole.Output)
