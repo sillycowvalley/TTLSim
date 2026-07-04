@@ -27,14 +27,25 @@ namespace TTLSim.UI.Components;
 /// </para>
 ///
 /// <para>
-/// Pin identity rules (same as the header's Mirrored feature): pins are added
-/// or kept, never destroyed while a Connection may reference them. Growing
-/// Width appends fresh pins. Shrinking Width removes the doomed trailing pins
-/// ONLY if none of them is wired; the check runs through
-/// <see cref="ConnectionProbe"/>, installed by <see cref="Schematic"/> when the
-/// item enters the model. No probe = cannot verify = the shrink is REFUSED
-/// (fail safe). A refused property-grid edit reads back unchanged, so the
-/// recorded SetPropertyCommand is a harmless no-op.
+/// <see cref="Mirrored"/> flips the label across its long axis, exactly like
+/// the header's Mirrored: pins exit from the opposite (right) edge, pin order
+/// and bit numbering unchanged, and the EXISTING Pin objects are relocated in
+/// place (Pin.LocalPosition / LocalDirection are settable) so Connections and
+/// router caches holding Pin references survive the toggle.
+/// <see cref="Color"/> renders the stubs, bracket, and bit names in a wire
+/// palette colour so a label reads as part of the net it names.
+/// </para>
+///
+/// <para>
+/// Pin identity rules (same as the header's Mirrored feature): pins are added,
+/// relocated, or kept -- never destroyed while a Connection may reference
+/// them. Growing Width appends fresh pins on the current pin edge. Shrinking
+/// Width removes the doomed trailing pins ONLY if none of them is wired; the
+/// check runs through <see cref="ConnectionProbe"/>, installed by
+/// <see cref="Schematic"/> when the item enters the model. No probe = cannot
+/// verify = the shrink is REFUSED (fail safe). A refused property-grid edit
+/// reads back unchanged, so the recorded SetPropertyCommand is a harmless
+/// no-op.
 /// </para>
 /// </summary>
 public sealed class NetLabelItem : SchematicItem
@@ -44,6 +55,7 @@ public sealed class NetLabelItem : SchematicItem
 
     private int width;
     private int startBit;
+    private bool mirrored;
 
     /// <summary>
     /// Installed by <see cref="Schematic"/> when this item is added to the
@@ -99,6 +111,7 @@ public sealed class NetLabelItem : SchematicItem
                     AddPin(MakePin(pinNumber));
                 width = target;
                 ApplySizeForWidth();
+                ApplyPinGeometry();   // new pins onto the current (mirrored?) edge
                 return;
             }
 
@@ -126,6 +139,39 @@ public sealed class NetLabelItem : SchematicItem
         }
     }
 
+    /// <summary>
+    /// Flip the label across its long axis: pins exit from the opposite
+    /// (right) edge of the body, with the bracket and text mirrored to
+    /// match. Pin order and bit numbering are unchanged -- this is a
+    /// drawing-side convenience, exactly like the header's Mirrored, so a
+    /// label can sit on either side of the thing it taps. Edits go through
+    /// the property grid's generic SetPropertyCommand path.
+    /// </summary>
+    [Category("Layout")]
+    [DefaultValue(false)]
+    [Description("Flip the label across its long axis so the pins exit from the opposite side. Pin order and bit numbering are unchanged.")]
+    public bool Mirrored
+    {
+        get => mirrored;
+        set
+        {
+            if (mirrored == value) return;
+            mirrored = value;
+            ApplyPinGeometry();
+        }
+    }
+
+    /// <summary>
+    /// Render colour for the stubs, bracket, and bit names, from the wire
+    /// palette -- so a label carries the same colour convention as the net
+    /// it names. Changes go through the undo stack via the PropertyGrid's
+    /// generic SetPropertyCommand path, the same way a wire's Color does.
+    /// </summary>
+    [Category("Appearance")]
+    [DefaultValue(TTLColor.Black)]
+    [Description("Render colour for the label's stubs and text, mirroring jumper-wire conventions.")]
+    public TTLColor Color { get; set; } = TTLColor.Black;
+
     /// <summary>Absolute bit number carried by the given pin number.</summary>
     public int BitOfPin(int pinNumber) => startBit + pinNumber - 1;
 
@@ -136,13 +182,35 @@ public sealed class NetLabelItem : SchematicItem
     public string BitName(int pinNumber) =>
         $"{(string.IsNullOrWhiteSpace(Label) ? "?" : Label)}{BitOfPin(pinNumber)}";
 
-    private static Pin MakePin(int pinNumber) =>
-        new(pinNumber.ToString(), pinNumber, new Point(0, pinNumber), PinDirection.Left);
+    private Pin MakePin(int pinNumber) =>
+        new(pinNumber.ToString(), pinNumber,
+            new Point(mirrored ? Size.Width : 0, pinNumber),
+            mirrored ? PinDirection.Right : PinDirection.Left);
 
     /// <summary>
-    /// Bounding box: one stub cell on the left, text field to the right.
+    /// Place every pin on the edge selected by <see cref="Mirrored"/>:
+    /// x = 0 facing Left when unmirrored, x = Size.Width facing Right when
+    /// mirrored. Relocates the EXISTING Pin objects (never rebuilds them)
+    /// so connections holding Pin references survive the toggle. Row (Y)
+    /// placement is untouched -- pin order never changes.
+    /// </summary>
+    private void ApplyPinGeometry()
+    {
+        int x = mirrored ? Size.Width : 0;
+        PinDirection dir = mirrored ? PinDirection.Right : PinDirection.Left;
+        foreach (var pin in Pins)
+        {
+            pin.LocalPosition = new Point(x, pin.Number);
+            pin.LocalDirection = dir;
+        }
+    }
+
+    /// <summary>
+    /// Bounding box: one stub cell on the pin side, text field on the other.
     /// Height is width + 1 rounded up to EVEN, the same rule as
     /// HeaderOutputUnit, so the rotation pivot lands on an integer cell.
+    /// The box width is fixed, so mirroring never moves the box -- only
+    /// which edge the pins sit on.
     /// </summary>
     private void ApplySizeForWidth()
     {
@@ -181,13 +249,20 @@ public sealed class NetLabelItem : SchematicItem
     private void DrawShape(Graphics g, RenderContext ctx)
     {
         int p = ctx.GridPitch;
-        int leftX = Position.X * p;              // pin-endpoint column
-        int bracketX = leftX + p;                // stub ends at the bracket
+        int leftX = Position.X * p;
+        int rightX = (Position.X + Size.Width) * p;
 
-        var color = Selected ? ctx.SelectedColor : ctx.ForegroundColor;
-        using var pen = new Pen(color, 1.2f);
+        // Pin-endpoint side and bracket column depend on Mirrored; the box
+        // itself never moves.
+        int pinOuterX = mirrored ? rightX : leftX;
+        int bracketX = mirrored ? rightX - p : leftX + p;
+        // Serifs and the range header extend TOWARD the pins.
+        int towardPins = mirrored ? +1 : -1;
+
+        Color ink = Selected ? ctx.SelectedColor : Color.ToColor();
+        using var pen = new Pen(ink, 1.2f);
         using var pinBrush = new SolidBrush(ctx.PinColor);
-        using var textBrush = new SolidBrush(ctx.ForegroundColor);
+        using var textBrush = new SolidBrush(ink);
 
         float dotRadius = p * 0.30f;
         float textInsetX = p * 0.30f;
@@ -198,24 +273,30 @@ public sealed class NetLabelItem : SchematicItem
 
             // Stub from the pin endpoint to the bracket column, terminal dot
             // at the outer end -- the same visual grammar as every other pin.
-            g.DrawLine(pen, leftX, rowY, bracketX, rowY);
-            g.FillEllipse(pinBrush, leftX - 2, rowY - 2, 4, 4);
+            g.DrawLine(pen, pinOuterX, rowY, bracketX, rowY);
+            g.FillEllipse(pinBrush, pinOuterX - 2, rowY - 2, 4, 4);
 
-            // Per-bit name to the right of the bracket ("D4"). Drawn inside
-            // the rotation transform, like the header's pin numbers, so it
-            // follows the body.
+            // Per-bit name on the text side of the bracket ("D4"): to the
+            // right of it when unmirrored, right-aligned to its left when
+            // mirrored. Drawn inside the rotation transform, like the
+            // header's pin numbers, so it follows the body.
             string bit = BitName(pinNumber);
             var bitSize = g.MeasureString(bit, ctx.PinFont);
+            float bitX = mirrored
+                ? bracketX - textInsetX - bitSize.Width
+                : bracketX + textInsetX;
             g.DrawString(bit, ctx.PinFont, textBrush,
-                bracketX + textInsetX,
+                bitX,
                 rowY - bitSize.Height / 2f);
 
-            // Sim-mode per-bit state dot, right of the text field, matching
+            // Sim-mode per-bit state dot on the far (text) side, matching
             // the header's per-pin indicator.
             Signal? sig = ctx.SignalStateProvider?.Invoke(this, pinNumber);
             if (sig is Signal s)
             {
-                float dotX = (Position.X + Size.Width) * p - p * 0.55f;
+                float dotX = mirrored
+                    ? leftX + p * 0.55f
+                    : rightX - p * 0.55f;
                 using var dotBrush = new SolidBrush(SignalColors.For(s));
                 g.FillEllipse(dotBrush,
                     dotX - dotRadius, rowY - dotRadius,
@@ -230,15 +311,19 @@ public sealed class NetLabelItem : SchematicItem
         {
             int topRowY = (Position.Y + 1) * p;
             int bottomRowY = (Position.Y + width) * p;
+            int serifX = bracketX + towardPins * (p / 2);
             g.DrawLine(pen, bracketX, topRowY - p / 2, bracketX, bottomRowY + p / 2);
-            g.DrawLine(pen, bracketX, topRowY - p / 2, bracketX - p / 2, topRowY - p / 2);
-            g.DrawLine(pen, bracketX, bottomRowY + p / 2, bracketX - p / 2, bottomRowY + p / 2);
+            g.DrawLine(pen, bracketX, topRowY - p / 2, serifX, topRowY - p / 2);
+            g.DrawLine(pen, bracketX, bottomRowY + p / 2, serifX, bottomRowY + p / 2);
 
             string name = string.IsNullOrWhiteSpace(Label) ? "?" : Label;
             string range = $"{name}[{startBit}..{startBit + width - 1}]";
             var rangeSize = g.MeasureString(range, ctx.LabelFont);
+            float rangeX = mirrored
+                ? bracketX + p / 2f - rangeSize.Width
+                : bracketX - p / 2f;
             g.DrawString(range, ctx.LabelFont, textBrush,
-                bracketX - p / 2f,
+                rangeX,
                 topRowY - p / 2f - rangeSize.Height);
         }
     }

@@ -184,7 +184,7 @@ Common fields on every item: `type`, `id`, `label`, `position`, `rotation`,
 | `canosc8` | `frequencyHz` (1e6), `designator` | Canned oscillator, DIP-8. |
 | `rect` | `width` (20), `height` (12), `filled` (true), `fillColor`, `borderColor` | Cosmetic rectangle. No electrical meaning. |
 | `text` | `fontSize` (4.0), `textColor` | Cosmetic text label; the text rides on `label`. |
-| `netlabel` | `width` (1), `startBit` (0) | Net label / bus port. Pins `1..width` on the left edge; pin *k* carries bit `startBit + k − 1` of the net named by `label`. Every active pin sharing a (name, bit) anywhere on the schematic is **one electrical net — no wire needed**; ranges may overlap freely (`D[0..7]` in one place, `D[0..3]` and `D[4..7]` elsewhere). An empty `label` ties nothing. Width 1 is a plain net label. |
+| `netlabel` | `width` (1), `startBit` (0), `mirrored` (false), `color` (`"Black"`) | Net label / bus port. Pins `1..width`; pin *k* carries bit `startBit + k − 1` of the net named by `label`. Every active pin sharing a (name, bit) anywhere on the schematic is **one electrical net — no wire needed**; ranges may overlap freely (`D[0..7]` in one place, `D[0..3]` and `D[4..7]` elsewhere). An empty `label` ties nothing. Width 1 is a plain net label. `mirrored` flips the label across its long axis so pins exit the opposite edge (bit numbering unchanged). `color` is a TTLColor name rendering the stubs and text like a wire. |
 
 Values in parentheses are the defaults applied when the field is absent. Colour
 fields are TTLColor enum **names** (`"Red"`, `"Black"`, `"Blue"`, `"Grey"`, …);

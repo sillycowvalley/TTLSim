@@ -141,6 +141,20 @@ public sealed class ItemDto
     // written before the feature; null loads as 0.
     public int? StartBit { get; set; }
 
+    /// <summary>
+    /// Net label only: flipped across the long axis so pins exit from the
+    /// opposite edge (bit numbering unchanged). Null on every other item type
+    /// and on older files; null loads as false.
+    /// </summary>
+    public bool? Mirrored { get; set; }
+
+    /// <summary>
+    /// Net label only: render colour, stored as the TTLColor enum name
+    /// (matching wires). Null on every other item type and on older files;
+    /// null loads as Black, the wire default.
+    /// </summary>
+    public string? Color { get; set; }
+
     // Cosmetic text label (Type "text"). The text itself rides on Label above.
     public float? FontSize { get; set; }
     public string? TextColor { get; set; }

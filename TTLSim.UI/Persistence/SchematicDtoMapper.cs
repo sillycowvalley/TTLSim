@@ -226,7 +226,8 @@ public static class SchematicDtoMapper
                 case Unit unit:
                     dto.Units.Add(UnitToDto(unit));
                     break;
-                case VccSymbol or GndSymbol or UiClockSource or CanOscillator or ICosmeticItem:
+                case VccSymbol or GndSymbol or UiClockSource or CanOscillator
+                    or ICosmeticItem or NetLabelItem:
                     dto.Items.Add(StandaloneItemToDto(item));
                     break;
                 default:
@@ -427,6 +428,8 @@ public static class SchematicDtoMapper
         {
             dto.Width = netLabel.Width;
             dto.StartBit = netLabel.StartBit;
+            dto.Mirrored = netLabel.Mirrored;
+            dto.Color = netLabel.Color.ToString();
         }
 
         if (item is IDesignatedItem des)
@@ -900,13 +903,17 @@ public static class SchematicDtoMapper
             FontSize = dto.FontSize ?? 4.0f,
             TextColor = ParseTtlColor(dto.TextColor)
         },
-        // Object initialisers assign in written order: StartBit first so the
-        // Width grow builds pins with their final bits. The item has no
-        // ConnectionProbe yet, and growth never needs one.
+        // Object initialisers assign in written order: StartBit and Mirrored
+        // first so the Width grow builds pins with their final bits on the
+        // correct edge. The item has no ConnectionProbe yet, and growth never
+        // needs one. A missing colour loads as Black -- the wire default --
+        // rather than ParseTtlColor's Grey, which suits the cosmetic items.
         "netlabel" => new NetLabelItem
         {
             StartBit = dto.StartBit ?? 0,
-            Width = dto.Width ?? 1
+            Mirrored = dto.Mirrored ?? false,
+            Width = dto.Width ?? 1,
+            Color = dto.Color is null ? TTLColor.Black : ParseTtlColor(dto.Color)
         },
         _ => throw new System.IO.InvalidDataException(
             $"Unknown standalone item type '{dto.Type}'. " +
