@@ -2,168 +2,168 @@ Blinky-M rev 14 micro-op dictionary
 57 micro-ops of 128 slots (7-bit index)
 
     0: Ram→Ir @Pc  PC++
-    1: Ram→A @Pc  PC++
-    2: Ram→B @Pc  PC++
-    3: Ram→Tos @Pc  PC++
-    4: Ram→AdrLo @Pc  PC++
-    5: Ram→AdrHi @Pc  PC++
-    6: Ram→None @Pc  PC++
-    7: Tos→A @Adr
-    8: Bp→A @Adr
-    9: Ram→Tos @Adr
-   10: Vec→PcHi @Adr
-   11: Tos→AdrLo @Adr
-   12: Ram→Halt @Adr
-   13: Ram→Iclr @Adr
-   14: Alu→Tos @Adr  ALU=Fa
-   15: Alu→PcHi @Adr  ALU=Fa
-   16: Alu→Tos @Adr  ALU=Fb
-   17: Alu→PcLo @Adr  ALU=Fb
-   18: Alu→AdrLo @Adr  ALU=AddAB
-   19: Alu→Bp @Adr  ALU=AddAB
+    1: Ram→Ir @Pc  DspDown  PC++
+    2: Ram→Ir @Pc  RspDown  PC++
+    3: Ram→A @Pc  PC++
+    4: Tos→A @Adr
+    5: Tos→A @Adr  DspDown
+    6: Bp→A @Adr
+    7: Ram→A @DStack
+    8: Ram→A @DStack  DspUp
+    9: Ram→A @DStack  DspDown
+   10: Ram→B @Pc  PC++
+   11: Ram→B @DStack
+   12: Ram→B @DStack  DspUp
+   13: Ram→B @DStack  DspDown
+   14: Ram→Tos @Pc  PC++
+   15: Ram→Tos @Adr
+   16: Alu→Tos @Adr  ALU=IR  NZ
+   17: Alu→Tos @Adr  ALU=IR  NZ  C
+   18: Alu→Tos @Adr  ALU=Fa
+   19: Alu→Tos @Adr  ALU=Fb
    20: Ram→Tos @ZpAdrLo
-   21: Alu→RamWe @ZpAdrLo  ALU=Fb
-   22: Ram→Tos @IoAdrLo
-   23: Alu→RamWe @IoAdrLo  ALU=Fb
-   24: Ram→A @DStack
-   25: Ram→B @DStack
-   26: Ram→Tos @DStack
-   27: Ram→Tos @RPcLo
-   28: Ram→PcLo @RPcLo
-   29: PcbLo→RamWe @RPcLo
+   21: Ram→Tos @IoAdrLo
+   22: Ram→Tos @DStack
+   23: Ram→Tos @RPcLo
+   24: Ram→Tos @RPcLo  RspUp
+   25: Alu→PcLo @Adr  ALU=Fb
+   26: Vec→PcLo @Adr  ISET
+   27: Ram→PcLo @RPcLo
+   28: Alu→PcHi @Adr  ALU=Fa
+   29: Vec→PcHi @Adr
    30: Ram→PcHi @RPcHi
-   31: PcbHi→RamWe @RPcHi
-   32: Ram→Bp @RBp
-   33: Flags→RamWe @RFlags
-   34: Ram→A @DStack  DspUp
-   35: Ram→B @DStack  DspUp
-   36: Tos→RamWe @DStack  DspUp
-   37: Alu→RamWe @DStack  ALU=Fa  DspUp
-   38: Ram→Ir @Pc  DspDown  PC++
-   39: Tos→A @Adr  DspDown
-   40: Tos→RamWe @Adr  DspDown
-   41: Tos→RamWe @ZpAdrLo  DspDown
+   31: Ram→AdrLo @Pc  PC++
+   32: Alu→AdrLo @Adr  ALU=AddAB
+   33: Tos→AdrLo @Adr
+   34: Ram→AdrHi @Pc  PC++
+   35: Alu→Bp @Adr  ALU=AddAB
+   36: Ram→Bp @RBp
+   37: Ram→Flags @RFlags  ALU=IR  NZ  C
+   38: Tos→RamWe @Adr  DspDown
+   39: Alu→RamWe @ZpAdrLo  ALU=Fb
+   40: Tos→RamWe @ZpAdrLo  DspDown
+   41: Alu→RamWe @IoAdrLo  ALU=Fb
    42: Tos→RamWe @IoAdrLo  DspDown
-   43: Ram→A @DStack  DspDown
-   44: Ram→B @DStack  DspDown
-   45: Ram→Tos @RPcLo  RspUp
-   46: Bp→RamWe @RBp  RspUp
-   47: Ram→Ir @Pc  RspDown  PC++
-   48: Tos→RamWe @RPcLo  DspDownRspUp
-   49: Alu→Tos @Adr  ALU=IR  NZ
-   50: ALU=IR  NZ
-   51: SHIFT  C
-   52: Alu→Tos @Adr  ALU=IR  NZ  C
-   53: ALU=IR  NZ  C
-   54: Ram→Flags @RFlags  ALU=IR  NZ  C
-   55: Vec→PcLo @Adr  ISET
-   56: ISET
+   43: Alu→RamWe @DStack  ALU=Fa  DspUp
+   44: Tos→RamWe @DStack  DspUp
+   45: Tos→RamWe @RPcLo  DspDownRspUp
+   46: PcbLo→RamWe @RPcLo
+   47: PcbHi→RamWe @RPcHi
+   48: Bp→RamWe @RBp  RspUp
+   49: Flags→RamWe @RFlags
+   50: Ram→Halt @Adr
+   51: Ram→Iclr @Adr
+   52: Ram→None @Pc  PC++
+   53: ISET
+   54: ALU=IR  NZ
+   55: ALU=IR  NZ  C
+   56: SHIFT  C
 
 Instruction sequences (index lists):
   0x00 NOP     0
-  0x01 RET     47 32 30 28
-  0x02 BRK     0 29 31 33 46 55 10
-  0x03 RTI     47 32 54 30 28
-  0x04 CLI     0 13
-  0x05 SEI     0 56
-  0x10 SHL     0 51
-  0x11 SHR     0 51
-  0x13 ASR     0 51
-  0x14 ROL     0 51
-  0x15 ROR     0 51
-  0x20 DUP     0 36
-  0x21 OVER    38 34 36 14
-  0x22 TUCK    38 24 36 37
-  0x23 SWAP    38 24 36 14
-  0x24 DROP    38 26
-  0x25 NIP     38
-  0x26 ROT     38 43 25 37 36 16
-  0x28 >R      0 48 26
-  0x29 R>      47 36 27
-  0x2A R@      47 36 45
-  0x30 PUSH    0 36 3
-  0x31 LOAD    0 4 5 36 9
-  0x32 STORE   0 4 5 40 26
-  0x33 FETCH   0 11 20
-  0x34 STORE!  38 11 44 21 26
-  0x35 IN      0 4 36 22
-  0x36 OUT     0 4 42 26
-  0x37 INS     0 11 22
-  0x38 OUTS    38 11 44 23 26
-  0x40 ALU_40  0 39 25 52
-  0x41 ALU_41  0 39 25 52
-  0x42 ALU_42  0 39 25 52
-  0x43 ALU_43  0 39 25 52
-  0x44 ALU_44  0 39 25 52
-  0x45 ALU_45  0 39 25 52
-  0x46 ALU_46  0 39 25 52
-  0x47 ALU_47  0 39 25 52
-  0x48 ALU_48  0 39 25 52
-  0x49 ADD     0 39 25 52
-  0x4A ALU_4A  0 39 25 52
-  0x4B ALU_4B  0 39 25 52
-  0x4C ALU_4C  0 39 25 52
-  0x4D ALU_4D  0 39 25 52
-  0x4E ALU_4E  0 39 25 52
-  0x4F ALU_4F  0 39 25 52
-  0x50 ALU_50  0 39 25 52
-  0x51 ALU_51  0 39 25 52
-  0x52 ALU_52  0 39 25 52
-  0x53 ALU_53  0 39 25 52
-  0x54 ALU_54  0 39 25 52
-  0x55 ALU_55  0 39 25 52
-  0x56 SUB     0 39 25 52
-  0x57 ALU_57  0 39 25 52
-  0x58 ALU_58  0 39 25 52
-  0x59 ADC     0 39 25 52
-  0x5A ALU_5A  0 39 25 52
-  0x5B ALU_5B  0 39 25 52
-  0x5C ALU_5C  0 39 25 52
-  0x5D ALU_5D  0 39 25 52
-  0x5E ALU_5E  0 39 25 52
-  0x5F ALU_5F  0 39 25 52
-  0x60 NOT     0 7 49
-  0x61 ALU_61  0 39 25 49
-  0x62 ALU_62  0 39 25 49
-  0x63 ALU_63  0 39 25 49
-  0x64 ALU_64  0 39 25 49
-  0x65 ALU_65  0 39 25 49
-  0x66 XOR     0 39 25 49
-  0x67 ALU_67  0 39 25 49
-  0x68 ALU_68  0 39 25 49
-  0x69 ALU_69  0 39 25 49
-  0x6A ALU_6A  0 39 25 49
-  0x6B AND     0 39 25 49
-  0x6C ALU_6C  0 39 25 49
-  0x6D ALU_6D  0 39 25 49
-  0x6E OR      0 39 25 49
-  0x6F TST     0 7 50
-  0x70 ALU_70  0 39 25 49
-  0x71 ALU_71  0 39 25 49
-  0x72 ALU_72  0 39 25 49
-  0x73 ALU_73  0 39 25 49
-  0x74 ALU_74  0 39 25 49
-  0x75 ALU_75  0 39 25 49
-  0x76 ALU_76  0 39 25 49
-  0x77 ALU_77  0 39 25 49
-  0x78 ALU_78  0 39 25 49
-  0x79 ALU_79  0 39 25 49
-  0x7A ALU_7A  0 39 25 49
-  0x7B ALU_7B  0 39 25 49
-  0x7C ALU_7C  0 39 25 49
-  0x7D ALU_7D  0 39 25 49
-  0x7E ALU_7E  0 39 25 49
-  0x7F ALU_7F  0 39 25 49
-  0x80 ENTER   0 2 8 19
-  0x81 LOCAL@  0 2 8 36 18 20
-  0x82 LOCAL!  0 2 8 18 41 26
-  0x90 JUMP    0 2 1 17 15
-  0x91 CALL    0 2 1 29 31 46 17 15
-  0x96 CMP     38 35 7 53
-  0x9A BEQ     0 6 6  taken: 0 2 1 17 15
-  0x9B BNE     0 6 6  taken: 0 2 1 17 15
-  0x9C BCS     0 6 6  taken: 0 2 1 17 15
-  0x9D BCC     0 6 6  taken: 0 2 1 17 15
-  0x9E BMI     0 6 6  taken: 0 2 1 17 15
-  0x9F BPL     0 6 6  taken: 0 2 1 17 15
-  0xFF HALT    0 12
+  0x01 RET     2 36 30 27
+  0x02 BRK     0 46 47 49 48 26 29
+  0x03 RTI     2 36 37 30 27
+  0x04 CLI     0 51
+  0x05 SEI     0 53
+  0x10 SHL     0 56
+  0x11 SHR     0 56
+  0x13 ASR     0 56
+  0x14 ROL     0 56
+  0x15 ROR     0 56
+  0x20 DUP     0 44
+  0x21 OVER    1 8 44 18
+  0x22 TUCK    1 7 44 43
+  0x23 SWAP    1 7 44 18
+  0x24 DROP    1 22
+  0x25 NIP     1
+  0x26 ROT     1 9 11 43 44 19
+  0x28 >R      0 45 22
+  0x29 R>      2 44 23
+  0x2A R@      2 44 24
+  0x30 PUSH    0 44 14
+  0x31 LOAD    0 31 34 44 15
+  0x32 STORE   0 31 34 38 22
+  0x33 FETCH   0 33 20
+  0x34 STORE!  1 33 13 39 22
+  0x35 IN      0 31 44 21
+  0x36 OUT     0 31 42 22
+  0x37 INS     0 33 21
+  0x38 OUTS    1 33 13 41 22
+  0x40 ALU_40  0 5 11 17
+  0x41 ALU_41  0 5 11 17
+  0x42 ALU_42  0 5 11 17
+  0x43 ALU_43  0 5 11 17
+  0x44 ALU_44  0 5 11 17
+  0x45 ALU_45  0 5 11 17
+  0x46 ALU_46  0 5 11 17
+  0x47 ALU_47  0 5 11 17
+  0x48 ALU_48  0 5 11 17
+  0x49 ADD     0 5 11 17
+  0x4A ALU_4A  0 5 11 17
+  0x4B ALU_4B  0 5 11 17
+  0x4C ALU_4C  0 5 11 17
+  0x4D ALU_4D  0 5 11 17
+  0x4E ALU_4E  0 5 11 17
+  0x4F ALU_4F  0 5 11 17
+  0x50 ALU_50  0 5 11 17
+  0x51 ALU_51  0 5 11 17
+  0x52 ALU_52  0 5 11 17
+  0x53 ALU_53  0 5 11 17
+  0x54 ALU_54  0 5 11 17
+  0x55 ALU_55  0 5 11 17
+  0x56 SUB     0 5 11 17
+  0x57 ALU_57  0 5 11 17
+  0x58 ALU_58  0 5 11 17
+  0x59 ADC     0 5 11 17
+  0x5A ALU_5A  0 5 11 17
+  0x5B ALU_5B  0 5 11 17
+  0x5C ALU_5C  0 5 11 17
+  0x5D ALU_5D  0 5 11 17
+  0x5E ALU_5E  0 5 11 17
+  0x5F ALU_5F  0 5 11 17
+  0x60 NOT     0 4 16
+  0x61 ALU_61  0 5 11 16
+  0x62 ALU_62  0 5 11 16
+  0x63 ALU_63  0 5 11 16
+  0x64 ALU_64  0 5 11 16
+  0x65 ALU_65  0 5 11 16
+  0x66 XOR     0 5 11 16
+  0x67 ALU_67  0 5 11 16
+  0x68 ALU_68  0 5 11 16
+  0x69 ALU_69  0 5 11 16
+  0x6A ALU_6A  0 5 11 16
+  0x6B AND     0 5 11 16
+  0x6C ALU_6C  0 5 11 16
+  0x6D ALU_6D  0 5 11 16
+  0x6E OR      0 5 11 16
+  0x6F TST     0 4 54
+  0x70 ALU_70  0 5 11 16
+  0x71 ALU_71  0 5 11 16
+  0x72 ALU_72  0 5 11 16
+  0x73 ALU_73  0 5 11 16
+  0x74 ALU_74  0 5 11 16
+  0x75 ALU_75  0 5 11 16
+  0x76 ALU_76  0 5 11 16
+  0x77 ALU_77  0 5 11 16
+  0x78 ALU_78  0 5 11 16
+  0x79 ALU_79  0 5 11 16
+  0x7A ALU_7A  0 5 11 16
+  0x7B ALU_7B  0 5 11 16
+  0x7C ALU_7C  0 5 11 16
+  0x7D ALU_7D  0 5 11 16
+  0x7E ALU_7E  0 5 11 16
+  0x7F ALU_7F  0 5 11 16
+  0x80 ENTER   0 10 6 35
+  0x81 LOCAL@  0 10 6 44 32 20
+  0x82 LOCAL!  0 10 6 32 40 22
+  0x90 JUMP    0 10 3 25 28
+  0x91 CALL    0 10 3 46 47 48 25 28
+  0x96 CMP     1 12 4 55
+  0x9A BEQ     0 52 52  taken: 0 10 3 25 28
+  0x9B BNE     0 52 52  taken: 0 10 3 25 28
+  0x9C BCS     0 52 52  taken: 0 10 3 25 28
+  0x9D BCC     0 52 52  taken: 0 10 3 25 28
+  0x9E BMI     0 52 52  taken: 0 10 3 25 28
+  0x9F BPL     0 52 52  taken: 0 10 3 25 28
+  0xFF HALT    0 50

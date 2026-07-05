@@ -37,7 +37,7 @@ WriteDictionaryListing(Path.Combine(outDir, "dictionary.txt"), program, dict, se
 int named = program.Count(i => !i.Mnemonic.StartsWith("ALU_"));
 Console.WriteLine($"Instructions: {program.Count} ({named} named, {program.Count - named} ALU #n)");
 Console.WriteLine($"Micro-op dictionary: {dict.Count} of {MicroDictionary.Slots} slots");
-Console.WriteLine($"Sequencer banks: {seq.Families.Count(f => f != 0xF)} families + entry");
+Console.WriteLine($"Sequencer banks: {seq.Banks.Count} + entry");
 Console.WriteLine($"Output -> {Path.GetFullPath(outDir)}");
 return;
 

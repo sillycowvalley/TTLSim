@@ -1,9 +1,11 @@
-/* BLINKY_M_SEQ_STK — Blinky-M rev 14 sequencer          GENERATED
+/* BLINKY_M_SEQ_STK - Blinky-M rev 14 GAL control          GENERATED
  *
- * Stage 1 sequencer for the STK family. Registered 22V10: inputs OPL0..3
- * (opcode low nibble) and COND; the T-state is held in this GAL (T0..2), next
- * = T+1 or 0 on /TRST. Reset-to-T0 via async reset (AR) on /RST.
- * Verify with BlinkyJED; cross-check in WinCUPL.
+ * Emitted by BlinkyMGen from the canonical instruction table. Do not
+ * hand-edit: regenerate. Verify with BlinkyJED, cross-check in WinCUPL.
+ *
+ * Stage 1 sequencer for the STK family. Combinational 22V10.
+ * Inputs OPL0..3 (opcode low), COND, T0..2 (external '161 counter).
+ * Outputs IDX0..6 (micro-op index) and TRSTN (/TRST -> counter /LOAD).
  */
 Name     SEQ_STK;
 PartNo   00;
@@ -14,15 +16,16 @@ Company  ;
 Assembly ;
 Location ;
 Device   g22v10;
-
 PIN 1  = CLK;
 PIN 2  = OPL0;
 PIN 3  = OPL1;
 PIN 4  = OPL2;
 PIN 5  = OPL3;
 PIN 6  = COND;
-PIN 7  = !RST;
-PIN 13 = TRSTN;
+PIN 8  = T0;
+PIN 9  = T1;
+PIN 10 = T2;
+
 PIN 14 = IDX0;
 PIN 15 = IDX1;
 PIN 16 = IDX2;
@@ -30,77 +33,60 @@ PIN 17 = IDX3;
 PIN 18 = IDX4;
 PIN 19 = IDX5;
 PIN 20 = IDX6;
-PIN 21 = T0;
-PIN 22 = T1;
-PIN 23 = T2;
+PIN 23 = TRSTN;   /* /TRST -> external '161 /LOAD */
 
-/* IDX0: 5 term(s) */
-IDX0 = OPL0 & OPL3 & !T0
-     # OPL1 & OPL3 & !T0
-     # OPL1 & OPL2 & T0 & !T2
-     # OPL2 & T1
-     # !OPL0 & T0 & T1;
-
-/* IDX1: 7 term(s) */
-IDX1 = OPL0 & !T0 & !T1
-     # OPL1 & !T0 & !T1 & !T2
-     # OPL2 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL3 & !T1
-     # !OPL1 & OPL3 & T1
-     # !OPL1 & T0 & T1
-     # OPL0 & T0 & T1;
-
-/* IDX2: 8 term(s) */
-IDX2 = OPL0 & !T0 & !T1
-     # OPL1 & !T0 & !T1
-     # OPL2 & !T0 & !T1
-     # !OPL0 & !OPL1 & !OPL2 & !OPL3 & T0
-     # OPL0 & OPL3 & !T1
-     # OPL1 & OPL3
-     # !OPL2 & !OPL3 & T1
-     # T0 & T1;
-
-/* IDX3: 8 term(s) */
-IDX3 = OPL0 & OPL3 & !T0
-     # OPL1 & OPL3 & !T0
-     # OPL1 & !OPL3 & T0 & !T1 & !T2
-     # OPL2 & T0 & !T1 & !T2
-     # OPL2 & !T0 & T1
-     # OPL3 & T1
-     # !OPL1 & T0 & T1
-     # OPL0 & T0 & T1;
-
-/* IDX4: 6 term(s) */
-IDX4 = OPL1 & !OPL2 & !OPL3 & T0 & !T1
-     # !OPL1 & OPL2 & T0
+/* IDX0: 6 term(s) */
+IDX0 = OPL0 & !OPL3 & !T0 & !T1
      # !OPL0 & !OPL1 & OPL3 & T0
-     # OPL2 & !T0 & T1
-     # !OPL1 & OPL3 & T1
-     # T0 & T2;
+     # OPL0 & OPL3 & T1
+     # OPL1 & !OPL3 & !T1 & !T2
+     # !OPL0 & OPL1 & !OPL3 & T0
+     # OPL2 & !T0 & !T2;
 
-/* IDX5: 9 term(s) */
-IDX5 = OPL0 & !T0 & !T1
-     # OPL1 & !T0 & !T1
-     # OPL2 & !T0 & !T1
-     # !OPL1 & !OPL2 & T0 & !T1
-     # OPL1 & OPL2 & !T1 & !T2
+/* IDX1: 7 term(s), active-low */
+!IDX1 = OPL1 & OPL2 & !T1 & !T2
      # OPL3 & T0
+     # !OPL3 & !T0 & !T1
+     # OPL1 & !OPL2 & !T0 & T1
+     # !OPL1 & !OPL2 & !OPL3 & !T1
+     # !OPL0 & !OPL1 & !T0 & !T1
+     # !OPL2 & !OPL3 & !T0;
+
+/* IDX2: 6 term(s), active-low */
+!IDX2 = T0 & T1
+     # !T0 & !T1 & !T2
+     # OPL1 & OPL2 & !T2
+     # OPL0 & !OPL1 & !OPL3 & !T1
+     # OPL1 & OPL3 & !T0
+     # OPL1 & OPL2 & T0;
+
+/* IDX3: 6 term(s) */
+IDX3 = OPL1 & OPL2 & T0 & !T2
+     # OPL3 & T0
+     # !OPL3 & !T0 & T1
+     # !T0 & T2
+     # !OPL1 & !OPL2 & T0 & !T1
+     # !OPL0 & OPL1 & T1;
+
+/* IDX4: 3 term(s), active-low */
+!IDX4 = !OPL3 & !T0
+     # !OPL2 & !T1
+     # !OPL0 & OPL1 & !OPL3 & !T2;
+
+/* IDX5: 5 term(s) */
+IDX5 = !OPL0 & !OPL1 & !OPL2 & T0
+     # OPL3 & T0
+     # !T0 & T2
      # !OPL2 & !OPL3 & !T0 & T1
-     # OPL1 & OPL3
      # !OPL0 & T0 & T1;
 
 /* IDX6: 0 term(s) */
-IDX6 = ;
+IDX6 = OPL0 & !OPL0;
 
-/* /TRST asserted (low) at end of instruction: 5 term(s) */
+/* TRSTN - asserted low at end of instruction: 5 term(s) */
 !TRSTN = OPL0 & OPL2
      # !OPL0 & !OPL1 & !OPL3 & T0
      # OPL3 & T1
      # !OPL2 & T0 & T1
      # T0 & T2;
 
-/* registered T-state: next = 0 on /TRST or /RST, else T+1 */
-T0.d = !TRSTN & !T0;
-T1.d = !TRSTN & (T1 $ T0);
-T2.d = !TRSTN & (T2 $ (T1 & T0));
-T0.ar = !RST;  T1.ar = !RST;  T2.ar = !RST;

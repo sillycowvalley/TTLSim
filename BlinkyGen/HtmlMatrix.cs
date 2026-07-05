@@ -54,64 +54,73 @@ public static class HtmlMatrix
     static void SequencerView(StringBuilder sb, Sequencer seq, MicroDictionary dict)
     {
         sb.Append("<h2>2 &middot; Sequencer (Stage 1)</h2>\n");
-        sb.Append("<p class=note>Per family, the micro-op index at each (opcode&#8209;low, T, COND). A dash is a don't-care (halt-filled). Each block is one registered 22V10; the T-state is held in the GAL.</p>\n");
+        sb.Append("<p class=note>Per bank, the micro-op index at each (opcode&#8209;low, T, COND). A dash is a don't-care (halt-filled). Each block is one combinational 22V10; the T-state comes from the external '161 counter. &bull; marks the /TRST step.</p>\n");
 
-        foreach (int fam in seq.Families)
+        foreach (var bank in seq.Banks)
         {
-            if (fam == 0xF) continue; // shown within CTL region conceptually
-            string fname = Sequencer.FamilyName(fam);
-            sb.Append($"<h3>0x{fam:X}_ &mdash; {fname}</h3>\n");
-            sb.Append("<div class=scroll><table class=seq>\n<thead><tr><th class=lab>op.lo</th>");
+            sb.Append($"<h3>{bank.Name}</h3>\n");
+            sb.Append("<div class=scroll><table class=seq>\n<thead><tr><th class=lab>op</th>");
             for (int t = 0; t < Sequencer.MaxT; t++) sb.Append($"<th class=v>T{t}</th>");
-            sb.Append("<th class=v>cond</th></tr></thead><tbody>\n");
+            sb.Append("</tr></thead><tbody>\n");
 
-            for (int lo = 0; lo < 16; lo++)
+            if (bank.Alu)
             {
-                bool anyDefined = false;
-                for (int t = 0; t < Sequencer.MaxT && !anyDefined; t++)
-                    for (int c = 0; c < 2; c++)
-                        if (seq.Bank(fam, lo, t, c).Defined) anyDefined = true;
-                if (!anyDefined) continue;
-
-                for (int c = 0; c < 2; c++)
+                for (int o = 0; o < 64; o++)
                 {
-                    // only show cond=1 row where it differs (branches)
+                    bool any = false;
+                    for (int t = 0; t < Sequencer.MaxT && !any; t++)
+                        if (seq.Alu(o, t).Defined) any = true;
+                    if (!any) continue;
+                    sb.Append($"<tr><td class=lab>0x{0x40 + o:X2}</td>");
+                    for (int t = 0; t < Sequencer.MaxT; t++)
+                        AppendCell(sb, seq.Alu(o, t));
+                    sb.Append("</tr>\n");
+                }
+            }
+            else
+            {
+                for (int lo = 0; lo < 16; lo++)
+                {
+                    bool any = false;
+                    for (int t = 0; t < Sequencer.MaxT && !any; t++)
+                        for (int c = 0; c < 2; c++)
+                            if (seq.Simple(bank.Name, lo, t, c).Defined) any = true;
+                    if (!any) continue;
+
                     bool differs = false;
                     for (int t = 0; t < Sequencer.MaxT; t++)
-                        if (seq.Bank(fam, lo, t, 0).Index != seq.Bank(fam, lo, t, 1).Index ||
-                            seq.Bank(fam, lo, t, 0).Defined != seq.Bank(fam, lo, t, 1).Defined)
+                        if (seq.Simple(bank.Name, lo, t, 0).Index != seq.Simple(bank.Name, lo, t, 1).Index ||
+                            seq.Simple(bank.Name, lo, t, 0).Defined != seq.Simple(bank.Name, lo, t, 1).Defined)
                             differs = true;
-                    if (c == 1 && !differs) continue;
 
-                    sb.Append($"<tr><td class=lab>0x{lo:X}{(differs ? (c == 0 ? " (nt)" : " (tk)") : "")}</td>");
-                    for (int t = 0; t < Sequencer.MaxT; t++)
+                    for (int c = 0; c < 2; c++)
                     {
-                        var cell = seq.Bank(fam, lo, t, c);
-                        if (cell.Defined)
-                            sb.Append($"<td class='v idx'>{cell.Index}{(cell.Trst ? "<span class=e>&bull;</span>" : "")}</td>");
-                        else
-                            sb.Append("<td class='v off'>&ndash;</td>");
+                        if (c == 1 && !differs) continue;
+                        sb.Append($"<tr><td class=lab>0x{bank.Nibble:X}{lo:X}{(differs ? (c == 0 ? " nt" : " tk") : "")}</td>");
+                        for (int t = 0; t < Sequencer.MaxT; t++)
+                            AppendCell(sb, seq.Simple(bank.Name, lo, t, c));
+                        sb.Append("</tr>\n");
                     }
-                    sb.Append($"<td class=v>{(differs ? (c == 0 ? "0" : "1") : "&mdash;")}</td></tr>\n");
                 }
             }
             sb.Append("</tbody></table></div>\n");
         }
 
-        // entry bank
-        sb.Append("<h3>INTP &mdash; interrupt entry</h3>\n<div class=scroll><table class=seq>\n<thead><tr>");
+        sb.Append("<h3>ENTRY (INTP)</h3>\n<div class=scroll><table class=seq>\n<thead><tr>");
         for (int t = 0; t < Sequencer.MaxT; t++) sb.Append($"<th class=v>T{t}</th>");
         sb.Append("</tr></thead><tbody><tr>");
         for (int t = 0; t < Sequencer.MaxT; t++)
-        {
-            var cell = seq.EntryAt(t);
-            sb.Append(cell.Defined
-                ? $"<td class='v idx'>{cell.Index}{(cell.Trst ? "<span class=e>&bull;</span>" : "")}</td>"
-                : "<td class='v off'>&ndash;</td>");
-        }
-        sb.Append("</tr></tbody></table></div>\n<p class=note>&bull; marks the /TRST step (end of instruction).</p>\n");
+            AppendCell(sb, seq.EntryAt(t));
+        sb.Append("</tr></tbody></table></div>\n");
     }
 
+    static void AppendCell(StringBuilder sb, Sequencer.Cell cell)
+    {
+        sb.Append(cell.Defined
+            ? $"<td class='v idx'>{cell.Index}{(cell.Trst ? "<span class=e>&bull;</span>" : "")}</td>"
+            : "<td class='v off'>&ndash;</td>");
+    }
+    
     // View 3 -----------------------------------------------------------------
     static void InstructionView(StringBuilder sb, IReadOnlyList<Instruction> program, MicroDictionary dict)
     {

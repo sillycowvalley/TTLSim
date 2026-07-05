@@ -2,11 +2,14 @@ namespace BlinkyMGen;
 
 // ---------------------------------------------------------------------------
 // The micro-op dictionary: the distinct MicroOp values across the whole
-// instruction set (every step of every opcode, both branch paths, and the
-// interrupt-entry sequence), each assigned a stable 7-bit index.
+// instruction set, each assigned a stable 7-bit index.
 //
-// This is the pivot of the two-stage control store: Stage 1 emits an index,
-// Stage 2 decodes it. 7 bits give 128 slots; the machine uses ~57.
+// Index assignment matters for the Stage-2 decoder GALs. If indices are sorted
+// by the whole packed control vector, a decoder line like DST0 ends up 1 for a
+// scattered set of indices and needs many product terms. Sorting instead by the
+// fields that drive the widest lines (DST, then AMODE, then SRC) makes each of
+// those lines a small number of contiguous index ranges, which minimize into
+// far fewer cubes. The remaining fields tie-break for determinism.
 // ---------------------------------------------------------------------------
 
 public sealed class MicroDictionary
@@ -32,10 +35,19 @@ public sealed class MicroDictionary
         foreach (var s in InstructionSet.Entry) distinct.Add(s.Op);
         distinct.Add(InstructionSet.IllegalFill.Op);
 
-        // Stable, deterministic order: sort by the packed decoder-line value so
-        // indices cluster on-sets for the fitter and never shuffle between runs.
+        // Cluster the fat fields into contiguous index ranges. Order of keys is
+        // deliberate: DST drives the widest decoder lines, then AMODE, then SRC;
+        // the rest tie-break so the ordering is total and deterministic.
         var ordered = distinct
-            .OrderBy(PackKey)
+            .OrderBy(o => (int)o.Dst)
+            .ThenBy(o => (int)o.Amode)
+            .ThenBy(o => (int)o.Src)
+            .ThenBy(o => (int)o.AluFn)
+            .ThenBy(o => (int)o.Sp)
+            .ThenBy(o => o.TosShift)
+            .ThenBy(o => o.NzWe)
+            .ThenBy(o => o.CWe)
+            .ThenBy(o => o.ISet)
             .ToList();
 
         if (ordered.Count > Slots)
@@ -47,16 +59,7 @@ public sealed class MicroDictionary
         for (int i = 0; i < ordered.Count; i++) indexOf[ordered[i]] = i;
     }
 
-    static int PackKey(MicroOp op)
-    {
-        var bits = op.DecoderLines();
-        int v = 0;
-        for (int i = 0; i < bits.Length; i++) v |= bits[i] << i;
-        return v;
-    }
-
     /// <summary>The value of decoder line <paramref name="line"/> for index
-    /// <paramref name="idx"/>; used indices only. Unused indices are
-    /// don't-cares to the caller.</summary>
+    /// <paramref name="idx"/> (used indices only; unused are don't-cares).</summary>
     public int LineValue(int idx, int line) => Ops[idx].DecoderLines()[line];
 }
