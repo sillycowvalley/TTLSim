@@ -243,23 +243,25 @@ the ALU family contributes *two* writeback micro-ops (arithmetic, logic) instead
 one per function — without it the dictionary would not close at 57. The fold set
 below trims 32 nominal control lines to 20, so the decoder fits two 22V10s.
 
-## Stage 1 — sequencer (per family)
+## Stage 1 — sequencer (per bank)
 
-A '138 decodes opcode[7:4] into one enable per family. Each active family owns a
-**registered 22V10** whose inputs are opcode[3:0], T[2:0], COND (8 lines) and whose
-outputs are IDX[6:0] plus /TRST. The high nibble is not an input — it selected the
-chip — so each sequencer solves a small 8-input problem.
+A '138 decodes opcode[7:4] into one bank enable. Each bank owns a **combinational
+22V10** whose inputs are the opcode low bits, COND, and the T-state T[2:0] from an
+external '161 counter; its outputs are IDX[6:0] plus TRSTN (active-low /TRST). /TRST
+drives the counter's /LOAD, so asserting it reloads the counter to zero and ends the
+instruction — the same synchronous-clear idiom the machine already uses, no inverter.
 
-The 22V10's **registered macrocells hold the T-state**: the sequencer's own
-next-state feedback replaces the discrete '161 T-counter, and /TRST is an output
-equation (assert to reload T to zero on the next edge) rather than a stored bit
-feeding an external counter. **Reset-to-T0 is the 22V10 asynchronous reset (AR)
-product term, driven by /RST** — asynchronous because at power-up there may be no
-valid clock yet, so T must clear the instant reset asserts, and the first edge after
-release fetches cleanly.
+There are eight banks — CTL, SHIFT, STK, MEM, ALU, FRM, FLOW, and CTLX (the HALT anchor
+at 0xFF) — plus an ENTRY bank for interrupt entry, enabled by INTP with T as its only
+live input. The ALU quadrant (0x40–0x7F) is one merged bank: the '138 ORs its four
+nibble enables, so its GAL sees opcode[5:0] and T (9 inputs) and every ALU opcode runs
+the one shared sequence.
 
-Interrupt entry, being opcode-independent, is one more registered 22V10 enabled by
-INTP with T as its only live input.
+Keeping the T-counter external is what lets a single 22V10 hold a whole bank — seven
+index outputs plus TRSTN is eight, well within the ten macrocells, with no registered
+feedback or async-reset logic to fit. TRSTN sits on pin 23 (pin 13 is input-only on a
+22V10). The '161 is a part the datapath already carries and was never on the critical
+path, so the speed story is unchanged.
 
 ## Stage 2 — decoder (shared)
 
@@ -353,7 +355,7 @@ targeting the JUMPs at RAM after the boot copy.
 
 | Block | Chips |
 |---|---|
-| Control S1: '138 bank select, ~7× 22V10 sequencer (per family + entry) | 8 |
+| Control S1: '138 bank select, 9× 22V10 sequencer (8 banks + entry), '161 T-counter | 11 |
 | Control S2: 22V10 UOPA, UOPB | 2 |
 | Control expand: '138 SRC, '154 DST, AMODE decode, '138 SPOP, '00 PCINC/glue | 5 |
 | Opcode bypass: '257 ×2 | 2 |
@@ -369,14 +371,17 @@ targeting the JUMPs at RAM after the boot copy.
 | BP: '377 + '541 | 2 |
 | Memory: W24512 SRAM, '10 select glue | 2 |
 | I/O: '688 page decode, '574 out, '541 in | 3 |
-| **Core total** | **64** |
+| **Core total** | **67** |
 
-The core is now **EEPROM-free** — the boot loader copies from an external source into
-SRAM, and the control store is fuses. One programmable technology (the 22V10) does all
-of control; the '181 ALU has no adder peers. Clock, reset, and single-step live on a
-separate module; a PC breakpoint comparator gates its halt on T=0 for
-instruction-boundary stops. The ~7-per-family sequencer count assumes one GAL per
-family fits; a family that overflows takes a second, a graceful local cost.
+The core is **EEPROM-free** — the boot loader copies from an external source into SRAM,
+and the control store is fuses: eleven 22V10s (two decoders, nine sequencer banks)
+behind a '138 bank selector, with the '161 T-counter driving the T-state. All eleven
+GALs compile clean through BlinkyJED (5892 fuses each); the worst decoder line is 12
+product terms and the worst sequencer line 7, both inside the 22V10's macrocells. One
+programmable technology does all of control; the '181 ALU has no adder peers. Clock,
+reset, and single-step live on a separate module; a PC breakpoint comparator gates its
+halt on T=0 for instruction-boundary stops. One GAL per bank fits with margin — the
+worst bank uses 7 of a macrocell's 8–16 terms — so no bank needed a second.
 
 # 10. Front panel
 
@@ -404,26 +409,32 @@ solution. The EEPROM control store is retired; there is no fallback baseline.
 
 **This revision ratifies:**
 
-- **Two-stage GAL control** (§6): per-family registered-22V10 sequencers behind a
-  '138, feeding two combinational 22V10 decoders; no control EEPROM.
-- **Registered T-state** in the sequencer macrocells; the discrete '161 T-counter is
-  gone. Reset-to-T0 via the 22V10 asynchronous reset (AR) product term, driven by /RST.
+- **Two-stage GAL control** (§6): combinational 22V10 sequencer banks behind a '138,
+  feeding two combinational 22V10 decoders; no control EEPROM. Eleven GALs total (nine
+  sequencer banks, two decoders), all compiled clean through BlinkyJED.
+- **External '161 T-counter.** The T-state comes from a '161 (as in stage 0); /TRST
+  (TRSTN, active-low, GAL pin 23) drives its /LOAD to reload T=0 at end of instruction.
+  Keeping the counter external keeps each bank in a single 22V10 (8 outputs of 10).
 - **IR-driven '181** via the ALUFN '153 mux (§4, §5): the ALU family's function rides
-  the opcode, collapsing the ALU writeback to two micro-ops and exposing the full '181
-  table as `ALU #n`.
+  the opcode, collapsing the ALU writeback and exposing the full '181 table as `ALU #n`.
 - **Opcode map** (§4): CTL 0x0_, SHIFT 0x1_, STK 0x2_, MEM 0x3_, ALU 0x40–0x7F, FRM
   0x8_, FLOW 0x9_; NOP = 0x00, HALT = 0xFF anchors; branch and shift member bits wired
-  raw.
+  raw. The ALU quadrant is one merged sequencer bank (opcode[5:0] + T).
 - **The fold set** (§6): /TRST as a sequencer output, TOS-load implied by DST,
   PCINC derived, ICLR-as-DST, PCBYTE-as-SRC, AMODE consolidation, SPOP consolidation.
-- **57-entry micro-op dictionary** with a 7-bit index (71 slots spare).
+- **57-entry micro-op dictionary** with a 7-bit index (71 slots spare). Constant index
+  bits (IDX6 everywhere; low bits in SHIFT/CTLX) take no macrocell — tied to GND.
 
-**Build-verification steps (not open design questions):**
+**Verified in the fitter:**
 
-1. Per-family sequencer term counts — confirm one 22V10 per family via BlinkyJED; a
-   bank that overflows takes a second GAL.
-2. Stage-2 fits — the 12-term worst line is within the 22V10; confirm in the fitter.
-3. `BlinkyMGen --plds` emitter — generate and verify both stages from the C# tables.
+1. All eleven GALs compile through BlinkyJED at 5892 fuses each.
+2. Worst decoder line 12 terms, worst sequencer line 7 — both inside the 22V10's
+   graduated macrocells (8–16). One GAL per bank; none overflowed.
+3. `BlinkyMGen` emits both GAL stages, the HTML control reference, and the assembler
+   opcode table from the one C# instruction table — done; the fuse maps cannot drift.
+
+**Remaining downstream (not control-store design):** run the JEDEC maps through the
+TTLSim sweep against the datapath, then cut the board.
 
 # Appendix A — Instruction Set Reference
 
