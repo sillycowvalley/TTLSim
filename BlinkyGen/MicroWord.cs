@@ -4,7 +4,8 @@ namespace BlinkyMGen;
 // Blinky-M microword — 32 control lines across 4x 28C64 (rev 10 field set).
 //
 // Bit layout (authoritative — the hardware is wired to THIS):
-//   ROM0: b0..b2 SRC, b3..b6 DST, b7 TRST
+//   ROM0: b0..b2 SRC, b3..b6 DST, b7 /TRST (active-low: 0 = end of instruction;
+//         wired directly to the T-counter '161 /LOAD — no inverter)
 //   ROM1: b0..b3 ALU S0..S3, b4 ALU M, b5 ALU CN, b6..b7 ASEL
 //   ROM2: b0 PCINC, b1 PCBYTE, b2..b3 DSPCTL, b4..b5 RSPCTL, b6 SPSEL, b7 NZ_WE
 //   ROM3: b0..b1 TOSMODE, b2 C_WE, b3 ISET, b4 ICLR, b5..b7 PGSEL
@@ -62,15 +63,15 @@ public enum TosMode : byte
 public readonly record struct AluOp(byte S, bool M, bool CN)
 {
     public static readonly AluOp Idle = new(0b0000, true, false);   // don't-care
-    public static readonly AluOp Add  = new(0b1001, false, false);  // A plus B
-    public static readonly AluOp Adc  = new(0b1001, false, true);   // A plus B plus C (S0=1 -> CN selects Cflag)
-    public static readonly AluOp Sub  = new(0b0110, false, true);   // B minus A (S0=0 -> CN injects 1)
-    public static readonly AluOp Xor  = new(0b0110, true,  false);
-    public static readonly AluOp And  = new(0b1011, true,  false);
-    public static readonly AluOp Or   = new(0b1110, true,  false);
-    public static readonly AluOp NotA = new(0b0000, true,  false);  // F = /A
-    public static readonly AluOp FA   = new(0b1111, true,  false);  // F = A  (moves, TST)
-    public static readonly AluOp FB   = new(0b1010, true,  false);  // F = B  (moves)
+    public static readonly AluOp Add = new(0b1001, false, false);  // A plus B
+    public static readonly AluOp Adc = new(0b1001, false, true);   // A plus B plus C (S0=1 -> CN selects Cflag)
+    public static readonly AluOp Sub = new(0b0110, false, true);   // B minus A (S0=0 -> CN injects 1)
+    public static readonly AluOp Xor = new(0b0110, true, false);
+    public static readonly AluOp And = new(0b1011, true, false);
+    public static readonly AluOp Or = new(0b1110, true, false);
+    public static readonly AluOp NotA = new(0b0000, true, false);  // F = /A
+    public static readonly AluOp FA = new(0b1111, true, false);  // F = A  (moves, TST)
+    public static readonly AluOp FB = new(0b1010, true, false);  // F = B  (moves)
 }
 
 public readonly record struct MicroStep(
@@ -93,7 +94,7 @@ public readonly record struct MicroStep(
     // SPSEL is derived, not authored: pages 03..06 are return-stack lanes.
     public bool SpSelRsp => Asel == Asel.PgSp && Pg >= Pg.RPcLo;
 
-    public byte Rom0 => (byte)(((byte)Src & 7) | (((byte)Dst & 15) << 3) | (Trst ? 0x80 : 0));
+    public byte Rom0 => (byte)(((byte)Src & 7) | (((byte)Dst & 15) << 3) | (Trst ? 0 : 0x80)); // b7 = /TRST
 
     public byte Rom1 => (byte)((Alu.S & 15) | (Alu.M ? 0x10 : 0) | (Alu.CN ? 0x20 : 0)
                         | (((byte)Asel & 3) << 6));

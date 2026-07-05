@@ -45,7 +45,7 @@
 <th colspan="2">FLAGS:2</th>
 <th colspan="2">I:2</th>
 <th colspan="7">PGSEL:3</th>
-<th colspan="1">TRST:1</th>
+<th colspan="1">/TRST:1</th>
 </tr><tr class="sig">
 <th class="gb">RAM</th>
 <th>ALU</th>
@@ -90,7 +90,7 @@
 <th>04</th>
 <th>05</th>
 <th>06</th>
-<th class="gb">TRST</th>
+<th class="gb">/TRST</th>
 </tr></thead><tbody>
 <tr class="grp"><td colspan="45">CONTROL (0x0_, 0xFF)</td></tr>
 <tr><td class="lab">NOP <span style="color:#8a8577;font-size:10px">0x00</span></td>
@@ -1896,7 +1896,7 @@
 </tbody></table></div>
 <section class="notes"><h2>Notes</h2><ul>
 <li><b>Purpose.</b> Incremental build planning: pick the instruction set for a bring-up stage, OR its rows, and the marked columns are the hardware that must be alive. NOP needs only PC, its address drivers, the SRAM path, IR, and the sequencer; NIP adds nothing but the DSP counter (it touches no memory at all).</li>
-<li><b>TRST</b> appears on every row by definition &mdash; kept for completeness.</li>
+<li><b>/TRST</b> appears on every row by definition &mdash; kept for completeness.</li>
 <li><b>COND and INTP are not control lines.</b> They are &mu;ROM <i>address</i> bits; Bcc therefore shows the same line usage as JUMP, and the entry row is selected by INTP, not by a strobe.</li>
 <li><b>ALU &ldquo;op&rdquo;</b> marks that the '181 result or flags are consumed; the S/M/Cn lines are driven in every microword but are don't-care elsewhere.</li>
 <li><b>HLT (ratified).</b> The spare DST code is the HALT strobe &mdash; one wire to the clock module's halt flip-flop.</li>

@@ -1,6 +1,6 @@
 # Blinky-M — A Microcoded Dual-Stack TTL CPU
 
-**Rev 12 — core decisions ratified; remaining items in §11. Working title.**
+**Rev 13 — core decisions ratified; remaining items in §11. Working title.**
 
 ---
 
@@ -73,7 +73,7 @@ microcode field into the source enables, so mutual exclusion is structural, not
 conventional; the destination strobe comes from a second decoder whose enable is
 gated by /CLK, so nothing loads or writes until the bus has settled — every write in
 the machine is confined to the second half-cycle by one gate. Edge-actions are the
-exception: counter enables, TOS shifts, flag writes, and TRST touch no bus, so any
+exception: counter enables, TOS shifts, flag writes, and /TRST touch no bus, so any
 number of them may ride any state.
 
 The non-bus paths are deliberately few: A→ALU and B→ALU (hardwired operand inputs),
@@ -216,8 +216,11 @@ address arithmetic exists — and the decrement itself costs nothing.
 All control is a lookup table.
 
 **Sequencer:** one '161 T-counter (3 bits used, T0–T7). Every microword carries a
-**TRST** bit; asserting it makes the next edge fetch T0 of the next instruction.
-Variable T-states per instruction is literally this one bit.
+**/TRST** line, stored active-low: driving it low makes the next edge fetch T0 of the
+next instruction. The polarity is the hardware's own — /TRST wires straight to the
+T-counter's synchronous /LOAD (parallel inputs strapped low), so end-of-instruction is
+a synchronous clear with zero gates between the μROM and the counter. Variable
+T-states per instruction is literally this one line.
 
 **μROM address (13 bits — exactly one 28C64):**
 
@@ -250,7 +253,7 @@ socket).
 | NZ_WE, C_WE | 2 | per-flag write masking |
 | ISET, ICLR | 2 | I flag control (SEI/CLI/entry/RTI paths) |
 | PGSEL | 3 | page: 0x00 frames / 0x01 I/O / 0x02 D-stack / 0x03 PC-lo / 0x04 PC-hi / 0x05 BP / 0x06 flags / (7 spare) |
-| TRST | 1 | end of instruction |
+| /TRST | 1 | end of instruction — **active-low**, direct to the T-counter /LOAD |
 
 Out-port writes need no DST slot: a write into the I/O page (RAM-WE with the '688
 matched) strobes the port latch instead of the SRAM. Likewise in-port reads are just
@@ -277,26 +280,26 @@ bypass (§2).
 
 ```
 NOP — 1 T
-  T0  ADDR=PC   RAM → IR              PC++            TRST
+  T0  ADDR=PC   RAM → IR              PC++            /TRST
 
 PUSH #imm — 3 T
   T0  ADDR=PC   RAM → IR              PC++
   T1  ADDR={02,DSP}  TOS → RAM        DSP++
-  T2  ADDR=PC   RAM → TOS             PC++            TRST
+  T2  ADDR=PC   RAM → TOS             PC++            /TRST
 
 DUP — 2 T
   T0  ADDR=PC   RAM → IR              PC++
-  T1  ADDR={02,DSP}  TOS → RAM        DSP++           TRST
+  T1  ADDR={02,DSP}  TOS → RAM        DSP++           /TRST
 
 DROP — 2 T
   T0  ADDR=PC   RAM → IR              PC++  DSP−−
-  T1  ADDR={02,DSP}  RAM → TOS                        TRST
+  T1  ADDR={02,DSP}  RAM → TOS                        /TRST
 
 SWAP — 4 T
   T0  ADDR=PC   RAM → IR              PC++  DSP−−
   T1  ADDR={02,DSP}  RAM → A
   T2  ADDR={02,DSP}  TOS → RAM        DSP++
-  T3            ALU(F=A) → TOS                        TRST
+  T3            ALU(F=A) → TOS                        /TRST
 
 ROT — 6 T   ( a b c — b c a )
   T0  ADDR=PC   RAM → IR              PC++  DSP−−
@@ -304,57 +307,57 @@ ROT — 6 T   ( a b c — b c a )
   T2  ADDR={02,DSP}  RAM → B   (a)
   T3  ADDR={02,DSP}  ALU(F=A) → RAM  (b)    DSP++
   T4  ADDR={02,DSP}  TOS → RAM       (c)    DSP++
-  T5            ALU(F=B) → TOS   (a)                  TRST
+  T5            ALU(F=B) → TOS   (a)                  /TRST
 
 ADD (all binary ALU) — 4 T
   T0  ADDR=PC   RAM → IR              PC++
   T1            TOS → A                     DSP−−
   T2  ADDR={02,DSP}  RAM → B
-  T3            ALU → TOS, flags                      TRST
+  T3            ALU → TOS, flags                      /TRST
 
 NOT / TST (unary) — 3 T
   T0  ADDR=PC   RAM → IR              PC++
   T1            TOS → A
-  T2            ALU → TOS, flags   (TST: flags only)  TRST
+  T2            ALU → TOS, flags   (TST: flags only)  /TRST
 
 CMP — 4 T   (non-destructive)
   T0  ADDR=PC   RAM → IR              PC++  DSP−−
   T1  ADDR={02,DSP}  RAM → B                DSP++
   T2            TOS → A
-  T3            flags only                            TRST
+  T3            flags only                            /TRST
 
 SHL/SHR/ASR/ROL/ROR — 2 T
   T0  ADDR=PC   RAM → IR              PC++
-  T1            TOS shifts in place, C ← bit out      TRST
+  T1            TOS shifts in place, C ← bit out      /TRST
 
 >R — 3 T
   T0  ADDR=PC   RAM → IR              PC++
   T1  ADDR={03,RSP}  TOS → RAM        RSP++  DSP−−
-  T2  ADDR={02,DSP}  RAM → TOS                        TRST
+  T2  ADDR={02,DSP}  RAM → TOS                        /TRST
 
 R> — 3 T
   T0  ADDR=PC   RAM → IR              PC++  RSP−−
   T1  ADDR={02,DSP}  TOS → RAM        DSP++
-  T2  ADDR={03,RSP}  RAM → TOS                        TRST
+  T2  ADDR={03,RSP}  RAM → TOS                        /TRST
 
 R@ — 3 T
   T0  ADDR=PC   RAM → IR              PC++  RSP−−
   T1  ADDR={02,DSP}  TOS → RAM        DSP++
-  T2  ADDR={03,RSP}  RAM → TOS        RSP++           TRST
+  T2  ADDR={03,RSP}  RAM → TOS        RSP++           /TRST
 
 JUMP a16 — 5 T
   T0  ADDR=PC   RAM → IR              PC++
   T1  ADDR=PC   RAM → B   (lo)        PC++
   T2  ADDR=PC   RAM → A   (hi)        PC++
   T3            ALU(F=B) → PClo
-  T4            ALU(F=A) → PChi                       TRST
+  T4            ALU(F=A) → PChi                       /TRST
 
 Bcc a16 — 3 T not taken / 5 T taken
   T0  ADDR=PC   RAM → IR              PC++
   taken (COND=1): as JUMP T1–T4
   not taken:
   T1                                  PC++   (skip lo)
-  T2                                  PC++   (skip hi)  TRST
+  T2                                  PC++   (skip hi)  /TRST
 
 CALL a16 — 8 T
   T0  ADDR=PC   RAM → IR              PC++
@@ -364,57 +367,57 @@ CALL a16 — 8 T
   T4  ADDR={04,RSP}  PChi → RAM
   T5  ADDR={05,RSP}  BP → RAM         RSP++   (one count per frame)
   T6            ALU(F=B) → PClo
-  T7            ALU(F=A) → PChi                       TRST
+  T7            ALU(F=A) → PChi                       /TRST
 
 RET — 4 T
   T0  ADDR=PC   RAM → IR              PC++  RSP−−
   T1  ADDR={05,RSP}  RAM → BP
   T2  ADDR={04,RSP}  RAM → PChi
-  T3  ADDR={03,RSP}  RAM → PClo                       TRST
+  T3  ADDR={03,RSP}  RAM → PClo                       /TRST
 
 LOAD a16 — 5 T
   T0  ADDR=PC   RAM → IR              PC++
   T1  ADDR=PC   RAM → ADRlo           PC++
   T2  ADDR=PC   RAM → ADRhi           PC++
   T3  ADDR={02,DSP}  TOS → RAM        DSP++   (spill)
-  T4  ADDR=ADR  RAM → TOS                             TRST
+  T4  ADDR=ADR  RAM → TOS                             /TRST
 
 STORE a16 — 5 T
   T0  ADDR=PC   RAM → IR              PC++
   T1  ADDR=PC   RAM → ADRlo           PC++
   T2  ADDR=PC   RAM → ADRhi           PC++
   T3  ADDR=ADR  TOS → RAM             DSP−−
-  T4  ADDR={02,DSP}  RAM → TOS                        TRST
+  T4  ADDR={02,DSP}  RAM → TOS                        /TRST
 
 FETCH — 3 T   (stack form, zero-page: ( a — m ))
   T0  ADDR=PC   RAM → IR              PC++
   T1            TOS → ADRlo
-  T2  ADDR={00,ADRlo}  RAM → TOS                      TRST
+  T2  ADDR={00,ADRlo}  RAM → TOS                      /TRST
 
 STORE! — 5 T   (stack form, zero-page: ( data addr — ))
   T0  ADDR=PC   RAM → IR              PC++  DSP−−
   T1            TOS → ADRlo
   T2  ADDR={02,DSP}  RAM → B   (data)       DSP−−
   T3  ADDR={00,ADRlo}  ALU(F=B) → RAM
-  T4  ADDR={02,DSP}  RAM → TOS                        TRST
+  T4  ADDR={02,DSP}  RAM → TOS                        /TRST
 
 IN #port — 4 T
   T0  ADDR=PC   RAM → IR              PC++
   T1  ADDR=PC   RAM → ADRlo           PC++
   T2  ADDR={02,DSP}  TOS → RAM        DSP++   (spill)
-  T3  ADDR={01,ADRlo}  RAM → TOS   (port read)        TRST
+  T3  ADDR={01,ADRlo}  RAM → TOS   (port read)        /TRST
 
 OUT #port — 4 T
   T0  ADDR=PC   RAM → IR              PC++
   T1  ADDR=PC   RAM → ADRlo           PC++
   T2  ADDR={01,ADRlo}  TOS → RAM   (port write)  DSP−−
-  T3  ADDR={02,DSP}  RAM → TOS                        TRST
+  T3  ADDR={02,DSP}  RAM → TOS                        /TRST
 
 ENTER k — 4 T
   T0  ADDR=PC   RAM → IR              PC++
   T1  ADDR=PC   RAM → B   (k)         PC++
   T2            BP → A
-  T3            ALU(A+B) → BP                         TRST
+  T3            ALU(A+B) → BP                         /TRST
 
 LOCAL@ off — 6 T
   T0  ADDR=PC   RAM → IR              PC++
@@ -422,7 +425,7 @@ LOCAL@ off — 6 T
   T2            BP → A
   T3  ADDR={02,DSP}  TOS → RAM        DSP++   (spill; ALU settles meanwhile)
   T4            ALU(A+B) → ADRlo
-  T5  ADDR={00,ADRlo}  RAM → TOS                      TRST
+  T5  ADDR={00,ADRlo}  RAM → TOS                      /TRST
 
 LOCAL! off — 6 T
   T0  ADDR=PC   RAM → IR              PC++
@@ -430,7 +433,7 @@ LOCAL! off — 6 T
   T2            BP → A
   T3            ALU(A+B) → ADRlo
   T4  ADDR={00,ADRlo}  TOS → RAM      DSP−−
-  T5  ADDR={02,DSP}  RAM → TOS                        TRST
+  T5  ADDR={02,DSP}  RAM → TOS                        /TRST
 
 hardware entry — 6 T   (INTP row; BRK adds its fetch = 7 T)
   T0  ADDR={03,RSP}  PClo → RAM
@@ -438,14 +441,14 @@ hardware entry — 6 T   (INTP row; BRK adds its fetch = 7 T)
   T2  ADDR={06,RSP}  FLAGS → RAM
   T3  ADDR={05,RSP}  BP → RAM         RSP++   (one count per frame)
   T4            VEC → PClo            ISET
-  T5            VEC → PChi                            TRST
+  T5            VEC → PChi                            /TRST
 
 RTI — 5 T
   T0  ADDR=PC   RAM → IR              PC++  RSP−−
   T1  ADDR={05,RSP}  RAM → BP
   T2  ADDR={06,RSP}  RAM → FLAGS ('157 restore)
   T3  ADDR={04,RSP}  RAM → PChi
-  T4  ADDR={03,RSP}  RAM → PClo                       TRST
+  T4  ADDR={03,RSP}  RAM → PClo                       /TRST
 ```
 
 Stack-form IN/OUT are the FETCH/STORE! sequences with page 0x01.
@@ -533,7 +536,7 @@ its halt on T=0 so it stops on instruction boundaries.
 
 Single-step is per-T-state by default — the panel shows the fetch, the operand reads,
 and the ALU transfer as separate settled states. A step-instruction mode (run until
-TRST) is a two-gate addition on the step path.
+/TRST) is a two-gate addition on the step path.
 
 # 11. Decisions and remaining items
 
@@ -549,7 +552,9 @@ N/Z held** (divergence documented in Appendix A); **registered INTP** on the
 spare interrupt-'74 flop; **B = /INTP** into the flags driver; **ADC carry-in =
 CN & (S0 ? C : 1)**; **flags hold-feedback '157** — the '377's common clock enable
 means per-flag masking is D = WE ? new : Q, made real in hardware; Appendix cycle
-counts regenerated from the BlinkyMGen listing.
+counts regenerated from the BlinkyMGen listing; **/TRST stored active-low** —
+ROM0 bit 7 drives the T-counter '161 /LOAD directly, deleting the inverter from
+the end-of-instruction path.
 
 **Remaining / future:**
 
