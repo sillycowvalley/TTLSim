@@ -1,354 +1,72 @@
-/* BLINKY_M_SEQ_ALU — Blinky-M rev 14 GAL control          GENERATED
+/* BLINKY_M_SEQ_ALU — Blinky-M rev 14 sequencer (ALU quadrant)  GENERATED
  *
- * Emitted by BlinkyMGen from the canonical instruction table. Do not
- * hand-edit: regenerate. Verify with BlinkyJED, cross-check in WinCUPL.
- *
- * Stage 1 sequencer for the ALU family (opcode nibble 0x7_).
- *  * Registered 22V10. Inputs OPL0..3 (opcode low), COND; the T-state
- *    is held in this GAL's registers (T0..T2), next = T+1 or 0 on /TRST.
- *  * Reset-to-T0 via the async-reset (AR) product term on /RST.
- *  * Outputs IDX0..6 select the micro-op; the decoder GALs expand it.
- *  * DRAFT — the registered next-state and AR equations below are a
- *    template for the fitter; BlinkyJED/WinCUPL produce the fuse map.
+ * The ALU quadrant spans opcode nibbles 0x4-0x7; this bank is enabled by their
+ * OR from the '138 and sees opcode[5:0] plus the registered T-state. Every ALU
+ * opcode runs the same sequence except NOT (0x60) and TST (0x6F).
+ * Registered 22V10; AR on /RST. Verify with BlinkyJED.
  */
 Name     SEQ_ALU;
-PartNo   00;
-Date     generated;
-Revision 14;
-Designer BlinkyMGen;
-Company  ;
-Assembly ;
-Location ;
 Device   g22v10;
 PIN 1  = CLK;
-PIN 2  = OPL0;
-PIN 3  = OPL1;
-PIN 4  = OPL2;
-PIN 5  = OPL3;
-PIN 6  = COND;
-PIN 7  = !RST;     /* active-low reset -> async T0 */
+PIN 2  = O0;  PIN 3 = O1;  PIN 4 = O2;  PIN 5 = O3;  PIN 6 = O4;  PIN 9 = O5;
+PIN 7  = !RST;
+PIN 13 = TRSTN;
+PIN 14 = IDX0; PIN 15 = IDX1; PIN 16 = IDX2; PIN 17 = IDX3;
+PIN 18 = IDX4; PIN 19 = IDX5; PIN 20 = IDX6;
+PIN 21 = T0; PIN 22 = T1; PIN 23 = T2;
 
-PIN 14 = IDX0;
-PIN 15 = IDX1;
-PIN 16 = IDX2;
-PIN 17 = IDX3;
-PIN 18 = IDX4;
-PIN 19 = IDX5;
-PIN 20 = IDX6;
-PIN 21 = T0;      /* registered T-state, fed back */
-PIN 22 = T1;
-PIN 23 = T2;
-PIN 13 = TRSTN;   /* /TRST, low = end of instruction */
+/* IDX0: 8 term(s) */
+IDX0 = T0 & !T1
+     # !O5 & !T0 & T1
+     # !O3 & !T0 & T1
+     # !O2 & !T0 & T1
+     # !O1 & !T0 & T1
+     # !O0 & !T0 & T1
+     # O4 & !T0 & T1
+     # O5 & T0;
 
-/* IDX0: 32 term(s) */
-IDX0 = !OPL0 & !OPL1 & !OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & OPL3 & COND & !T0 & !T1 & !T2;
+/* IDX1: 2 term(s) */
+IDX1 = T0 & !T1
+     # O0 & O1 & O2 & O3 & !O4 & O5 & T1;
 
-/* IDX1: 32 term(s), active-low */
-!IDX1 = !OPL0 & !OPL1 & !OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & OPL3 & COND & T0 & !T1 & !T2;
+/* IDX2: 2 term(s) */
+IDX2 = T0 & !T1
+     # !O5 & T0;
 
-/* IDX2: 32 term(s), active-low */
-!IDX2 = !OPL0 & !OPL1 & !OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & OPL3 & COND & T0 & !T1 & !T2;
+/* IDX3: 8 term(s) */
+IDX3 = !O5 & !T0 & T1
+     # O0 & !O3 & !T0 & T1
+     # O1 & !O3 & !T0 & T1
+     # O2 & !O3 & !T0 & T1
+     # !O2 & O3 & !T0 & T1
+     # !O1 & O3 & !T0 & T1
+     # !O0 & O3 & !T0 & T1
+     # O4 & !T0 & T1;
 
-/* IDX3: 32 term(s), active-low */
-!IDX3 = !OPL0 & !OPL1 & !OPL2 & !OPL3 & !COND & !T0 & T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & !OPL3 & !COND & !T0 & T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & !OPL3 & !COND & !T0 & T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & !OPL3 & !COND & !T0 & T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & !OPL3 & !COND & !T0 & T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & !OPL3 & !COND & !T0 & T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & !OPL3 & !COND & !T0 & T1 & !T2
-     # OPL0 & OPL1 & OPL2 & !OPL3 & !COND & !T0 & T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & OPL3 & !COND & !T0 & T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & OPL3 & !COND & !T0 & T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & OPL3 & !COND & !T0 & T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & OPL3 & !COND & !T0 & T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & OPL3 & !COND & !T0 & T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & OPL3 & !COND & !T0 & T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & OPL3 & !COND & !T0 & T1 & !T2
-     # OPL0 & OPL1 & OPL2 & OPL3 & !COND & !T0 & T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & !OPL3 & COND & !T0 & T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & !OPL3 & COND & !T0 & T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & !OPL3 & COND & !T0 & T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & !OPL3 & COND & !T0 & T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & !OPL3 & COND & !T0 & T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & !OPL3 & COND & !T0 & T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & !OPL3 & COND & !T0 & T1 & !T2
-     # OPL0 & OPL1 & OPL2 & !OPL3 & COND & !T0 & T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & OPL3 & COND & !T0 & T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & OPL3 & COND & !T0 & T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & OPL3 & COND & !T0 & T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & OPL3 & COND & !T0 & T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & OPL3 & COND & !T0 & T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & OPL3 & COND & !T0 & T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & OPL3 & COND & !T0 & T1 & !T2
-     # OPL0 & OPL1 & OPL2 & OPL3 & COND & !T0 & T1 & !T2;
+/* IDX4: 1 term(s) */
+IDX4 = T1;
 
-/* IDX4: 64 term(s) */
-IDX4 = !OPL0 & !OPL1 & !OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & !OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & OPL3 & !COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & !OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & OPL3 & COND & T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & OPL3 & COND & T0 & !T1 & !T2;
+/* IDX5: 10 term(s) */
+IDX5 = !O5 & T0
+     # O0 & !O3 & T0
+     # O1 & !O3 & T0
+     # O2 & !O3 & T0
+     # !O2 & O3 & T0
+     # !O1 & O3 & T0
+     # !O0 & O3 & T0
+     # O4 & T0
+     # !O0 & !O1 & !O2 & !O3 & !O4 & O5 & T1
+     # O0 & O1 & O2 & O3 & !O4 & O5 & T1;
 
-/* IDX5: 64 term(s) */
-IDX5 = !OPL0 & !OPL1 & !OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & !OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & OPL3 & !COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & !OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # OPL0 & OPL1 & OPL2 & OPL3 & COND & !T0 & !T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & !OPL3 & !COND & !T0 & T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & !OPL3 & !COND & !T0 & T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & !OPL3 & !COND & !T0 & T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & !OPL3 & !COND & !T0 & T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & !OPL3 & !COND & !T0 & T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & !OPL3 & !COND & !T0 & T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & !OPL3 & !COND & !T0 & T1 & !T2
-     # OPL0 & OPL1 & OPL2 & !OPL3 & !COND & !T0 & T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & OPL3 & !COND & !T0 & T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & OPL3 & !COND & !T0 & T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & OPL3 & !COND & !T0 & T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & OPL3 & !COND & !T0 & T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & OPL3 & !COND & !T0 & T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & OPL3 & !COND & !T0 & T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & OPL3 & !COND & !T0 & T1 & !T2
-     # OPL0 & OPL1 & OPL2 & OPL3 & !COND & !T0 & T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & !OPL3 & COND & !T0 & T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & !OPL3 & COND & !T0 & T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & !OPL3 & COND & !T0 & T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & !OPL3 & COND & !T0 & T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & !OPL3 & COND & !T0 & T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & !OPL3 & COND & !T0 & T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & !OPL3 & COND & !T0 & T1 & !T2
-     # OPL0 & OPL1 & OPL2 & !OPL3 & COND & !T0 & T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & OPL3 & COND & !T0 & T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & OPL3 & COND & !T0 & T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & OPL3 & COND & !T0 & T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & OPL3 & COND & !T0 & T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & OPL3 & COND & !T0 & T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & OPL3 & COND & !T0 & T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & OPL3 & COND & !T0 & T1 & !T2
-     # OPL0 & OPL1 & OPL2 & OPL3 & COND & !T0 & T1 & !T2;
+/* IDX6: 0 term(s) */
+IDX6 = ;
 
-/* IDX6: 0 term(s), active-low */
-!IDX6 = ;
+/* /TRST: 3 term(s) */
+!TRSTN = !O0 & !O1 & !O2 & !O3 & !O4 & O5 & T1
+     # O0 & O1 & O2 & O3 & !O4 & O5 & T1
+     # T0 & T1;
 
-/* TRSTN — asserted (low) at end of instruction: 32 term(s) */
-TRSTN = !OPL0 & !OPL1 & !OPL2 & !OPL3 & !COND & T0 & T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & !OPL3 & !COND & T0 & T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & !OPL3 & !COND & T0 & T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & !OPL3 & !COND & T0 & T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & !OPL3 & !COND & T0 & T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & !OPL3 & !COND & T0 & T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & !OPL3 & !COND & T0 & T1 & !T2
-     # OPL0 & OPL1 & OPL2 & !OPL3 & !COND & T0 & T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & OPL3 & !COND & T0 & T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & OPL3 & !COND & T0 & T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & OPL3 & !COND & T0 & T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & OPL3 & !COND & T0 & T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & OPL3 & !COND & T0 & T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & OPL3 & !COND & T0 & T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & OPL3 & !COND & T0 & T1 & !T2
-     # OPL0 & OPL1 & OPL2 & OPL3 & !COND & T0 & T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & !OPL3 & COND & T0 & T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & !OPL3 & COND & T0 & T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & !OPL3 & COND & T0 & T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & !OPL3 & COND & T0 & T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & !OPL3 & COND & T0 & T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & !OPL3 & COND & T0 & T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & !OPL3 & COND & T0 & T1 & !T2
-     # OPL0 & OPL1 & OPL2 & !OPL3 & COND & T0 & T1 & !T2
-     # !OPL0 & !OPL1 & !OPL2 & OPL3 & COND & T0 & T1 & !T2
-     # OPL0 & !OPL1 & !OPL2 & OPL3 & COND & T0 & T1 & !T2
-     # !OPL0 & OPL1 & !OPL2 & OPL3 & COND & T0 & T1 & !T2
-     # OPL0 & OPL1 & !OPL2 & OPL3 & COND & T0 & T1 & !T2
-     # !OPL0 & !OPL1 & OPL2 & OPL3 & COND & T0 & T1 & !T2
-     # OPL0 & !OPL1 & OPL2 & OPL3 & COND & T0 & T1 & !T2
-     # !OPL0 & OPL1 & OPL2 & OPL3 & COND & T0 & T1 & !T2
-     # OPL0 & OPL1 & OPL2 & OPL3 & COND & T0 & T1 & !T2;
-
-/* Registered T-state: next = 0 on /TRST or /RST, else T+1.
-   Written as a template; the fitter realises the ripple. */
-FIELD Tstate = [T2..0];
 T0.d = !TRSTN & !T0;
 T1.d = !TRSTN & (T1 $ T0);
 T2.d = !TRSTN & (T2 $ (T1 & T0));
-T0.ar = !RST;   T1.ar = !RST;   T2.ar = !RST;
+T0.ar = !RST;  T1.ar = !RST;  T2.ar = !RST;
