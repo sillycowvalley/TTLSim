@@ -1520,8 +1520,8 @@
         "deviceId": "dev0025",
         "unitLetter": "",
         "position": {
-          "x": 159,
-          "y": 112
+          "x": 166,
+          "y": 113
         },
         "label": "ABUS 0-7",
         "rotation": 0,
@@ -1534,7 +1534,7 @@
         "deviceId": "dev0027",
         "unitLetter": "",
         "position": {
-          "x": 204,
+          "x": 217,
           "y": 112
         },
         "label": "ABUS 8-15",
@@ -3411,8 +3411,8 @@
         "id": "vcc0117",
         "label": "",
         "position": {
-          "x": 174,
-          "y": 102
+          "x": 181,
+          "y": 103
         },
         "rotation": 0,
         "layer": 0,
@@ -3436,8 +3436,8 @@
         "id": "gnd0118",
         "label": "",
         "position": {
-          "x": 147,
-          "y": 140
+          "x": 154,
+          "y": 141
         },
         "rotation": 0,
         "layer": 0,
@@ -3461,7 +3461,7 @@
         "id": "vcc0121",
         "label": "",
         "position": {
-          "x": 219,
+          "x": 232,
           "y": 102
         },
         "rotation": 0,
@@ -3486,7 +3486,7 @@
         "id": "gnd0122",
         "label": "",
         "position": {
-          "x": 198,
+          "x": 211,
           "y": 141
         },
         "rotation": 0,
@@ -3786,8 +3786,8 @@
         "id": "gnd0146",
         "label": "",
         "position": {
-          "x": 201,
-          "y": 279
+          "x": 212,
+          "y": 272
         },
         "rotation": 0,
         "layer": 0,
@@ -3988,31 +3988,6 @@
         "position": {
           "x": 286,
           "y": 311
-        },
-        "rotation": 0,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": null,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "startBit": null,
-        "mirrored": null,
-        "color": null,
-        "fontSize": null,
-        "textColor": null
-      },
-      {
-        "type": "gnd",
-        "id": "gnd5016",
-        "label": "",
-        "position": {
-          "x": 68,
-          "y": 70
         },
         "rotation": 0,
         "layer": 0,
@@ -4261,8 +4236,8 @@
         "id": "8a56b3cad6b445638790aad0526ac2d3",
         "label": "PC",
         "position": {
-          "x": 141,
-          "y": 115
+          "x": 148,
+          "y": 116
         },
         "rotation": 0,
         "layer": 0,
@@ -4286,7 +4261,7 @@
         "id": "33f2523ecf3642dea9f45c882a488904",
         "label": "PC",
         "position": {
-          "x": 188,
+          "x": 201,
           "y": 117
         },
         "rotation": 0,
@@ -5436,8 +5411,8 @@
         "id": "6c8a51ef63d49ba2f64ca42a6342d5eb",
         "label": "A",
         "position": {
-          "x": 177,
-          "y": 123
+          "x": 185,
+          "y": 124
         },
         "rotation": 0,
         "layer": 0,
@@ -5461,7 +5436,7 @@
         "id": "72cd2fd456aef679a0c4384960348d15",
         "label": "A",
         "position": {
-          "x": 225,
+          "x": 238,
           "y": 122
         },
         "rotation": 0,
@@ -9528,76 +9503,6 @@
         "color": "Red"
       },
       {
-        "id": "c5017",
-        "a": {
-          "itemId": "u0008",
-          "pinNumber": 3,
-          "external": false
-        },
-        "b": {
-          "itemId": "gnd5016",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Blue"
-      },
-      {
-        "id": "c5018",
-        "a": {
-          "itemId": "u0008",
-          "pinNumber": 5,
-          "external": false
-        },
-        "b": {
-          "itemId": "gnd5016",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Blue"
-      },
-      {
-        "id": "c5019",
-        "a": {
-          "itemId": "u0008",
-          "pinNumber": 9,
-          "external": false
-        },
-        "b": {
-          "itemId": "gnd5016",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Blue"
-      },
-      {
-        "id": "c5020",
-        "a": {
-          "itemId": "u0008",
-          "pinNumber": 11,
-          "external": false
-        },
-        "b": {
-          "itemId": "gnd5016",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Blue"
-      },
-      {
-        "id": "c5021",
-        "a": {
-          "itemId": "u0008",
-          "pinNumber": 13,
-          "external": false
-        },
-        "b": {
-          "itemId": "gnd5016",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Blue"
-      },
-      {
         "id": "c5023",
         "a": {
           "itemId": "u0044",
@@ -13306,6 +13211,76 @@
           "external": false
         },
         "color": "Cyan"
+      },
+      {
+        "id": "7dcb41def4d54969834a19479bb14ea2",
+        "a": {
+          "itemId": "gnd0082",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "u0008",
+          "pinNumber": 5,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "6b7f781b001a43b88ff9b7350a2efa7a",
+        "a": {
+          "itemId": "gnd0082",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "u0008",
+          "pinNumber": 3,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "f80ddc3bb0f0412693032be98db736d9",
+        "a": {
+          "itemId": "gnd0082",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "u0008",
+          "pinNumber": 9,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "e3039c91deb342079846a1f0ea3494f3",
+        "a": {
+          "itemId": "gnd0082",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "u0008",
+          "pinNumber": 11,
+          "external": false
+        },
+        "color": "Blue"
+      },
+      {
+        "id": "2d2987dfe2b640f59e4f9d92b66d257a",
+        "a": {
+          "itemId": "gnd0082",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "u0008",
+          "pinNumber": 13,
+          "external": false
+        },
+        "color": "Blue"
       }
     ],
     "links": [],
@@ -13318,10 +13293,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 0.48567784,
+    "zoom": 0.7386552,
     "pan": {
-      "x": 557,
-      "y": -179
+      "x": 190,
+      "y": 218
     }
   }
 }
