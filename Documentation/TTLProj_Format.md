@@ -39,7 +39,7 @@ open. Everything electrical lives under `schematic`.
 |---|---|
 | `devices` | Logical parts: chips, passives, headers, displays. A device owns one or more units. |
 | `units` | The placed, drawable pieces of each device. Connections attach to **units**, never to devices. |
-| `items` | Standalone items that aren't part of a device: VCC, GND, clock, oscillators, cosmetic shapes. |
+| `items` | Standalone items that aren't part of a device: VCC, GND, clock, oscillators, net labels, cosmetic shapes. |
 | `connections` | Pin-to-pin electrical connections. This is the electrical truth of the schematic. |
 | `links` | Ribbon-cable links between equal-width header units. |
 | `layers` | Layer table. Every unit/item's `layer` field indexes into this. Index 0 is the always-visible Default. |
@@ -136,8 +136,7 @@ current catalogue.)
   "label": "NAND",
   "rotation": 0,
   "layer": 0,
-  "switchClosed": null,
-  "mirrored": null
+  "switchClosed": null
 }
 ```
 
@@ -151,7 +150,6 @@ current catalogue.)
 | `rotation` | int | `0` / `90` / `180` / `270`. |
 | `layer` | int | Index into `layers`. Usually `0`. |
 | `switchClosed` | bool? | SPST switch / SPDT switch units only. `false` for an open SPST (or SPDT throw A), `true` for closed (throw B). **Null for everything else.** When generating from scratch, default switches to `false`. |
-| `mirrored` | bool? | Header units only. `true` flips the header across its long axis so the pins exit from the opposite edge of the body; pin order, pin numbering, and ribbon-link mapping are unchanged. **Null for everything else.** Null or absent loads as `false`, so files written before the feature are unaffected. |
 
 ---
 
@@ -171,7 +169,7 @@ Standalone items not owned by a device. The `type` field discriminates.
 ```
 
 `type` is one of: `"vcc"`, `"gnd"`, `"clock"`, `"canosc"`, `"canosc8"`,
-`"rect"`, `"text"`, `"netlabel"`.
+`"netlabel"`, `"rect"`, `"text"`.
 
 Common fields on every item: `type`, `id`, `label`, `position`, `rotation`,
 `layer`. Type-specific fields:
@@ -182,16 +180,99 @@ Common fields on every item: `type`, `id`, `label`, `position`, `rotation`,
 | `clock` | `frequencyHz` (1e6), `dutyCycle` (0.5), `startHigh` (false) | Simulator clock source. |
 | `canosc` | `frequencyHz` (1e6), `designator` (e.g. `"X1"`) | Canned oscillator, DIP-14. |
 | `canosc8` | `frequencyHz` (1e6), `designator` | Canned oscillator, DIP-8. |
+| `netlabel` | `width` (int), `startBit` (0), `mirrored` (false), `color` | Named-net / bus tap. See the dedicated section below. |
 | `rect` | `width` (20), `height` (12), `filled` (true), `fillColor`, `borderColor` | Cosmetic rectangle. No electrical meaning. |
 | `text` | `fontSize` (4.0), `textColor` | Cosmetic text label; the text rides on `label`. |
-| `netlabel` | `width` (1), `startBit` (0), `mirrored` (false), `color` (`"Black"`) | Net label / bus port. Pins `1..width`; pin *k* carries bit `startBit + k − 1` of the net named by `label`. Every active pin sharing a (name, bit) anywhere on the schematic is **one electrical net — no wire needed**; ranges may overlap freely (`D[0..7]` in one place, `D[0..3]` and `D[4..7]` elsewhere). An empty `label` ties nothing. Width 1 is a plain net label. `mirrored` flips the label across its long axis so pins exit the opposite edge (bit numbering unchanged). `color` is a TTLColor name rendering the stubs and text like a wire. |
 
 Values in parentheses are the defaults applied when the field is absent. Colour
-fields are TTLColor enum **names** (`"Red"`, `"Black"`, `"Blue"`, `"Grey"`, …);
-an unrecognised or missing colour falls back to `"Grey"`.
+fields are TTLColor enum **names** (`"Red"`, `"Black"`, `"Blue"`, `"Grey"`,
+`"Yellow"`, `"Olive"`, `"Cyan"`, …); an unrecognised or missing colour falls
+back to `"Grey"`.
 
 `canosc`/`canosc8` carry a `designator` (the `X`-series reference). VCC, GND and
 clock do not.
+
+---
+
+## `netlabel` — named nets and buses
+
+A `netlabel` item is an electrical **tap on a named global net or bus**. It is
+the mechanism for carrying a signal or a bundle of signals across the canvas
+without drawing point-to-point connections between distant pins.
+
+```json
+{
+  "type": "netlabel",
+  "id": "nl-ir-reg",
+  "label": "IR",
+  "position": { "x": 105, "y": 174 },
+  "rotation": 180,
+  "layer": 0,
+  "width": 8,
+  "startBit": 0,
+  "mirrored": false,
+  "color": "Yellow"
+}
+```
+
+| Field | Type | Notes |
+|---|---|---|
+| `label` | string | The **net name**. This is the identity of the net: every netlabel in the file with the same label string belongs to the same global net/bus. Case and punctuation are significant — `"T"`, `"Tn"`, `"/SRC"`, `"SRC"` are four different nets. |
+| `width` | int | Number of bit-pins this tap exposes. `1` for a plain single-signal net (CLK, /RESET); >1 for a bus tap. |
+| `startBit` | int | The global bus bit that this tap's **pin 1** maps to. Default `0`. |
+| `mirrored` | bool | Cosmetic draw flag (flips the symbol). No electrical meaning. |
+| `color` | string? | TTLColor name for the tap and its wires. Use one colour per logical bus, consistently across every tap of that bus. |
+| `rotation` | int | 0/90/180/270 as usual; cosmetic. |
+
+### Pins and bit mapping
+
+A netlabel's connectable pins are numbered **1..width** (unlike VCC/GND, which
+use pin 0). Pin *k* of a tap maps to **global bus bit `startBit + k − 1`**.
+
+So a full-width tap on an 8-bit bus is `width: 8, startBit: 0` (pins 1..8 =
+bits 0..7), while a tap exposing only the upper nibble is `width: 4,
+startBit: 4` (pin 1 = bit 4, pin 4 = bit 7). A `width: 1, startBit: 5` tap
+picks out just bit 5 of a wider bus — single-bit taps of a wide bus are the
+normal way to route one control line from a decoded bundle (e.g. a `/DST`
+bit-0 tap at a register's enable pin, while the 16-bit `/DST` source tap sits
+at the '154).
+
+Connections attach to netlabel pins exactly like any other pin ref:
+
+```json
+{ "id": "c-ir0", "a": { "itemId": "u-ir", "pinNumber": 2 },
+                 "b": { "itemId": "nl-ir-reg", "pinNumber": 1 }, "color": "Yellow" }
+```
+
+### Net identity and electrical semantics
+
+- **Same label ⇒ same net.** All taps sharing a label are shorted together
+  bit-for-bit according to their `startBit` mapping. There is no separate
+  net-declaration record; the bus exists implicitly as the union of its taps.
+- **Different label ⇒ different net**, no matter how related the signals are
+  conceptually. An encoded value and its decode (e.g. a 3-bit binary state
+  counter on `T` and its 8-line one-hot active-low decode on `Tn`) must be two
+  distinctly named buses, joined only through the decoder chip that computes
+  one from the other.
+- The **effective width of the global bus** is implied by its taps (the
+  maximum `startBit + width` in use). Individual taps may be any slice of it.
+- Netlabels carry ordinary signals only. Power still goes through `vcc`/`gnd`
+  symbols, and the one-driver-per-net rule applies to a named bus the same as
+  to a drawn wire — a netlabel does not arbitrate multiple drivers.
+
+### Conventions for generated files
+
+- Give each bus one colour and use it on every tap and every connection
+  touching that bus (e.g. all control-signal netlabels yellow, address bus
+  olive, data bus cyan).
+- Name active-low signals with a leading `/` (`/RESET`, `/SRC`, `/DST`) so the
+  polarity is visible at every tap.
+- Place a tap adjacent to the pin group it serves and connect with short local
+  wires; let the shared label do the long-distance routing. This keeps the
+  canvas readable and is the whole point of the mechanism.
+- Prefer slice taps (`width`/`startBit`) over full-width taps with unused
+  pins: a consumer that reads only bits 4–7 should carry a `width: 4,
+  startBit: 4` tap, not an 8-wide tap with four floating pins.
 
 ---
 
@@ -223,8 +304,8 @@ A pure pin-to-pin link. No geometry — the editor's router draws the wire.
 | `external` | bool | Clipboard-only. **Omit it (or set `false`) in a file.** |
 
 Pin numbers are the part's real package pin numbers (pin 14 = VCC on a DIP-14,
-pin 7 = GND, and so on). The VCC and GND symbols are the exception: their single
-pin is number **0**.
+pin 7 = GND, and so on). Two exceptions: the VCC and GND symbols' single pin is
+number **0**, and netlabel taps use **1..width** (see the netlabel section).
 
 ---
 
@@ -294,7 +375,7 @@ item, whose pin is number `0`:
 
 Multiple chips may share one VCC symbol and one GND symbol — several
 connections can terminate on the same symbol pin. Passives, headers and displays
-have no power pins and are not checked.
+have no power pins and are not checked. Power never travels over netlabels.
 
 ---
 
@@ -304,7 +385,10 @@ Set colours at generation time rather than leaving them null:
 
 - **VCC connections → `"Red"`** (any connection touching a `vcc` symbol).
 - **GND connections → `"Black"`** (any connection touching a `gnd` symbol).
-- Signal wires: a colour if it aids reading, otherwise omit (loads as Black).
+- **Bus connections → the bus's colour**: every connection touching a netlabel
+  tap uses that bus's single chosen colour.
+- Other signal wires: a colour if it aids reading, otherwise omit (loads as
+  Black).
 
 ---
 
@@ -316,16 +400,22 @@ Set colours at generation time rather than leaving them null:
    TTL003).
 3. Every `vcc` / `gnd` symbol has at least one connection — no floating power
    symbols.
-4. Every unit's `deviceId` matches a `devices[].id`.
-5. Every `rotation` is 0/90/180/270.
-6. `wires` is `[]`.
-7. Switches default to `switchClosed: false` on a freshly generated schematic.
+4. Every netlabel has at least one connection, its pin references fall within
+   1..width, and every net name resolves to at least one driver and one
+   consumer — a label that appears on only one tap is a routing dead-end.
+5. No two drivers on the same named net bit (the one-source rule applies to
+   buses exactly as to drawn wires).
+6. Every unit's `deviceId` matches a `devices[].id`.
+7. Every `rotation` is 0/90/180/270.
+8. `wires` is `[]`.
+9. Switches default to `switchClosed: false` on a freshly generated schematic.
 
 ---
 
 ## Minimal complete example
 
-A single 74HC00 with its power pins wired and one gate input pulled to VCC.
+A single 74HC00 with its power pins wired, one gate input pulled to VCC, and
+the gate output published on a named net.
 
 ```json
 {
@@ -348,18 +438,20 @@ A single 74HC00 with its power pins wired and one gate input pulled to VCC.
         "label": "NAND",
         "rotation": 0,
         "layer": 0,
-        "switchClosed": null,
-        "mirrored": null
+        "switchClosed": null
       }
     ],
     "items": [
       { "type": "vcc", "id": "vcc1", "label": "", "position": { "x": 64, "y": 12 }, "rotation": 0, "layer": 0 },
-      { "type": "gnd", "id": "gnd1", "label": "", "position": { "x": 30, "y": 60 }, "rotation": 0, "layer": 0 }
+      { "type": "gnd", "id": "gnd1", "label": "", "position": { "x": 30, "y": 60 }, "rotation": 0, "layer": 0 },
+      { "type": "netlabel", "id": "nl1", "label": "Y0", "position": { "x": 56, "y": 26 }, "rotation": 0, "layer": 0,
+        "width": 1, "startBit": 0, "mirrored": false, "color": "Yellow" }
     ],
     "connections": [
-      { "id": "cvcc", "a": { "itemId": "u1", "pinNumber": 14 }, "b": { "itemId": "vcc1", "pinNumber": 0 }, "color": "Red"   },
-      { "id": "cgnd", "a": { "itemId": "u1", "pinNumber": 7  }, "b": { "itemId": "gnd1", "pinNumber": 0 }, "color": "Black" },
-      { "id": "cin",  "a": { "itemId": "u1", "pinNumber": 1  }, "b": { "itemId": "vcc1", "pinNumber": 0 }, "color": "Red"   }
+      { "id": "cvcc", "a": { "itemId": "u1", "pinNumber": 14 }, "b": { "itemId": "vcc1", "pinNumber": 0 }, "color": "Red"    },
+      { "id": "cgnd", "a": { "itemId": "u1", "pinNumber": 7  }, "b": { "itemId": "gnd1", "pinNumber": 0 }, "color": "Black"  },
+      { "id": "cin",  "a": { "itemId": "u1", "pinNumber": 1  }, "b": { "itemId": "vcc1", "pinNumber": 0 }, "color": "Red"    },
+      { "id": "cout", "a": { "itemId": "u1", "pinNumber": 3  }, "b": { "itemId": "nl1",  "pinNumber": 1 }, "color": "Yellow" }
     ],
     "links": [],
     "layers": [ { "name": "Default", "visible": true } ],
