@@ -57,8 +57,16 @@ public static class PldEmitter
 
     static readonly Dictionary<int, int> V10CapByPin = new()
     {
-        [14] = 8, [15] = 10, [16] = 12, [17] = 14, [18] = 16,
-        [19] = 16, [20] = 14, [21] = 12, [22] = 10, [23] = 8
+        [14] = 8,
+        [15] = 10,
+        [16] = 12,
+        [17] = 14,
+        [18] = 16,
+        [19] = 16,
+        [20] = 14,
+        [21] = 12,
+        [22] = 10,
+        [23] = 8
     };
 
     static void EmitDecoder(string path, MicroDictionary dict, int half)
