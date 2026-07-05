@@ -1,386 +1,477 @@
 namespace BlinkyMGen;
 
 // ---------------------------------------------------------------------------
-// The microcode table — mirrors Blinky_M_Microcoded_CPU.md §7 (rev 10).
+// The canonical rev 14 instruction table — the single source of truth.
+// Everything else (dictionary, sequencer, PLDs, HTML matrix, assembler
+// tables) is a projection of this.
 //
-// Hardware wiring notes the table depends on (all zero-package):
-//   * '181 carry-in  = CN & (S0 ? Cflag : 1)
-//       - SUB/CMP (S=0110, S0=0): CN=1 injects +1
-//       - ADC     (S=1001, S0=1): CN=1 injects the C flag
-//       - one AND + one spare section of flags '157 #2
-//   * Shift direction = raw IR[0]; C_SRC = (TOSMODE == Shift).
-//   * B bit in the pushed flags byte = /INTP (registered): BRK pushes B=1,
-//     hardware entry pushes B=0.
-//   * INTP is REGISTERED (spare flop of the interrupt '74s), sampled on the
-//     fetch edge, so the entry sequence cannot be torn when ISET clears the
-//     pending condition mid-sequence.
+// Opcode map (rev 14):
+//   CTL   0x0_    SHIFT 0x1_   STK 0x2_   MEM 0x3_
+//   ALU   0x40-0x7F   (opcode = 01 M CN S3 S2 S1 S0; the '181 code IS the opcode)
+//   FRM   0x8_    FLOW  0x9_
+//   NOP = 0x00, HALT = 0xFF anchors.
+//
+// Hardware wiring the table depends on (all zero-package, ratified rev 14):
+//   * '181 carry-in = CN & (S0 ? Cflag : 1). SUB/CMP inject 1; ADC injects C.
+//   * Shift direction = raw IR[0]; C_SRC = TOS shift; fill = IR[3:2].
+//   * B bit in the pushed flags byte = /INTP (registered): BRK B=1, entry B=0.
+//   * INTP registered, sampled on the TRST edge entering T0.
+//   * ALUFN '153 mux: Ir routes IR[5:0] to '181 S/M/CN; Fa/Fb/AddAB strapped.
 // ---------------------------------------------------------------------------
-
-public sealed record Instruction(byte Opcode, string Mnemonic, string Operand,
-    MicroStep[] Steps, MicroStep[]? StepsCondTrue = null);
 
 public static class InstructionSet
 {
-    // --- step shorthands ---------------------------------------------------
-
-    // T0 fetch: ADDR=PC, RAM -> IR, PC++ (+ optional edge actions)
-    static MicroStep Fetch(SpOp dsp = SpOp.Hold, SpOp rsp = SpOp.Hold, bool trst = false)
-        => new(Src.Ram, Dst.Ir, Asel.Pc, PcInc: true, Dsp: dsp, Rsp: rsp, Trst: trst);
-
-    // ADDR=PC, RAM -> dst, PC++  (operand byte consume)
-    static MicroStep Operand(Dst dst)
-        => new(Src.Ram, dst, Asel.Pc, PcInc: true);
-
-    // paged read: ADDR={pg,SP}, RAM -> dst
-    static MicroStep SpRead(Pg pg, Dst dst, SpOp dsp = SpOp.Hold, SpOp rsp = SpOp.Hold,
-                            TosMode tos = TosMode.Hold, bool nz = false, bool c = false, bool trst = false)
-        => new(Src.Ram, dst, Asel.PgSp, pg, Dsp: dsp, Rsp: rsp, Tos: tos, NzWe: nz, CWe: c, Trst: trst);
-
-    // paged write: ADDR={pg,SP}, src -> RAM
-    static MicroStep SpWrite(Pg pg, Src src, SpOp dsp = SpOp.Hold, SpOp rsp = SpOp.Hold,
-                             bool pcHi = false, bool trst = false)
-        => new(src, Dst.RamWe, Asel.PgSp, pg, PcHiByte: pcHi, Dsp: dsp, Rsp: rsp, Trst: trst);
-
-    // RAM -> TOS refill at the data-stack page (the standard pop tail)
-    static MicroStep TosRefill(bool trst = true)
-        => new(Src.Ram, Dst.Tos, Asel.PgSp, Pg.DStack, Tos: TosMode.Load, Trst: trst);
-
-    // ALU result onto the bus
-    static MicroStep AluTo(Dst dst, AluOp op, TosMode tos = TosMode.Hold,
-                           bool nz = false, bool c = false, SpOp dsp = SpOp.Hold, bool trst = false)
-        => new(Src.Alu, dst, Asel.Pc, Alu: op, Tos: tos, NzWe: nz, CWe: c, Dsp: dsp, Trst: trst);
-
-    // ALU result written to memory
-    static MicroStep AluToRam(AluOp op, Asel asel, Pg pg, SpOp dsp = SpOp.Hold, bool trst = false)
-        => new(Src.Alu, Dst.RamWe, asel, pg, Alu: op, Dsp: dsp, Trst: trst);
-
-    // --- binary ALU family helper -------------------------------------------
-    static MicroStep[] Binary(AluOp op, bool writesC) => new[]
+    // ---- '181 function codes (active-high operand convention) --------------
+    // These are the validated codes that produced the simulated listing.
+    public readonly record struct Alu181(int S, bool M, bool Cn)
     {
-        Fetch(),
-        new MicroStep(Src.Tos, Dst.A, Asel.Pc, Dsp: SpOp.Down),
-        SpRead(Pg.DStack, Dst.B),
-        new MicroStep(Src.Alu, Dst.Tos, Asel.Pc, Alu: op, Tos: TosMode.Load,
-                      NzWe: true, CWe: writesC, Trst: true),
-    };
+        public int QuadrantOpcode => 0x40 | (M ? 0x20 : 0) | (Cn ? 0x10 : 0) | (S & 0xF);
+    }
 
-    // --- shift family helper: TOS shifts in place; C only, N/Z held ---------
-    static MicroStep[] Shift() => new[]
-    {
-        Fetch(),
-        new MicroStep(Tos: TosMode.Shift, CWe: true, Trst: true),
-    };
+    public static readonly Alu181 Add  = new(0b1001, false, false);
+    public static readonly Alu181 Adc  = new(0b1001, false, true);
+    public static readonly Alu181 Sub  = new(0b0110, false, true);
+    public static readonly Alu181 Xor  = new(0b0110, true,  false);
+    public static readonly Alu181 And  = new(0b1011, true,  false);
+    public static readonly Alu181 Or   = new(0b1110, true,  false);
+    public static readonly Alu181 NotA = new(0b0000, true,  false);   // F = /A
+    public static readonly Alu181 Fa   = new(0b1111, true,  false);   // F = A
+    public static readonly Alu181 Fb   = new(0b1010, true,  false);   // F = B
 
-    // --- the table -----------------------------------------------------------
+    // ---- step shorthands ---------------------------------------------------
 
-    public static readonly Instruction[] All =
+    static Step Fetch(SpOp sp = SpOp.None, bool trst = false)
+        => new Step(new MicroOp(Src.Ram, Dst.Ir, Amode: AMode.Pc, Sp: sp), trst);
+
+    static Step Consume(Dst dst)
+        => new Step(new MicroOp(Src.Ram, dst, Amode: AMode.Pc));
+
+    static Step SpRead(AMode page, Dst dst, SpOp sp = SpOp.None,
+                       bool nz = false, bool c = false, bool trst = false)
+        => new Step(new MicroOp(Src.Ram, dst, Amode: page, Sp: sp, NzWe: nz, CWe: c), trst);
+
+    static Step SpWrite(Src src, AMode page, SpOp sp = SpOp.None, bool trst = false)
+        => new Step(new MicroOp(src, Dst.RamWe, Amode: page, Sp: sp), trst);
+
+    static Step TosRefill(bool trst = true)
+        => new Step(new MicroOp(Src.Ram, Dst.Tos, Amode: AMode.DStack), trst);
+
+    static Step AluTo(Dst dst, AluFn fn, bool nz = false, bool c = false,
+                      SpOp sp = SpOp.None, bool trst = false)
+        => new Step(new MicroOp(Src.Alu, dst, AluFn: fn, Amode: AMode.Adr,
+                           Sp: sp, NzWe: nz, CWe: c), trst);
+
+    static Step Move(Src src, Dst dst, SpOp sp = SpOp.None, bool trst = false)
+        => new Step(new MicroOp(src, dst, Amode: AMode.Adr, Sp: sp), trst);
+
+    // ---- the fixed (non-ALU-quadrant) instructions -------------------------
+
+    static IEnumerable<Instruction> Fixed()
     {
         // CONTROL -------------------------------------------------------------
-        new(0x00, "NOP", "-", new[] { Fetch(trst: true) }),
+        yield return new(0x00, "NOP", OperandShape.None, new[] { Fetch(trst: true) });
 
-        new(0x01, "RET", "-", new[]
+        yield return new(0x01, "RET", OperandShape.None, new[]
         {
-            Fetch(rsp: SpOp.Down),
-            SpRead(Pg.RBp,   Dst.Bp),
-            SpRead(Pg.RPcHi, Dst.PcHi),
-            SpRead(Pg.RPcLo, Dst.PcLo, trst: true),
-        }),
+            Fetch(SpOp.RspDown),
+            SpRead(AMode.RBp,   Dst.Bp),
+            SpRead(AMode.RPcHi, Dst.PcHi),
+            SpRead(AMode.RPcLo, Dst.PcLo, trst: true),
+        });
 
-        new(0x02, "BRK", "-", new[]
-        {
-            Fetch(),                                        // PC++ -> pushes PC+1
-            SpWrite(Pg.RPcLo,  Src.PcByte),
-            SpWrite(Pg.RPcHi,  Src.PcByte, pcHi: true),
-            SpWrite(Pg.RFlags, Src.Flags),                  // B = /INTP = 1
-            SpWrite(Pg.RBp,    Src.Bp, rsp: SpOp.Up),       // one count per frame
-            new MicroStep(Src.Vec, Dst.PcLo, ISet: true),   // VEC = 0xFE (IRQ/BRK)
-            new MicroStep(Src.Vec, Dst.PcHi, Trst: true),
-        }),
-
-        new(0x03, "RTI", "-", new[]
-        {
-            Fetch(rsp: SpOp.Down),
-            SpRead(Pg.RBp,    Dst.Bp),
-            SpRead(Pg.RFlags, Dst.Flags, nz: true, c: true),  // '157 restore path
-            SpRead(Pg.RPcHi,  Dst.PcHi),
-            SpRead(Pg.RPcLo,  Dst.PcLo, trst: true),
-        }),
-
-        new(0x04, "CLI", "-", new[] { Fetch(), new MicroStep(IClr: true, Trst: true) }),
-        new(0x05, "SEI", "-", new[] { Fetch(), new MicroStep(ISet: true, Trst: true) }),
-
-        // ALU (0x1_) — nibble placement is load-bearing (fill mux = IR[3:2],
-        // direction = IR[0]) ---------------------------------------------------
-        new(0x10, "ADD", "-", Binary(AluOp.Add, writesC: true)),
-        new(0x11, "ADC", "-", Binary(AluOp.Adc, writesC: true)),
-        new(0x12, "SUB", "-", Binary(AluOp.Sub, writesC: true)),
-        new(0x13, "XOR", "-", Binary(AluOp.Xor, writesC: false)),
-
-        new(0x14, "NOT", "-", new[]
+        yield return new(0x02, "BRK", OperandShape.None, new[]
         {
             Fetch(),
-            new MicroStep(Src.Tos, Dst.A, Asel.Pc),
-            AluTo(Dst.Tos, AluOp.NotA, TosMode.Load, nz: true, trst: true),
-        }),
+            SpWrite(Src.PcbLo, AMode.RPcLo),
+            SpWrite(Src.PcbHi, AMode.RPcHi),
+            SpWrite(Src.Flags, AMode.RFlags),
+            SpWrite(Src.Bp,    AMode.RBp, SpOp.RspUp),
+            new Step(new MicroOp(Src.Vec, Dst.PcLo, Amode: AMode.Adr, ISet: true)),
+            new Step(new MicroOp(Src.Vec, Dst.PcHi, Amode: AMode.Adr), Trst: true),
+        });
 
-        new(0x15, "TST", "-", new[]
+        yield return new(0x03, "RTI", OperandShape.None, new[]
+        {
+            Fetch(SpOp.RspDown),
+            SpRead(AMode.RBp,     Dst.Bp),
+            SpRead(AMode.RFlags,  Dst.Flags, nz: true, c: true),
+            SpRead(AMode.RPcHi,   Dst.PcHi),
+            SpRead(AMode.RPcLo,   Dst.PcLo, trst: true),
+        });
+
+        yield return new(0x04, "CLI", OperandShape.None, new[]
         {
             Fetch(),
-            new MicroStep(Src.Tos, Dst.A, Asel.Pc),
-            new MicroStep(Alu: AluOp.FA, NzWe: true, Trst: true),   // flags only
-        }),
+            new Step(new MicroOp(Dst: Dst.Iclr, Amode: AMode.Adr), Trst: true),
+        });
 
-        new(0x16, "SHL", "-", Shift()),
-        new(0x17, "SHR", "-", Shift()),
-
-        new(0x18, "AND", "-", Binary(AluOp.And, writesC: false)),
-
-        new(0x19, "CMP", "-", new[]
-        {
-            Fetch(dsp: SpOp.Down),
-            SpRead(Pg.DStack, Dst.B, dsp: SpOp.Up),                 // NOS, non-destructive
-            new MicroStep(Src.Tos, Dst.A, Asel.Pc),
-            new MicroStep(Alu: AluOp.Sub, NzWe: true, CWe: true, Trst: true),
-        }),
-
-        new(0x1B, "ASR", "-", Shift()),
-        new(0x1C, "OR",  "-", Binary(AluOp.Or, writesC: false)),
-        new(0x1E, "ROL", "-", Shift()),
-        new(0x1F, "ROR", "-", Shift()),
-
-        // STACK (0x2_) ----------------------------------------------------------
-        new(0x20, "DUP", "-", new[]
+        yield return new(0x05, "SEI", OperandShape.None, new[]
         {
             Fetch(),
-            SpWrite(Pg.DStack, Src.Tos, dsp: SpOp.Up, trst: true),
-        }),
+            new Step(new MicroOp(Amode: AMode.Adr, ISet: true), Trst: true),
+        });
 
-        new(0x21, "OVER", "-", new[]
+        // SHIFT (0x1_) — fill IR[3:2], direction IR[0]; C only, N/Z held ------
+        foreach (var (op, name) in new[]
+                 { (0x10, "SHL"), (0x11, "SHR"), (0x13, "ASR"), (0x14, "ROL"), (0x15, "ROR") })
         {
-            Fetch(dsp: SpOp.Down),
-            SpRead(Pg.DStack, Dst.A, dsp: SpOp.Up),                 // read NOS (a)
-            SpWrite(Pg.DStack, Src.Tos, dsp: SpOp.Up),              // push old TOS (b)
-            AluTo(Dst.Tos, AluOp.FA, TosMode.Load, trst: true),     // TOS <- a
-        }),
+            yield return new(op, name, OperandShape.None, new[]
+            {
+                Fetch(),
+                new Step(new MicroOp(Amode: AMode.Adr, TosShift: true, CWe: true), Trst: true),
+            });
+        }
 
-        new(0x22, "TUCK", "-", new[]
+        // STACK (0x2_) --------------------------------------------------------
+        yield return new(0x20, "DUP", OperandShape.None, new[]
         {
-            Fetch(dsp: SpOp.Down),
-            SpRead(Pg.DStack, Dst.A),                               // a from NOS slot
-            SpWrite(Pg.DStack, Src.Tos, dsp: SpOp.Up),              // b over a's slot
-            AluToRam(AluOp.FA, Asel.PgSp, Pg.DStack, dsp: SpOp.Up, trst: true), // a above
-        }),
+            Fetch(),
+            SpWrite(Src.Tos, AMode.DStack, SpOp.DspUp, trst: true),
+        });
 
-        new(0x23, "SWAP", "-", new[]
+        yield return new(0x21, "OVER", OperandShape.None, new[]
         {
-            Fetch(dsp: SpOp.Down),
-            SpRead(Pg.DStack, Dst.A),
-            SpWrite(Pg.DStack, Src.Tos, dsp: SpOp.Up),
-            AluTo(Dst.Tos, AluOp.FA, TosMode.Load, trst: true),
-        }),
+            Fetch(SpOp.DspDown),
+            SpRead(AMode.DStack, Dst.A, SpOp.DspUp),
+            SpWrite(Src.Tos, AMode.DStack, SpOp.DspUp),
+            AluTo(Dst.Tos, AluFn.Fa, trst: true),
+        });
 
-        new(0x24, "DROP", "-", new[]
+        yield return new(0x22, "TUCK", OperandShape.None, new[]
         {
-            Fetch(dsp: SpOp.Down),
+            Fetch(SpOp.DspDown),
+            SpRead(AMode.DStack, Dst.A),
+            SpWrite(Src.Tos, AMode.DStack, SpOp.DspUp),
+            new Step(new MicroOp(Src.Alu, Dst.RamWe, AluFn: AluFn.Fa, Amode: AMode.DStack, Sp: SpOp.DspUp), Trst: true),
+        });
+
+        yield return new(0x23, "SWAP", OperandShape.None, new[]
+        {
+            Fetch(SpOp.DspDown),
+            SpRead(AMode.DStack, Dst.A),
+            SpWrite(Src.Tos, AMode.DStack, SpOp.DspUp),
+            AluTo(Dst.Tos, AluFn.Fa, trst: true),
+        });
+
+        yield return new(0x24, "DROP", OperandShape.None, new[]
+        {
+            Fetch(SpOp.DspDown),
             TosRefill(),
-        }),
+        });
 
-        new(0x25, "NIP", "-", new[]
+        yield return new(0x25, "NIP", OperandShape.None, new[]
         {
-            Fetch(dsp: SpOp.Down, trst: true),                      // pure pointer move
-        }),
+            Fetch(SpOp.DspDown, trst: true),
+        });
 
-        new(0x26, "ROT", "-", new[]
+        yield return new(0x26, "ROT", OperandShape.None, new[]
         {
-            Fetch(dsp: SpOp.Down),
-            SpRead(Pg.DStack, Dst.A, dsp: SpOp.Down),               // b
-            SpRead(Pg.DStack, Dst.B),                               // a
-            AluToRam(AluOp.FA, Asel.PgSp, Pg.DStack, dsp: SpOp.Up), // b -> a's slot
-            SpWrite(Pg.DStack, Src.Tos, dsp: SpOp.Up),              // c -> b's slot
-            AluTo(Dst.Tos, AluOp.FB, TosMode.Load, trst: true),     // TOS <- a
-        }),
+            Fetch(SpOp.DspDown),
+            SpRead(AMode.DStack, Dst.A, SpOp.DspDown),
+            SpRead(AMode.DStack, Dst.B),
+            new Step(new MicroOp(Src.Alu, Dst.RamWe, AluFn: AluFn.Fa, Amode: AMode.DStack, Sp: SpOp.DspUp)),
+            SpWrite(Src.Tos, AMode.DStack, SpOp.DspUp),
+            AluTo(Dst.Tos, AluFn.Fb, trst: true),
+        });
 
-        new(0x28, ">R", "-", new[]
+        yield return new(0x28, ">R", OperandShape.None, new[]
         {
             Fetch(),
-            SpWrite(Pg.RPcLo, Src.Tos, rsp: SpOp.Up, dsp: SpOp.Down),
+            SpWrite(Src.Tos, AMode.RPcLo, SpOp.DspDownRspUp),
             TosRefill(),
-        }),
+        });
 
-        new(0x29, "R>", "-", new[]
+        yield return new(0x29, "R>", OperandShape.None, new[]
         {
-            Fetch(rsp: SpOp.Down),
-            SpWrite(Pg.DStack, Src.Tos, dsp: SpOp.Up),
-            SpRead(Pg.RPcLo, Dst.Tos, tos: TosMode.Load, trst: true),
-        }),
+            Fetch(SpOp.RspDown),
+            SpWrite(Src.Tos, AMode.DStack, SpOp.DspUp),
+            SpRead(AMode.RPcLo, Dst.Tos, trst: true),
+        });
 
-        new(0x2A, "R@", "-", new[]
+        yield return new(0x2A, "R@", OperandShape.None, new[]
         {
-            Fetch(rsp: SpOp.Down),
-            SpWrite(Pg.DStack, Src.Tos, dsp: SpOp.Up),
-            SpRead(Pg.RPcLo, Dst.Tos, rsp: SpOp.Up, tos: TosMode.Load, trst: true),
-        }),
+            Fetch(SpOp.RspDown),
+            SpWrite(Src.Tos, AMode.DStack, SpOp.DspUp),
+            SpRead(AMode.RPcLo, Dst.Tos, SpOp.RspUp, trst: true),
+        });
 
-        // MEMORY / I-O (0x3_) -----------------------------------------------------
-        new(0x30, "PUSH #", "ii", new[]
-        {
-            Fetch(),
-            SpWrite(Pg.DStack, Src.Tos, dsp: SpOp.Up),              // spill
-            new MicroStep(Src.Ram, Dst.Tos, Asel.Pc, PcInc: true, Tos: TosMode.Load, Trst: true),
-        }),
-
-        new(0x31, "LOAD", "aaaa", new[]
+        // MEMORY / I-O (0x3_) -------------------------------------------------
+        yield return new(0x30, "PUSH", OperandShape.Imm, new[]
         {
             Fetch(),
-            Operand(Dst.AdrLo),
-            Operand(Dst.AdrHi),
-            SpWrite(Pg.DStack, Src.Tos, dsp: SpOp.Up),              // spill
-            new MicroStep(Src.Ram, Dst.Tos, Asel.Adr, Tos: TosMode.Load, Trst: true),
-        }),
+            SpWrite(Src.Tos, AMode.DStack, SpOp.DspUp),
+            new Step(new MicroOp(Src.Ram, Dst.Tos, Amode: AMode.Pc), Trst: true),
+        });
 
-        new(0x32, "STORE", "aaaa", new[]
+        yield return new(0x31, "LOAD", OperandShape.Addr, new[]
         {
             Fetch(),
-            Operand(Dst.AdrLo),
-            Operand(Dst.AdrHi),
-            new MicroStep(Src.Tos, Dst.RamWe, Asel.Adr, Dsp: SpOp.Down),
+            Consume(Dst.AdrLo),
+            Consume(Dst.AdrHi),
+            SpWrite(Src.Tos, AMode.DStack, SpOp.DspUp),
+            new Step(new MicroOp(Src.Ram, Dst.Tos, Amode: AMode.Adr), Trst: true),
+        });
+
+        yield return new(0x32, "STORE", OperandShape.Addr, new[]
+        {
+            Fetch(),
+            Consume(Dst.AdrLo),
+            Consume(Dst.AdrHi),
+            new Step(new MicroOp(Src.Tos, Dst.RamWe, Amode: AMode.Adr, Sp: SpOp.DspDown)),
             TosRefill(),
-        }),
+        });
 
-        new(0x33, "FETCH", "-", new[]
+        yield return new(0x33, "FETCH", OperandShape.None, new[]
         {
             Fetch(),
-            new MicroStep(Src.Tos, Dst.AdrLo, Asel.Pc),
-            new MicroStep(Src.Ram, Dst.Tos, Asel.PgAdrLo, Pg.Frames, Tos: TosMode.Load, Trst: true),
-        }),
+            Move(Src.Tos, Dst.AdrLo),
+            new Step(new MicroOp(Src.Ram, Dst.Tos, Amode: AMode.ZpAdrLo), Trst: true),
+        });
 
-        new(0x34, "STORE!", "-", new[]
+        yield return new(0x34, "STORE!", OperandShape.None, new[]
         {
-            Fetch(dsp: SpOp.Down),
-            new MicroStep(Src.Tos, Dst.AdrLo, Asel.Pc),
-            SpRead(Pg.DStack, Dst.B, dsp: SpOp.Down),               // data
-            new MicroStep(Src.Alu, Dst.RamWe, Asel.PgAdrLo, Pg.Frames, Alu: AluOp.FB),
+            Fetch(SpOp.DspDown),
+            Move(Src.Tos, Dst.AdrLo),
+            SpRead(AMode.DStack, Dst.B, SpOp.DspDown),
+            new Step(new MicroOp(Src.Alu, Dst.RamWe, AluFn: AluFn.Fb, Amode: AMode.ZpAdrLo)),
             TosRefill(),
-        }),
+        });
 
-        new(0x35, "IN #", "pp", new[]
+        yield return new(0x35, "IN", OperandShape.Port, new[]
         {
             Fetch(),
-            Operand(Dst.AdrLo),
-            SpWrite(Pg.DStack, Src.Tos, dsp: SpOp.Up),              // spill
-            new MicroStep(Src.Ram, Dst.Tos, Asel.PgAdrLo, Pg.Io, Tos: TosMode.Load, Trst: true),
-        }),
+            Consume(Dst.AdrLo),
+            SpWrite(Src.Tos, AMode.DStack, SpOp.DspUp),
+            new Step(new MicroOp(Src.Ram, Dst.Tos, Amode: AMode.IoAdrLo), Trst: true),
+        });
 
-        new(0x36, "OUT #", "pp", new[]
+        yield return new(0x36, "OUT", OperandShape.Port, new[]
         {
             Fetch(),
-            Operand(Dst.AdrLo),
-            new MicroStep(Src.Tos, Dst.RamWe, Asel.PgAdrLo, Pg.Io, Dsp: SpOp.Down),
+            Consume(Dst.AdrLo),
+            new Step(new MicroOp(Src.Tos, Dst.RamWe, Amode: AMode.IoAdrLo, Sp: SpOp.DspDown)),
             TosRefill(),
-        }),
+        });
 
-        new(0x37, "IN", "-", new[]                                  // ( p -- v )
+        yield return new(0x37, "INS", OperandShape.None, new[]
         {
             Fetch(),
-            new MicroStep(Src.Tos, Dst.AdrLo, Asel.Pc),
-            new MicroStep(Src.Ram, Dst.Tos, Asel.PgAdrLo, Pg.Io, Tos: TosMode.Load, Trst: true),
-        }),
+            Move(Src.Tos, Dst.AdrLo),
+            new Step(new MicroOp(Src.Ram, Dst.Tos, Amode: AMode.IoAdrLo), Trst: true),
+        });
 
-        new(0x38, "OUT", "-", new[]                                 // ( d p -- )
+        yield return new(0x38, "OUTS", OperandShape.None, new[]
         {
-            Fetch(dsp: SpOp.Down),
-            new MicroStep(Src.Tos, Dst.AdrLo, Asel.Pc),
-            SpRead(Pg.DStack, Dst.B, dsp: SpOp.Down),               // data
-            new MicroStep(Src.Alu, Dst.RamWe, Asel.PgAdrLo, Pg.Io, Alu: AluOp.FB),
+            Fetch(SpOp.DspDown),
+            Move(Src.Tos, Dst.AdrLo),
+            SpRead(AMode.DStack, Dst.B, SpOp.DspDown),
+            new Step(new MicroOp(Src.Alu, Dst.RamWe, AluFn: AluFn.Fb, Amode: AMode.IoAdrLo)),
             TosRefill(),
-        }),
+        });
 
-        // FRAME (0x4_) ---------------------------------------------------------------
-        new(0x40, "ENTER", "kk", new[]
+        // FRAME (0x8_) --------------------------------------------------------
+        yield return new(0x80, "ENTER", OperandShape.Count, new[]
         {
             Fetch(),
-            Operand(Dst.B),
-            new MicroStep(Src.Bp, Dst.A, Asel.Pc),
-            AluTo(Dst.Bp, AluOp.Add, trst: true),
-        }),
+            Consume(Dst.B),
+            Move(Src.Bp, Dst.A),
+            AluTo(Dst.Bp, AluFn.AddAB, trst: true),
+        });
 
-        new(0x41, "LOCAL@", "oo", new[]
+        yield return new(0x81, "LOCAL@", OperandShape.Offset, new[]
         {
             Fetch(),
-            Operand(Dst.B),
-            new MicroStep(Src.Bp, Dst.A, Asel.Pc),
-            SpWrite(Pg.DStack, Src.Tos, dsp: SpOp.Up),              // spill; ALU settles
-            AluTo(Dst.AdrLo, AluOp.Add),
-            new MicroStep(Src.Ram, Dst.Tos, Asel.PgAdrLo, Pg.Frames, Tos: TosMode.Load, Trst: true),
-        }),
+            Consume(Dst.B),
+            Move(Src.Bp, Dst.A),
+            SpWrite(Src.Tos, AMode.DStack, SpOp.DspUp),
+            AluTo(Dst.AdrLo, AluFn.AddAB),
+            new Step(new MicroOp(Src.Ram, Dst.Tos, Amode: AMode.ZpAdrLo), Trst: true),
+        });
 
-        new(0x42, "LOCAL!", "oo", new[]
+        yield return new(0x82, "LOCAL!", OperandShape.Offset, new[]
         {
             Fetch(),
-            Operand(Dst.B),
-            new MicroStep(Src.Bp, Dst.A, Asel.Pc),
-            AluTo(Dst.AdrLo, AluOp.Add),
-            new MicroStep(Src.Tos, Dst.RamWe, Asel.PgAdrLo, Pg.Frames, Dsp: SpOp.Down),
+            Consume(Dst.B),
+            Move(Src.Bp, Dst.A),
+            AluTo(Dst.AdrLo, AluFn.AddAB),
+            new Step(new MicroOp(Src.Tos, Dst.RamWe, Amode: AMode.ZpAdrLo, Sp: SpOp.DspDown)),
             TosRefill(),
-        }),
+        });
 
-        // FLOW (0x5_) ----------------------------------------------------------------
-        new(0x50, "JUMP", "aaaa", Jump()),
-        new(0x51, "CALL", "aaaa", new[]
+        // FLOW (0x9_) ---------------------------------------------------------
+        yield return new(0x90, "JUMP", OperandShape.Addr, JumpSteps());
+
+        yield return new(0x91, "CALL", OperandShape.Addr, new[]
         {
             Fetch(),
-            Operand(Dst.B),                                         // target lo
-            Operand(Dst.A),                                         // target hi
-            SpWrite(Pg.RPcLo, Src.PcByte),
-            SpWrite(Pg.RPcHi, Src.PcByte, pcHi: true),
-            SpWrite(Pg.RBp,   Src.Bp, rsp: SpOp.Up),                // one count per frame
-            AluTo(Dst.PcLo, AluOp.FB),
-            AluTo(Dst.PcHi, AluOp.FA, trst: true),
-        }),
+            Consume(Dst.B),
+            Consume(Dst.A),
+            SpWrite(Src.PcbLo, AMode.RPcLo),
+            SpWrite(Src.PcbHi, AMode.RPcHi),
+            SpWrite(Src.Bp,    AMode.RBp, SpOp.RspUp),
+            AluTo(Dst.PcLo, AluFn.Fb),
+            AluTo(Dst.PcHi, AluFn.Fa, trst: true),
+        });
 
-        // Conditionals: COND=0 row skips the operand bytes; COND=1 row is JUMP.
-        Bcc(0x5A, "BEQ"), Bcc(0x5B, "BNE"),
-        Bcc(0x5C, "BCS"), Bcc(0x5D, "BCC"),
-        Bcc(0x5E, "BMI"), Bcc(0x5F, "BPL"),
+        // CMP: shares SUB's '181 code, so it cannot live in the quadrant.
+        // Placed at 0x96 in FLOW, whose low six bits (010110) read as SUB
+        // through ALUFN=Ir; non-destructive (NOS restored, TOS held).
+        yield return new(0x96, "CMP", OperandShape.None, new[]
+        {
+            Fetch(SpOp.DspDown),
+            SpRead(AMode.DStack, Dst.B, SpOp.DspUp),
+            Move(Src.Tos, Dst.A),
+            new Step(new MicroOp(AluFn: AluFn.Ir, Amode: AMode.Adr, NzWe: true, CWe: true), Trst: true),
+        });
 
-        // 0xFF — HALT anchor: fetch, then the HALT strobe stops the clock.
-        new(0xFF, "HALT", "-", new[]
+        foreach (var (op, name) in new[]
+                 { (0x9A, "BEQ"), (0x9B, "BNE"), (0x9C, "BCS"),
+                   (0x9D, "BCC"), (0x9E, "BMI"), (0x9F, "BPL") })
+        {
+            yield return new(op, name, OperandShape.Addr,
+                Steps: new[]
+                {
+                    Fetch(),
+                    new Step(new MicroOp(Src.Ram, Dst.None, Amode: AMode.Pc)),   // skip lo (PC++)
+                    new Step(new MicroOp(Src.Ram, Dst.None, Amode: AMode.Pc), Trst: true), // skip hi
+                },
+                TakenSteps: JumpSteps());
+        }
+
+        // HALT anchor ---------------------------------------------------------
+        yield return new(0xFF, "HALT", OperandShape.None, new[]
         {
             Fetch(),
-            new MicroStep(Dst: Dst.Halt, Trst: true),
-        }),
-    };
+            new Step(new MicroOp(Dst: Dst.Halt, Amode: AMode.Adr), Trst: true),
+        });
+    }
 
-    static MicroStep[] Jump() => new[]
+    static Step[] JumpSteps() => new[]
     {
         Fetch(),
-        Operand(Dst.B),
-        Operand(Dst.A),
-        AluTo(Dst.PcLo, AluOp.FB),
-        AluTo(Dst.PcHi, AluOp.FA, trst: true),
+        Consume(Dst.B),
+        Consume(Dst.A),
+        AluTo(Dst.PcLo, AluFn.Fb),
+        AluTo(Dst.PcHi, AluFn.Fa, trst: true),
     };
 
-    static Instruction Bcc(byte opcode, string mnemonic) => new(opcode, mnemonic, "aaaa",
-        Steps: new[]                                                // not taken
-        {
-            Fetch(),
-            new MicroStep(PcInc: true),                             // skip lo
-            new MicroStep(PcInc: true, Trst: true),                 // skip hi
-        },
-        StepsCondTrue: Jump());                                     // taken
+    // ---- the ALU quadrant (0x40-0x7F), generated from '181 codes -----------
+    //
+    // Every quadrant opcode is a valid instruction: the opcode's low six bits
+    // are the '181 function, routed by ALUFN=Ir. Named ops get their mnemonic;
+    // the rest are ALU #n. Three named ops have special microprograms (NOT
+    // unary, TST flags-only); the default is the 4-T binary op. C is written
+    // when M = 0 (arithmetic); logic (M = 1) preserves it.
 
-    // Hardware interrupt entry — the INTP=1 rows, shared by every opcode.
-    // Runs BEFORE the fetch increments PC: raw PC is pushed, B = /INTP = 0.
-    public static readonly MicroStep[] Entry =
+    static IEnumerable<Instruction> AluQuadrant()
     {
-        SpWrite(Pg.RPcLo,  Src.PcByte),
-        SpWrite(Pg.RPcHi,  Src.PcByte, pcHi: true),
-        SpWrite(Pg.RFlags, Src.Flags),
-        SpWrite(Pg.RBp,    Src.Bp, rsp: SpOp.Up),
-        new MicroStep(Src.Vec, Dst.PcLo, ISet: true),
-        new MicroStep(Src.Vec, Dst.PcHi, Trst: true),
+        var named = new Dictionary<int, string>
+        {
+            [Add.QuadrantOpcode] = "ADD",
+            [Adc.QuadrantOpcode] = "ADC",
+            [Sub.QuadrantOpcode] = "SUB",
+            [Xor.QuadrantOpcode] = "XOR",
+            [And.QuadrantOpcode] = "AND",
+            [Or.QuadrantOpcode]  = "OR",
+            [NotA.QuadrantOpcode] = "NOT",
+            [Fa.QuadrantOpcode]   = "TST",
+        };
+
+        for (int op = 0x40; op <= 0x7F; op++)
+        {
+            bool m = (op & 0x20) != 0;          // logic when set
+            bool writesC = !m;                  // arithmetic writes carry
+            string name = named.TryGetValue(op, out var n) ? n : $"ALU_{op:X2}";
+
+            Step[] steps;
+            if (name == "NOT")
+            {
+                steps = new[]
+                {
+                    Fetch(),
+                    Move(Src.Tos, Dst.A),
+                    AluTo(Dst.Tos, AluFn.Ir, nz: true, trst: true),
+                };
+            }
+            else if (name == "TST")
+            {
+                steps = new[]
+                {
+                    Fetch(),
+                    Move(Src.Tos, Dst.A),
+                    new Step(new MicroOp(AluFn: AluFn.Ir, Amode: AMode.Adr, NzWe: true), Trst: true),
+                };
+            }
+            else
+            {
+                steps = new[]
+                {
+                    Fetch(),
+                    new Step(new MicroOp(Src.Tos, Dst.A, Amode: AMode.Adr, Sp: SpOp.DspDown)),
+                    SpRead(AMode.DStack, Dst.B),
+                    AluTo(Dst.Tos, AluFn.Ir, nz: true, c: writesC, trst: true),
+                };
+            }
+            yield return new(op, name, OperandShape.None, steps);
+        }
+    }
+
+    // ---- the interrupt-entry micro-sequence (INTP = 1, all opcodes) --------
+
+    public static readonly Step[] Entry =
+    {
+        SpWrite(Src.PcbLo, AMode.RPcLo),
+        SpWrite(Src.PcbHi, AMode.RPcHi),
+        SpWrite(Src.Flags, AMode.RFlags),
+        SpWrite(Src.Bp,    AMode.RBp, SpOp.RspUp),
+        new Step(new MicroOp(Src.Vec, Dst.PcLo, Amode: AMode.Adr, ISet: true)),
+        new Step(new MicroOp(Src.Vec, Dst.PcHi, Amode: AMode.Adr), Trst: true),
     };
 
-    // Fill for unassigned opcodes and unreachable T-states: halt visibly.
-    public static readonly MicroStep IllegalFill = new(Dst: Dst.Halt, Trst: true);
+    /// <summary>Fill for unassigned opcodes and unreachable T-states: halt.</summary>
+    public static readonly Step IllegalFill =
+        new Step(new MicroOp(Dst: Dst.Halt, Amode: AMode.Adr), Trst: true);
+
+    // ---- assembled table + invariants --------------------------------------
+
+    static List<Instruction>? cache;
+
+    public static IReadOnlyList<Instruction> All
+    {
+        get
+        {
+            if (cache is not null) return cache;
+            var list = Fixed().Concat(AluQuadrant())
+                              .OrderBy(i => i.Opcode).ToList();
+
+            // Invariant: no duplicate opcodes.
+            var seen = new HashSet<int>();
+            foreach (var i in list)
+                if (!seen.Add(i.Opcode))
+                    throw new InvalidOperationException($"Duplicate opcode 0x{i.Opcode:X2} ({i.Mnemonic})");
+
+            // Invariant: CMP's low six bits equal the SUB '181 function code,
+            // so ALUFN=Ir yields subtract. Guards against a silent renumber.
+            var cmp = list.First(i => i.Mnemonic == "CMP");
+            int cmpFn = cmp.Opcode & 0x3F;
+            int subFn = (Sub.M ? 0x20 : 0) | (Sub.Cn ? 0x10 : 0) | (Sub.S & 0xF);
+            if (cmpFn != subFn)
+                throw new InvalidOperationException(
+                    $"CMP opcode low6 (0x{cmpFn:X2}) must equal the SUB '181 code (0x{subFn:X2})");
+
+            // Invariant: every step's terminal is well-formed.
+            foreach (var i in list)
+            {
+                if (i.Steps.Count == 0 || !i.Steps[^1].Trst)
+                    throw new InvalidOperationException($"{i.Mnemonic}: last step must set TRST");
+                if (i.Steps.Count > 8)
+                    throw new InvalidOperationException($"{i.Mnemonic}: more than 8 T-states");
+                if (i.TakenSteps is { } t && (t.Count == 0 || !t[^1].Trst))
+                    throw new InvalidOperationException($"{i.Mnemonic}: taken path must set TRST");
+            }
+
+            cache = list;
+            return cache;
+        }
+    }
 }

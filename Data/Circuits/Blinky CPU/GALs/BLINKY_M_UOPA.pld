@@ -1,0 +1,137 @@
+/* BLINKY_M_UOPA — Blinky-M rev 14 GAL control          GENERATED
+ *
+ * Emitted from the canonical instruction table (57 micro-ops). Do not
+ * hand-edit; regenerate. Verify with BlinkyJED, cross-check in WinCUPL.
+ *
+ * Stage 2 decoder A of 2 — micro-op index -> SRC, DST, ALUFN, ISET.
+ * Combinational; 57 live indices, 71 don't-care.
+ */
+Name     UOPA;
+PartNo   00;
+Date     generated;
+Revision 14;
+Designer BlinkyMGen;
+Company  ;
+Assembly ;
+Location ;
+Device   g22v10;
+
+/* inputs: micro-op index from the Stage-1 sequencer */
+PIN 2  = IDX0;
+PIN 3  = IDX1;
+PIN 4  = IDX2;
+PIN 5  = IDX3;
+PIN 6  = IDX4;
+PIN 7  = IDX5;
+PIN 8  = IDX6;
+
+PIN 14 = ALUFN1;
+PIN 15 = SRC2;
+PIN 16 = DST2;
+PIN 17 = SRC0;
+PIN 18 = DST0;
+PIN 19 = DST3;
+PIN 20 = DST1;
+PIN 21 = SRC1;
+PIN 22 = ALUFN0;
+PIN 23 = ISET;
+
+/* ALUFN1 (pin 14, 2 term(s) of 8) */
+ALUFN1 = !IDX2 & !IDX3 & IDX4 & !IDX5
+     # IDX0 & !IDX3 & IDX4 & !IDX5;
+
+/* SRC2 (pin 15, 5 term(s) of 10) */
+SRC2 = !IDX0 & !IDX2 & IDX3 & !IDX4 & !IDX5
+     # IDX0 & IDX1 & IDX2 & IDX3 & IDX4
+     # IDX0 & !IDX1 & !IDX2 & !IDX3 & !IDX4 & IDX5
+     # !IDX0 & IDX1 & IDX2 & IDX3 & IDX5
+     # IDX0 & IDX1 & IDX2 & IDX4 & IDX5;
+
+/* DST2 (pin 16, 10 term(s) of 12) */
+DST2 = !IDX1 & IDX2 & !IDX3 & !IDX4 & !IDX5
+     # !IDX0 & IDX2 & !IDX3 & !IDX4 & !IDX5
+     # IDX1 & !IDX2 & IDX3 & !IDX4 & !IDX5
+     # IDX0 & IDX2 & IDX3 & !IDX4 & !IDX5
+     # IDX0 & !IDX1 & !IDX2 & !IDX3 & IDX4 & !IDX5
+     # !IDX0 & IDX1 & !IDX2 & !IDX3 & IDX4
+     # !IDX0 & IDX2 & IDX3 & IDX4
+     # IDX1 & !IDX2 & IDX4 & IDX5
+     # IDX0 & IDX2 & IDX4 & IDX5
+     # IDX3 & IDX4 & IDX5;
+
+/* SRC0 (pin 17, 10 term(s) of 14) */
+SRC0 = !IDX0 & !IDX2 & IDX3 & !IDX4 & !IDX5
+     # IDX1 & IDX2 & IDX3 & !IDX4 & !IDX5
+     # !IDX2 & !IDX3 & IDX4 & !IDX5
+     # IDX0 & !IDX3 & IDX4 & !IDX5
+     # IDX0 & !IDX1 & IDX2 & IDX4 & !IDX5
+     # IDX0 & !IDX1 & IDX2 & !IDX3 & !IDX4 & IDX5
+     # !IDX0 & IDX1 & IDX2 & IDX3 & IDX5
+     # IDX0 & !IDX1 & !IDX2 & IDX4 & IDX5
+     # !IDX0 & !IDX1 & IDX2 & IDX4 & IDX5
+     # IDX0 & IDX1 & IDX2 & IDX4 & IDX5;
+
+/* DST0 (pin 18, 16 term(s) of 16) */
+DST0 = IDX0 & !IDX3 & !IDX4 & !IDX5
+     # IDX1 & IDX2 & !IDX4 & !IDX5
+     # !IDX1 & !IDX2 & IDX3 & !IDX4 & !IDX5
+     # !IDX0 & IDX3 & !IDX4 & !IDX5
+     # !IDX0 & !IDX1 & !IDX3 & IDX4 & !IDX5
+     # !IDX0 & IDX2 & !IDX3 & IDX4
+     # !IDX0 & !IDX2 & IDX3 & !IDX5
+     # IDX1 & !IDX2 & IDX3 & IDX4
+     # !IDX0 & IDX1 & IDX3 & !IDX5
+     # !IDX0 & IDX1 & !IDX2 & !IDX3 & IDX5
+     # IDX0 & IDX1 & IDX2 & !IDX3 & !IDX4
+     # IDX0 & IDX1 & !IDX2 & IDX3 & IDX5
+     # IDX0 & !IDX1 & IDX2 & IDX3 & IDX5
+     # IDX0 & !IDX2 & IDX4 & IDX5
+     # !IDX1 & IDX2 & IDX4 & IDX5
+     # IDX3 & IDX4 & IDX5;
+
+/* DST3 (pin 19, 12 term(s) of 16) */
+DST3 = !IDX0 & IDX1 & IDX2 & !IDX3 & !IDX4 & !IDX5
+     # !IDX1 & IDX2 & IDX3 & !IDX4 & !IDX5
+     # IDX0 & IDX1 & !IDX3 & IDX4 & !IDX5
+     # IDX0 & IDX2 & IDX4 & !IDX5
+     # !IDX1 & !IDX3 & !IDX4 & IDX5
+     # !IDX1 & !IDX2 & !IDX4 & IDX5
+     # !IDX0 & !IDX2 & IDX3 & IDX5
+     # !IDX0 & IDX1 & IDX3 & IDX5
+     # !IDX0 & !IDX2 & IDX4 & IDX5
+     # IDX1 & !IDX2 & IDX4 & IDX5
+     # IDX0 & !IDX1 & IDX2 & IDX4
+     # !IDX0 & IDX1 & IDX4 & IDX5;
+
+/* DST1 (pin 20, 10 term(s) of 14, active-low) */
+!DST1 = !IDX1 & !IDX2 & !IDX3 & !IDX4 & !IDX5
+     # IDX0 & IDX1 & IDX2 & !IDX4
+     # !IDX0 & !IDX2 & IDX3 & !IDX4 & !IDX5
+     # IDX0 & IDX2 & IDX3 & !IDX4 & !IDX5
+     # IDX0 & !IDX2 & !IDX3 & IDX4 & !IDX5
+     # !IDX0 & !IDX1 & IDX3 & IDX4 & !IDX5
+     # !IDX0 & IDX2 & IDX3 & IDX4
+     # !IDX0 & !IDX2 & !IDX3 & !IDX4 & IDX5
+     # IDX1 & IDX2 & !IDX3 & IDX5
+     # IDX0 & IDX1 & IDX3 & IDX5;
+
+/* SRC1 (pin 21, 9 term(s) of 12) */
+SRC1 = IDX0 & IDX1 & IDX2 & !IDX3 & !IDX4
+     # IDX1 & !IDX2 & IDX3 & !IDX4 & !IDX5
+     # IDX0 & !IDX1 & IDX2 & IDX3 & IDX4
+     # IDX0 & !IDX1 & !IDX2 & !IDX4 & IDX5
+     # !IDX0 & !IDX1 & IDX2 & !IDX3 & !IDX4 & IDX5
+     # !IDX1 & !IDX2 & IDX3 & !IDX4 & IDX5
+     # !IDX0 & !IDX2 & IDX3 & !IDX4 & IDX5
+     # !IDX0 & !IDX1 & !IDX2 & !IDX3 & IDX4 & IDX5
+     # IDX0 & IDX1 & IDX2 & IDX4 & IDX5;
+
+/* ALUFN0 (pin 22, 3 term(s) of 10) */
+ALUFN0 = IDX1 & IDX2 & IDX3 & !IDX4 & !IDX5
+     # IDX1 & !IDX2 & !IDX3 & IDX4 & !IDX5
+     # IDX0 & !IDX1 & IDX2 & !IDX3 & !IDX4 & IDX5;
+
+/* ISET (pin 23, 2 term(s) of 8) */
+ISET = IDX0 & IDX1 & IDX2 & IDX4 & IDX5
+     # IDX3 & IDX4 & IDX5;
+

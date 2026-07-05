@@ -1,137 +1,61 @@
-﻿using System.Text;
 using BlinkyMGen;
 
 // ---------------------------------------------------------------------------
-// BlinkyMGen — builds the four Blinky-M uROM images (uROM0..uROM3, 28C64 each)
-// from the instruction table, plus a human-readable decoded listing.
+// BlinkyMGen — rev 14 control generator.
+//
+// From the one canonical instruction table it emits, into <outputFolder>:
+//   BLINKY_M_UOPA.pld, BLINKY_M_UOPB.pld     Stage 2 decoder GALs
+//   BLINKY_M_SEQ_<family>.pld, SEQ_ENTRY.pld Stage 1 sequencer GALs
+//   blinky_m_control.html                    three-view control reference
+//   OpcodeTable.cs                           BlinkyASM opcode map
+//   dictionary.txt                           the micro-op dictionary listing
+//
+// No microcode EEPROM images: rev 14 control is fuses, not ROM.
 //
 // Usage:  BlinkyMGen <outputFolder>
-// Output: uROM0.hex .. uROM3.hex (Intel HEX), listing.txt
 // ---------------------------------------------------------------------------
-
-const int RomSize = 8192;                       // 28C64
 
 if (args.Length != 1)
 {
     Console.WriteLine("Usage: BlinkyMGen <outputFolder>");
-    Console.WriteLine("Writes uROM0.hex .. uROM3.hex (Intel HEX) and listing.txt to the folder.");
+    Console.WriteLine("Emits the rev 14 GAL sources, HTML control reference, and assembler table.");
     return;
 }
+
 string outDir = args[0];
 Directory.CreateDirectory(outDir);
 
-var rom = new byte[4][];
-for (int i = 0; i < 4; i++) rom[i] = new byte[RomSize];
+var program = InstructionSet.All;
+var dict = new MicroDictionary(program);
+var seq = new Sequencer(program, dict);
 
-// uROM address: opcode<<5 | T<<2 | COND<<1 | INTP
-static int Addr(int opcode, int t, int cond, int intp)
-    => (opcode << 5) | (t << 2) | (cond << 1) | intp;
+PldEmitter.EmitAll(outDir, dict, seq);
+HtmlMatrix.Emit(Path.Combine(outDir, "blinky_m_control.html"), program, dict, seq);
+AsmTableEmitter.Emit(Path.Combine(outDir, "OpcodeTable.cs"), program);
+WriteDictionaryListing(Path.Combine(outDir, "dictionary.txt"), program, dict, seq);
 
-void Write(int opcode, int t, int cond, int intp, MicroStep s)
-{
-    int a = Addr(opcode, t, cond, intp);
-    rom[0][a] = s.Rom0; rom[1][a] = s.Rom1; rom[2][a] = s.Rom2; rom[3][a] = s.Rom3;
-}
-
-// 1) Fill the whole map with the illegal-opcode row: halt visibly.
-for (int a = 0; a < RomSize; a++)
-{
-    var f = InstructionSet.IllegalFill;
-    rom[0][a] = f.Rom0; rom[1][a] = f.Rom1; rom[2][a] = f.Rom2; rom[3][a] = f.Rom3;
-}
-
-// 2) INTP=1 rows: the hardware-entry microprogram, identical under every
-//    opcode (the bypass presents the fetched opcode at T0, but the entry row
-//    wins via A0). INTP is registered at the fetch edge, so the sequence
-//    cannot be torn when ISET clears the pending condition.
-for (int op = 0; op < 256; op++)
-    for (int cond = 0; cond < 2; cond++)
-        for (int t = 0; t < InstructionSet.Entry.Length; t++)
-            Write(op, t, cond, intp: 1, InstructionSet.Entry[t]);
-
-// 3) The instruction table, INTP=0 rows. COND=1 mirrors COND=0 unless the
-//    instruction supplies a taken variant (the conditionals).
-var used = new HashSet<byte>();
-foreach (var ins in InstructionSet.All)
-{
-    if (!used.Add(ins.Opcode))
-        throw new InvalidOperationException($"Duplicate opcode 0x{ins.Opcode:X2} ({ins.Mnemonic})");
-    if (ins.Steps.Length > 8 || (ins.StepsCondTrue?.Length ?? 0) > 8)
-        throw new InvalidOperationException($"{ins.Mnemonic}: more than 8 T-states");
-    if (!ins.Steps[^1].Trst || (ins.StepsCondTrue is { } ct && !ct[^1].Trst))
-        throw new InvalidOperationException($"{ins.Mnemonic}: last step must assert TRST");
-
-    for (int t = 0; t < ins.Steps.Length; t++)
-        Write(ins.Opcode, t, cond: 0, intp: 0, ins.Steps[t]);
-
-    var taken = ins.StepsCondTrue ?? ins.Steps;
-    for (int t = 0; t < taken.Length; t++)
-        Write(ins.Opcode, t, cond: 1, intp: 0, taken[t]);
-}
-
-// 4) Emit.
-for (int i = 0; i < 4; i++)
-    File.WriteAllText(Path.Combine(outDir, $"uROM{i}.hex"), IntelHex.Emit(rom[i]));
-
-File.WriteAllText(Path.Combine(outDir, "listing.txt"), BuildListing());
-Console.WriteLine($"Wrote uROM0..uROM3.hex + listing.txt to {Path.GetFullPath(outDir)}");
-Console.WriteLine($"{used.Count} opcodes assigned, {256 - used.Count} halt-filled.");
+int named = program.Count(i => !i.Mnemonic.StartsWith("ALU_"));
+Console.WriteLine($"Instructions: {program.Count} ({named} named, {program.Count - named} ALU #n)");
+Console.WriteLine($"Micro-op dictionary: {dict.Count} of {MicroDictionary.Slots} slots");
+Console.WriteLine($"Sequencer banks: {seq.Families.Count(f => f != 0xF)} families + entry");
+Console.WriteLine($"Output -> {Path.GetFullPath(outDir)}");
 return;
 
-// ---------------------------------------------------------------------------
-
-string BuildListing()
+static void WriteDictionaryListing(string path, IReadOnlyList<Instruction> program,
+                                   MicroDictionary dict, Sequencer seq)
 {
-    var sb = new StringBuilder();
-    sb.AppendLine("Blinky-M uROM listing — generated by BlinkyMGen");
-    sb.AppendLine("Fields: SRC>DST @ADDR | ALU | PC | DSP RSP | TOS | flags | I | /TRST (asserted low)");
-    sb.AppendLine();
-
-    foreach (var ins in InstructionSet.All.OrderBy(i => i.Opcode))
+    using var w = new StreamWriter(path);
+    w.WriteLine("Blinky-M rev 14 micro-op dictionary");
+    w.WriteLine($"{dict.Count} micro-ops of {MicroDictionary.Slots} slots ({MicroDictionary.IndexBits}-bit index)");
+    w.WriteLine();
+    for (int i = 0; i < dict.Count; i++)
+        w.WriteLine($"  {i,3}: {dict.Ops[i].Describe()}");
+    w.WriteLine();
+    w.WriteLine("Instruction sequences (index lists):");
+    foreach (var ins in program)
     {
-        sb.AppendLine($"0x{ins.Opcode:X2}  {ins.Mnemonic} {ins.Operand}  — {ins.Steps.Length} T"
-            + (ins.StepsCondTrue is { } ct ? $" not taken / {ct.Length} T taken" : ""));
-        Dump(sb, ins.Steps, ins.StepsCondTrue is null ? "" : "  [COND=0]");
-        if (ins.StepsCondTrue is { } tk) Dump(sb, tk, "  [COND=1]");
-        sb.AppendLine();
-    }
-
-    sb.AppendLine("(INTP=1)  hardware entry — shared by every opcode — "
-        + $"{InstructionSet.Entry.Length} T");
-    Dump(sb, InstructionSet.Entry, "");
-    return sb.ToString();
-}
-
-static void Dump(StringBuilder sb, MicroStep[] steps, string tag)
-{
-    if (tag.Length > 0) sb.AppendLine(tag);
-    for (int t = 0; t < steps.Length; t++)
-    {
-        var s = steps[t];
-        var p = new List<string>();
-
-        if (s.Src != Src.None || s.Dst != Dst.None)
-            p.Add($"{s.Src}>{s.Dst} @{AddrName(s)}");
-        if (s.Src == Src.Alu || s.NzWe) p.Add($"ALU[{Convert.ToString(s.Rom1 & 0x3F, 2).PadLeft(6, '0')}]");
-        if (s.PcInc) p.Add("PC++");
-        if (s.PcHiByte) p.Add("PCB=hi");
-        if (s.Dsp != SpOp.Hold) p.Add($"DSP{(s.Dsp == SpOp.Up ? "++" : "--")}");
-        if (s.Rsp != SpOp.Hold) p.Add($"RSP{(s.Rsp == SpOp.Up ? "++" : "--")}");
-        if (s.Tos != TosMode.Hold) p.Add($"TOS:{s.Tos}");
-        if (s.NzWe) p.Add("NZ_WE");
-        if (s.CWe) p.Add("C_WE");
-        if (s.ISet) p.Add("I=1");
-        if (s.IClr) p.Add("I=0");
-        if (s.Trst) p.Add("/TRST");
-
-        sb.AppendLine($"  T{t}  {string.Join("  ", p)}");
+        string s = string.Join(" ", ins.Steps.Select(x => dict.Index(x.Op)));
+        string tk = ins.TakenSteps is { } t ? "  taken: " + string.Join(" ", t.Select(x => dict.Index(x.Op))) : "";
+        w.WriteLine($"  0x{ins.Opcode:X2} {ins.Mnemonic,-7} {s}{tk}");
     }
 }
-
-static string AddrName(MicroStep s) => s.Asel switch
-{
-    Asel.Pc => "PC",
-    Asel.Adr => "ADR",
-    Asel.PgSp => $"{{{(int)s.Pg:X2},{(s.SpSelRsp ? "RSP" : "DSP")}}}",
-    _ => $"{{{(int)s.Pg:X2},ADRlo}}",
-};

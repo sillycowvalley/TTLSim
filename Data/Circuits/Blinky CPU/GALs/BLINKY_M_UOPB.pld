@@ -1,0 +1,132 @@
+/* BLINKY_M_UOPB — Blinky-M rev 14 GAL control          GENERATED
+ *
+ * Emitted by BlinkyMGen from the canonical instruction table. Do not
+ * hand-edit: regenerate. Verify with BlinkyJED, cross-check in WinCUPL.
+ *
+ * Stage 2 decoder B of 2 — micro-op index -> control lines.
+ *  * Combinational. Inputs IDX0..6 (sequence ROM/GAL output).
+ *  * Dictionary size 57 of 128; unused indices are don't-cares.
+ */
+Name     UOPB;
+PartNo   00;
+Date     generated;
+Revision 14;
+Designer BlinkyMGen;
+Company  ;
+Assembly ;
+Location ;
+Device   g22v10;
+PIN 14 = SPOP2;
+PIN 15 = C_WE;
+PIN 16 = SPOP0;
+PIN 17 = AMODE1;
+PIN 18 = AMODE0;
+PIN 19 = AMODE2;
+PIN 20 = SPOP1;
+PIN 21 = NZ_WE;
+PIN 22 = AMODE3;
+PIN 23 = TOSSH;
+
+/* SPOP2 (pin 14, 2 term(s) of 8, active-low) */
+!SPOP2 = IDX0 & IDX1 & IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & !IDX1 & !IDX2 & !IDX3 & IDX4 & IDX5 & !IDX6;
+
+/* C_WE (pin 15, 4 term(s) of 10, active-low) */
+!C_WE = IDX0 & IDX1 & !IDX2 & !IDX3 & IDX4 & IDX5 & !IDX6
+     # !IDX0 & !IDX1 & IDX2 & !IDX3 & IDX4 & IDX5 & !IDX6
+     # IDX0 & !IDX1 & IDX2 & !IDX3 & IDX4 & IDX5 & !IDX6
+     # !IDX0 & IDX1 & IDX2 & !IDX3 & IDX4 & IDX5 & !IDX6;
+
+/* SPOP0 (pin 16, 7 term(s) of 12, active-low) */
+!SPOP0 = !IDX0 & IDX1 & !IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # IDX0 & IDX1 & !IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & !IDX1 & IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # IDX0 & !IDX1 & IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # IDX0 & !IDX1 & IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & IDX1 & IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & !IDX1 & !IDX2 & !IDX3 & IDX4 & IDX5 & !IDX6;
+
+/* AMODE1 (pin 17, 10 term(s) of 14, active-low) */
+!AMODE1 = !IDX0 & !IDX1 & IDX2 & !IDX3 & IDX4 & !IDX5 & !IDX6
+     # IDX0 & !IDX1 & IDX2 & !IDX3 & IDX4 & !IDX5 & !IDX6
+     # !IDX0 & IDX1 & IDX2 & !IDX3 & IDX4 & !IDX5 & !IDX6
+     # IDX0 & IDX1 & IDX2 & !IDX3 & IDX4 & !IDX5 & !IDX6
+     # !IDX0 & IDX1 & IDX2 & IDX3 & IDX4 & !IDX5 & !IDX6
+     # IDX0 & IDX1 & IDX2 & IDX3 & IDX4 & !IDX5 & !IDX6
+     # !IDX0 & !IDX1 & !IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # IDX0 & !IDX1 & !IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & IDX1 & !IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & IDX1 & IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6;
+
+/* AMODE0 (pin 18, 25 term(s) of 16) */
+AMODE0 = !IDX0 & !IDX1 & !IDX2 & !IDX3 & !IDX4 & !IDX5 & !IDX6
+     # IDX0 & !IDX1 & !IDX2 & !IDX3 & !IDX4 & !IDX5 & !IDX6
+     # !IDX0 & IDX1 & !IDX2 & !IDX3 & !IDX4 & !IDX5 & !IDX6
+     # IDX0 & IDX1 & !IDX2 & !IDX3 & !IDX4 & !IDX5 & !IDX6
+     # !IDX0 & !IDX1 & IDX2 & !IDX3 & !IDX4 & !IDX5 & !IDX6
+     # IDX0 & !IDX1 & IDX2 & !IDX3 & !IDX4 & !IDX5 & !IDX6
+     # !IDX0 & IDX1 & IDX2 & !IDX3 & !IDX4 & !IDX5 & !IDX6
+     # !IDX0 & !IDX1 & IDX2 & !IDX3 & IDX4 & !IDX5 & !IDX6
+     # IDX0 & !IDX1 & IDX2 & !IDX3 & IDX4 & !IDX5 & !IDX6
+     # !IDX0 & !IDX1 & !IDX2 & IDX3 & IDX4 & !IDX5 & !IDX6
+     # IDX0 & !IDX1 & !IDX2 & IDX3 & IDX4 & !IDX5 & !IDX6
+     # !IDX0 & IDX1 & !IDX2 & IDX3 & IDX4 & !IDX5 & !IDX6
+     # !IDX0 & IDX1 & IDX2 & IDX3 & IDX4 & !IDX5 & !IDX6
+     # IDX0 & IDX1 & IDX2 & IDX3 & IDX4 & !IDX5 & !IDX6
+     # IDX0 & !IDX1 & !IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & IDX1 & !IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # IDX0 & IDX1 & !IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & !IDX1 & IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # IDX0 & !IDX1 & IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & IDX1 & IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # IDX0 & !IDX1 & !IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # IDX0 & IDX1 & !IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & !IDX1 & IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # IDX0 & IDX1 & IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & IDX1 & IDX2 & !IDX3 & IDX4 & IDX5 & !IDX6;
+
+/* AMODE2 (pin 19, 18 term(s) of 16, active-low) */
+!AMODE2 = !IDX0 & !IDX1 & !IDX2 & IDX3 & IDX4 & !IDX5 & !IDX6
+     # IDX0 & !IDX1 & !IDX2 & IDX3 & IDX4 & !IDX5 & !IDX6
+     # !IDX0 & IDX1 & !IDX2 & IDX3 & IDX4 & !IDX5 & !IDX6
+     # IDX0 & IDX1 & !IDX2 & IDX3 & IDX4 & !IDX5 & !IDX6
+     # !IDX0 & !IDX1 & IDX2 & IDX3 & IDX4 & !IDX5 & !IDX6
+     # IDX0 & !IDX1 & IDX2 & IDX3 & IDX4 & !IDX5 & !IDX6
+     # !IDX0 & IDX1 & IDX2 & IDX3 & IDX4 & !IDX5 & !IDX6
+     # IDX0 & IDX1 & IDX2 & IDX3 & IDX4 & !IDX5 & !IDX6
+     # !IDX0 & !IDX1 & !IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & IDX1 & !IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # IDX0 & IDX1 & !IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & !IDX1 & IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # IDX0 & !IDX1 & IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # IDX0 & IDX1 & !IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & !IDX1 & IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # IDX0 & !IDX1 & IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & IDX1 & IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & !IDX1 & !IDX2 & !IDX3 & IDX4 & IDX5 & !IDX6;
+
+/* SPOP1 (pin 20, 9 term(s) of 14, active-low) */
+!SPOP1 = !IDX0 & IDX1 & IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # IDX0 & IDX1 & IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & !IDX1 & !IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # IDX0 & !IDX1 & !IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & IDX1 & !IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # IDX0 & IDX1 & !IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & !IDX1 & IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # IDX0 & !IDX1 & IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & IDX1 & IDX2 & IDX3 & !IDX4 & IDX5 & !IDX6;
+
+/* NZ_WE (pin 21, 5 term(s) of 12, active-low) */
+!NZ_WE = IDX0 & !IDX1 & !IDX2 & !IDX3 & IDX4 & IDX5 & !IDX6
+     # !IDX0 & IDX1 & !IDX2 & !IDX3 & IDX4 & IDX5 & !IDX6
+     # !IDX0 & !IDX1 & IDX2 & !IDX3 & IDX4 & IDX5 & !IDX6
+     # IDX0 & !IDX1 & IDX2 & !IDX3 & IDX4 & IDX5 & !IDX6
+     # !IDX0 & IDX1 & IDX2 & !IDX3 & IDX4 & IDX5 & !IDX6;
+
+/* AMODE3 (pin 22, 2 term(s) of 10, active-low) */
+!AMODE3 = IDX0 & !IDX1 & !IDX2 & !IDX3 & !IDX4 & IDX5 & !IDX6
+     # !IDX0 & IDX1 & IDX2 & !IDX3 & IDX4 & IDX5 & !IDX6;
+
+/* TOSSH (pin 23, 1 term(s) of 8, active-low) */
+!TOSSH = IDX0 & IDX1 & !IDX2 & !IDX3 & IDX4 & IDX5 & !IDX6;
+

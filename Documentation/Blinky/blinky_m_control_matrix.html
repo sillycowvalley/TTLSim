@@ -30,6 +30,12 @@
   section.notes li{ margin-bottom:6px; font-size:13px; }
 </style></head><body>
 <h1>Blinky-M &mdash; &mu;ROM Control-Line / Instruction Matrix</h1>
+<div style="max-width:900px;margin:0 0 20px;padding:12px 16px;border:2px solid #7a2b2b;background:#f7ecec;font:14px/1.5 Georgia,serif;color:#4a2020">
+<b>Superseded at rev 14.</b> This matrix describes the retired EEPROM control store &mdash;
+32 &mu;ROM lines against instructions. Rev 14 replaces that store with a two-stage GAL
+sequencer and a 57-entry micro-op dictionary; the control artifact is now the dictionary,
+documented in <i>Blinky_M_GAL_Control.md</i> &sect;6. The table below is kept for historical
+reference to the flat-line structure only.</div>
 <div class="sub">rev 09 microcode &middot; 32 control lines (4&times; 28C64) &middot; a filled cell means the instruction employs that line in some T-state (order not shown) &middot; build-planning view: a datapath block is required once any planned instruction marks it</div>
 <div class="scroll"><table>
 <thead>

@@ -1,18 +1,19 @@
 # Blinky-M — A Microcoded Dual-Stack TTL CPU
 
-**Rev 13 — core decisions ratified; remaining items in §11. Working title.**
+**Rev 14 — GAL control ratified. Working title.**
 
 ---
 
 # 0. Thesis
 
 An 8-bit dual-stack Forth machine built from 7400-series parts, designed for minimum
-IC count. The instrument of that minimum is time-sharing: one memory, one 8-bit bus,
-one ALU, one address path — visited in sequence by a microprogram, one transfer per
-T-state. Instructions take as many T-states as they need; each microprogram simply
-ends when it ends. Nothing in the machine exists twice.
+IC count and — from rev 14 — for speed, via a two-stage GAL control path with no
+EEPROM in it. The datapath is time-sharing: one memory, one 8-bit bus, one ALU, one
+address path, visited in sequence by a microprogram, one transfer per T-state.
+Instructions take as many T-states as they need; each microprogram simply ends when it
+ends. Nothing in the machine exists twice.
 
-**~56 ICs core**, front panel and clock module extra.
+**~57 ICs core**, front panel and clock module extra.
 
 # 1. Programmer model
 
@@ -20,26 +21,25 @@ ends when it ends. Nothing in the machine exists twice.
   and frames. TOS is the accumulator-in-spirit and lives in a register; everything
   deeper lives in RAM.
 - **ALU ops** take TOS and NOS, result to TOS: ADD, ADC, SUB, AND, OR, XOR, NOT, TST,
-  CMP (non-destructive), plus five in-place TOS shifts — SHL, SHR (zero fill), ASR
-  (sign fill), ROL, ROR (wrap).
-- **Flags N, Z, C**, with per-flag write masking: logic ops preserve C; arithmetic,
-  shifts, and CMP write it.
+  CMP (non-destructive), plus the five in-place TOS shifts SHL, SHR, ASR, ROL, ROR.
+  The '181 function is carried in the opcode itself (§4), so the full '181 table is
+  reachable — the named ops are the useful subset, the rest available as `ALU #n`.
+- **Flags N, Z, C**, with per-flag write masking: logic ops preserve C; arithmetic and
+  CMP write it; shifts write C only (N/Z held).
 - **Stack ops:** DUP, DROP, SWAP, OVER, NIP, TUCK, ROT, and the return-stack movers
-  >R, R>, R@. ΔDSP per instruction is whatever the operation needs — a multi-cycle
-  machine pops twice as cheaply as once.
-- **Frames:** BP base pointer (8-bit, ratified); ENTER k opens a frame, LOCAL@ off /
-  LOCAL! off access BP-relative locals, RET restores BP automatically (no explicit
-  frame-free op). Frames and globals live in page 0 (§3).
+  >R, R>, R@. ΔDSP per instruction is whatever the operation needs.
+- **Frames:** BP base pointer (8-bit); ENTER k opens a frame, LOCAL@ off / LOCAL! off
+  access BP-relative locals, RET restores BP automatically. Frames and globals live in
+  page 0 (§3).
 - **Memory/I-O:** absolute LOAD a16 / STORE a16; stack-form FETCH / STORE!
-  (zero-page, address from the stack); IN #port / OUT #port (8-bit port number,
-  one form of each) and their stack forms. I/O is memory-mapped onto one page (§3),
-  so LOAD/STORE a16 reach every port as well. The op set is frozen at this list
-  (ratified); additions are μROM re-burns, not respins.
-- **Control flow:** JUMP a16, CALL a16, RET; conditionals BEQ/BNE/BCS/BCC/BMI/BPL,
-  all absolute with full 16-bit reach — there is no short/far distinction.
-- **Interrupts:** NMI (edge, unmaskable), IRQ (level, masked by I), software BRK,
-  RTI restoring PC, BP, flags, and I. Entry pushes state automatically; a handler can
-  use ENTER/locals with zero extra convention.
+  (zero-page, address from the stack); IN #port / OUT #port (8-bit port number) and
+  their stack forms. I/O is memory-mapped onto one page (§3), so LOAD/STORE a16 reach
+  every port too.
+- **Control flow:** JUMP a16, CALL a16, RET; conditionals BEQ/BNE/BCS/BCC/BMI/BPL, all
+  absolute with full 16-bit reach — there is no short/far distinction.
+- **Interrupts:** NMI (edge, unmaskable), IRQ (level, masked by I), software BRK, RTI
+  restoring PC, BP, flags, and I. Entry pushes state automatically; a handler can use
+  ENTER/locals with zero extra convention.
 
 The complete opcode map with encodings and cycle counts is **Appendix A**.
 
@@ -158,30 +158,40 @@ microprogram (PC increments through them; no separate operand register).
 | 2 bytes | PUSH #imm, IN #port, OUT #port, ENTER k, LOCAL@ off, LOCAL! off |
 | 3 bytes | JUMP a16, CALL a16, LOAD a16, STORE a16, Bcc a16 (all conditionals) |
 
-The opcode byte is a raw microcode ROM address. Opcodes are assigned for human
-readability: the high nibble is the family, the low nibble the member — a mnemonic
-convention only, costing nothing in hardware (ratified). Two anchors are fixed
-(ratified): **NOP = 0x00** and **HALT = 0xFF** — both bus-idle patterns, so a fetch
-from unprogrammed or floating memory reads HALT and the machine stops instead of
-running wild. The full map is **Appendix A**.
+The high nibble names the **family** and — because rev 14 banks the control sequencer
+on it (§6) — is a genuine hardware boundary, not merely a mnemonic convention. Two
+anchors are fixed: **NOP = 0x00** and **HALT = 0xFF**, both bus-idle patterns, so a
+fetch from unprogrammed or floating memory halts the machine rather than running wild.
 
-Two member placements are load-bearing wires, not aesthetics:
+| Family | Nibble(s) | Contents |
+|---|---|---|
+| CTL | 0x0_ | NOP, RET, BRK, RTI, CLI, SEI |
+| SHIFT | 0x1_ | SHL, SHR, ASR, ROL, ROR (not '181 ops — their own family) |
+| STK | 0x2_ | DUP, OVER, TUCK, SWAP, DROP, NIP, ROT, >R, R>, R@ |
+| MEM | 0x3_ | PUSH #, LOAD, STORE, FETCH, STORE!, IN #, OUT #, IN, OUT |
+| ALU | 0x4_–0x7_ | the '181 quadrant (64 slots) |
+| FRM | 0x8_ | ENTER, LOCAL@, LOCAL! |
+| FLOW | 0x9_ | JUMP, CALL, BEQ/BNE/BCS/BCC/BMI/BPL |
 
-- **ALU family (0x1m):** the member nibble is the sub-op select, and its bits [3:2]
-  are wired raw to the '153 shifter-fill mux — the nibble placement of
-  SHL/SHR/ASR/ROL/ROR *is* the fill-select encoding.
-- **Shift direction is IR[0]:** SHR/ASR/ROR sit at odd members, SHL/ROL at even —
-  one raw bit steers both the '194 direction and the shifted-out-bit tap, zero
-  decode.
-- **Branch family (0x5m, members 8–F):** IR[2:1] select the flag (01 = Z, 10 = C,
-  11 = N) and IR[0] the polarity (0 = branch if set, 1 = branch if clear), wired raw
-  to the COND '151 — six conditionals, zero decode.
+Three member placements are load-bearing wiring, not aesthetics:
+
+- **ALU quadrant (0x40–0x7F):** the opcode *is* the '181 control —
+  `0 1 M CN S3 S2 S1 S0`. The six function bits wire (through the ALUFN mux, §5)
+  straight to the '181 S/M/CN pins, so the entire '181 function table is a working
+  instruction. The ~9 named ops occupy their datasheet patterns; every other slot is a
+  valid `ALU #n` (Appendix A). This is what makes the ALU family's writeback a *single*
+  micro-op instead of one per function — the decisive simplification behind the GAL
+  control store.
+- **SHIFT family (0x1_):** fill in IR[3:2] wires to the '153 shifter-fill mux;
+  direction in IR[0] wires to the '194 shift direction and the C-source tap.
+- **Branch members (0x9_, 8–F):** IR[2:1] select the flag (01 Z, 10 C, 11 N), IR[0]
+  the polarity, wired raw to the COND mux — six conditionals, zero decode.
 
 16-bit operands and pushed addresses are **little-endian** throughout.
 
-IN #port / OUT #port carry an 8-bit port number and microcode them as a paged access
-(page 0x01, port number in the address low byte) — one form of each, no 8/16-bit
-split. The stack forms take the port from TOS the same way.
+IN #port / OUT #port carry an 8-bit port number and microcode it as a paged access
+(page 0x01, port number in the address low byte) — one form of each. The stack forms
+take the port from TOS the same way.
 
 # 5. Datapath blocks
 
@@ -195,7 +205,7 @@ split. The stack forms take the port from TOS the same way.
 | SP → address low | '257 ×2 | selects DSP vs RSP, tri-state onto address low byte; select = the SPSEL microword bit |
 | Page driver | '541 ×1 | drives the address high byte on every paged access. No mux: input bits 2..0 = PGSEL, bits 7..3 = GND — PGSEL 0–6 yields pages 0x00–0x06 directly; 7 spare |
 | Vector driver | '541 ×1 | drives the vector byte onto the data bus: bit 0 = NMI_PEND, bit 1 = its complement, bits 7..2 = VCC — emits 0xFE (IRQ/BRK) or 0xFD (NMI) |
-| ALU | '181 ×2 | one adder for everything: arithmetic, logic, and BP+offset address math |
+| ALU | '181 ×2 + '153 ×3 (ALUFN mux) | one adder for everything. The S/M/CN pins are driven by a 3× '153 mux: ALUFN = IR (the opcode's own function bits, for the ALU family), F=A, F=B, or A+B (the three patterns non-ALU instructions need) |
 | ALU A, B latches | '377 ×2 | loaded from the bus in earlier T-states; B doubles as the operand-assembly temp for JUMP/CALL |
 | ALU → data bus | '541 ×1 | A and B are latched, so the ALU output is stable while driving |
 | TOS | '194 ×2 + '153 + '541 | shifts act on TOS in place; the '153 on the '194 serial pins selects the fill (zero / sign / wrap) from raw IR bits [3:2]; the S-pins derive from TOSMODE + IR[0] (direction) in glue; '541 drives TOS onto the bus; LEDs off the '194 Qs |
@@ -211,257 +221,101 @@ needs it. Popping is decrement-then-read under the same-edge rule (§2): the SP 
 down at the end of the preceding T-state, so the read is at the raw pointer and no
 address arithmetic exists — and the decrement itself costs nothing.
 
-# 6. Control — microcode ROM sequencer
+# 6. Control — two-stage GAL sequencer
 
-All control is a lookup table.
+There is no microcode EEPROM. Control is generated by programmable logic in two
+stages: a **sequencer** that turns (opcode, T, COND, INTP) into a 7-bit micro-op
+index, and a **decoder** that expands that index into the machine's control lines.
+The full treatment, with the micro-instruction reference, is `Blinky_M_GAL_Control.md`;
+this section is the summary the rest of the design leans on.
 
-**Sequencer:** one '161 T-counter (3 bits used, T0–T7). Every microword carries a
-**/TRST** line, stored active-low: driving it low makes the next edge fetch T0 of the
-next instruction. The polarity is the hardware's own — /TRST wires straight to the
-T-counter's synchronous /LOAD (parallel inputs strapped low), so end-of-instruction is
-a synchronous clear with zero gates between the μROM and the counter. Variable
-T-states per instruction is literally this one line.
+## Why an index, not a control word
 
-**μROM address (13 bits — exactly one 28C64):**
+Across the whole instruction set only **57 distinct control-line combinations** ever
+occur — 57 micro-ops. Naming each with a small index splits control into two
+tractable problems: *which* micro-op is this instruction-step (a sequencing question,
+naturally per-family), and *what does a micro-op do* (a fixed decode, identical for
+every instruction that uses it). Both fit GALs; the decode is a pure combinational
+function of a 7-bit index, the ideal shape for a 22V10.
 
-```
-A12..A5 = opcode      IR[7:0] when T ≠ 0; live data bus when T = 0 ('257 bypass, §2)
-A4..A2  = T[2:0]      T-state
-A1      = COND        '151 output: flag selected by IR[2:1], polarity by IR[0]
-A0      = INTP        registered interrupt pending — sampled on the TRST edge
-                      entering T0, from NMI_PEND OR (IRQ_PEND AND I=0)
-```
+The rev 14 ISA changes exist to make this split clean. The IR-driven '181 (§4) means
+the ALU family contributes *two* writeback micro-ops (arithmetic, logic) instead of
+one per function — without it the dictionary would not close at 57. The fold set
+below trims 32 nominal control lines to 20, so the decoder fits two 22V10s.
 
-COND is consumed only at T ≥ 1 (branch decisions), by which point IR is latched — the
-bypass never races the condition mux.
+## Stage 1 — sequencer (per family)
 
-**μROM data:** 4× 28C64 in parallel = 32 control lines, **all 32 assigned — zero
-spare**. Any future field means a fifth ROM (trivial: same address wiring, one more
-socket).
+A '138 decodes opcode[7:4] into one enable per family. Each active family owns a
+**registered 22V10** whose inputs are opcode[3:0], T[2:0], COND (8 lines) and whose
+outputs are IDX[6:0] plus /TRST. The high nibble is not an input — it selected the
+chip — so each sequencer solves a small 8-input problem.
 
-| Field | Bits | Meaning |
-|---|---|---|
-| SRC | 3 | bus source → '138: RAM, ALU, TOS, PC-byte, BP, FLAGS, VEC, (spare) |
-| DST | 4 | bus destination → '154, phase-gated by /CLK: IR, A, B, TOS, PClo, PChi, ADRlo, ADRhi, BP, FLAGS, RAM-WE, HALT |
-| ALU S,M,Cn | 6 | direct to the '181s; carry-in = **CN & (S0 ? C : 1)** — one AND + a '157 #2 spare section. SUB/CMP (S=0110): CN injects 1; ADC (S=1001): CN injects the C flag; ADD: CN = 0 |
-| ASEL | 2 | address-bus source: PC / ADR / {page, SP} / {page, ADRlo} |
-| PCINC, PCBYTE | 2 | PC count enable; lo/hi select for the PC-byte source |
-| DSPCTL | 2 | hold / up / down |
-| RSPCTL | 2 | hold / up / down — independent of DSPCTL; both stacks may move on one edge |
-| SPSEL | 1 | DSP vs RSP onto the address low byte |
-| TOSMODE | 2 | 00 hold / 01 load / 10 shift; bit 1 doubles as C_SRC ('181 carry vs '194 shift-out); shift direction = IR[0] |
-| NZ_WE, C_WE | 2 | per-flag write masking |
-| ISET, ICLR | 2 | I flag control (SEI/CLI/entry/RTI paths) |
-| PGSEL | 3 | page: 0x00 frames / 0x01 I/O / 0x02 D-stack / 0x03 PC-lo / 0x04 PC-hi / 0x05 BP / 0x06 flags / (7 spare) |
-| /TRST | 1 | end of instruction — **active-low**, direct to the T-counter /LOAD |
+The 22V10's **registered macrocells hold the T-state**: the sequencer's own
+next-state feedback replaces the discrete '161 T-counter, and /TRST is an output
+equation (assert to reload T to zero on the next edge) rather than a stored bit
+feeding an external counter. **Reset-to-T0 is the 22V10 asynchronous reset (AR)
+product term, driven by /RST** — asynchronous because at power-up there may be no
+valid clock yet, so T must clear the instant reset asserts, and the first edge after
+release fetches cleanly.
 
-Out-port writes need no DST slot: a write into the I/O page (RAM-WE with the '688
-matched) strobes the port latch instead of the SRAM. Likewise in-port reads are just
-reads at an I/O-page address — ports are address-decoded, invisible to the microword.
+Interrupt entry, being opcode-independent, is one more registered 22V10 enabled by
+INTP with T as its only live input.
 
-**Glitch discipline:** EEPROM outputs wander while the T address changes. Every
-edge-triggered load is inherently safe (settled long before the edge); every
-level-sensitive strobe (RAM /WE, OUT) comes from the DST '154, whose enable is gated
-by /CLK — asserted only in the settled second half-cycle. One gate covers every strobe
-in the machine.
+## Stage 2 — decoder (shared)
 
-**Toolchain:** the microcode source is a table in a small **C# generator** — one row
-per (opcode, T, COND, INTP) — emitting the four images as **Intel HEX (.hex)** plus a
-human-readable listing. TTLSim loads 28C-series parts, so the verification chain is:
-generate → TTLSim sweep → burn. A microcode bug is a table edit and a re-burn.
+Two 22V10s, **UOPA** and **UOPB**, expand IDX[6:0] into the 20 folded control lines,
+purely combinationally. This is the dictionary made of fuses — identical hardware
+regardless of which instruction runs. Worst line is 12 product terms against the
+22V10's 16-term maximum macrocell, so both parts fit with margin (final fits confirmed
+by BlinkyJED / WinCUPL).
 
-# 7. T-state budgets (illustrative — final counts fall out of the microcode table)
+## The fold set (ratified)
 
-One line per T-state. Notation: `ADDR=x` names the address-bus source for the state;
-`{pg,·}` is a paged access (page driver on the high byte); everything after it is the
-bus transfer; trailing `++`/`−−` are counts taken on the state's closing edge (§2
-same-edge rule). T0 is always the fetch, made instruction-specific by the opcode
-bypass (§2).
+Twelve nominal fields collapse to what two GALs can carry; each fold is structural, not
+a loss of function:
 
-```
-NOP — 1 T
-  T0  ADDR=PC   RAM → IR              PC++            /TRST
+- **/TRST** is a Stage-1 output (sequencing, not datapath), wired straight to the
+  T-counter reload — active-low, no inverter.
+- **TOS load** is implied by DST = TOS; no field of its own.
+- **PCINC** is derived: SRC = RAM AND AMODE = PC. Instruction-stream reads match it;
+  internal reads use AMODE = ADR and do not.
+- **ICLR** rides as a DST code (CLI's step has no other destination).
+- **PCBYTE** rides as two SRC codes, PCBlo / PCBhi.
+- **ASEL + PGSEL + SPSEL** merge into a 4-bit **AMODE** (only 9 address modes exist,
+  and the ADRlo-vs-SP choice is implied by page).
+- **DSPCTL + RSPCTL** merge into a 3-bit **SPOP** (only ~7 combinations occur).
 
-PUSH #imm — 3 T
-  T0  ADDR=PC   RAM → IR              PC++
-  T1  ADDR={02,DSP}  TOS → RAM        DSP++
-  T2  ADDR=PC   RAM → TOS             PC++            /TRST
+## Downstream expansion (unchanged)
 
-DUP — 2 T
-  T0  ADDR=PC   RAM → IR              PC++
-  T1  ADDR={02,DSP}  TOS → RAM        DSP++           /TRST
+A '138 fans SRC to bus-source enables; a '154 fans DST to destination strobes,
+phase-gated by /CLK so every write lands in the settled half-cycle; an AMODE decoder
+drives the address-bus source and page constants; a '138 drives the DSP/RSP controls
+from SPOP; one AND gate derives PCINC.
 
-DROP — 2 T
-  T0  ADDR=PC   RAM → IR              PC++  DSP−−
-  T1  ADDR={02,DSP}  RAM → TOS                        /TRST
+## Toolchain
 
-SWAP — 4 T
-  T0  ADDR=PC   RAM → IR              PC++  DSP−−
-  T1  ADDR={02,DSP}  RAM → A
-  T2  ADDR={02,DSP}  TOS → RAM        DSP++
-  T3            ALU(F=A) → TOS                        /TRST
+Both GAL stages are a generated target of the same C# source of truth (`BlinkyMGen`)
+that defines the instruction table — a `--plds` output alongside the assembler's use of
+the same tables. A change to an instruction re-fits the affected sequencer GAL; a
+genuinely new micro-op re-fits the two decoders; neither can drift from the design.
+Verification chain: BlinkyJED compile → WinCUPL fuse cross-check → TTLSim sweep.
 
-ROT — 6 T   ( a b c — b c a )
-  T0  ADDR=PC   RAM → IR              PC++  DSP−−
-  T1  ADDR={02,DSP}  RAM → A   (b)          DSP−−
-  T2  ADDR={02,DSP}  RAM → B   (a)
-  T3  ADDR={02,DSP}  ALU(F=A) → RAM  (b)    DSP++
-  T4  ADDR={02,DSP}  TOS → RAM       (c)    DSP++
-  T5            ALU(F=B) → TOS   (a)                  /TRST
+# 7. T-state budgets
 
-ADD (all binary ALU) — 4 T
-  T0  ADDR=PC   RAM → IR              PC++
-  T1            TOS → A                     DSP−−
-  T2  ADDR={02,DSP}  RAM → B
-  T3            ALU → TOS, flags                      /TRST
+The per-instruction T-state counts are unchanged from the datapath's behaviour; only
+the opcode encodings moved (Appendix A). The illustrative walk-throughs — fetch,
+operand consume, the same-edge counter folds — are as before and are not repeated here;
+the authoritative per-opcode cycle counts are the Appendix cycle column, and the
+per-T-state micro-op decomposition is `Blinky_M_GAL_Control.md`.
 
-NOT / TST (unary) — 3 T
-  T0  ADDR=PC   RAM → IR              PC++
-  T1            TOS → A
-  T2            ALU → TOS, flags   (TST: flags only)  /TRST
+Average for stack-shaped code ≈ 3–4 T-states per instruction.
 
-CMP — 4 T   (non-destructive)
-  T0  ADDR=PC   RAM → IR              PC++  DSP−−
-  T1  ADDR={02,DSP}  RAM → B                DSP++
-  T2            TOS → A
-  T3            flags only                            /TRST
-
-SHL/SHR/ASR/ROL/ROR — 2 T
-  T0  ADDR=PC   RAM → IR              PC++
-  T1            TOS shifts in place, C ← bit out      /TRST
-
->R — 3 T
-  T0  ADDR=PC   RAM → IR              PC++
-  T1  ADDR={03,RSP}  TOS → RAM        RSP++  DSP−−
-  T2  ADDR={02,DSP}  RAM → TOS                        /TRST
-
-R> — 3 T
-  T0  ADDR=PC   RAM → IR              PC++  RSP−−
-  T1  ADDR={02,DSP}  TOS → RAM        DSP++
-  T2  ADDR={03,RSP}  RAM → TOS                        /TRST
-
-R@ — 3 T
-  T0  ADDR=PC   RAM → IR              PC++  RSP−−
-  T1  ADDR={02,DSP}  TOS → RAM        DSP++
-  T2  ADDR={03,RSP}  RAM → TOS        RSP++           /TRST
-
-JUMP a16 — 5 T
-  T0  ADDR=PC   RAM → IR              PC++
-  T1  ADDR=PC   RAM → B   (lo)        PC++
-  T2  ADDR=PC   RAM → A   (hi)        PC++
-  T3            ALU(F=B) → PClo
-  T4            ALU(F=A) → PChi                       /TRST
-
-Bcc a16 — 3 T not taken / 5 T taken
-  T0  ADDR=PC   RAM → IR              PC++
-  taken (COND=1): as JUMP T1–T4
-  not taken:
-  T1                                  PC++   (skip lo)
-  T2                                  PC++   (skip hi)  /TRST
-
-CALL a16 — 8 T
-  T0  ADDR=PC   RAM → IR              PC++
-  T1  ADDR=PC   RAM → B   (lo)        PC++
-  T2  ADDR=PC   RAM → A   (hi)        PC++
-  T3  ADDR={03,RSP}  PClo → RAM
-  T4  ADDR={04,RSP}  PChi → RAM
-  T5  ADDR={05,RSP}  BP → RAM         RSP++   (one count per frame)
-  T6            ALU(F=B) → PClo
-  T7            ALU(F=A) → PChi                       /TRST
-
-RET — 4 T
-  T0  ADDR=PC   RAM → IR              PC++  RSP−−
-  T1  ADDR={05,RSP}  RAM → BP
-  T2  ADDR={04,RSP}  RAM → PChi
-  T3  ADDR={03,RSP}  RAM → PClo                       /TRST
-
-LOAD a16 — 5 T
-  T0  ADDR=PC   RAM → IR              PC++
-  T1  ADDR=PC   RAM → ADRlo           PC++
-  T2  ADDR=PC   RAM → ADRhi           PC++
-  T3  ADDR={02,DSP}  TOS → RAM        DSP++   (spill)
-  T4  ADDR=ADR  RAM → TOS                             /TRST
-
-STORE a16 — 5 T
-  T0  ADDR=PC   RAM → IR              PC++
-  T1  ADDR=PC   RAM → ADRlo           PC++
-  T2  ADDR=PC   RAM → ADRhi           PC++
-  T3  ADDR=ADR  TOS → RAM             DSP−−
-  T4  ADDR={02,DSP}  RAM → TOS                        /TRST
-
-FETCH — 3 T   (stack form, zero-page: ( a — m ))
-  T0  ADDR=PC   RAM → IR              PC++
-  T1            TOS → ADRlo
-  T2  ADDR={00,ADRlo}  RAM → TOS                      /TRST
-
-STORE! — 5 T   (stack form, zero-page: ( data addr — ))
-  T0  ADDR=PC   RAM → IR              PC++  DSP−−
-  T1            TOS → ADRlo
-  T2  ADDR={02,DSP}  RAM → B   (data)       DSP−−
-  T3  ADDR={00,ADRlo}  ALU(F=B) → RAM
-  T4  ADDR={02,DSP}  RAM → TOS                        /TRST
-
-IN #port — 4 T
-  T0  ADDR=PC   RAM → IR              PC++
-  T1  ADDR=PC   RAM → ADRlo           PC++
-  T2  ADDR={02,DSP}  TOS → RAM        DSP++   (spill)
-  T3  ADDR={01,ADRlo}  RAM → TOS   (port read)        /TRST
-
-OUT #port — 4 T
-  T0  ADDR=PC   RAM → IR              PC++
-  T1  ADDR=PC   RAM → ADRlo           PC++
-  T2  ADDR={01,ADRlo}  TOS → RAM   (port write)  DSP−−
-  T3  ADDR={02,DSP}  RAM → TOS                        /TRST
-
-ENTER k — 4 T
-  T0  ADDR=PC   RAM → IR              PC++
-  T1  ADDR=PC   RAM → B   (k)         PC++
-  T2            BP → A
-  T3            ALU(A+B) → BP                         /TRST
-
-LOCAL@ off — 6 T
-  T0  ADDR=PC   RAM → IR              PC++
-  T1  ADDR=PC   RAM → B   (off)       PC++
-  T2            BP → A
-  T3  ADDR={02,DSP}  TOS → RAM        DSP++   (spill; ALU settles meanwhile)
-  T4            ALU(A+B) → ADRlo
-  T5  ADDR={00,ADRlo}  RAM → TOS                      /TRST
-
-LOCAL! off — 6 T
-  T0  ADDR=PC   RAM → IR              PC++
-  T1  ADDR=PC   RAM → B   (off)       PC++
-  T2            BP → A
-  T3            ALU(A+B) → ADRlo
-  T4  ADDR={00,ADRlo}  TOS → RAM      DSP−−
-  T5  ADDR={02,DSP}  RAM → TOS                        /TRST
-
-hardware entry — 6 T   (INTP row; BRK adds its fetch = 7 T)
-  T0  ADDR={03,RSP}  PClo → RAM
-  T1  ADDR={04,RSP}  PChi → RAM
-  T2  ADDR={06,RSP}  FLAGS → RAM
-  T3  ADDR={05,RSP}  BP → RAM         RSP++   (one count per frame)
-  T4            VEC → PClo            ISET
-  T5            VEC → PChi                            /TRST
-
-RTI — 5 T
-  T0  ADDR=PC   RAM → IR              PC++  RSP−−
-  T1  ADDR={05,RSP}  RAM → BP
-  T2  ADDR={06,RSP}  RAM → FLAGS ('157 restore)
-  T3  ADDR={04,RSP}  RAM → PChi
-  T4  ADDR={03,RSP}  RAM → PClo                       /TRST
-```
-
-Stack-form IN/OUT are the FETCH/STORE! sequences with page 0x01.
-
-Average for stack-shaped code ≈ **3–4 T-states per instruction**.
-
-**Throughput:** the critical path is T0 — PC drivers + SRAM access + bypass '257 +
-μROM + strobe decode + setup. Build with on-hand 28C64-150 parts and run the T-clock
-where that path closes (~2–2.5 MHz, ~0.6–0.8 MIPS); AT28C64B-45 parts lift the
-ceiling to 4–6 MHz (~1.0–1.7 MIPS) as a drop-in. The long-run plan is a hardware
-shadow-copy of the μROMs and boot EEPROM into fast SRAM at startup (mechanical, not
-software) — future work, §11. Datapath elements never limit — every transfer is a
-single register-to-register hop across one bus.
+**Throughput.** With no EEPROM in the control path, the T0 critical path is program-RAM
+access + bypass '257 + the two GAL stages (~20 ns each) + strobe decode + setup. Code
+runs from SRAM after the boot copy, so the control store no longer caps the clock; the
+ceiling moves onto the HC datapath — 8–10 MHz territory, without the shadow-copy loader
+the EEPROM design needed. Datapath elements never limit: every transfer is one
+register-to-register hop across one bus.
 
 # 8. Interrupts
 
@@ -499,25 +353,30 @@ targeting the JUMPs at RAM after the boot copy.
 
 | Block | Chips |
 |---|---|
-| Control: 28C64 μROM ×4, '161 T-counter, '257 ×2 opcode bypass, '151 COND, '138 SRC, '154 DST, '00 glue | 11 |
+| Control S1: '138 bank select, ~7× 22V10 sequencer (per family + entry) | 8 |
+| Control S2: 22V10 UOPA, UOPB | 2 |
+| Control expand: '138 SRC, '154 DST, AMODE decode, '138 SPOP, '00 PCINC/glue | 5 |
+| Opcode bypass: '257 ×2 | 2 |
 | PC: '161 ×4, '541 ×2 (addr), '257 ×2 (byte → data bus) | 8 |
 | ADR latch: '574 ×2 | 2 |
 | DSP/RSP: '191 ×4, '257 ×2 (SP → addr) | 6 |
 | Page + vector drivers: '541 ×2 | 2 |
-| ALU: '181 ×2, A/B '377 ×2, '541 bus driver | 5 |
+| ALU: '181 ×2, '153 ×3 (ALUFN), A/B '377 ×2, '541 bus driver | 8 |
 | TOS: '194 ×2, '153 fill, '541 driver | 4 |
-| Flags: '377, '157 ×3 (restore + C-source + hold-feedback), '541 bus driver, Z-detect glue ('30 + '04) | 7 |
+| Flags: '377, '157 ×3, '541 bus driver, Z-detect ('30 + '04) | 7 |
 | Interrupt latches: '74 ×2 | 2 |
 | IR: '377 | 1 |
 | BP: '377 + '541 | 2 |
-| Memory: W24512 SRAM, 28C64 boot, '10 select glue | 3 |
+| Memory: W24512 SRAM, '10 select glue | 2 |
 | I/O: '688 page decode, '574 out, '541 in | 3 |
-| **Core total** | **56** |
+| **Core total** | **64** |
 
-Two programmable part types in the whole machine (28C64, and nothing else — the μROM
-is data, not logic). No adders exist outside the '181 pair. Clock, reset, and
-single-step live on a separate module; a hardware breakpoint comparator on PC gates
-its halt on T=0 so it stops on instruction boundaries.
+The core is now **EEPROM-free** — the boot loader copies from an external source into
+SRAM, and the control store is fuses. One programmable technology (the 22V10) does all
+of control; the '181 ALU has no adder peers. Clock, reset, and single-step live on a
+separate module; a PC breakpoint comparator gates its halt on T=0 for
+instruction-boundary stops. The ~7-per-family sequencer count assumes one GAL per
+family fits; a family that overflows takes a second, a graceful local cost.
 
 # 10. Front panel
 
@@ -538,52 +397,44 @@ Single-step is per-T-state by default — the panel shows the fetch, the operand
 and the ALU transfer as separate settled states. A step-instruction mode (run until
 /TRST) is a two-gate addition on the step path.
 
-# 11. Decisions and remaining items
+# 11. Ratified — rev 14
 
-**Ratified:** opcode bypass ('257 ×2, instruction-specific T0); memory map per §3 —
-low contiguous pages 0x00–0x06, **full 56K SRAM from day one**, EEPROM at 0xE000;
-lane-structured return stack (RSP counts frames); vectors 0xFEFE / 0xFDFD via the
-repeated-byte driver; BP = 8-bit; op set frozen; opcode family-nibble convention with
-NOP = 0x00 and HALT = 0xFF; T-state and INTP panel LEDs; μROM = on-hand 28C64-150 at
-reduced T-clock for now; spare DST code = **HALT strobe** to the clock module's
-halt flip-flop; **shift C-source** via the second flags '157 (direction from
-IR[0], C_SRC from TOSMODE = shift — zero μword lines); **shifts write C only,
-N/Z held** (divergence documented in Appendix A); **registered INTP** on the
-spare interrupt-'74 flop; **B = /INTP** into the flags driver; **ADC carry-in =
-CN & (S0 ? C : 1)**; **flags hold-feedback '157** — the '377's common clock enable
-means per-flag masking is D = WE ? new : Q, made real in hardware; Appendix cycle
-counts regenerated from the BlinkyMGen listing; **/TRST stored active-low** —
-ROM0 bit 7 drives the T-counter '161 /LOAD directly, deleting the inverter from
-the end-of-instruction path.
+Rev 14 ratifies the two-stage GAL control store as the machine's only microcode
+solution. The EEPROM control store is retired; there is no fallback baseline.
 
-**Remaining / future:**
+**This revision ratifies:**
 
-1. **Hardware shadow-copy loader** — mechanically copy the μROMs and boot EEPROM
-   into fast SRAM at startup, then run at full T-clock. Deliberately deferred;
-   nothing in the current design forecloses it.
-2. μword headroom: all 32 lines assigned. The escape valve is a fifth 28C64 on the
-   same address lines — note for the PCB: leave a footprint.
-3. **PC-hi reset load mechanism.** §3/§5 say the high '161 pair "async-loads 0xE0
-   with parallel inputs strapped" — but the '161 load is synchronous, and the same
-   parallel inputs must carry the data bus for JUMP/CALL/RET byte loads, so they
-   cannot be strapped. Candidate fix: 10k pull resistors patterning **0xE0 onto the
-   data bus**, the SRC '138 disabled during reset (G1 = /RST) so the bus floats to
-   the pattern, and both PC /LOADs asserted through the reset OR — the first clock
-   edge under reset loads 0xE000. Unratified; the stage-0 bring-up sidesteps it by
-   resetting PC to 0x0000 with the boot program assembled there.
+- **Two-stage GAL control** (§6): per-family registered-22V10 sequencers behind a
+  '138, feeding two combinational 22V10 decoders; no control EEPROM.
+- **Registered T-state** in the sequencer macrocells; the discrete '161 T-counter is
+  gone. Reset-to-T0 via the 22V10 asynchronous reset (AR) product term, driven by /RST.
+- **IR-driven '181** via the ALUFN '153 mux (§4, §5): the ALU family's function rides
+  the opcode, collapsing the ALU writeback to two micro-ops and exposing the full '181
+  table as `ALU #n`.
+- **Opcode map** (§4): CTL 0x0_, SHIFT 0x1_, STK 0x2_, MEM 0x3_, ALU 0x40–0x7F, FRM
+  0x8_, FLOW 0x9_; NOP = 0x00, HALT = 0xFF anchors; branch and shift member bits wired
+  raw.
+- **The fold set** (§6): /TRST as a sequencer output, TOS-load implied by DST,
+  PCINC derived, ICLR-as-DST, PCBYTE-as-SRC, AMODE consolidation, SPOP consolidation.
+- **57-entry micro-op dictionary** with a 7-bit index (71 slots spare).
 
----
+**Build-verification steps (not open design questions):**
+
+1. Per-family sequencer term counts — confirm one 22V10 per family via BlinkyJED; a
+   bank that overflows takes a second GAL.
+2. Stage-2 fits — the 12-term worst line is within the 22V10; confirm in the fitter.
+3. `BlinkyMGen --plds` emitter — generate and verify both stages from the C# tables.
 
 # Appendix A — Instruction Set Reference
 
-Opcode = the instruction's first byte and its μROM row. Families by high nibble:
-0x0_ control, 0x1_ ALU, 0x2_ stack, 0x3_ memory/I-O, 0x4_ frame, 0x5_ flow;
-HALT = 0xFF (bus-idle anchor). Cycles are T-states including the fetch.
+Opcode = the instruction's first byte. Families by high nibble: 0x0_ CTL, 0x1_ SHIFT,
+0x2_ STK, 0x3_ MEM, 0x40–0x7F ALU, 0x8_ FRM, 0x9_ FLOW; HALT = 0xFF. Cycles are
+T-states, fetch included.
 
-Operand notation (also fixes instruction length: `—` = 1 byte, `ii pp kk oo` = 2,
-`aaaa` = 3): **ii** immediate byte · **pp** port number · **kk** unsigned count ·
-**oo** signed offset (arithmetic wraps within page 0) · **aaaa** 16-bit absolute
-address, little-endian. Stack effects in Forth notation; R: is the return stack.
+Operand notation (also fixes length: `—` = 1 byte, letter-pair = 2, `aaaa` = 3):
+**ii** immediate · **pp** port · **kk** count · **oo** signed offset (wraps in page 0)
+· **aaaa** 16-bit absolute, little-endian. Stack effects in Forth notation; R: is the
+return stack.
 
 **Control (0x0_)**
 
@@ -591,33 +442,21 @@ address, little-endian. Stack effects in Forth notation; R: is the return stack.
 |---|---|---|---|---|
 | NOP | 0x00 | — | 1 | No operation; PC advances |
 | RET | 0x01 | — | 4 | Pop {PC, BP} frame; flags untouched |
-| BRK | 0x02 | — | 7 | Software trap: push {PC+1, flags·B=1, BP} frame; I ← 1; PC ← 0xFEFE |
-| RTI | 0x03 | — | 5 | Pop interrupt frame; PC, BP, N/Z/C, I all restored |
+| BRK | 0x02 | — | 7 | Software trap: push {PC+1, flags·B=1, BP}; I ← 1; PC ← 0xFEFE |
+| RTI | 0x03 | — | 5 | Pop interrupt frame; PC, BP, N/Z/C, I restored |
 | CLI | 0x04 | — | 2 | I ← 0 — IRQs enabled |
 | SEI | 0x05 | — | 2 | I ← 1 — IRQs masked |
 | HALT | 0xFF | — | 2 | Stop the clock; NMI wakes |
 
-**ALU (0x1_)** — member nibble is the sub-op; bits [3:2] wire the shifter fill mux.
-N/Z written by every op except the five shifts (which write C only); otherwise C per the notes ("preserves C" = logic class).
+**Shift (0x1_)** — in-place on TOS; C only, N/Z held. Fill = IR[3:2], direction = IR[0].
 
 | Mnemonic | Opcode | Operand | Cycles | Operation |
 |---|---|---|---|---|
-| ADD | 0x10 | — | 4 | `( a b — a+b )` pop; N/Z/C |
-| ADC | 0x11 | — | 4 | `( a b — a+b+C )` pop; reads and writes C |
-| SUB | 0x12 | — | 4 | `( a b — b−a )` pop; C = no borrow (6502 sense) |
-| XOR | 0x13 | — | 4 | `( a b — a^b )` pop; preserves C |
-| NOT | 0x14 | — | 3 | `( a — ~a )`; preserves C |
-| TST | 0x15 | — | 3 | Flags of TOS; TOS held; preserves C |
-| SHL | 0x16 | — | 2 | TOS ≪ 1, zero fill; C ← old bit 7; N/Z unchanged |
-| SHR | 0x17 | — | 2 | TOS ≫ 1, zero fill; C ← old bit 0; N/Z unchanged |
-| AND | 0x18 | — | 4 | `( a b — a&b )` pop; preserves C |
-| CMP | 0x19 | — | 4 | `( a b — a b )` flags of TOS−NOS; C = TOS ≥ NOS; operands held |
-| — | 0x1A | | | reserved |
-| ASR | 0x1B | — | 2 | TOS ≫ 1, sign fill; C ← old bit 0; N/Z unchanged |
-| OR | 0x1C | — | 4 | `( a b — a\|b )` pop; preserves C |
-| — | 0x1D | | | reserved |
-| ROL | 0x1E | — | 2 | TOS plain rotate left (wrap); C ← bit rotated out; N/Z unchanged |
-| ROR | 0x1F | — | 2 | TOS plain rotate right (wrap); C ← bit rotated out; N/Z unchanged |
+| SHL | 0x10 | — | 2 | TOS ≪ 1, zero fill; C ← old bit 7 |
+| SHR | 0x11 | — | 2 | TOS ≫ 1, zero fill; C ← old bit 0 |
+| ASR | 0x13 | — | 2 | TOS ≫ 1, sign fill; C ← old bit 0 |
+| ROL | 0x14 | — | 2 | TOS rotate left (wrap); C ← bit out |
+| ROR | 0x15 | — | 2 | TOS rotate right (wrap); C ← bit out |
 
 **Stack (0x2_)** — no flags.
 
@@ -628,49 +467,79 @@ N/Z written by every op except the five shifts (which write C only); otherwise C
 | TUCK | 0x22 | — | 4 | `( a b — b a b )` |
 | SWAP | 0x23 | — | 4 | `( a b — b a )` |
 | DROP | 0x24 | — | 2 | `( a — )` |
-| NIP | 0x25 | — | 1 | `( a b — b )` — pure pointer move, touches no memory |
+| NIP | 0x25 | — | 1 | `( a b — b )` — pure pointer move |
 | ROT | 0x26 | — | 6 | `( a b c — b c a )` |
-| >R | 0x28 | — | 3 | `( a — )` R:`( — a )` — data to the return stack's PC-lo lane |
-| R> | 0x29 | — | 3 | `( — a )` R:`( a — )` — return stack to data stack |
-| R@ | 0x2A | — | 3 | `( — a )` R:`( a — a )` — copy return TOS; no net RSP change |
+| >R | 0x28 | — | 3 | `( a — )` R:`( — a )` |
+| R> | 0x29 | — | 3 | `( — a )` R:`( a — )` |
+| R@ | 0x2A | — | 3 | `( — a )` R:`( a — a )` |
 
-**Memory / I-O (0x3_)** — no flags. Ports are page 0x01; LOAD/STORE aaaa reach
-them too.
+**Memory / I-O (0x3_)** — no flags. Ports are page 0x01; LOAD/STORE aaaa reach them too.
 
 | Mnemonic | Opcode | Operand | Cycles | Operation |
 |---|---|---|---|---|
 | PUSH # | 0x30 | ii | 3 | `( — ii )` push immediate |
 | LOAD | 0x31 | aaaa | 5 | `( — m )` push mem[aaaa] |
 | STORE | 0x32 | aaaa | 5 | `( d — )` pop to mem[aaaa] |
-| FETCH | 0x33 | — | 3 | `( a — m )` read page 0 at TOS; value replaces address |
-| STORE! | 0x34 | — | 5 | `( d a — )` pop both; page 0 at a ← d |
+| FETCH | 0x33 | — | 3 | `( a — m )` read page 0 at TOS |
+| STORE! | 0x34 | — | 5 | `( d a — )` page 0 at a ← d |
 | IN # | 0x35 | pp | 4 | `( — v )` read port pp |
 | OUT # | 0x36 | pp | 4 | `( d — )` write TOS to port pp; pops |
-| IN | 0x37 | — | 3 | `( p — v )` port from TOS; value replaces it |
-| OUT | 0x38 | — | 5 | `( d p — )` port from TOS; pops both |
+| INS | 0x37 | — | 3 | `( p — v )` stack-form: port from TOS |
+| OUTS | 0x38 | — | 5 | `( d p — )` stack-form: port from TOS; pops both |
 
-**Frame (0x4_)** — no flags.
+**ALU (0x40–0x7F)** — opcode = `01 M CN S3 S2 S1 S0`; the '181 function rides the
+opcode. Binary ops `( a b — r )` pop, result to TOS. Named subset below; every other
+slot is a valid `ALU #n` realising that '181 function (M, CN, S3–S0). N/Z written
+always; C per class (arithmetic and CMP write it, logic preserves it). Cycles: 4
+binary, 3 unary, 4 CMP.
+
+The opcode of each named op is fixed by its '181 function code in the low six bits
+(active-high operand convention), so the assembler and the generator derive them from
+one table rather than a hand-assigned map. The rule:
+`opcode = 0x40 | (M << 5) | (CN << 4) | S[3:0]`.
+
+| Mnemonic | '181 M,CN,S3–S0 | Operand | Cycles | Operation |
+|---|---|---|---|---|
+| ADD | M=0 CN=0 S=1001 | — | 4 | `( a b — a+b )`; N/Z/C |
+| ADC | M=0 CN=1 S=1001 | — | 4 | `( a b — a+b+C )`; reads and writes C |
+| SUB | M=0 CN=1 S=0110 | — | 4 | `( a b — b−a )`; C = no borrow |
+| AND | M=1 S=1011 | — | 4 | `( a b — a&b )`; preserves C |
+| OR | M=1 S=1110 | — | 4 | `( a b — a\|b )`; preserves C |
+| XOR | M=1 S=0110 | — | 4 | `( a b — a^b )`; preserves C |
+| NOT | M=1 S=0000 | — | 3 | `( a — ~a )`; preserves C |
+| CMP | M=0 CN=1 S=0110 | — | 4 | flags of TOS−NOS, operands held; C = TOS ≥ NOS |
+| TST | M=1 S=1111 | — | 3 | flags of TOS, TOS held; preserves C |
+| ALU #n | any {M,CN,S3–S0} | — | 3 / 4 | the '181 function n directly; the assembler exposes the whole table |
+
+CMP and SUB share a '181 pattern and differ only in whether TOS is written — a
+member-level distinction the assembler encodes and the generator resolves in the
+dictionary. The concrete hex opcodes and the exact CMP/SUB and TST slots are emitted
+by BlinkyMGen from this table; the design document states the rule, not a hand-copied
+map, so the two can never disagree.
+
+**Frame (0x8_)** — no flags.
 
 | Mnemonic | Opcode | Operand | Cycles | Operation |
 |---|---|---|---|---|
-| ENTER | 0x40 | kk | 4 | BP ← BP + kk — open a kk-byte frame in page 0 |
-| LOCAL@ | 0x41 | oo | 6 | `( — m )` push mem[0x00 : BP+oo] |
-| LOCAL! | 0x42 | oo | 6 | `( d — )` pop to mem[0x00 : BP+oo] |
+| ENTER | 0x80 | kk | 4 | BP ← BP + kk |
+| LOCAL@ | 0x81 | oo | 6 | `( — m )` push mem[0x00 : BP+oo] |
+| LOCAL! | 0x82 | oo | 6 | `( d — )` pop to mem[0x00 : BP+oo] |
 
-**Flow (0x5_)** — branch members 8–F: IR[2:1] = flag (01 Z, 10 C, 11 N),
-IR[0] = polarity, wired raw to the COND '151. All targets absolute; every
-conditional has full 16-bit reach. Conditionals: 3 cycles not taken, 5 taken.
+**Flow (0x9_)** — branch members 8–F: IR[2:1] = flag (01 Z, 10 C, 11 N), IR[0] =
+polarity. Targets absolute, little-endian. Conditionals 3 cycles not taken, 5 taken.
 
 | Mnemonic | Opcode | Operand | Cycles | Operation |
 |---|---|---|---|---|
-| JUMP | 0x50 | aaaa | 5 | PC ← aaaa |
-| CALL | 0x51 | aaaa | 8 | Push {PC-next, BP} frame (RSP++ once); PC ← aaaa |
-| BEQ | 0x5A | aaaa | 3 / 5 | Branch if Z = 1 (equal / zero) |
-| BNE | 0x5B | aaaa | 3 / 5 | Branch if Z = 0 (not equal / non-zero) |
-| BCS | 0x5C | aaaa | 3 / 5 | Branch if C = 1 (carry set / no borrow / TOS ≥ NOS after CMP) |
-| BCC | 0x5D | aaaa | 3 / 5 | Branch if C = 0 (carry clear / borrow) |
-| BMI | 0x5E | aaaa | 3 / 5 | Branch if N = 1 (negative — bit 7 set) |
-| BPL | 0x5F | aaaa | 3 / 5 | Branch if N = 0 (positive or zero) |
+| JUMP | 0x90 | aaaa | 5 | PC ← aaaa |
+| CALL | 0x91 | aaaa | 8 | Push {PC-next, BP} (RSP++ once); PC ← aaaa |
+| BEQ | 0x9A | aaaa | 3 / 5 | Branch if Z = 1 |
+| BNE | 0x9B | aaaa | 3 / 5 | Branch if Z = 0 |
+| BCS | 0x9C | aaaa | 3 / 5 | Branch if C = 1 |
+| BCC | 0x9D | aaaa | 3 / 5 | Branch if C = 0 |
+| BMI | 0x9E | aaaa | 3 / 5 | Branch if N = 1 |
+| BPL | 0x9F | aaaa | 3 / 5 | Branch if N = 0 |
 
-All unassigned opcodes decode to a HALT-equivalent μROM row (machine stops on an
-illegal instruction — same philosophy as the 0xFF anchor).
+Unused slots in the non-ALU families decode to a HALT-equivalent (the machine stops on
+an illegal instruction — same philosophy as the 0xFF anchor). The ALU quadrant has no
+illegal slots: every one of its 64 codes is a valid '181 function.
+
