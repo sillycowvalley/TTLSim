@@ -4,6 +4,8 @@
 // The ALU family also accepts the general form  ALU #n  where n is the raw
 // 6-bit '181 function (M CN S3 S2 S1 S0), and  ALU M,CN,Ssss  as an alias.
 
+using System.Collections.Generic;
+
 namespace BlinkyM.Assembler;
 
 public enum OperandShape { None, Imm8, Port8, Count8, Offset8, Addr16 }

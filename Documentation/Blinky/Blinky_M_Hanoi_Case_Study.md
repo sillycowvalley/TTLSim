@@ -7,10 +7,10 @@ them. A machine is measured here on exactly two things: how cheaply it enters an
 leaves a subroutine, and how cheaply it keeps four bytes in the right places across
 those calls.
 
-This document implements the same algorithm on Blinky-M and on a 65C02, side by side,
-with per-instruction cycle counts, and closes with a same-clock (4 MHz) comparison.
-Blinky-M cycle counts are T-states from the rev 12 microcode; 65C02 counts are from
-the data sheet.
+This document implements the same algorithm on Blinky-M and on a 65C02, side by side, with per-instruction cycle counts, and closes with a same-clock (4 MHz) comparison.
+Blinky-M cycle counts are T-states from the rev 14 GAL control store; 65C02 counts are
+from the data sheet. The Blinky-M routine is the one in `hanoi.asm`, which assembles
+with `bmasm` against the rev 14 opcode map.
 
 ```
 hanoi(n, from, to, via):
@@ -35,7 +35,7 @@ fixed ZP addresses for fast random access, but ZP is *global*, so every level mu
 them in place before each child call.
 
 Same algorithm, same structure, same port-write move. The difference is what the ISA
-charges for calls and for state — and, on a microcoded machine, what each instruction
+charges for calls and for state — and, on a multi-cycle machine, what each instruction
 charges in T-states.
 
 ---
@@ -44,27 +44,27 @@ charges in T-states.
 
 Calling convention: caller pushes the four arguments on the data stack in the order
 **via, to, from, n** (n on top, so the base case tests without touching the frame).
-Frame layout after `ENTER 4`: `n` at BP−4, `from` at BP−3, `to` at BP−2, `via` at
-BP−1. Signed offsets wrap within page 0.
+Frame layout after `ENTER 4`: `n` at BP-4, `from` at BP-3, `to` at BP-2, `via` at
+BP-1. Signed offsets wrap within page 0.
 
-Cycle column = T-states, fetch included, per the rev 12 microcode.
+Cycle column = T-states, fetch included, per the rev 14 control store.
 
 ```
-; ports (I/O page 0x0100)
-FROM_PORT = 0
-TO_PORT   = 1
+FROM_PORT EQU 0          ; I/O page 0x01, port 0
+TO_PORT   EQU 1          ; I/O page 0x01, port 1
+DISKS     EQU 8          ; n = 8 -> 255 moves
 
 main:   PUSH #2          ; via  = peg 2                                   3
         PUSH #1          ; to   = peg 1                                   3
         PUSH #0          ; from = peg 0                                   3
-        PUSH #8          ; n    = 8 disks                                 3
+        PUSH #DISKS      ; n    = 8 disks                                 3
         CALL hanoi       ;                                                8
         HALT             ;                                                2
 
 ; ---- hanoi ( via to from n -- ) ----------------------------- T-states --
 hanoi:  TST              ; flags of n (non-destructive)                   3
         BEQ leaf         ; n == 0 -> unwind the arguments             3 / 5
-        ENTER 4          ; open this level's frame (BP += 4)              4
+        ENTER #4         ; open this level's frame (BP += 4)              4
         LOCAL! -4        ; n                                              6
         LOCAL! -3        ; from                                           6
         LOCAL! -2        ; to                                             6
@@ -76,7 +76,7 @@ hanoi:  TST              ; flags of n (non-destructive)                   3
         LOCAL@ -3        ; from  -> callee's from                         6
         PUSH #1          ;                                                3
         LOCAL@ -4        ; n                                              6
-        SUB              ; n-1   (TOS - NOS)                              4
+        SUB              ; n-1   ( a b -- b-a )                           4
         CALL hanoi       ; pushes {PC, BP} into the frame lanes           8
 
         ; move from -> to
@@ -103,22 +103,19 @@ leaf:   NIP              ; discard from (pure pointer move)               1
         RET              ;                                                4
 ```
 
-**Internal node: 136 T-states. Leaf: 17 T-states (TST 3 + BEQ taken 5 + 9).
-31 instructions, 56 bytes.**
+**Internal node: 136 T-states. Leaf: 17 T-states** (TST 3 + BEQ taken 5 + NIP.3 +
+DROP 2 + RET 4). The `hanoi` routine is **31 instructions, 56 bytes**; with the
+six-instruction `main` driver the whole program is 37 instructions, 68 bytes.
 
 Points worth noticing:
 
 - There is still **no restore code at all**. `RET` restores BP, which both frees this
-  level's frame and re-exposes the parent's — the 28-cycle `PLA`/`STA` block the 65C02
-  needs simply doesn't exist.
+  level's frame and re-exposes the parent's — the 28-cycle `PLA`/`STA` block the 65C02 needs simply doesn't exist.
 - The arguments are never permuted. Child A and child B read the *same* slots in
   different orders; the "shuffle" is just which offset each `LOCAL@` names.
 - `TST`-before-`ENTER` keeps the leaf path frameless, and `NIP` — a 1-T pure pointer
   move that touches no memory — unwinds three of the four arguments for 3 T total.
-- An alternative convention was evaluated and rejected: because frames are contiguous
-  in page 0, a caller *could* write the callee's slots directly (positive offsets) and
-  skip the push/store round trip — but at 6 T per `LOCAL!` that costs more than the
-  stack transport it replaces. The push convention stands.
+- An alternative convention was evaluated and rejected: because frames are contiguous in page 0, a caller *could* write the callee's slots directly (positive offsets) and skip the push/store round trip — but at 6 T per `LOCAL!` that costs more than the stack transport it replaces. The push convention stands.
 
 ## 65C02 implementation
 
@@ -172,50 +169,51 @@ hanoi:  lda N            ;                                                3
 done:   rts              ; caller's restore block repairs ZP              6
 ```
 
-**Internal node: 120 cycles. Leaf: 12 cycles (`lda` 3 + `beq` taken 3 + `rts` 6).
-~34 instructions, 63 bytes.**
+**Internal node: 120 cycles. Leaf: 12 cycles** (`lda` 3 + `beq` taken 3 + `rts` 6).
+~34 instructions, 63 bytes.
 
 ---
 
 ## Where the cycles go (per internal node)
 
-| Cost category                       | Blinky-M                     | 65C02                 |
-| ----------------------------------- | ---------------------------- | --------------------- |
-| Base-case test                      | 6                            | 5                     |
-| Frame open / state save             | 28 (`ENTER` + 4× `LOCAL!`)   | 21 (`PHA` ×4 + loads) |
-| State restore                       | **0** (automatic on `RET`)   | 28 (`PLA`/`STA` ×4)   |
-| Argument ordering for the two calls | 36 (`LOCAL@` ×3, twice)      | 24 (two ZP swaps)     |
-| n−1 (twice)                         | 26                           | 10                    |
-| CALL/CALL/RET vs JSR/JSR/RTS        | 20                           | 18                    |
-| The move (two port writes)          | 20                           | 14                    |
-| **Total**                           | **136**                      | **120**               |
+| Cost category                       | Blinky-M                   | 65C02                 |
+| ----------------------------------- | -------------------------- | --------------------- |
+| Base-case test                      | 6                          | 5                     |
+| Frame open / state save             | 28 (`ENTER` + 4x `LOCAL!`) | 21 (`PHA` x4 + loads) |
+| State restore                       | **0** (automatic on `RET`) | 28 (`PLA`/`STA` x4)   |
+| Argument ordering for the two calls | 36 (`LOCAL@` x3, twice)    | 24 (two ZP swaps)     |
+| n-1 (twice)                         | 26                         | 10                    |
+| CALL/CALL/RET vs JSR/JSR/RTS        | 20                         | 18                    |
+| The move (two port writes)          | 20                         | 14                    |
+| **Total**                           | **136**                    | **120**               |
 
-The structure of the result has changed from the single-cycle story. The frame
-*architecture* still deletes an entire cost category — restore is 0 against 28 — and
-still avoids all permutation. But every surviving category now pays the microcode tax:
-a `LOCAL@` is 6 T against `lda zp`'s 3, so keeping four bytes in the right places
-costs Blinky-M **64 T** per node (save + ordering) against the 65C02's **73**
-(save + restore + permutation) — a narrow win where the single-cycle machine's was
-7×. The call machinery proper is 20 vs 18, effectively even — except that Blinky-M's
-20 *includes* the frame save/restore and the 65C02's 18 buys none of it.
+The frame *architecture* still deletes an entire cost category — restore is 0 against
+28 — and still avoids all permutation. But every surviving category pays the
+multi-cycle tax: a `LOCAL@` is 6 T against `lda zp`'s 3, so keeping four bytes in the
+right places costs Blinky-M **64 T** per node (save + ordering) against the 65C02's
+**73** (save + restore + permutation) — a narrow win. The call machinery proper is 20
+vs 18, effectively even — except that Blinky-M's 20 *includes* the frame save/restore
+and the 65C02's 18 buys none of it.
 
 ## Comparison at 4 MHz (n = 8, 255 moves)
 
-Internal nodes 255, leaf calls 256. 4 MHz T-clock assumes the AT28C64B-45 μROM grade;
-the on-hand -150 parts run ~2–2.5 MHz (§7 of the design document).
+Internal nodes 255, leaf calls 256. With the GAL control store there is no EEPROM in
+the control path, so the clock ceiling sits on the HC datapath rather than a uROM
+access grade (section 7 of the design document) — the 4 MHz figure below is a
+conservative datapath-limited point, and the design targets 8-10 MHz.
 
-| Metric                     | Blinky-M                         | 65C02                                            |
-| -------------------------- | -------------------------------- | ------------------------------------------------ |
-| Cycles per instruction     | 1–8 T, fixed per opcode          | 2–7, data-dependent                              |
-| Cycles per internal node   | 136                              | 120                                              |
-| Cycles per leaf call       | 17                               | 12                                               |
-| Average cycles per move    | 153                              | 132                                              |
-| Total cycles               | 39,032                           | 33,672                                           |
-| **Run time @ 4 MHz**       | **9.8 ms**                       | **8.4 ms**                                       |
-| Moves per second @ 4 MHz   | ~26,100                          | ~30,300                                          |
-| Code size                  | 31 instructions, **56 bytes**    | ~34 instructions, 63 bytes                       |
-| Recursion depth limit      | 64 levels (page-0 frames, 4 B/level; the 256-frame return stack never binds) | ~42 levels (6 bytes/level of the 256-byte stack) |
-| **Relative speed**         | 0.86×                            | **1×**                                           |
+| Metric                   | Blinky-M                                                                     | 65C02                                            |
+| ------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------ |
+| Cycles per instruction   | 1-8 T, fixed per opcode                                                      | 2-7, data-dependent                              |
+| Cycles per internal node | 136                                                                          | 120                                              |
+| Cycles per leaf call     | 17                                                                           | 12                                               |
+| Average cycles per move  | 153                                                                          | 132                                              |
+| Total cycles             | 39,032                                                                       | 33,672                                           |
+| **Run time @ 4 MHz**     | **9.8 ms**                                                                   | **8.4 ms**                                       |
+| Moves per second @ 4 MHz | ~26,100                                                                      | ~30,300                                          |
+| Code size (routine)      | 31 instructions, **56 bytes**                                                | ~34 instructions, 63 bytes                       |
+| Recursion depth limit    | 64 levels (page-0 frames, 4 B/level; the 256-frame return stack never binds) | ~42 levels (6 bytes/level of the 256-byte stack) |
+| **Relative speed**       | 0.86x                                                                        | **1x**                                           |
 
 ## Advantages and disadvantages
 
@@ -223,39 +221,28 @@ the on-hand -150 parts run ~2–2.5 MHz (§7 of the design document).
 
 - **Zero restore code.** `RET` restores BP as a side effect of the frame lanes; the
   65C02's 28-cycle repair block per node has no Blinky-M counterpart. This is the
-  frame architecture's surviving structural win, intact from the single-cycle design.
+  frame architecture's structural win.
 - **No permutation, ever.** Both children read the same four slots in whatever order
   they need. The 65C02 physically rewrites zero page twice per node and pays for it
   on every path.
-- **Code density.** 56 bytes against 63 — the byte-stream encoding (1-byte stack ops,
-  2-byte frame ops) beats the 65C02 despite doing the same work, and the whole
-  routine is 31 instructions.
+- **Code density.** 56 bytes against 63 for the routine — the byte-stream encoding
+  (1-byte stack ops, 2-byte frame ops) beats the 65C02 despite doing the same work.
 - **Determinism.** Every opcode has a fixed T-count — no page-crossing or
-  branch-taken variability beyond the documented 3/5 split — so the totals above are
-  exact. The panel makes it visible: RSP counts frames, so its LEDs read recursion
+  branch-taken variability beyond the documented 3/5 split — so the totals above are exact. The panel makes it visible: RSP counts frames, so its LEDs read recursion
   depth *directly*, and the T-state row shows every microstep of every `CALL`.
 - **Depth.** 64 frame levels against ~42, with the 256-frame return stack far from
   binding. (Hanoi depth 8 uses an eighth of it.)
 - **Structural safety.** Absolute-only branches with full reach — no far-branch
-  idiom — and every unassigned opcode or overrun T-state lands on a HALT row instead
-  of executing garbage.
+  idiom — and every unassigned opcode or overrun T-state lands on a HALT row instead of executing garbage.
 
 **Where Blinky-M loses:**
 
-- **The microcode tax outruns the frame dividend at equal clock.** 136 T against 120
-  cycles per node is a 0.86× result: each `LOCAL@`/`LOCAL!` is 6 T against `lda zp`'s
-  3, and the marshalling round trip (push four, store four = 52 T per call) is paid at
-  those rates. The single-cycle premise that made the frames a 4× weapon is gone; the
-  frames now roughly break even against zero page and the rest of the node is simply
-  slower per instruction.
-- **Argument marshalling is still paid twice.** Same critique as ever, at higher
-  prices. Passing arguments through the frame directly (contiguous frames make it
-  legal) was evaluated and costs *more* — 6 T per `LOCAL!` exceeds the stack
-  transport it would replace.
-- **Wall-clock honesty.** The 4 MHz framing assumes the -45 μROM grade; the on-hand
-  -150 parts run this benchmark in ~17 ms. Production W65C02s clock to 14 MHz and run
-  it in 2.4 ms. Today's hardware gap is ~7×; the ratified upgrade path (-45 parts,
-  then the shadow-copy loader) closes it to ~2–3×, never to parity.
+- **The multi-cycle tax outruns the frame dividend at equal clock.** 136 T against 120 cycles per node is a 0.86x result: each `LOCAL@`/`LOCAL!` is 6 T against `lda zp`'s 3, and the marshalling round trip (push four, store four) is paid at those rates. The frames now roughly break even against zero page, and the rest of the node is simply slower per instruction.
+- **Argument marshalling is still paid twice.** Passing arguments through the frame
+  directly (contiguous frames make it legal) was evaluated and costs *more* — 6 T per
+  `LOCAL!` exceeds the stack transport it would replace.
+- **Wall-clock honesty.** The 4 MHz framing is the conservative datapath-limited point;
+  production W65C02s clock to 14 MHz and run this benchmark in ~2.4 ms. The GAL control store removes the old uROM-access ceiling, so Blinky-M's own headroom is the HC datapath (8-10 MHz territory) rather than a control-store re-burn — but the gap to a modern NMOS/CMOS part at its rated clock never closes to parity.
 - **8-bit data path.** Irrelevant to Hanoi (n = 8 is already 255 moves), but the
   65C02's indexed addressing generalizes to array-heavy workloads in ways `FETCH`'s
   zero-page reach does not.
@@ -263,8 +250,7 @@ the on-hand -150 parts run ~2–2.5 MHz (§7 of the design document).
 The summary: on the workload a stack machine is supposed to lose, the frame
 architecture still deletes exactly the software it was designed to delete — restore
 code and operand permutation — and wins on density, depth, determinism, and safety.
-What it no longer buys is speed: at equal clock the microcode tax gives the 65C02 a
-1.16× edge, and the fair conclusion is that Blinky-M's frames make it *civilised*,
-not fast. The machine's case rests on 56 chips of visible, deterministic,
-single-EEPROM-type hardware — not on beating forty years of NMOS refinement per
-cycle.
+What it does not buy is raw speed: at equal clock the multi-cycle tax gives the 65C02 a
+1.16x edge, and the fair conclusion is that Blinky-M's frames make it *civilised*, not
+fast. The machine's case rests on 67 chips of visible, deterministic, EEPROM-free
+hardware — control is eleven GAL fuses, not a microcode ROM — not on beating decades of NMOS refinement per cycle.

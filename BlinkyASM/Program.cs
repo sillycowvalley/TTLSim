@@ -1,9 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
+
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace BlinkyM.Assembler;
 
@@ -425,23 +426,23 @@ internal static class Program
                 return new[] { info.Opcode };
 
             case OperandShape.Addr16:
+            {
+                int v = 0;
+                if (RequireOperand(line, errors, out string? tok))
                 {
-                    int v = 0;
-                    if (RequireOperand(line, errors, out string? tok))
-                    {
-                        v = EvalWord(m, tok!, symbols, line.Number, errors);
-                        string bare = tok!.StartsWith("#") ? tok.Substring(1) : tok;
-                        if (symbols.ContainsKey(bare)) comment = $"{bare} = {v:X4}";
-                    }
-                    return new[] { info.Opcode, (byte)(v & 0xFF), (byte)((v >> 8) & 0xFF) };
+                    v = EvalWord(m, tok!, symbols, line.Number, errors);
+                    string bare = tok!.StartsWith("#") ? tok.Substring(1) : tok;
+                    if (symbols.ContainsKey(bare)) comment = $"{bare} = {v:X4}";
                 }
+                return new[] { info.Opcode, (byte)(v & 0xFF), (byte)((v >> 8) & 0xFF) };
+            }
 
             default:   // Imm8, Port8, Count8, Offset8
-                {
-                    int v = RequireOperand(line, errors, out string? tok)
-                        ? EvalByte(m, tok!, symbols, line.Number, errors) : 0;
-                    return new[] { info.Opcode, (byte)(v & 0xFF) };
-                }
+            {
+                int v = RequireOperand(line, errors, out string? tok)
+                    ? EvalByte(m, tok!, symbols, line.Number, errors) : 0;
+                return new[] { info.Opcode, (byte)(v & 0xFF) };
+            }
         }
     }
 
