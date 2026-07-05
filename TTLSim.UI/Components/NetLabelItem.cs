@@ -25,7 +25,10 @@ namespace TTLSim.UI.Components;
 /// a width-1 port is a single-bit tap. An EMPTY label ties nothing (drawn with
 /// a "?" placeholder), so freshly dropped labels can never silently short.
 /// A width-1 label with StartBit 0 displays its bare name ("/CS", never
-/// "/CS0"); a width-1 tap of a higher bit keeps the digit ("D4"), and every
+/// "/CS0") -- unless another label in the schematic carries the same name
+/// with a higher bit, in which case the digit stays (a lone A0 tap reads
+/// "A0" while A[0..15] exists elsewhere; see <see cref="HigherBitsProbe"/>).
+/// A width-1 tap of a higher bit keeps the digit ("D4"), and every
 /// bus-port pin is always numbered. The per-bit names are the ONLY text drawn
 /// -- there is no range-header designator. Display only -- the electrical tie
 /// key is always (name, absolute bit).
@@ -119,6 +122,22 @@ public sealed class NetLabelItem : SchematicItem
     /// </summary>
     [Browsable(false)]
     public Func<Pin, bool>? ConnectionProbe { get; set; }
+
+    /// <summary>
+    /// Installed by <see cref="Schematic"/> alongside ConnectionProbe (and
+    /// cleared with it): returns true when ANY net label in the schematic
+    /// carries the given name with a top bit above 0 (StartBit + Width - 1
+    /// &gt; 0). <see cref="BitName"/> consults it so a lone "/WE" tap shows
+    /// its bare name while an "A0" tap keeps its digit whenever A1 or above
+    /// exists anywhere under the same name. The scan deliberately IGNORES
+    /// layer visibility: hiding the layer holding A[8..15] must not rename
+    /// every A0 tap (and silently change exported net-name strings) --
+    /// naming intent is schematic-wide even when ties are activity-filtered.
+    /// Null (an item not yet in any schematic) suppresses the digit,
+    /// matching the standalone default.
+    /// </summary>
+    [Browsable(false)]
+    public Func<string, bool>? HigherBitsProbe { get; set; }
 
     public NetLabelItem()
     {
@@ -231,17 +250,26 @@ public sealed class NetLabelItem : SchematicItem
     public int BitOfPin(int pinNumber) => startBit + pinNumber - 1;
 
     /// <summary>
-    /// Display name for one bit. A plain width-1 label starting at bit 0 is
-    /// just its name ("/CS", never "/CS0"); a width-1 tap of a higher bit
-    /// keeps the digit ("D4"); every bus-port pin is numbered ("D0".."D7").
-    /// An empty label shows the "?" placeholder (an empty label ties nothing,
-    /// and the placeholder makes that visible). Display only -- the
-    /// electrical tie key is always (name, absolute bit).
+    /// Display name for one bit. A plain width-1 label starting at bit 0
+    /// shows just its name ("/CS", never "/CS0") -- UNLESS another label in
+    /// the schematic carries the same name with a higher bit, in which case
+    /// the digit stays: a standalone A0 tap reads "A0" while A[0..15] exists
+    /// elsewhere, so every rendering of the net (and every exported NET
+    /// string, which EasyEDA fuses by name) agrees. A width-1 tap of a
+    /// higher bit always keeps the digit ("D4"); every bus-port pin is
+    /// always numbered ("D0".."D7"). An empty label shows the "?"
+    /// placeholder (an empty label ties nothing, and the placeholder makes
+    /// that visible). Display only -- the electrical tie key is always
+    /// (name, absolute bit).
     /// </summary>
     public string BitName(int pinNumber)
     {
         string name = string.IsNullOrWhiteSpace(Label) ? "?" : Label;
-        if (width == 1 && startBit == 0) return name;
+        if (width == 1 && startBit == 0
+            && (string.IsNullOrWhiteSpace(Label)
+                || HigherBitsProbe is null
+                || !HigherBitsProbe(Label)))
+            return name;
         return $"{name}{BitOfPin(pinNumber)}";
     }
 

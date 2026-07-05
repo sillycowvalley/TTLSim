@@ -52,7 +52,11 @@ public sealed class Schematic
     public void Remove(SchematicItem item)
     {
         Items.Remove(item);
-        if (item is NetLabelItem label) label.ConnectionProbe = null;
+        if (item is NetLabelItem label)
+        {
+            label.ConnectionProbe = null;
+            label.HigherBitsProbe = null;
+        }
     }
 
     public void Add(Connection connection) => Connections.Add(connection);
@@ -114,10 +118,20 @@ public sealed class Schematic
     }
 
     /// <summary>
-    /// Give a net label its connection probe: "is this pin an endpoint of any
-    /// Connection in THIS schematic". The Width setter consults it before
-    /// shrinking; without a probe (an item not yet in any schematic, or one
-    /// added through a path that missed this) shrinks refuse -- fail safe.
+    /// Give a net label its probes. ConnectionProbe: "is this pin an
+    /// endpoint of any Connection in THIS schematic" -- the Width setter
+    /// consults it before shrinking; without a probe (an item not yet in
+    /// any schematic, or one added through a path that missed this) shrinks
+    /// refuse -- fail safe. HigherBitsProbe: "does any label in THIS
+    /// schematic carry the given name with a top bit above 0" -- BitName
+    /// consults it so a lone "/WE" tap drops its digit while a standalone
+    /// A0 keeps it whenever A1+ exists under the same name. That scan
+    /// deliberately ignores layer visibility: hiding the layer holding
+    /// A[8..15] must not rename every A0 tap (and silently change exported
+    /// NET strings); naming intent is schematic-wide even though the
+    /// electrical ties in <see cref="NetLabelTiePairs"/> stay
+    /// activity-filtered. Name matching is ordinal, the same rule the tie
+    /// keys use.
     /// </summary>
     private void InstallNetLabelProbe(SchematicItem item)
     {
@@ -126,6 +140,15 @@ public sealed class Schematic
         {
             foreach (var c in Connections)
                 if (c.A == pin || c.B == pin) return true;
+            return false;
+        };
+        label.HigherBitsProbe = name =>
+        {
+            foreach (var other in Items)
+                if (other is NetLabelItem nl
+                    && string.Equals(nl.Label, name, StringComparison.Ordinal)
+                    && nl.StartBit + nl.Width - 1 > 0)
+                    return true;
             return false;
         };
     }
