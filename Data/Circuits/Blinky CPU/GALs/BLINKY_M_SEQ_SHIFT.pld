@@ -6,6 +6,7 @@
  * Stage 1 sequencer for the SHIFT family. Combinational 22V10.
  * Inputs OPL0..3 (opcode low), COND, T0..2 (external '161 counter).
  * Outputs IDX0..6 (micro-op index) and TRSTN (/TRST -> counter /LOAD).
+ * Constant outputs (no macrocell used) - tie to GND: IDX0, IDX1, IDX2, IDX6.
  */
 Name     SEQ_SHIFT;
 PartNo   00;
@@ -26,23 +27,10 @@ PIN 8  = T0;
 PIN 9  = T1;
 PIN 10 = T2;
 
-PIN 14 = IDX0;
-PIN 15 = IDX1;
-PIN 16 = IDX2;
 PIN 17 = IDX3;
 PIN 18 = IDX4;
 PIN 19 = IDX5;
-PIN 20 = IDX6;
 PIN 23 = TRSTN;   /* /TRST -> external '161 /LOAD */
-
-/* IDX0: 0 term(s) */
-IDX0 = OPL0 & !OPL0;
-
-/* IDX1: 0 term(s) */
-IDX1 = OPL0 & !OPL0;
-
-/* IDX2: 0 term(s) */
-IDX2 = OPL0 & !OPL0;
 
 /* IDX3: 1 term(s) */
 IDX3 = T0;
@@ -52,9 +40,6 @@ IDX4 = T0;
 
 /* IDX5: 1 term(s) */
 IDX5 = T0;
-
-/* IDX6: 0 term(s) */
-IDX6 = OPL0 & !OPL0;
 
 /* TRSTN - asserted low at end of instruction: 1 term(s) */
 !TRSTN = T0;

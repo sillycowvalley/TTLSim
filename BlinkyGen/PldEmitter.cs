@@ -10,51 +10,40 @@ namespace BlinkyMGen;
 // Stage 1 sequencers: one combinational 22V10 per bank. Inputs are the opcode
 // low bits, COND, and the T-state from the external '161 counter (T0..2).
 // Outputs are IDX0..6 and TRSTN (active-low /TRST, which drives the counter's
-// /LOAD). Eight outputs fit a 22V10 with room; there is no registered T inside
-// the GAL, so no .d/.ar equations.
+// /LOAD).
 //
-// Pin notes: on a 22V10 pins 14..23 are the ten output macrocells; pin 13 is
-// input-only, so TRSTN goes on an output pin (23).
-//
-// Constants: a line that is 0 for every used index (e.g. IDX6) has no product
-// terms. BlinkyJED rejects "NAME = ;" and the quoted-radix "'b'0", so an
-// always-0 output is written as a contradiction over a present input and an
-// always-1 as a tautology.
+// Constant outputs: a control line that is 0 for every used index (e.g. IDX6,
+// since no micro-op index reaches 64) needs no macrocell at all - it is tied to
+// GND on the board. BlinkyJED rejects both "NAME = ;" and a contradiction like
+// "NAME = A & !A", so such an output is NOT declared as a pin and NOT given an
+// equation; the header lists it as a GND tie instead. An always-1 line (none
+// occur here, but handled for completeness) ties to VCC.
 // ---------------------------------------------------------------------------
 
 public static class PldEmitter
 {
-    public static void EmitAll(string dir, MicroDictionary dict, Sequencer seq)
+    public static void EmitAll(string dir, MicroDictionary dict, Sequencer seq, Action? progress = null)
     {
-        EmitDecoder(Path.Combine(dir, "BLINKY_M_UOPA.pld"), dict, half: 0);
-        EmitDecoder(Path.Combine(dir, "BLINKY_M_UOPB.pld"), dict, half: 1);
+        EmitDecoder(Path.Combine(dir, "BLINKY_M_UOPA.pld"), dict, half: 0); progress?.Invoke();
+        EmitDecoder(Path.Combine(dir, "BLINKY_M_UOPB.pld"), dict, half: 1); progress?.Invoke();
 
         foreach (var bank in seq.Banks)
         {
             if (bank.Alu) EmitAluSequencer(Path.Combine(dir, "BLINKY_M_SEQ_ALU.pld"), seq);
             else EmitSimpleSequencer(Path.Combine(dir, $"BLINKY_M_SEQ_{bank.Name}.pld"), seq, bank.Name);
+            progress?.Invoke();
         }
-        EmitEntrySequencer(Path.Combine(dir, "BLINKY_M_SEQ_ENTRY.pld"), seq);
-    }
-
-    static string Constant(string name, bool value, string zeroRef)
-        => value ? $"{name} = {zeroRef} # !{zeroRef};"
-                 : $"{name} = {zeroRef} & !{zeroRef};";
-
-    static string Equation(string name, IReadOnlyList<Minimizer.Cube> cubes,
-                           bool inverted, Minimizer min, string[] inputNames, string zeroRef)
-    {
-        if (cubes.Count == 0)
-            return Constant(name, inverted, zeroRef);
-        string lhs = inverted ? "!" + name : name;
-        var terms = cubes.Select(c => min.CubeToCupl(c, inputNames));
-        return $"{lhs} = {string.Join("\n     # ", terms)};";
+        EmitEntrySequencer(Path.Combine(dir, "BLINKY_M_SEQ_ENTRY.pld"), seq); progress?.Invoke();
     }
 
     // ---- Stage 2 decoders --------------------------------------------------
 
     static readonly string[] IdxNames = { "IDX0", "IDX1", "IDX2", "IDX3", "IDX4", "IDX5", "IDX6" };
 
+    static readonly int[] IdxPins = { 14, 15, 16, 17, 18, 19, 20 };
+    const int TrstPin = 23;
+
+    // 22V10 macrocell term capacities by pin (graduated).
     static readonly Dictionary<int, int> V10CapByPin = new()
     {
         [14] = 8,
@@ -91,7 +80,12 @@ public static class PldEmitter
             results.Add((MicroOp.DecoderLineNames[line], cubes, inv));
         }
 
-        var order = results.OrderByDescending(r => r.cubes.Count).ToList();
+        // Heaviest lines to widest macrocells. Constant lines take no pin.
+        var live = results.Where(r => r.cubes.Count > 0).ToList();
+        var gndTies = results.Where(r => r.cubes.Count == 0 && !r.inv).Select(r => r.name).ToList();
+        var vccTies = results.Where(r => r.cubes.Count == 0 && r.inv).Select(r => r.name).ToList();
+
+        var order = live.OrderByDescending(r => r.cubes.Count).ToList();
         var pinOrder = V10CapByPin.Keys.OrderByDescending(p => V10CapByPin[p]).ToList();
         var assign = order.Zip(pinOrder, (r, p) => (r, p)).OrderBy(x => x.p).ToList();
 
@@ -100,7 +94,8 @@ public static class PldEmitter
         sb.Append(Header(name,
             $"Stage 2 decoder {(half == 0 ? "A" : "B")} of 2 - micro-op index to control lines.\n" +
             "Combinational. Inputs IDX0..6 (Stage-1 sequencer output).\n" +
-            $"Dictionary size {dict.Count} of {MicroDictionary.Slots}; unused indices are don't-cares."));
+            $"Dictionary size {dict.Count} of {MicroDictionary.Slots}; unused indices are don't-cares." +
+            TieNote(gndTies, vccTies)));
         sb.AppendLine("/* inputs: micro-op index from the Stage-1 sequencer */");
         for (int i = 0; i < IdxNames.Length; i++)
             sb.AppendLine($"PIN {i + 2,-2} = {IdxNames[i]};");
@@ -113,20 +108,18 @@ public static class PldEmitter
         {
             int cap = V10CapByPin[p];
             sb.AppendLine($"/* {r.name} (pin {p}, {r.cubes.Count} term(s) of {cap}{(r.inv ? ", active-low" : "")}) */");
-            sb.AppendLine(Equation(r.name, r.cubes, r.inv, min, IdxNames, "IDX0"));
+            string lhs = r.inv ? "!" + r.name : r.name;
+            sb.AppendLine($"{lhs} = {string.Join("\n     # ", r.cubes.Select(c => min.CubeToCupl(c, IdxNames)))};");
             sb.AppendLine();
         }
         File.WriteAllText(path, sb.ToString());
     }
 
-    // ---- Stage 1: simple family sequencer ----------------------------------
-    // Inputs: OPL0..3 (opcode low nibble), COND, T0..2. 8 inputs.
-    // Outputs: IDX0..6 + TRSTN. Combinational.
+    // ---- Stage 1 sequencers ------------------------------------------------
 
     static void EmitSimpleSequencer(string path, Sequencer seq, string bank)
     {
         const int bits = 8;   // OPL0..3=0..3, COND=4, T0..2=5..7
-        var min = new Minimizer(bits);
         string[] names = { "OPL0", "OPL1", "OPL2", "OPL3", "COND", "T0", "T1", "T2" };
 
         bool[][] idxVal = NewGrid(MicroDictionary.IndexBits, 1 << bits);
@@ -145,23 +138,21 @@ public static class PldEmitter
                         idxVal[b][addr] = ((cell.Index >> b) & 1) != 0;
                 }
 
-        var sb = new StringBuilder();
-        sb.Append(Header($"SEQ_{bank}",
+        var inputPins = new List<string>
+        {
+            "PIN 2  = OPL0;", "PIN 3  = OPL1;", "PIN 4  = OPL2;", "PIN 5  = OPL3;",
+            "PIN 6  = COND;", "PIN 8  = T0;", "PIN 9  = T1;", "PIN 10 = T2;"
+        };
+        WriteSequencer(path, $"SEQ_{bank}",
             $"Stage 1 sequencer for the {bank} family. Combinational 22V10.\n" +
             "Inputs OPL0..3 (opcode low), COND, T0..2 (external '161 counter).\n" +
-            "Outputs IDX0..6 (micro-op index) and TRSTN (/TRST -> counter /LOAD)."));
-        EmitSeqPins(sb, cond: true);
-        EmitSeqBody(sb, min, names, idxVal, care, trst, zeroRef: "OPL0");
-        File.WriteAllText(path, sb.ToString());
+            "Outputs IDX0..6 (micro-op index) and TRSTN (/TRST -> counter /LOAD).",
+            names, bits, idxVal, care, trst, inputPins);
     }
-
-    // ---- Stage 1: ALU sequencer (merged quadrant) --------------------------
-    // Inputs: O0..5 (opcode[5:0]), T0..2. 9 inputs. No COND (ALU has none).
 
     static void EmitAluSequencer(string path, Sequencer seq)
     {
         const int bits = 9;   // O0..5=0..5, T0..2=6..8
-        var min = new Minimizer(bits);
         string[] names = { "O0", "O1", "O2", "O3", "O4", "O5", "T0", "T1", "T2" };
 
         bool[][] idxVal = NewGrid(MicroDictionary.IndexBits, 1 << bits);
@@ -179,34 +170,22 @@ public static class PldEmitter
                     idxVal[b][addr] = ((cell.Index >> b) & 1) != 0;
             }
 
-        var sb = new StringBuilder();
-        sb.Append(Header("SEQ_ALU",
+        var inputPins = new List<string>
+        {
+            "PIN 2  = O0;", "PIN 3  = O1;", "PIN 4  = O2;", "PIN 5  = O3;",
+            "PIN 6  = O4;", "PIN 7  = O5;", "PIN 8  = T0;", "PIN 9  = T1;", "PIN 10 = T2;"
+        };
+        WriteSequencer(path, "SEQ_ALU",
             "Stage 1 sequencer for the ALU quadrant (0x40..0x7F), merged.\n" +
             "The '138 ORs the four nibble enables into one bank enable; this GAL\n" +
             "sees opcode[5:0] (O0..5) and T0..2 (external '161 counter).\n" +
-            "Outputs IDX0..6 and TRSTN (/TRST -> counter /LOAD)."));
-        sb.AppendLine("PIN 1  = CLK;");
-        sb.AppendLine("PIN 2  = O0;");
-        sb.AppendLine("PIN 3  = O1;");
-        sb.AppendLine("PIN 4  = O2;");
-        sb.AppendLine("PIN 5  = O3;");
-        sb.AppendLine("PIN 6  = O4;");
-        sb.AppendLine("PIN 7  = O5;");
-        sb.AppendLine("PIN 8  = T0;");
-        sb.AppendLine("PIN 9  = T1;");
-        sb.AppendLine("PIN 10 = T2;");
-        sb.AppendLine();
-        EmitOutputPins(sb);
-        EmitSeqBody(sb, min, names, idxVal, care, trst, zeroRef: "O0");
-        File.WriteAllText(path, sb.ToString());
+            "Outputs IDX0..6 and TRSTN (/TRST -> counter /LOAD).",
+            names, bits, idxVal, care, trst, inputPins);
     }
-
-    // ---- Stage 1: entry sequencer ------------------------------------------
 
     static void EmitEntrySequencer(string path, Sequencer seq)
     {
         const int bits = 3;
-        var min = new Minimizer(bits);
         string[] names = { "T0", "T1", "T2" };
 
         bool[][] idxVal = NewGrid(MicroDictionary.IndexBits, 1 << bits);
@@ -221,75 +200,81 @@ public static class PldEmitter
                 idxVal[b][t] = ((cell.Index >> b) & 1) != 0;
         }
 
-        var sb = new StringBuilder();
-        sb.Append(Header("SEQ_ENTRY",
+        var inputPins = new List<string> { "PIN 8  = T0;", "PIN 9  = T1;", "PIN 10 = T2;" };
+        WriteSequencer(path, "SEQ_ENTRY",
             "Stage 1 sequencer for interrupt entry (INTP = 1, opcode-independent).\n" +
             "Combinational; enabled by INTP, T0..2 the only inputs.\n" +
-            "Outputs IDX0..6 and TRSTN (/TRST -> counter /LOAD)."));
+            "Outputs IDX0..6 and TRSTN (/TRST -> counter /LOAD).",
+            names, bits, idxVal, care, trst, inputPins);
+    }
+
+    // Shared sequencer writer: minimizes each IDX bit and TRSTN, assigns pins
+    // only to live (non-constant) outputs, and lists constant bits as ties.
+    static void WriteSequencer(string path, string name, string blurb, string[] inputNames,
+                               int bits, bool[][] idxVal, bool[] care, bool[] trst,
+                               List<string> inputPins)
+    {
+        var min = new Minimizer(bits);
+
+        var idxResult = new (IReadOnlyList<Minimizer.Cube> cubes, bool inv)[MicroDictionary.IndexBits];
+        for (int b = 0; b < MicroDictionary.IndexBits; b++)
+            idxResult[b] = min.Best(idxVal[b], care);
+        (IReadOnlyList<Minimizer.Cube> cubes, bool inv) trstResult = min.Best(trst, care);
+
+        var gndTies = new List<string>();
+        var vccTies = new List<string>();
+        for (int b = 0; b < MicroDictionary.IndexBits; b++)
+            if (idxResult[b].cubes.Count == 0)
+                (idxResult[b].inv ? vccTies : gndTies).Add($"IDX{b}");
+        if (trstResult.cubes.Count == 0)
+            (trstResult.inv ? vccTies : gndTies).Add("TRSTN");
+
+        var sb = new StringBuilder();
+        sb.Append(Header(name, blurb + TieNote(gndTies, vccTies)));
         sb.AppendLine("PIN 1  = CLK;");
-        sb.AppendLine("PIN 8  = T0;");
-        sb.AppendLine("PIN 9  = T1;");
-        sb.AppendLine("PIN 10 = T2;");
+        foreach (var p in inputPins) sb.AppendLine(p);
         sb.AppendLine();
-        EmitOutputPins(sb);
-        EmitSeqBody(sb, min, names, idxVal, care, trst, zeroRef: "T0");
-        File.WriteAllText(path, sb.ToString());
-    }
 
-    // ---- shared sequencer helpers ------------------------------------------
-
-    static void EmitSeqPins(StringBuilder sb, bool cond)
-    {
-        sb.AppendLine("PIN 1  = CLK;");
-        sb.AppendLine("PIN 2  = OPL0;");
-        sb.AppendLine("PIN 3  = OPL1;");
-        sb.AppendLine("PIN 4  = OPL2;");
-        sb.AppendLine("PIN 5  = OPL3;");
-        if (cond) sb.AppendLine("PIN 6  = COND;");
-        sb.AppendLine("PIN 8  = T0;");
-        sb.AppendLine("PIN 9  = T1;");
-        sb.AppendLine("PIN 10 = T2;");
+        // Assign output pins only to live outputs, in fixed IDX order then TRSTN.
+        for (int b = 0; b < MicroDictionary.IndexBits; b++)
+            if (idxResult[b].cubes.Count > 0)
+                sb.AppendLine($"PIN {IdxPins[b],-2} = IDX{b};");
+        if (trstResult.cubes.Count > 0)
+            sb.AppendLine($"PIN {TrstPin} = TRSTN;   /* /TRST -> external '161 /LOAD */");
         sb.AppendLine();
-        EmitOutputPins(sb);
-    }
 
-    static void EmitOutputPins(StringBuilder sb)
-    {
-        sb.AppendLine("PIN 14 = IDX0;");
-        sb.AppendLine("PIN 15 = IDX1;");
-        sb.AppendLine("PIN 16 = IDX2;");
-        sb.AppendLine("PIN 17 = IDX3;");
-        sb.AppendLine("PIN 18 = IDX4;");
-        sb.AppendLine("PIN 19 = IDX5;");
-        sb.AppendLine("PIN 20 = IDX6;");
-        sb.AppendLine("PIN 23 = TRSTN;   /* /TRST -> external '161 /LOAD */");
-        sb.AppendLine();
-    }
-
-    static void EmitSeqBody(StringBuilder sb, Minimizer min, string[] names,
-                            bool[][] idxVal, bool[] care, bool[] trst, string zeroRef)
-    {
         for (int b = 0; b < MicroDictionary.IndexBits; b++)
         {
-            var (cubes, inv) = min.Best(idxVal[b], care);
+            var (cubes, inv) = idxResult[b];
+            if (cubes.Count == 0) continue;   // constant: tied to GND/VCC (see header)
             sb.AppendLine($"/* IDX{b}: {cubes.Count} term(s){(inv ? ", active-low" : "")} */");
-            sb.AppendLine(Equation($"IDX{b}", cubes, inv, min, names, zeroRef));
+            string lhs = inv ? "!IDX" + b : "IDX" + b;
+            sb.AppendLine($"{lhs} = {string.Join("\n     # ", cubes.Select(c => min.CubeToCupl(c, inputNames)))};");
             sb.AppendLine();
         }
 
-        // /TRST active-high in the table; TRSTN is active-low to the counter.
-        var (tc, tinv) = min.Best(trst, care);
-        sb.AppendLine($"/* TRSTN - asserted low at end of instruction: {tc.Count} term(s) */");
-        if (tc.Count == 0)
-            sb.AppendLine(Constant("TRSTN", tinv, zeroRef));
-        else
+        if (trstResult.cubes.Count > 0)
         {
-            // Best minimized TRST (active-high). !TRSTN carries that cover;
-            // if Best chose the complement, TRSTN carries it directly.
-            string lhs = tinv ? "TRSTN" : "!TRSTN";
-            sb.AppendLine($"{lhs} = {string.Join("\n     # ", tc.Select(c => min.CubeToCupl(c, names)))};");
+            var (cubes, inv) = trstResult;
+            sb.AppendLine($"/* TRSTN - asserted low at end of instruction: {cubes.Count} term(s) */");
+            // Best minimized active-high TRST; !TRSTN carries that cover.
+            string lhs = inv ? "TRSTN" : "!TRSTN";
+            sb.AppendLine($"{lhs} = {string.Join("\n     # ", cubes.Select(c => min.CubeToCupl(c, inputNames)))};");
+            sb.AppendLine();
         }
-        sb.AppendLine();
+
+        File.WriteAllText(path, sb.ToString());
+    }
+
+    // ---- helpers -----------------------------------------------------------
+
+    static string TieNote(List<string> gnd, List<string> vcc)
+    {
+        if (gnd.Count == 0 && vcc.Count == 0) return "";
+        var parts = new List<string>();
+        if (gnd.Count > 0) parts.Add($"tie to GND: {string.Join(", ", gnd)}");
+        if (vcc.Count > 0) parts.Add($"tie to VCC: {string.Join(", ", vcc)}");
+        return "\nConstant outputs (no macrocell used) - " + string.Join("; ", parts) + ".";
     }
 
     static bool[][] NewGrid(int rows, int cols)

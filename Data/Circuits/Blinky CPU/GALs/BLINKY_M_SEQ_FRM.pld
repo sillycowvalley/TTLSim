@@ -6,6 +6,7 @@
  * Stage 1 sequencer for the FRM family. Combinational 22V10.
  * Inputs OPL0..3 (opcode low), COND, T0..2 (external '161 counter).
  * Outputs IDX0..6 (micro-op index) and TRSTN (/TRST -> counter /LOAD).
+ * Constant outputs (no macrocell used) - tie to GND: IDX6.
  */
 Name     SEQ_FRM;
 PartNo   00;
@@ -32,7 +33,6 @@ PIN 16 = IDX2;
 PIN 17 = IDX3;
 PIN 18 = IDX4;
 PIN 19 = IDX5;
-PIN 20 = IDX6;
 PIN 23 = TRSTN;   /* /TRST -> external '161 /LOAD */
 
 /* IDX0: 1 term(s) */
@@ -60,9 +60,6 @@ IDX4 = T0 & T2;
 /* IDX5: 2 term(s) */
 IDX5 = T0 & T1
      # !T0 & T2;
-
-/* IDX6: 0 term(s) */
-IDX6 = OPL0 & !OPL0;
 
 /* TRSTN - asserted low at end of instruction: 2 term(s) */
 !TRSTN = !OPL0 & !OPL1 & T0 & T1

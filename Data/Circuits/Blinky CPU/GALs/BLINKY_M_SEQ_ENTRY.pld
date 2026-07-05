@@ -6,6 +6,7 @@
  * Stage 1 sequencer for interrupt entry (INTP = 1, opcode-independent).
  * Combinational; enabled by INTP, T0..2 the only inputs.
  * Outputs IDX0..6 and TRSTN (/TRST -> counter /LOAD).
+ * Constant outputs (no macrocell used) - tie to GND: IDX6.
  */
 Name     SEQ_ENTRY;
 PartNo   00;
@@ -27,7 +28,6 @@ PIN 16 = IDX2;
 PIN 17 = IDX3;
 PIN 18 = IDX4;
 PIN 19 = IDX5;
-PIN 20 = IDX6;
 PIN 23 = TRSTN;   /* /TRST -> external '161 /LOAD */
 
 /* IDX0: 2 term(s) */
@@ -50,9 +50,6 @@ IDX3 = !T1;
 
 /* IDX5: 1 term(s) */
 IDX5 = !T2;
-
-/* IDX6: 0 term(s) */
-IDX6 = T0 & !T0;
 
 /* TRSTN - asserted low at end of instruction: 1 term(s) */
 !TRSTN = T0 & T2;

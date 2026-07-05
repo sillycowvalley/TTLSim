@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using BlinkyMGen;
 
 // ---------------------------------------------------------------------------
@@ -5,7 +6,7 @@ using BlinkyMGen;
 //
 // From the one canonical instruction table it emits, into <outputFolder>:
 //   BLINKY_M_UOPA.pld, BLINKY_M_UOPB.pld     Stage 2 decoder GALs
-//   BLINKY_M_SEQ_<family>.pld, SEQ_ENTRY.pld Stage 1 sequencer GALs
+//   BLINKY_M_SEQ_<bank>.pld, SEQ_ENTRY.pld   Stage 1 sequencer GALs
 //   blinky_m_control.html                    three-view control reference
 //   OpcodeTable.cs                           BlinkyASM opcode map
 //   dictionary.txt                           the micro-op dictionary listing
@@ -25,19 +26,31 @@ if (args.Length != 1)
 string outDir = args[0];
 Directory.CreateDirectory(outDir);
 
+var stopwatch = Stopwatch.StartNew();
+
 var program = InstructionSet.All;
 var dict = new MicroDictionary(program);
 var seq = new Sequencer(program, dict);
 
-PldEmitter.EmitAll(outDir, dict, seq);
-HtmlMatrix.Emit(Path.Combine(outDir, "blinky_m_control.html"), program, dict, seq);
-AsmTableEmitter.Emit(Path.Combine(outDir, "OpcodeTable.cs"), program);
-WriteDictionaryListing(Path.Combine(outDir, "dictionary.txt"), program, dict, seq);
+// One dot per generated artifact; the GAL minimization is the slow part, so
+// EmitAll reports a dot as each .pld finishes.
+Console.Write("Generating");
+void Tick() { Console.Write('.'); Console.Out.Flush(); }
+
+PldEmitter.EmitAll(outDir, dict, seq, Tick);
+HtmlMatrix.Emit(Path.Combine(outDir, "blinky_m_control.html"), program, dict, seq); Tick();
+AsmTableEmitter.Emit(Path.Combine(outDir, "OpcodeTable.cs"), program); Tick();
+WriteDictionaryListing(Path.Combine(outDir, "dictionary.txt"), program, dict, seq); Tick();
+
+stopwatch.Stop();
+Console.WriteLine(" done");
+Console.WriteLine();
 
 int named = program.Count(i => !i.Mnemonic.StartsWith("ALU_"));
 Console.WriteLine($"Instructions: {program.Count} ({named} named, {program.Count - named} ALU #n)");
 Console.WriteLine($"Micro-op dictionary: {dict.Count} of {MicroDictionary.Slots} slots");
 Console.WriteLine($"Sequencer banks: {seq.Banks.Count} + entry");
+Console.WriteLine($"Elapsed: {stopwatch.ElapsedMilliseconds} ms");
 Console.WriteLine($"Output -> {Path.GetFullPath(outDir)}");
 return;
 
