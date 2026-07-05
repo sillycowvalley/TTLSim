@@ -63,13 +63,12 @@ namespace TTLSim.UI.Components;
 /// </para>
 ///
 /// <para>
-/// All text is drawn UPRIGHT at every rotation: bit names render in a
-/// screen-aligned pass (outside the rotation transform, like the oscillator's
-/// labels), each anchored to its pin's WorldPosition and extending inward
-/// past the bracket. Note that at 90/270 the pin columns are one cell apart,
-/// so long bit names on a wide rotated port will overlap horizontally --
-/// inherent to upright text at that pitch; keep rotated ports' names short or
-/// the port at 0/180.
+/// Text rendering (all outside the rotation transform, anchored per pin to
+/// WorldPosition): width-1 labels draw upright at every rotation, like the
+/// oscillator's labels. Multi-bit ports draw upright names at 0/180 (one
+/// name per pin row) but at 90/270 -- where the pin columns are one cell
+/// apart and upright names can only collide -- each name draws ROTATED to
+/// run along its stub, reading bottom-to-top on both facings.
 /// </para>
 ///
 /// <para>
@@ -318,39 +317,30 @@ public sealed class NetLabelItem : SchematicItem
     }
 
     /// <summary>
-    /// Router keep-out, anchored to the pin column rather than the box. At
-    /// R0/R180 it spans <see cref="PinSideCells"/> on the wire-approach side
-    /// and <see cref="TextSideCells"/> on the text side (sides selected by
-    /// Mirrored) -- tight against the blobs, just enough for three-character
-    /// names. At R90/R270 the upright names form a single text row beside
-    /// the pins, already inside the box's own margin, so the plain box is
-    /// the whole footprint. The R0/R180 rect is ASYMMETRIC about the pivot,
-    /// so R180 must map it through the pivot rather than reuse the unrotated
-    /// rect; <see cref="RotateCell"/> matches Pin.WorldPosition's convention
-    /// exactly.
+    /// Router keep-out, anchored to the pin column rather than the box: it
+    /// spans <see cref="PinSideCells"/> on the wire-approach side and
+    /// <see cref="TextSideCells"/> on the text side (sides selected by
+    /// Mirrored) -- tight against the blobs, just enough for
+    /// three-character names; longer names overhang cosmetically, exactly
+    /// as at R0. ONE rect for every rotation: at 90/270 a multi-bit port's
+    /// names now run ALONG the stubs (see <see cref="DrawText"/>), so the
+    /// text side needs the same depth sideways as upright -- the old
+    /// plain-box special case assumed a single upright text row and is
+    /// gone. The rect is ASYMMETRIC about the pivot, so every rotation
+    /// maps it through the pivot; <see cref="RotateCell"/> matches
+    /// Pin.WorldPosition's convention exactly.
     /// </summary>
     public override Rectangle RoutingBounds
     {
         get
         {
-            bool sideways = Rotation == Rotation.R90 || Rotation == Rotation.R270;
-
-            Rectangle unrotated;
-            if (sideways)
-            {
-                unrotated = new Rectangle(
-                    Position.X, Position.Y, Size.Width, Size.Height);
-            }
-            else
-            {
-                int pinX = Position.X + PinColumn;
-                int left = mirrored
-                    ? pinX - TextSideCells
-                    : pinX - PinSideCells;
-                unrotated = new Rectangle(
-                    left, Position.Y,
-                    PinSideCells + TextSideCells, Size.Height);
-            }
+            int pinX = Position.X + PinColumn;
+            int left = mirrored
+                ? pinX - TextSideCells
+                : pinX - PinSideCells;
+            var unrotated = new Rectangle(
+                left, Position.Y,
+                PinSideCells + TextSideCells, Size.Height);
 
             if (Rotation == Rotation.R0) return unrotated;
 
@@ -450,10 +440,15 @@ public sealed class NetLabelItem : SchematicItem
     }
 
     /// <summary>
-    /// All text, drawn upright (screen-aligned, outside the rotation
-    /// transform): one bit name per pin, anchored inward of the pin's
-    /// WorldPosition just past the bracket. The per-bit names are the only
-    /// text a label carries -- no range-header designator is drawn.
+    /// All text, drawn screen-aligned outside the rotation transform: one
+    /// bit name per pin, anchored inward of the pin's WorldPosition just
+    /// past the bracket. On a MULTI-BIT port whose pins face Up/Down (the
+    /// 90/270 orientations) each name is drawn ROTATED to run along its
+    /// stub, reading bottom-to-top -- upright names at one-cell pin pitch
+    /// can only collide. Width-1 labels keep upright text at every
+    /// rotation, and Left/Right-facing ports were never at risk (one name
+    /// per row). The per-bit names are the only text a label carries -- no
+    /// range-header designator is drawn.
     /// </summary>
     private void DrawText(Graphics g, RenderContext ctx)
     {
@@ -468,6 +463,34 @@ public sealed class NetLabelItem : SchematicItem
         {
             string bit = BitName(pin.Number);
             var bitSize = g.MeasureString(bit, ctx.PinFont);
+            bool vertical = pin.Direction is PinDirection.Up or PinDirection.Down;
+
+            if (width > 1 && vertical)
+            {
+                // Along-the-stub name on a sideways bus port. Rotate the
+                // graphics -90 about the pin so the baseline runs UP the
+                // screen (text reads bottom-to-top, both facings, matching
+                // the vertical-label convention EasyEDA itself uses). In
+                // the rotated frame the offsets are exactly the upright
+                // Left/Right cases: text extends inward from the inset,
+                // centred across the stub.
+                //   Pin faces Up   (wire above, text below): local x from
+                //     -(inset + width) to -inset -- nearest character ends
+                //     at the inset below the pin.
+                //   Pin faces Down (wire below, text above): local x from
+                //     +inset upward.
+                float tx = pin.Direction == PinDirection.Up
+                    ? -textInset - bitSize.Width
+                    : textInset;
+
+                var state = g.Save();
+                g.TranslateTransform(pin.WorldPosition.X * p, pin.WorldPosition.Y * p);
+                g.RotateTransform(-90f);
+                g.DrawString(bit, ctx.PinFont, textBrush, tx, -bitSize.Height / 2f);
+                g.Restore(state);
+                continue;
+            }
+
             var origin = UprightTextOrigin(
                 pin.WorldPosition, pin.Direction, textInset, bitSize, p);
             g.DrawString(bit, ctx.PinFont, textBrush, origin.X, origin.Y);
