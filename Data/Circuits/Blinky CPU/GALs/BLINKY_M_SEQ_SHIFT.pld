@@ -36,14 +36,14 @@ PIN 18 = IDX4;
 PIN 19 = IDX5;
 PIN 23 = TRSTN;   /* /TRST -> external '161 /LOAD */
 
-/* IDX0: constant 1 for this bank */
-IDX0 = VCC;
+/* IDX0: constant 0 for this bank */
+IDX0 = GND;
 
-/* IDX1: constant 1 for this bank */
-IDX1 = VCC;
+/* IDX1: constant 0 for this bank */
+IDX1 = GND;
 
-/* IDX2: constant 1 for this bank */
-IDX2 = VCC;
+/* IDX2: constant 0 for this bank */
+IDX2 = GND;
 
 /* IDX3: 1 term(s) */
 IDX3 = T0;

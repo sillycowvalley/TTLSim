@@ -256,11 +256,11 @@ public static class PldEmitter
             var (cubes, inv) = idxResult[b];
             if (cubes.Count == 0)
             {
-                // Constant over this bank's used states. Best() returns the
-                // complement cover for an all-0 care-set (inv = true, no cubes)
-                // -> drive GND; an all-1 care-set would give inv = false -> VCC.
-                sb.AppendLine($"/* IDX{b}: constant {(inv ? "0" : "1")} for this bank */");
-                sb.AppendLine($"IDX{b} = {(inv ? "GND" : "VCC")};");
+                // Best() returns 0 cubes when a polarity has an empty cover.
+                // inv == false: the on-set is empty  -> always 0 -> GND.
+                // inv == true : the off-set is empty -> always 1 -> VCC.
+                sb.AppendLine($"/* IDX{b}: constant {(inv ? "1" : "0")} for this bank */");
+                sb.AppendLine($"IDX{b} = {(inv ? "VCC" : "GND")};");
                 sb.AppendLine();
                 continue;
             }
@@ -274,8 +274,10 @@ public static class PldEmitter
             var (cubes, inv) = trstResult;
             if (cubes.Count == 0)
             {
-                sb.AppendLine($"/* TRSTN: constant {(inv ? "0" : "1")} for this bank */");
-                sb.AppendLine($"TRSTN = {(inv ? "GND" : "VCC")};");
+                // inv == false: on-set empty -> always 0 -> GND; inv == true:
+                // off-set empty -> always 1 -> VCC.
+                sb.AppendLine($"/* TRSTN: constant {(inv ? "1" : "0")} for this bank */");
+                sb.AppendLine($"TRSTN = {(inv ? "VCC" : "GND")};");
                 sb.AppendLine();
             }
             else
