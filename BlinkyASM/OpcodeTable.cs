@@ -74,7 +74,7 @@ public static class OpcodeTable
     // Every one of the 64 codes is a valid instruction. Named ops appear
     // in Entries above; ALU #n reaches the rest.
     public const byte AluQuadrantBase = 0x40;
-    public const byte AluQuadrantEnd = 0x7F;
+    public const byte AluQuadrantEnd  = 0x7F;
 
     public static byte AluOpcode(bool m, bool cn, int s4)
         => (byte)(AluQuadrantBase | (m ? 0x20 : 0) | (cn ? 0x10 : 0) | (s4 & 0xF));
