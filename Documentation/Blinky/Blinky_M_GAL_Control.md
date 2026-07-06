@@ -38,8 +38,8 @@ magnitude faster than the EEPROM alternative and with no shadow-copy loader.
 ## 2. The two stages
 
 ```
-   opcode[7:4] ──►┌────────┐ bank enables
-                  │  '138  │──────────────┐
+   opcode[7:4] ──►┌────────┐ BANKEN (one per bank)
+                  │  '154  │──────────────┐
                   └────────┘              │   ┌────────┐  T[2:0]
                                           │   │ '161   │──────┐
                                           ▼   │ counter│      │
@@ -48,8 +48,9 @@ magnitude faster than the EEPROM alternative and with no shadow-copy loader.
                 │        │  one 22V10 per bank (CTL,     │
                 │        │  SHIFT, STK, MEM, ALU, FRM,   │
                 │        │  FLOW, CTLX) + ENTRY          │
+                │        │  outputs tristated by BANKEN  │
                 └───────►└───────────────┬──────────────┘
-                                         │ IDX[6:0]  micro-op index
+                                         │ IDX[5:0]  shared micro-op-index bus
                                          │ /TRST ────► '161 /LOAD (reload T=0)
                                          ▼
                          ┌─────────────────────────────┐
@@ -64,32 +65,42 @@ magnitude faster than the EEPROM alternative and with no shadow-copy loader.
 
 ### Stage 1 — the sequencer (per bank)
 
-A `'138` decodes `opcode[7:4]` into one bank enable. Each bank owns a **combinational
-22V10** whose inputs are the opcode low bits, `COND`, and the T-state `T[2:0]` from an
-external `'161` counter, and whose outputs are the 7-bit micro-op index plus `TRSTN`
-(active-low `/TRST`). `/TRST` drives the counter's `/LOAD` — asserting it reloads the
-counter to zero, ending the instruction. There are eight banks — CTL, SHIFT, STK, MEM,
-ALU, FRM, FLOW, CTLX (the `HALT` anchor at `0xFF`) — plus an ENTRY bank for interrupt
-entry, enabled by `INTP` with `T` as its only live input.
+A `'154` decodes `opcode[7:4]` into one active-low select per family. Each bank owns a
+**combinational 22V10** whose inputs are the opcode low bits, `COND`, and the T-state
+`T[2:0]` from an external `'161` counter, and whose outputs are the 6-bit micro-op index
+plus `TRSTN` (active-low `/TRST`). `/TRST` drives the counter's `/LOAD` — asserting it
+reloads the counter to zero, ending the instruction. There are eight banks — CTL,
+SHIFT, STK, MEM, ALU, FRM, FLOW, CTLX (the `HALT` anchor at `0xFF`) — plus an ENTRY
+bank for interrupt entry, enabled by `INTP` with `T` as its only live input.
 
-The ALU quadrant (`0x40..0x7F`) is one merged bank: the `'138` ORs its four nibble
-enables together, so its GAL sees `opcode[5:0]` and `T` (9 inputs). Every ALU opcode
-runs the same short sequence, so the sequencer collapses to a handful of terms per line
-regardless of which of the 64 functions the opcode selects.
+**The banks share one index/`TRSTN` bus.** Rather than mux the nine banks' outputs
+together, each GAL output is output-enabled by a **BANKEN** input (pin 11) driven from
+the `'154` select for that family (inverted to active-high). When a bank is not
+selected its outputs go high-Z, so all nine banks wire directly onto one shared
+`IDX[5:0]`/`TRSTN` bus and only the selected one drives it — no external mux or OR tree.
+This is why the index is a driven bus and not a per-bank tie: every bank must define all
+six index lines while selected, including any that are constant for it (below).
+
+The ALU quadrant (`0x40..0x7F`) is one merged bank: the `'154` selects Y4–Y7 for the
+four ALU nibbles, ORed to one BANKEN, so its GAL sees `opcode[5:0]` and `T` (9 inputs).
+Every ALU opcode runs the same short sequence, so the sequencer collapses to a handful
+of terms per line regardless of which of the 64 functions the opcode selects.
 
 Keeping the T-counter external (rather than registering `T` inside each GAL) is what
-lets a single 22V10 hold a whole bank: seven index outputs plus `TRSTN` is eight
-outputs, comfortably within the ten macrocells, with no registered-feedback or
-async-reset logic to fit. `TRSTN` lands on pin 23 (pin 13 is input-only on a 22V10).
-The `'161` is a part the datapath already carries, and it was never on the critical
-path, so the speed story is unchanged.
+lets a single 22V10 hold a whole bank: six index outputs plus `TRSTN` is seven outputs,
+comfortably within the ten macrocells, with the remaining macrocells free and no
+registered-feedback or async-reset logic to fit. `TRSTN` lands on pin 23 (pin 13 is
+input-only on a 22V10). The `'161` is a part the datapath already carries, and it was
+never on the critical path, so the speed story is unchanged.
 
 ### Stage 2 — the decode (shared)
 
-Two 22V10s, `UOPA` and `UOPB`, take the 7-bit index and expand it to the 20 folded
-control lines (§5). This stage is identical hardware regardless of which instruction is
-executing — it is the dictionary made of fuses. It is purely combinational; its speed
-is the array propagation delay alone.
+Two 22V10s, `UOPA` and `UOPB`, take the micro-op index and expand it to the 20 folded
+control lines (§5). The index is a 7-bit space (128 slots), but bit 6 is 0 for every
+micro-op — the dictionary's highest index is 57 — so only `IDX[5:0]` is a driven bus
+line; the decoders' `IDX6` input is tied low. This stage is identical hardware
+regardless of which instruction is executing — it is the dictionary made of fuses. It
+is purely combinational; its speed is the array propagation delay alone.
 
 Downstream expansion: a `'138` fans SRC out to bus source enables, a `'154` fans DST
 out to destination strobes (phase-gated by /CLK), an AMODE decoder drives the
@@ -102,8 +113,10 @@ SPOP, and a single AND gate derives PCINC.
 
 Every T-state of every instruction is one of **57 micro-ops** (indices 0–56). The
 dictionary is the list of those 57 combinations; Stage 1 emits an index into it, Stage
-2 realises it. A 7-bit index (128 slots) leaves 71 free for future growth before either
-stage needs re-fitting; `IDX6` is 0 in every bank.
+2 realises it. The index space is 7 bits (128 slots), leaving 71 free for future growth
+before either stage needs re-fitting — but because the highest index is 57, `IDX6` is 0
+in every bank and is dropped from the bus entirely: the sequencers drive `IDX[5:0]` and
+the decoders tie their `IDX6` input low.
 
 A micro-op is fully described by nine fields:
 
@@ -211,7 +224,7 @@ fitter; it carries no meaning a programmer or reviewer needs beyond decoding §7
 
 Opcodes are one byte; the high nibble names the family and selects the Stage-1 bank,
 the low nibble selects the member. The family grouping is a genuine hardware boundary
-here (it is the '138 decode), not merely a mnemonic convention.
+here (it is the '154 bank decode), not merely a mnemonic convention.
 
 | Family | Nibble(s) | Members | Character |
 |---|---|---|---|
@@ -295,8 +308,10 @@ human-readable form of the sequencer is the instruction→micro-op decomposition
 which is exactly these tables read out per opcode.
 
 - **CTL, SHIFT, STK, MEM, FRM, FLOW, CTLX** — one 22V10 each, keyed on the opcode low
-  nibble and T. SHIFT and CTLX have several constant low index bits (tied to GND on the
-  board rather than consuming a pin).
+  nibble and T. SHIFT and CTLX have several constant low index bits; because the banks
+  share one index bus, a constant bit must still be *driven* while its bank is selected,
+  so it is emitted as a driven `GND` inside the GAL (`IDX0 = GND;`), output-enabled by
+  BANKEN like every other line, rather than tied off on the board.
 - **ALU** — one merged 22V10 for `0x40–0x7F`, keyed on `opcode[5:0]` and T. Because
   every ALU opcode runs the same sequence, the only opcode dependence is arithmetic vs
   logic (M bit) and unary vs binary; the '181 function itself never reaches the GAL.
@@ -456,7 +471,7 @@ six states, which is why its push resumes after the fetch rather than before it.
 
 | Block | Parts |
 |---|---|
-| Bank select | 1× '138 |
+| Bank select | 1× '154 (selects inverted to active-high BANKEN in spare glue) |
 | Stage 1 sequencer | 9× 22V10 (CTL, SHIFT, STK, MEM, ALU, FRM, FLOW, CTLX, ENTRY) |
 | T-counter | 1× '161 |
 | Stage 2 decode | 2× 22V10 (UOPA, UOPB) |
@@ -485,9 +500,13 @@ are confirmed:
   against the 22V10's 16-term maximum macrocell.
 - **Stage 1 sequencers fit** with room — the worst index line across all banks is 7
   terms. One 22V10 per bank; no bank needed a second.
-- **Constant index bits take no macrocell.** `IDX6` is 0 in every bank (no micro-op
-  index reaches 64), and a few low bits are constant in the small banks (SHIFT, CTLX);
-  each is tied to GND on the board rather than consuming a pin.
+- **Constant index bits stay off the macrocell budget.** `IDX6` is 0 in every bank (no
+  micro-op index reaches 64), so it is dropped from the bus entirely — the sequencers
+  drive only `IDX[5:0]`. A few low bits are constant in the small banks (SHIFT, CTLX);
+  on the shared bus these are emitted as a driven `GND` inside the GAL and enabled by
+  BANKEN, so the bit is actively held low while its bank is selected. This needs
+  BlinkyJED's `GND`/`VCC` constant-output support, since a bare `IDX0 = ;` has no
+  fuse-array form.
 
 `BlinkyMGen` emits both GAL stages, this control reference, and the assembler opcode
 table from the one C# instruction table. What remains is downstream, not control-store

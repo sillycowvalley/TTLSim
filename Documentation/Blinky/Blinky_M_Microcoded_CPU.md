@@ -13,7 +13,7 @@ address path, visited in sequence by a microprogram, one transfer per T-state.
 Instructions take as many T-states as they need; each microprogram simply ends when it
 ends. Nothing in the machine exists twice.
 
-**~57 ICs core**, front panel and clock module extra.
+**67 ICs core**, front panel and clock module extra.
 
 # 1. Programmer model
 
@@ -356,7 +356,7 @@ targeting the JUMPs at RAM after the boot copy.
 
 | Block | Chips |
 |---|---|
-| Control S1: '138 bank select, 9× 22V10 sequencer (8 banks + entry), '161 T-counter | 11 |
+| Control S1: '154 bank select, 9× 22V10 sequencer (8 banks + entry), '161 T-counter | 11 |
 | Control S2: 22V10 UOPA, UOPB | 2 |
 | Control expand: '138 SRC, '154 DST, AMODE decode, '138 SPOP, '00 PCINC/glue | 5 |
 | Opcode bypass: '257 ×2 | 2 |
@@ -376,13 +376,16 @@ targeting the JUMPs at RAM after the boot copy.
 
 The core is **EEPROM-free** — the boot loader copies from an external source into SRAM,
 and the control store is fuses: eleven 22V10s (two decoders, nine sequencer banks)
-behind a '138 bank selector, with the '161 T-counter driving the T-state. All eleven
-GALs compile clean through BlinkyJED (5892 fuses each); the worst decoder line is 12
-product terms and the worst sequencer line 7, both inside the 22V10's macrocells. One
-programmable technology does all of control; the '181 ALU has no adder peers. Clock,
-reset, and single-step live on a separate module; a PC breakpoint comparator gates its
-halt on T=0 for instruction-boundary stops. One GAL per bank fits with margin — the
-worst bank uses 7 of a macrocell's 8–16 terms — so no bank needed a second.
+behind a '154 bank selector, with the '161 T-counter driving the T-state. The nine
+sequencers share one micro-op-index bus: each GAL output is output-enabled by a BANKEN
+input driven from the '154, so only the selected bank drives the bus and no external
+mux or OR tree is needed. All eleven GALs compile clean through BlinkyJED (5892 fuses
+each); the worst decoder line is 12 product terms and the worst sequencer line 7, both
+inside the 22V10's macrocells. One programmable technology does all of control; the
+'181 ALU has no adder peers. Clock, reset, and single-step live on a separate module; a
+PC breakpoint comparator gates its halt on T=0 for instruction-boundary stops. One GAL
+per bank fits with margin — the worst bank uses 7 of a macrocell's 8–16 terms — so no
+bank needed a second.
 
 # 10. Front panel
 
@@ -410,9 +413,11 @@ solution. The EEPROM control store is retired; there is no fallback baseline.
 
 **This revision ratifies:**
 
-- **Two-stage GAL control** (§6): combinational 22V10 sequencer banks behind a '138,
+- **Two-stage GAL control** (§6): combinational 22V10 sequencer banks behind a '154,
   feeding two combinational 22V10 decoders; no control EEPROM. Eleven GALs total (nine
-  sequencer banks, two decoders), all compiled clean through BlinkyJED.
+  sequencer banks, two decoders), all compiled clean through BlinkyJED. The banks share
+  one micro-op-index bus, each GAL output enabled by a BANKEN input from the '154, so
+  only the selected bank drives.
 - **External '161 T-counter.** The T-state comes from a '161 (as in stage 0); /TRST
   (TRSTN, active-low, GAL pin 23) drives its /LOAD to reload T=0 at end of instruction.
   Keeping the counter external keeps each bank in a single 22V10 (8 outputs of 10).
