@@ -8,7 +8,7 @@
         "partIdentifier": "28C64",
         "family": null,
         "value": null,
-        "program": ":030000000000FFFE\n:00000001FF\n",
+        "program": ":0A0000000000900600FF00900000D1\n:00000001FF\n",
         "propagationDelayNs": null,
         "function1": null,
         "function2": null,
@@ -484,8 +484,8 @@
         "deviceId": "dev0000004c",
         "unitLetter": "",
         "position": {
-          "x": -7,
-          "y": 146
+          "x": -5,
+          "y": 136
         },
         "label": "T-CTR",
         "rotation": 0,
@@ -499,7 +499,7 @@
         "unitLetter": "",
         "position": {
           "x": 31,
-          "y": 170
+          "y": 172
         },
         "label": "UOPA",
         "rotation": 0,
@@ -512,8 +512,8 @@
         "deviceId": "dev0000005d",
         "unitLetter": "",
         "position": {
-          "x": 71,
-          "y": 188
+          "x": 82,
+          "y": 171
         },
         "label": "UOPB",
         "rotation": 0,
@@ -526,8 +526,8 @@
         "deviceId": "dev00000065",
         "unitLetter": "",
         "position": {
-          "x": 114,
-          "y": 170
+          "x": 31,
+          "y": 226
         },
         "label": "SEQ CTL",
         "rotation": 0,
@@ -540,8 +540,8 @@
         "deviceId": "dev00000069",
         "unitLetter": "",
         "position": {
-          "x": 171,
-          "y": 193
+          "x": 79,
+          "y": 226
         },
         "label": "SEQ CTLX",
         "rotation": 0,
@@ -554,8 +554,8 @@
         "deviceId": "dev00000071",
         "unitLetter": "",
         "position": {
-          "x": 4,
-          "y": 219
+          "x": 121,
+          "y": 226
         },
         "label": "SEQ FLOW",
         "rotation": 0,
@@ -582,7 +582,7 @@
         "deviceId": "dev00000496",
         "unitLetter": "",
         "position": {
-          "x": 165,
+          "x": 169,
           "y": 34
         },
         "label": "FETCH DET",
@@ -596,8 +596,8 @@
         "deviceId": "dev000004a2",
         "unitLetter": "",
         "position": {
-          "x": 194,
-          "y": 38
+          "x": 199,
+          "y": 36
         },
         "label": "PCINC INV",
         "rotation": 0,
@@ -610,8 +610,8 @@
         "deviceId": "dev00001388",
         "unitLetter": "",
         "position": {
-          "x": 150,
-          "y": 100
+          "x": 169,
+          "y": 96
         },
         "label": "BANK SEL",
         "rotation": 0,
@@ -624,8 +624,8 @@
         "deviceId": "dev00001394",
         "unitLetter": "",
         "position": {
-          "x": 202,
-          "y": 104
+          "x": 203,
+          "y": 106
         },
         "label": "BANKEN INV",
         "rotation": 0,
@@ -638,7 +638,7 @@
         "deviceId": "65eebd92356c49caaa30c70115ad0788",
         "unitLetter": "",
         "position": {
-          "x": -114,
+          "x": -81,
           "y": 142
         },
         "label": "RESET",
@@ -652,7 +652,7 @@
         "deviceId": "f82d3dbc8b1447eaaf6d7e1f690aa9b4",
         "unitLetter": "",
         "position": {
-          "x": -114,
+          "x": -81,
           "y": 130
         },
         "label": "",
@@ -666,8 +666,8 @@
         "deviceId": "d06960c8b7c6ca42502913d10f2f2ffe",
         "unitLetter": "",
         "position": {
-          "x": -91,
-          "y": 138
+          "x": -63,
+          "y": 136
         },
         "label": "HALT",
         "rotation": 0,
@@ -680,8 +680,8 @@
         "deviceId": "18e1f0d7674e2b717cb37b28a8c0d520",
         "unitLetter": "",
         "position": {
-          "x": -63,
-          "y": 138
+          "x": -35,
+          "y": 136
         },
         "label": "HALT HOLD",
         "rotation": 0,
@@ -694,7 +694,7 @@
         "deviceId": "f34dc7a6d4b63fedc4acb858d967596d",
         "unitLetter": "",
         "position": {
-          "x": -85,
+          "x": -57,
           "y": 102
         },
         "label": "CLK GATE",
@@ -708,8 +708,8 @@
         "deviceId": "389c064179ba40188106f332e1d641fa",
         "unitLetter": "",
         "position": {
-          "x": -104,
-          "y": 180
+          "x": -40,
+          "y": 176
         },
         "label": "OPL3",
         "rotation": 90,
@@ -722,8 +722,8 @@
         "deviceId": "38abedb54f7b4ab8ad7b701103334244",
         "unitLetter": "",
         "position": {
-          "x": -79,
-          "y": 180
+          "x": -15,
+          "y": 176
         },
         "label": "T2",
         "rotation": 90,
@@ -736,8 +736,8 @@
         "deviceId": "141d157e3ce7405f9d4e9d7004429bc3",
         "unitLetter": "",
         "position": {
-          "x": -74,
-          "y": 180
+          "x": -10,
+          "y": 176
         },
         "label": "T1",
         "rotation": 90,
@@ -750,8 +750,8 @@
         "deviceId": "5ce5015b66264ef2b7eecb460ba32457",
         "unitLetter": "",
         "position": {
-          "x": -69,
-          "y": 180
+          "x": -5,
+          "y": 176
         },
         "label": "T0",
         "rotation": 90,
@@ -764,8 +764,8 @@
         "deviceId": "353768e7f8984743bc5cabc3438dbec8",
         "unitLetter": "",
         "position": {
-          "x": -98,
-          "y": 180
+          "x": -34,
+          "y": 176
         },
         "label": "OPL2",
         "rotation": 90,
@@ -778,8 +778,8 @@
         "deviceId": "3ff30b5f5124488888811c46135bd08f",
         "unitLetter": "",
         "position": {
-          "x": -92,
-          "y": 180
+          "x": -28,
+          "y": 176
         },
         "label": "OPL1",
         "rotation": 90,
@@ -792,8 +792,8 @@
         "deviceId": "a52c1e2d4a634bbc960315d22e7498e7",
         "unitLetter": "",
         "position": {
-          "x": -86,
-          "y": 180
+          "x": -22,
+          "y": 176
         },
         "label": "OPL0",
         "rotation": 90,
@@ -806,8 +806,8 @@
         "deviceId": "c530e8facc9d451a99b8a944b00a9a11",
         "unitLetter": "",
         "position": {
-          "x": -112,
-          "y": 180
+          "x": -48,
+          "y": 176
         },
         "label": "",
         "rotation": 90,
@@ -1022,7 +1022,7 @@
         "id": "vcc00000411",
         "label": "",
         "position": {
-          "x": 123,
+          "x": 118,
           "y": 92
         },
         "rotation": 0,
@@ -1072,8 +1072,8 @@
         "id": "vcc0000041c",
         "label": "",
         "position": {
-          "x": 10,
-          "y": 136
+          "x": 4,
+          "y": 128
         },
         "rotation": 0,
         "layer": 0,
@@ -1097,8 +1097,8 @@
         "id": "gnd0000041d",
         "label": "",
         "position": {
-          "x": -19,
-          "y": 166
+          "x": -17,
+          "y": 156
         },
         "rotation": 0,
         "layer": 0,
@@ -1123,7 +1123,7 @@
         "label": "",
         "position": {
           "x": 43,
-          "y": 163
+          "y": 165
         },
         "rotation": 0,
         "layer": 0,
@@ -1148,7 +1148,7 @@
         "label": "",
         "position": {
           "x": 30,
-          "y": 202
+          "y": 204
         },
         "rotation": 0,
         "layer": 0,
@@ -1172,8 +1172,8 @@
         "id": "vcc00000438",
         "label": "",
         "position": {
-          "x": 85,
-          "y": 178
+          "x": 96,
+          "y": 161
         },
         "rotation": 0,
         "layer": 0,
@@ -1197,8 +1197,8 @@
         "id": "gnd00000439",
         "label": "",
         "position": {
-          "x": 67,
-          "y": 218
+          "x": 78,
+          "y": 201
         },
         "rotation": 0,
         "layer": 0,
@@ -1222,8 +1222,8 @@
         "id": "vcc00000448",
         "label": "",
         "position": {
-          "x": 132,
-          "y": 162
+          "x": 49,
+          "y": 218
         },
         "rotation": 0,
         "layer": 0,
@@ -1247,8 +1247,8 @@
         "id": "gnd00000449",
         "label": "",
         "position": {
-          "x": 110,
-          "y": 200
+          "x": 27,
+          "y": 256
         },
         "rotation": 0,
         "layer": 0,
@@ -1272,8 +1272,8 @@
         "id": "vcc00000454",
         "label": "",
         "position": {
-          "x": 191,
-          "y": 187
+          "x": 99,
+          "y": 220
         },
         "rotation": 0,
         "layer": 0,
@@ -1297,8 +1297,8 @@
         "id": "gnd00000455",
         "label": "",
         "position": {
-          "x": 165,
-          "y": 226
+          "x": 73,
+          "y": 259
         },
         "rotation": 0,
         "layer": 0,
@@ -1322,8 +1322,8 @@
         "id": "vcc00000460",
         "label": "",
         "position": {
-          "x": 15,
-          "y": 210
+          "x": 132,
+          "y": 217
         },
         "rotation": 0,
         "layer": 0,
@@ -1347,8 +1347,8 @@
         "id": "gnd00000461",
         "label": "",
         "position": {
-          "x": -3,
-          "y": 255
+          "x": 114,
+          "y": 262
         },
         "rotation": 0,
         "layer": 0,
@@ -1422,7 +1422,7 @@
         "id": "vcc00000498",
         "label": "",
         "position": {
-          "x": 176,
+          "x": 180,
           "y": 26
         },
         "rotation": 0,
@@ -1447,7 +1447,7 @@
         "id": "gnd00000499",
         "label": "",
         "position": {
-          "x": 160,
+          "x": 164,
           "y": 54
         },
         "rotation": 0,
@@ -1472,8 +1472,8 @@
         "id": "vcc000004a4",
         "label": "",
         "position": {
-          "x": 208,
-          "y": 29
+          "x": 213,
+          "y": 27
         },
         "rotation": 0,
         "layer": 0,
@@ -1497,8 +1497,8 @@
         "id": "gnd000004a5",
         "label": "",
         "position": {
-          "x": 190,
-          "y": 55
+          "x": 195,
+          "y": 53
         },
         "rotation": 0,
         "layer": 0,
@@ -1522,8 +1522,8 @@
         "id": "vcc0000138a",
         "label": "",
         "position": {
-          "x": 161,
-          "y": 91
+          "x": 180,
+          "y": 87
         },
         "rotation": 0,
         "layer": 0,
@@ -1547,8 +1547,8 @@
         "id": "gnd0000138b",
         "label": "",
         "position": {
-          "x": 147,
-          "y": 134
+          "x": 166,
+          "y": 130
         },
         "rotation": 0,
         "layer": 0,
@@ -1572,8 +1572,8 @@
         "id": "vcc00001396",
         "label": "",
         "position": {
-          "x": 215,
-          "y": 96
+          "x": 216,
+          "y": 98
         },
         "rotation": 0,
         "layer": 0,
@@ -1597,8 +1597,8 @@
         "id": "gnd00001397",
         "label": "",
         "position": {
-          "x": 194,
-          "y": 129
+          "x": 195,
+          "y": 131
         },
         "rotation": 0,
         "layer": 0,
@@ -1772,7 +1772,7 @@
         "id": "805e135fc5ab4f6291b7d4e3ae6ecb34",
         "label": "",
         "position": {
-          "x": -113,
+          "x": -80,
           "y": 115
         },
         "rotation": 0,
@@ -1797,7 +1797,7 @@
         "id": "7b0c3f568c024529a94ba0c516a4e4fd",
         "label": "",
         "position": {
-          "x": -113,
+          "x": -80,
           "y": 161
         },
         "rotation": 0,
@@ -1822,7 +1822,7 @@
         "id": "1f174ee0b8594e27874dc52f0bd61e45",
         "label": "/RESET",
         "position": {
-          "x": -104,
+          "x": -75,
           "y": 134
         },
         "rotation": 270,
@@ -1947,8 +1947,8 @@
         "id": "5f9a12109f9ba6f6af31c07a48cd664e",
         "label": "/RESET",
         "position": {
-          "x": -17,
-          "y": 146
+          "x": -15,
+          "y": 136
         },
         "rotation": 180,
         "layer": 0,
@@ -1972,7 +1972,7 @@
         "id": "8f5a8f44ade04b9e941138e65363dc3c",
         "label": "",
         "position": {
-          "x": -113,
+          "x": -80,
           "y": 100
         },
         "rotation": 0,
@@ -1997,7 +1997,7 @@
         "id": "142d101386c4409ebbd769bb59b59458",
         "label": "CLK",
         "position": {
-          "x": -89,
+          "x": -61,
           "y": 100
         },
         "rotation": 270,
@@ -2122,8 +2122,8 @@
         "id": "5b6eaacaccf84d3ebdc82b9cd3336292",
         "label": "CLKG",
         "position": {
-          "x": -17,
-          "y": 148
+          "x": -15,
+          "y": 138
         },
         "rotation": 180,
         "layer": 0,
@@ -2172,8 +2172,8 @@
         "id": "a2d4d29d3ff14964a602496cd468841f",
         "label": "CLK",
         "position": {
-          "x": 105,
-          "y": 170
+          "x": 22,
+          "y": 226
         },
         "rotation": 180,
         "layer": 0,
@@ -2197,8 +2197,8 @@
         "id": "86211cec208240a5848f05aba3431706",
         "label": "CLK",
         "position": {
-          "x": 161,
-          "y": 193
+          "x": 69,
+          "y": 226
         },
         "rotation": 180,
         "layer": 0,
@@ -2222,8 +2222,8 @@
         "id": "511c51d30b4d48c086c0f0ddd7037486",
         "label": "CLK",
         "position": {
-          "x": -5,
-          "y": 219
+          "x": 112,
+          "y": 226
         },
         "rotation": 180,
         "layer": 0,
@@ -2247,8 +2247,8 @@
         "id": "7080d7dd4fe707d3264b739e0c1b32d4",
         "label": "",
         "position": {
-          "x": -69,
-          "y": 126
+          "x": -53,
+          "y": 128
         },
         "rotation": 0,
         "layer": 0,
@@ -2272,7 +2272,7 @@
         "id": "6fe8ec07d6caaf00b176da43ade1c0c7",
         "label": "",
         "position": {
-          "x": -94,
+          "x": -66,
           "y": 156
         },
         "rotation": 0,
@@ -2297,8 +2297,8 @@
         "id": "f82c3203a1ffd209fc8dbaba3a7347fb",
         "label": "",
         "position": {
-          "x": -48,
-          "y": 126
+          "x": -26,
+          "y": 128
         },
         "rotation": 0,
         "layer": 0,
@@ -2322,8 +2322,8 @@
         "id": "c63083c9d9e7fe2834eb71f59e455f8e",
         "label": "",
         "position": {
-          "x": -69,
-          "y": 161
+          "x": -41,
+          "y": 156
         },
         "rotation": 0,
         "layer": 0,
@@ -2347,7 +2347,7 @@
         "id": "1c4d9bb128ae122d46c0546329416280",
         "label": "",
         "position": {
-          "x": -70,
+          "x": -48,
           "y": 89
         },
         "rotation": 0,
@@ -2372,7 +2372,7 @@
         "id": "a1573f8cfe33a559cd04bdedfa044742",
         "label": "",
         "position": {
-          "x": -91,
+          "x": -63,
           "y": 123
         },
         "rotation": 0,
@@ -2397,7 +2397,7 @@
         "id": "b5181705182b53a5c980aabac9efcea7",
         "label": "CLKG",
         "position": {
-          "x": -90,
+          "x": -62,
           "y": 106
         },
         "rotation": 180,
@@ -2422,8 +2422,8 @@
         "id": "66e3a13071a14854929f83db90f439f6",
         "label": "OPL",
         "position": {
-          "x": 161,
-          "y": 196
+          "x": 69,
+          "y": 229
         },
         "rotation": 0,
         "layer": 0,
@@ -2438,7 +2438,7 @@
         "borderColor": null,
         "startBit": 0,
         "mirrored": true,
-        "color": "Green",
+        "color": "Olive",
         "fontSize": null,
         "textColor": null
       },
@@ -2447,8 +2447,8 @@
         "id": "711a4dce7c7e4a0ebcbf54f4fd528845",
         "label": "OPL",
         "position": {
-          "x": 105,
-          "y": 173
+          "x": 22,
+          "y": 229
         },
         "rotation": 0,
         "layer": 0,
@@ -2463,7 +2463,7 @@
         "borderColor": null,
         "startBit": 0,
         "mirrored": true,
-        "color": "Green",
+        "color": "Olive",
         "fontSize": null,
         "textColor": null
       },
@@ -2472,8 +2472,8 @@
         "id": "5e7cd26859bd4131923bd7da7b2c76cf",
         "label": "OPL",
         "position": {
-          "x": -5,
-          "y": 222
+          "x": 112,
+          "y": 229
         },
         "rotation": 0,
         "layer": 0,
@@ -2488,7 +2488,7 @@
         "borderColor": null,
         "startBit": 0,
         "mirrored": true,
-        "color": "Green",
+        "color": "Olive",
         "fontSize": null,
         "textColor": null
       },
@@ -2513,7 +2513,7 @@
         "borderColor": null,
         "startBit": 0,
         "mirrored": true,
-        "color": "Green",
+        "color": "Olive",
         "fontSize": null,
         "textColor": null
       },
@@ -2522,8 +2522,8 @@
         "id": "4dcd015b216548168937ae16400aa696",
         "label": "T",
         "position": {
-          "x": 6,
-          "y": 151
+          "x": 8,
+          "y": 141
         },
         "rotation": 0,
         "layer": 0,
@@ -2547,8 +2547,8 @@
         "id": "14e47614a8674c288e425ff37a452d56",
         "label": "T",
         "position": {
-          "x": -5,
-          "y": 234
+          "x": 112,
+          "y": 241
         },
         "rotation": 0,
         "layer": 0,
@@ -2572,8 +2572,8 @@
         "id": "97f8ac06ee4a4bdd8be485af57953f9d",
         "label": "T",
         "position": {
-          "x": 105,
-          "y": 185
+          "x": 22,
+          "y": 241
         },
         "rotation": 0,
         "layer": 0,
@@ -2597,8 +2597,8 @@
         "id": "e9d93a80f74b4ca294e04b375931e2ea",
         "label": "T",
         "position": {
-          "x": 161,
-          "y": 208
+          "x": 69,
+          "y": 241
         },
         "rotation": 0,
         "layer": 0,
@@ -2622,8 +2622,8 @@
         "id": "2e749b3046ce4c8e93447bd6b62c1bb3",
         "label": "OPL",
         "position": {
-          "x": -93,
-          "y": 172
+          "x": -29,
+          "y": 168
         },
         "rotation": 90,
         "layer": 0,
@@ -2647,8 +2647,8 @@
         "id": "66e12303b8bf4e5fa5f993006cf55055",
         "label": "T",
         "position": {
-          "x": -74,
-          "y": 172
+          "x": -10,
+          "y": 168
         },
         "rotation": 90,
         "layer": 0,
@@ -2672,8 +2672,8 @@
         "id": "ca61b0b71d8248ecb1b8bd24953f2cd4",
         "label": "",
         "position": {
-          "x": -112,
-          "y": 187
+          "x": -48,
+          "y": 183
         },
         "rotation": 0,
         "layer": 0,
@@ -2697,8 +2697,8 @@
         "id": "2442ab31a52445a2a320b6172e8a6603",
         "label": "CLKG",
         "position": {
-          "x": -112,
-          "y": 173
+          "x": -48,
+          "y": 169
         },
         "rotation": 270,
         "layer": 0,
@@ -6133,7 +6133,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Green"
+        "color": "Olive"
       },
       {
         "id": "4fbeca3228cd4fc9a7fa27374960449d",
@@ -6147,7 +6147,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Green"
+        "color": "Olive"
       },
       {
         "id": "8707393fdbcd4070937f1db2d49e8286",
@@ -6161,7 +6161,7 @@
           "pinNumber": 4,
           "external": false
         },
-        "color": "Green"
+        "color": "Olive"
       },
       {
         "id": "048b5ce80ea0489bab199649448632ab",
@@ -6175,7 +6175,7 @@
           "pinNumber": 4,
           "external": false
         },
-        "color": "Green"
+        "color": "Olive"
       },
       {
         "id": "d9214821b2c94998a4a867cfdda05a31",
@@ -6189,7 +6189,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Green"
+        "color": "Olive"
       },
       {
         "id": "9a479f034e0847a4a62ed4a6691ea370",
@@ -6203,7 +6203,7 @@
           "pinNumber": 3,
           "external": false
         },
-        "color": "Green"
+        "color": "Olive"
       },
       {
         "id": "9b835ceb0a0a429bb537bfefeec1dd8d",
@@ -6217,7 +6217,7 @@
           "pinNumber": 4,
           "external": false
         },
-        "color": "Green"
+        "color": "Olive"
       },
       {
         "id": "0823456f6fe34373ba9cf28de69d8785",
@@ -6231,7 +6231,7 @@
           "pinNumber": 5,
           "external": false
         },
-        "color": "Green"
+        "color": "Olive"
       },
       {
         "id": "6ecea81c44b84455b6a6cdf8668c5736",
@@ -6245,7 +6245,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Green"
+        "color": "Olive"
       },
       {
         "id": "6903ae5247a34445b69dcc21e0c6b951",
@@ -6259,7 +6259,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Green"
+        "color": "Olive"
       },
       {
         "id": "88fd57821c3b423babe9d6bb63540b5f",
@@ -6273,7 +6273,7 @@
           "pinNumber": 4,
           "external": false
         },
-        "color": "Green"
+        "color": "Olive"
       },
       {
         "id": "b983ee6c87e14358bf9176d92e2fea4f",
@@ -6287,7 +6287,7 @@
           "pinNumber": 4,
           "external": false
         },
-        "color": "Green"
+        "color": "Olive"
       },
       {
         "id": "74a1e76b3c9c476f976f478d56b2ef2d",
@@ -6301,7 +6301,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Green"
+        "color": "Olive"
       },
       {
         "id": "410ae708354a46f4b9f5ab78ef827ff4",
@@ -6315,7 +6315,7 @@
           "pinNumber": 5,
           "external": false
         },
-        "color": "Green"
+        "color": "Olive"
       },
       {
         "id": "1e0a6595b0964baf9229094478cd2c45",
@@ -6329,7 +6329,7 @@
           "pinNumber": 6,
           "external": false
         },
-        "color": "Green"
+        "color": "Olive"
       },
       {
         "id": "7862b03106ff4a15adc6876b3507e4ad",
@@ -6343,7 +6343,7 @@
           "pinNumber": 9,
           "external": false
         },
-        "color": "Green"
+        "color": "Olive"
       },
       {
         "id": "934914654c744dd38876c8795ba4da29",
@@ -6762,10 +6762,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 0.9537264,
+    "zoom": 0.7528,
     "pan": {
-      "x": 955,
-      "y": -401
+      "x": 416,
+      "y": -79
     }
   }
 }
