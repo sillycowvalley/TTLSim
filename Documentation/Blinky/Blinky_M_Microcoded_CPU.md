@@ -178,7 +178,7 @@ Three member placements are load-bearing wiring, not aesthetics:
 - **ALU quadrant (0x40–0x7F):** the opcode *is* the '181 control —
   `0 1 M CN S3 S2 S1 S0`. The six function bits wire (through the ALUFN mux, §5)
   straight to the '181 S/M/CN pins, so the entire '181 function table is a working
-  instruction. The ~9 named ops occupy their datasheet patterns; every other slot is a
+  instruction. The eight named ops occupy their datasheet patterns; every other slot is a
   valid `ALU #n` (Appendix A). This is what makes the ALU family's writeback a *single*
   micro-op instead of one per function — the decisive simplification behind the GAL
   control store.
@@ -308,7 +308,8 @@ The per-instruction T-state counts are unchanged from the datapath's behaviour; 
 the opcode encodings moved (Appendix A). The illustrative walk-throughs — fetch,
 operand consume, the same-edge counter folds — are as before and are not repeated here;
 the authoritative per-opcode cycle counts are the Appendix cycle column, and the
-per-T-state micro-op decomposition is `Blinky_M_GAL_Control.md`.
+per-T-state micro-op decomposition is the instruction→micro-op sequence table in
+`Blinky_M_GAL_Control.md` §7.
 
 Average for stack-shaped code ≈ 3–4 T-states per instruction.
 
@@ -501,8 +502,9 @@ return stack.
 **ALU (0x40–0x7F)** — opcode = `01 M CN S3 S2 S1 S0`; the '181 function rides the
 opcode. Binary ops `( a b — r )` pop, result to TOS. Named subset below; every other
 slot is a valid `ALU #n` realising that '181 function (M, CN, S3–S0). N/Z written
-always; C per class (arithmetic and CMP write it, logic preserves it). Cycles: 4
-binary, 3 unary, 4 CMP.
+always; C per class (arithmetic writes it, logic preserves it). Cycles: 4 binary,
+3 unary. The non-destructive compare CMP is not a quadrant op — it is encoded at 0x96
+(Flow); TST is the quadrant's only flags-only op.
 
 The opcode of each named op is fixed by its '181 function code in the low six bits
 (active-high operand convention), so the assembler and the generator derive them from
@@ -518,15 +520,16 @@ one table rather than a hand-assigned map. The rule:
 | OR | M=1 S=1110 | — | 4 | `( a b — a\|b )`; preserves C |
 | XOR | M=1 S=0110 | — | 4 | `( a b — a^b )`; preserves C |
 | NOT | M=1 S=0000 | — | 3 | `( a — ~a )`; preserves C |
-| CMP | M=0 CN=1 S=0110 | — | 4 | flags of TOS−NOS, operands held; C = TOS ≥ NOS |
 | TST | M=1 S=1111 | — | 3 | flags of TOS, TOS held; preserves C |
 | ALU #n | any {M,CN,S3–S0} | — | 3 / 4 | the '181 function n directly; the assembler exposes the whole table |
 
-CMP and SUB share a '181 pattern and differ only in whether TOS is written — a
-member-level distinction the assembler encodes and the generator resolves in the
-dictionary. The concrete hex opcodes and the exact CMP/SUB and TST slots are emitted
-by BlinkyMGen from this table; the design document states the rule, not a hand-copied
-map, so the two can never disagree.
+SUB and CMP evaluate the same '181 pattern (M=0, CN=1, S=0110) but differ in
+destination: SUB writes TOS and sits in the quadrant at 0x56; CMP writes flags only
+and is encoded **outside** the quadrant at **0x96** (a FLOW-family spare, Appendix A
+Flow), so the quadrant's writeback stays a single micro-op with no member-level
+destination fork. The concrete hex opcodes are emitted by BlinkyMGen from this table;
+the design document states the rule, not a hand-copied map, so the two can never
+disagree.
 
 **Frame (0x8_)** — no flags.
 
@@ -543,6 +546,7 @@ polarity. Targets absolute, little-endian. Conditionals 3 cycles not taken, 5 ta
 |---|---|---|---|---|
 | JUMP | 0x90 | aaaa | 5 | PC ← aaaa |
 | CALL | 0x91 | aaaa | 8 | Push {PC-next, BP} (RSP++ once); PC ← aaaa |
+| CMP | 0x96 | — | 4 | `( a b — a b )` flags of TOS−NOS, operands held; C = TOS ≥ NOS. Evaluates the SUB '181 pattern, writes flags only |
 | BEQ | 0x9A | aaaa | 3 / 5 | Branch if Z = 1 |
 | BNE | 0x9B | aaaa | 3 / 5 | Branch if Z = 0 |
 | BCS | 0x9C | aaaa | 3 / 5 | Branch if C = 1 |
