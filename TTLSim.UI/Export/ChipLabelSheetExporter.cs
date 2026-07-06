@@ -74,7 +74,7 @@ public static class ChipLabelSheetExporter
     private const double GapBetweenGroups = 18.0;
     private const double CaptionSize = 4.0;
     private const double CaptionGap = 3.0;           // caption to label top
-    private const double ShelfGap = 16.0;            // vertical gap between layout rows
+    private const double ShelfGap = 9.6;             // vertical gap between layout rows (60% of the former 16.0)
 
     /// <summary>
     /// Export the BOM label sheet for <paramref name="schematic"/> to
@@ -96,6 +96,14 @@ public static class ChipLabelSheetExporter
         // JEDEC header ("GAL1_ALU") and its header/fuse-derived pin names;
         // its caption carries the designators so the sticker is traceable to
         // the schematic.
+        //
+        // Group order is by label LENGTH (the vertical dimension), tallest
+        // first, name as tiebreak. The shelf packer sets each shelf's height
+        // to its tallest label, so ordering by height puts near-equal-height
+        // labels on the same shelf and collapses the per-shelf slack a taller
+        // neighbour would otherwise force -- fitting more labels per page.
+        // Within one height band the order stays alphabetical, so the sheet
+        // is still scannable and the output deterministic.
         var groups = schematic.Devices
             .Where(d => d.Definition is ChipPartDefinition { To92: false })
             .GroupBy(d => d.Definition is ChipPartDefinition cp
@@ -103,7 +111,8 @@ public static class ChipLabelSheetExporter
                 ? d.FullPartNumber + "\n" + (d.Program ?? "") + "\n" + UnitLabel(d)
                 : d.FullPartNumber + "\n" + UnitLabel(d))
             .Select(g => BuildGroup(g.ToList()))
-            .OrderBy(g => g.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(g => LabelSize(g.Definition).Height)
+            .ThenBy(g => g.DisplayName, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
         if (groups.Count == 0) return 0;
