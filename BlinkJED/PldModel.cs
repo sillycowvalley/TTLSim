@@ -204,21 +204,53 @@ internal static class PldParser
         // Flatten the whole right-hand side (with !, &, #, $ and parentheses)
         // into a sum-of-products. Each product term is a name->polarity map.
         List<Dictionary<string, bool>>? sop =
-            ExprParser.ParseToSop(rhs, errors, Shorten(st));
+            ExprParser.ParseToSop(rhs, errors, Shorten(st), out bool sawConstant);
         if (sop == null) return;
+
+        // A deliberate GND/VCC constant is a driven low/high output. It is legal
+        // on a combinational logic output, but not on .oe/.ar/.sp (those want a
+        // real product term). Represent it as a single empty product term (an
+        // always-true fuse row) and fold the low/high sense into the output
+        // polarity: VCC drives 1 (non-inverted); GND drives 0 (inverted). A
+        // leading '!' on the target flips that intent via the polarity XOR, so
+        // "!X = GND" drives 1 and "!X = VCC" drives 0.
+        //
+        // Honour the constant only when the expression collapsed to a genuine
+        // constant: an empty sum (GND, all terms vanished) or a single empty
+        // term (VCC). A GND/VCC mixed with real terms (e.g. "GND # T0") lands in
+        // the normal path below, where it simplifies naturally.
+        bool isConstZero = sawConstant && sop.Count == 0;
+        bool isConstOne = sawConstant && sop.Count == 1 && sop[0].Count == 0;
+        if (isConstZero || isConstOne)
+        {
+            if (outputEnable || asyncReset || syncPreset)
+            {
+                errors.Add($"Output '{target}': GND/VCC is not valid on a .oe/.ar/.sp equation.");
+                return;
+            }
+            var constEq = new Equation
+            {
+                Target = target,
+                ActiveLow = activeLow ^ isConstZero,    // invert for GND so the pin reads 0
+                Registered = registered,
+            };
+            constEq.Terms.Add(new ProductTerm());       // empty term = always-true row
+            doc.Equations.Add(constEq);
+            return;
+        }
 
         // Degenerate results have no fuse-array representation as a plain SOP:
         // an empty sum is constant 0; a term with no literals is constant 1.
         if (sop.Count == 0)
         {
-            errors.Add($"Expression reduces to constant 0 (no product terms): \"{Shorten(st)}\".");
+            errors.Add($"Expression reduces to constant 0 (no product terms): \"{Shorten(st)}\". Use GND for a deliberate driven-low output.");
             return;
         }
         foreach (var termLits in sop)
         {
             if (termLits.Count == 0)
             {
-                errors.Add($"Expression reduces to a constant (always true): \"{Shorten(st)}\".");
+                errors.Add($"Expression reduces to a constant (always true): \"{Shorten(st)}\". Use VCC for a deliberate driven-high output.");
                 return;
             }
         }
@@ -302,6 +334,10 @@ internal static class PldParser
         private int pos;
         private bool failed;
 
+        // Set when the expression used a GND or VCC constant keyword, so the
+        // caller can allow the resulting (otherwise-rejected) degenerate SOP.
+        public bool SawConstant;
+
         private ExprParser(List<string> toks, List<string> errors, string ctx)
         {
             this.toks = toks;
@@ -310,8 +346,9 @@ internal static class PldParser
         }
 
         public static List<Dictionary<string, bool>>? ParseToSop(
-            string rhs, List<string> errors, string ctx)
+            string rhs, List<string> errors, string ctx, out bool sawConstant)
         {
+            sawConstant = false;
             List<string>? toks = Tokenize(rhs, errors, ctx);
             if (toks == null) return null;
 
@@ -323,6 +360,7 @@ internal static class PldParser
                 errors.Add($"Unexpected '{toks[p.pos]}' in \"{ctx}\".");
                 return null;
             }
+            sawConstant = p.SawConstant;
             return sop;
         }
 
@@ -403,7 +441,26 @@ internal static class PldParser
                 pos++;
                 return inner;
             }
-            if (IsNameTok(t)) { pos++; return Lit(t, true); }
+            if (IsNameTok(t))
+            {
+                pos++;
+                // GND and VCC are reserved constant operands: a deliberate driven
+                // low / high. GND flattens to the empty OR (constant 0); VCC to
+                // the single empty AND (constant 1). SawConstant lets the caller
+                // permit the otherwise-rejected degenerate SOP, distinguishing an
+                // intentional constant from an accidental one such as x & !x.
+                if (t.Equals("GND", StringComparison.OrdinalIgnoreCase))
+                {
+                    SawConstant = true;
+                    return Zero();
+                }
+                if (t.Equals("VCC", StringComparison.OrdinalIgnoreCase))
+                {
+                    SawConstant = true;
+                    return One();
+                }
+                return Lit(t, true);
+            }
             Fail($"unexpected '{t}'");
             return Zero();
         }

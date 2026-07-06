@@ -12,12 +12,19 @@ namespace BlinkyMGen;
 // Outputs are IDX0..6 and TRSTN (active-low /TRST, which drives the counter's
 // /LOAD).
 //
-// Constant outputs: a control line that is 0 for every used index (e.g. IDX6,
-// since no micro-op index reaches 64) needs no macrocell at all - it is tied to
-// GND on the board. BlinkyJED rejects both "NAME = ;" and a contradiction like
-// "NAME = A & !A", so such an output is NOT declared as a pin and NOT given an
-// equation; the header lists it as a GND tie instead. An always-1 line (none
-// occur here, but handled for completeness) ties to VCC.
+// Shared IDX bus: the nine sequencers drive one common IDX/TRSTN bus. Each
+// sequencer's outputs are tristated by a BANKEN input (pin 11) driven from the
+// bank-select '154, so only the selected bank drives the bus. Because every
+// selected bank must define ALL bus lines, a sequencer whose IDXn is constant 0
+// over its used states emits "IDXn = GND;" (a real driven-low output), not an
+// omitted pin - otherwise that bus line would float while the bank is selected.
+//
+// Sequencers emit IDX0..5 only. IDX6 is the >=64 bit and the dictionary's max
+// index is 57, so IDX6 is 0 for every bank and is dropped entirely (no pin, no
+// bus line). The decoders still see a 7-bit index space with IDX6 tied low.
+//
+// Decoders (UOPA/UOPB): a control line constant across ALL indices still takes
+// no macrocell and is listed as a board tie - they are not on a shared bus.
 // ---------------------------------------------------------------------------
 
 public static class PldEmitter
@@ -42,6 +49,10 @@ public static class PldEmitter
 
     static readonly int[] IdxPins = { 14, 15, 16, 17, 18, 19, 20 };
     const int TrstPin = 23;
+    const int BankEnPin = 11;   // BANKEN output-enable input, all sequencers
+
+    // Sequencers emit IDX0..5 (IDX6 dropped: max index 57 < 64).
+    const int SeqIdxBits = 6;
 
     // 22V10 macrocell term capacities by pin (graduated).
     static readonly Dictionary<int, int> V10CapByPin = new()
@@ -122,7 +133,7 @@ public static class PldEmitter
         const int bits = 8;   // OPL0..3=0..3, COND=4, T0..2=5..7
         string[] names = { "OPL0", "OPL1", "OPL2", "OPL3", "COND", "T0", "T1", "T2" };
 
-        bool[][] idxVal = NewGrid(MicroDictionary.IndexBits, 1 << bits);
+        bool[][] idxVal = NewGrid(SeqIdxBits, 1 << bits);
         var care = new bool[1 << bits];
         var trst = new bool[1 << bits];
 
@@ -134,7 +145,7 @@ public static class PldEmitter
                     int addr = lo | (cond << 4) | (t << 5);
                     care[addr] = cell.Defined;
                     trst[addr] = cell.Trst;
-                    for (int b = 0; b < MicroDictionary.IndexBits; b++)
+                    for (int b = 0; b < SeqIdxBits; b++)
                         idxVal[b][addr] = ((cell.Index >> b) & 1) != 0;
                 }
 
@@ -146,7 +157,8 @@ public static class PldEmitter
         WriteSequencer(path, $"SEQ_{bank}",
             $"Stage 1 sequencer for the {bank} family. Combinational 22V10.\n" +
             "Inputs OPL0..3 (opcode low), COND, T0..2 (external '161 counter).\n" +
-            "Outputs IDX0..6 (micro-op index) and TRSTN (/TRST -> counter /LOAD).",
+            "Outputs IDX0..5 (micro-op index) and TRSTN (/TRST -> counter /LOAD).\n" +
+            "BANKEN (pin 11) tristates all outputs so banks share one IDX bus.",
             names, bits, idxVal, care, trst, inputPins);
     }
 
@@ -155,7 +167,7 @@ public static class PldEmitter
         const int bits = 9;   // O0..5=0..5, T0..2=6..8
         string[] names = { "O0", "O1", "O2", "O3", "O4", "O5", "T0", "T1", "T2" };
 
-        bool[][] idxVal = NewGrid(MicroDictionary.IndexBits, 1 << bits);
+        bool[][] idxVal = NewGrid(SeqIdxBits, 1 << bits);
         var care = new bool[1 << bits];
         var trst = new bool[1 << bits];
 
@@ -166,7 +178,7 @@ public static class PldEmitter
                 int addr = o | (t << 6);
                 care[addr] = cell.Defined;
                 trst[addr] = cell.Trst;
-                for (int b = 0; b < MicroDictionary.IndexBits; b++)
+                for (int b = 0; b < SeqIdxBits; b++)
                     idxVal[b][addr] = ((cell.Index >> b) & 1) != 0;
             }
 
@@ -179,7 +191,8 @@ public static class PldEmitter
             "Stage 1 sequencer for the ALU quadrant (0x40..0x7F), merged.\n" +
             "The '138 ORs the four nibble enables into one bank enable; this GAL\n" +
             "sees opcode[5:0] (O0..5) and T0..2 (external '161 counter).\n" +
-            "Outputs IDX0..6 and TRSTN (/TRST -> counter /LOAD).",
+            "Outputs IDX0..5 and TRSTN (/TRST -> counter /LOAD).\n" +
+            "BANKEN (pin 11) tristates all outputs so banks share one IDX bus.",
             names, bits, idxVal, care, trst, inputPins);
     }
 
@@ -188,7 +201,7 @@ public static class PldEmitter
         const int bits = 3;
         string[] names = { "T0", "T1", "T2" };
 
-        bool[][] idxVal = NewGrid(MicroDictionary.IndexBits, 1 << bits);
+        bool[][] idxVal = NewGrid(SeqIdxBits, 1 << bits);
         var care = new bool[1 << bits];
         var trst = new bool[1 << bits];
         for (int t = 0; t < Sequencer.MaxT && t < (1 << bits); t++)
@@ -196,7 +209,7 @@ public static class PldEmitter
             var cell = seq.EntryAt(t);
             care[t] = cell.Defined;
             trst[t] = cell.Trst;
-            for (int b = 0; b < MicroDictionary.IndexBits; b++)
+            for (int b = 0; b < SeqIdxBits; b++)
                 idxVal[b][t] = ((cell.Index >> b) & 1) != 0;
         }
 
@@ -204,64 +217,83 @@ public static class PldEmitter
         WriteSequencer(path, "SEQ_ENTRY",
             "Stage 1 sequencer for interrupt entry (INTP = 1, opcode-independent).\n" +
             "Combinational; enabled by INTP, T0..2 the only inputs.\n" +
-            "Outputs IDX0..6 and TRSTN (/TRST -> counter /LOAD).",
+            "Outputs IDX0..5 and TRSTN (/TRST -> counter /LOAD).\n" +
+            "BANKEN (pin 11) tristates all outputs so banks share one IDX bus.",
             names, bits, idxVal, care, trst, inputPins);
     }
 
-    // Shared sequencer writer: minimizes each IDX bit and TRSTN, assigns pins
-    // only to live (non-constant) outputs, and lists constant bits as ties.
+    // Shared sequencer writer. All sequencers drive one common IDX/TRSTN bus,
+    // tristated by BANKEN (pin 11). Every selected bank must define ALL bus
+    // lines, so a constant-0 IDX bit is emitted as "IDXn = GND;" (a real
+    // driven-low output), never omitted. Each output carries ".oe = BANKEN".
     static void WriteSequencer(string path, string name, string blurb, string[] inputNames,
                                int bits, bool[][] idxVal, bool[] care, bool[] trst,
                                List<string> inputPins)
     {
         var min = new Minimizer(bits);
 
-        var idxResult = new (IReadOnlyList<Minimizer.Cube> cubes, bool inv)[MicroDictionary.IndexBits];
-        for (int b = 0; b < MicroDictionary.IndexBits; b++)
+        var idxResult = new (IReadOnlyList<Minimizer.Cube> cubes, bool inv)[SeqIdxBits];
+        for (int b = 0; b < SeqIdxBits; b++)
             idxResult[b] = min.Best(idxVal[b], care);
         (IReadOnlyList<Minimizer.Cube> cubes, bool inv) trstResult = min.Best(trst, care);
 
-        var gndTies = new List<string>();
-        var vccTies = new List<string>();
-        for (int b = 0; b < MicroDictionary.IndexBits; b++)
-            if (idxResult[b].cubes.Count == 0)
-                (idxResult[b].inv ? vccTies : gndTies).Add($"IDX{b}");
-        if (trstResult.cubes.Count == 0)
-            (trstResult.inv ? vccTies : gndTies).Add("TRSTN");
-
+        // On the shared bus every IDX bit and TRSTN takes a pin - constants are
+        // driven (GND/VCC), not tied off - so all outputs are live pins.
         var sb = new StringBuilder();
-        sb.Append(Header(name, blurb + TieNote(gndTies, vccTies)));
+        sb.Append(Header(name, blurb));
         sb.AppendLine("PIN 1  = CLK;");
         foreach (var p in inputPins) sb.AppendLine(p);
+        sb.AppendLine($"PIN {BankEnPin} = BANKEN;   /* output-enable: bank select from the '154 */");
         sb.AppendLine();
 
-        // Assign output pins only to live outputs, in fixed IDX order then TRSTN.
-        for (int b = 0; b < MicroDictionary.IndexBits; b++)
-            if (idxResult[b].cubes.Count > 0)
-                sb.AppendLine($"PIN {IdxPins[b],-2} = IDX{b};");
-        if (trstResult.cubes.Count > 0)
-            sb.AppendLine($"PIN {TrstPin} = TRSTN;   /* /TRST -> external '161 /LOAD */");
+        for (int b = 0; b < SeqIdxBits; b++)
+            sb.AppendLine($"PIN {IdxPins[b],-2} = IDX{b};");
+        sb.AppendLine($"PIN {TrstPin} = TRSTN;   /* /TRST -> external '161 /LOAD */");
         sb.AppendLine();
 
-        for (int b = 0; b < MicroDictionary.IndexBits; b++)
+        for (int b = 0; b < SeqIdxBits; b++)
         {
             var (cubes, inv) = idxResult[b];
-            if (cubes.Count == 0) continue;   // constant: tied to GND/VCC (see header)
+            if (cubes.Count == 0)
+            {
+                // Constant over this bank's used states. Best() returns the
+                // complement cover for an all-0 care-set (inv = true, no cubes)
+                // -> drive GND; an all-1 care-set would give inv = false -> VCC.
+                sb.AppendLine($"/* IDX{b}: constant {(inv ? "0" : "1")} for this bank */");
+                sb.AppendLine($"IDX{b} = {(inv ? "GND" : "VCC")};");
+                sb.AppendLine();
+                continue;
+            }
             sb.AppendLine($"/* IDX{b}: {cubes.Count} term(s){(inv ? ", active-low" : "")} */");
             string lhs = inv ? "!IDX" + b : "IDX" + b;
             sb.AppendLine($"{lhs} = {string.Join("\n     # ", cubes.Select(c => min.CubeToCupl(c, inputNames)))};");
             sb.AppendLine();
         }
 
-        if (trstResult.cubes.Count > 0)
         {
             var (cubes, inv) = trstResult;
-            sb.AppendLine($"/* TRSTN - asserted low at end of instruction: {cubes.Count} term(s) */");
-            // Best minimized active-high TRST; !TRSTN carries that cover.
-            string lhs = inv ? "TRSTN" : "!TRSTN";
-            sb.AppendLine($"{lhs} = {string.Join("\n     # ", cubes.Select(c => min.CubeToCupl(c, inputNames)))};");
-            sb.AppendLine();
+            if (cubes.Count == 0)
+            {
+                sb.AppendLine($"/* TRSTN: constant {(inv ? "0" : "1")} for this bank */");
+                sb.AppendLine($"TRSTN = {(inv ? "GND" : "VCC")};");
+                sb.AppendLine();
+            }
+            else
+            {
+                sb.AppendLine($"/* TRSTN - asserted low at end of instruction: {cubes.Count} term(s) */");
+                // Best minimized active-high TRST; !TRSTN carries that cover.
+                string lhs = inv ? "TRSTN" : "!TRSTN";
+                sb.AppendLine($"{lhs} = {string.Join("\n     # ", cubes.Select(c => min.CubeToCupl(c, inputNames)))};");
+                sb.AppendLine();
+            }
         }
+
+        // Output-enable: every output drives only while this bank is selected.
+        sb.AppendLine("/* tristate all outputs unless this bank is selected */");
+        for (int b = 0; b < SeqIdxBits; b++)
+            sb.AppendLine($"IDX{b}.oe = BANKEN;");
+        sb.AppendLine("TRSTN.oe = BANKEN;");
+        sb.AppendLine();
 
         File.WriteAllText(path, sb.ToString());
     }

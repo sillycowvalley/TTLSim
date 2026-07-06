@@ -5,8 +5,8 @@
  *
  * Stage 1 sequencer for the STK family. Combinational 22V10.
  * Inputs OPL0..3 (opcode low), COND, T0..2 (external '161 counter).
- * Outputs IDX0..6 (micro-op index) and TRSTN (/TRST -> counter /LOAD).
- * Constant outputs (no macrocell used) - tie to GND: IDX6.
+ * Outputs IDX0..5 (micro-op index) and TRSTN (/TRST -> counter /LOAD).
+ * BANKEN (pin 11) tristates all outputs so banks share one IDX bus.
  */
 Name     SEQ_STK;
 PartNo   00;
@@ -26,6 +26,7 @@ PIN 6  = COND;
 PIN 8  = T0;
 PIN 9  = T1;
 PIN 10 = T2;
+PIN 11 = BANKEN;   /* output-enable: bank select from the '154 */
 
 PIN 14 = IDX0;
 PIN 15 = IDX1;
@@ -86,4 +87,13 @@ IDX5 = !OPL0 & !OPL1 & !OPL2 & T0
      # OPL3 & T1
      # !OPL2 & T0 & T1
      # T0 & T2;
+
+/* tristate all outputs unless this bank is selected */
+IDX0.oe = BANKEN;
+IDX1.oe = BANKEN;
+IDX2.oe = BANKEN;
+IDX3.oe = BANKEN;
+IDX4.oe = BANKEN;
+IDX5.oe = BANKEN;
+TRSTN.oe = BANKEN;
 
