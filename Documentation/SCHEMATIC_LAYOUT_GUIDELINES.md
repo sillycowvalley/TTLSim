@@ -65,11 +65,14 @@ Set wire colour at generation time, don't leave them all `null`. Use this fixed 
 | Carry (ripple Cn+4 → Cn, mux Cn) | `"Gray"` |
 | Clock (CLK, gated CLK) | `"Orange"` |
 | Control — strobes / enables (SRC & DST decoder outputs, `/FETCH`, `/PCLO`, `/PCHI`, `/TRST`, load and output enables) | `"Yellow"` |
-| Address bus (PC → memory) | `"Olive"` |
+| Address bus (A0–A15) | `"Green"` |
+| PC (address source, before the buffers) | `"Olive"` |
 | Opcode & micro-op index (OPL, OPH, IDX) | `"Green"` |
 | Register / ALU operand feeds (IR·A·B outputs, latch → ALU, ALU → bus driver, the S select bus) | `"Cyan"` |
 
 - **VCC wires** are every connection with an endpoint on a `vcc_*` symbol; **GND wires** every connection with an endpoint on a `gnd_*` symbol.
+- **The address bus is Green; the PC that feeds it is Olive.** The split is deliberate — the PC value travels Olive up to the address buffers, and everything on the far side (the address bus proper and memory's address inputs) is Green, so you can see at a glance where the counter hands off to the bus.
+- Green does double duty — the address bus (datapath side) and the opcode/index buses OPL·OPH·IDX (control-decode side). They never share canvas region, so the reuse is unambiguous in practice; if a future sheet puts them near each other, move the opcode/index group to its own colour rather than the address bus.
 - Stick to one colour per logical signal bundle — don't split a bus across two colours.
 - Pick colours during generation, not as a post-pass — it's cheaper and avoids the awkward bulk-recolour edit later.
 
@@ -78,7 +81,7 @@ Set wire colour at generation time, don't leave them all `null`. Use this fixed 
 Net names carry their polarity, matching the `!` convention already used in the PLD source:
 
 - An active-low net takes a **`/` prefix** — `/RESET`, `/FETCH`, `/TRST`, `/PCLO`, `/A`. A net earns the `/` exactly when it is `!X` in the generated PLD, **or** it is driven by a decoder ('138/'154 pull their selected line low), **or** it drives an active-low pin (`/LOAD`, `/E`, `/OE`, `/CLR`, `/CE`). Those three conditions always agree.
-- **Source output-enables take an `OE` suffix** — `/RAMOE`, `/ALUOE`, `/TOSOE`. This keeps a source strobe distinct from the same-named *load* strobe on the destination side. TOS, BP and FLAGS are each both a bus source and a bus destination, so a bare `/TOS` on both decoders would be the *same net* and would short the drive to the load. `/TOSOE` (drive onto the bus) versus `/TOS` (load from the bus) keeps them apart.
+- **A source output-enable takes an `OE` suffix only where the bare name would collide with a load strobe — not always.** The collision cases are TOS, BP and FLAGS: each is *both* a bus source and a bus destination, so a bare `/TOS` on the SRC decoder and `/TOS` on the DST decoder would be the *same net* and short the drive to the load — hence `/TOSOE` (drive onto the bus) versus `/TOS` (load from it). Sources with no such twin take the **bare** name: the address sources `/PC`, `/ADR`, `/DSP`, `/RSP` (their loads are `/PCLO`, `/ADRLO`, … or they're counters poked by SPOP — never a same-named load), and equally `/RAM` and `/ALU` on the data side. `/RAMOE` / `/ALUOE` may keep the suffix purely as a readability nicety — it reads as the literal chip `/OE` pin — but that's taste, not a requirement.
 - Clocks and multi-bit buses carry no polarity marker — a clock is an edge, not a level, and a data or address bus has no single active sense.
 
 ## Named buses
