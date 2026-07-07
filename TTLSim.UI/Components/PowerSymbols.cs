@@ -3,7 +3,9 @@ using TTLSim.UI.Model;
 
 namespace TTLSim.UI.Components;
 
-/// <summary>VCC symbol -- T-bar above a downward stub, pin at the bottom.</summary>
+/// <summary>VCC symbol -- T-bar above a downward stub, pin at the bottom.
+/// Drawn in the shared palette's <see cref="TTLColor.Red"/> so the symbol
+/// reads as part of the VCC net, matching the Red wire convention.</summary>
 public sealed class VccSymbol : SchematicItem
 {
     public VccSymbol()
@@ -12,6 +14,15 @@ public sealed class VccSymbol : SchematicItem
         Label = "VCC";
         AddPin(new Pin("VCC", 0, new Point(2, 4), PinDirection.Down));
     }
+
+    /// <summary>
+    /// Symbol ink: the VCC rail colour from the shared palette, or the
+    /// selection highlight when selected. Pulling from <see cref="TTLColor.Red"/>
+    /// keeps the symbol in step with the Red wire colour without a second
+    /// copy of the RGB.
+    /// </summary>
+    private Color RailInk(RenderContext ctx) =>
+        Selected ? ctx.SelectedColor : TTLColor.Red.ToColor();
 
     public override void Draw(Graphics g, RenderContext ctx)
     {
@@ -29,8 +40,9 @@ public sealed class VccSymbol : SchematicItem
         int topY = Position.Y * p;
         int pinY = (Position.Y + 4) * p;
 
-        using var pen = new Pen(Selected ? ctx.SelectedColor : ctx.ForegroundColor, 1.2f);
-        using var brush = new SolidBrush(ctx.ForegroundColor);
+        Color ink = RailInk(ctx);
+        using var pen = new Pen(ink, 1.2f);
+        using var brush = new SolidBrush(ink);
 
         g.DrawLine(pen, cx - p, topY + p, cx + p, topY + p);
         g.DrawLine(pen, cx, topY + p, cx, pinY);
@@ -60,7 +72,7 @@ public sealed class VccSymbol : SchematicItem
         float cx = (Position.X + 2) * p;
         float barY = (Position.Y + 1) * p;
 
-        using var brush = new SolidBrush(ctx.ForegroundColor);
+        using var brush = new SolidBrush(RailInk(ctx));
         var savedState = g.Save();
         try
         {
@@ -113,7 +125,9 @@ public sealed class VccSymbol : SchematicItem
     }
 }
 
-/// <summary>GND symbol -- three horizontal bars decreasing in width, pin at the top.</summary>
+/// <summary>GND symbol -- three horizontal bars decreasing in width, pin at the
+/// top. Drawn in the shared palette's <see cref="TTLColor.Navy"/> so the symbol
+/// reads as part of the GND net, matching the Navy wire convention.</summary>
 public sealed class GndSymbol : SchematicItem
 {
     public GndSymbol()
@@ -122,6 +136,15 @@ public sealed class GndSymbol : SchematicItem
         Label = "";
         AddPin(new Pin("GND", 0, new Point(2, 0), PinDirection.Up));
     }
+
+    /// <summary>
+    /// Symbol ink: the GND rail colour from the shared palette, or the
+    /// selection highlight when selected. Pulling from <see cref="TTLColor.Navy"/>
+    /// keeps the symbol in step with the Navy wire colour without a second
+    /// copy of the RGB.
+    /// </summary>
+    private Color RailInk(RenderContext ctx) =>
+        Selected ? ctx.SelectedColor : TTLColor.Navy.ToColor();
 
     public override void Draw(Graphics g, RenderContext ctx)
     {
@@ -140,8 +163,9 @@ public sealed class GndSymbol : SchematicItem
         int pinY = Position.Y * p;
         int barY = (Position.Y + 2) * p;
 
-        using var pen = new Pen(Selected ? ctx.SelectedColor : ctx.ForegroundColor, 1.2f);
-        using var brush = new SolidBrush(ctx.ForegroundColor);
+        Color ink = RailInk(ctx);
+        using var pen = new Pen(ink, 1.2f);
+        using var brush = new SolidBrush(ink);
 
         g.DrawLine(pen, cx, pinY, cx, barY);
         g.DrawLine(pen, cx - p * 3 / 2, barY, cx + p * 3 / 2, barY);
@@ -155,7 +179,7 @@ public sealed class GndSymbol : SchematicItem
         if (string.IsNullOrEmpty(Label)) return;
         int p = ctx.GridPitch;
         var b = Bounds;
-        using var brush = new SolidBrush(ctx.ForegroundColor);
+        using var brush = new SolidBrush(RailInk(ctx));
         g.DrawString(Label, ctx.LabelFont, brush,
             (b.X + b.Width) * p, (b.Y + b.Height / 2) * p);
     }

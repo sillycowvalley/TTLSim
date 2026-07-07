@@ -48,7 +48,7 @@ public static class TTLColors
         TTLColor.Black => Color.FromArgb(30, 30, 30),
         TTLColor.Grey => Color.FromArgb(130, 130, 130),
         TTLColor.Brown => Color.FromArgb(130, 75, 40),
-        TTLColor.Red => Color.FromArgb(200, 50, 50),
+        TTLColor.Red => Color.FromArgb(150, 45, 45),
         TTLColor.Orange => Color.FromArgb(230, 130, 30),
         TTLColor.Yellow => Color.FromArgb(220, 180, 40),
         TTLColor.Olive => Color.FromArgb(160, 160, 60),
