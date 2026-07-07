@@ -171,7 +171,7 @@
       },
       {
         "id": "dev00000496",
-        "designator": "FETCH DET",
+        "designator": "SRC",
         "partKind": "chip",
         "partIdentifier": "138",
         "family": "HC",
@@ -638,8 +638,8 @@
         "deviceId": "dev0000000b",
         "unitLetter": "",
         "position": {
-          "x": -5,
-          "y": 104
+          "x": -1,
+          "y": 95
         },
         "label": "PC 0-3",
         "rotation": 0,
@@ -652,8 +652,8 @@
         "deviceId": "dev0000000d",
         "unitLetter": "",
         "position": {
-          "x": 31,
-          "y": 100
+          "x": 35,
+          "y": 91
         },
         "label": "PC 4-7",
         "rotation": 0,
@@ -666,8 +666,8 @@
         "deviceId": "dev0000000f",
         "unitLetter": "",
         "position": {
-          "x": 68,
-          "y": 103
+          "x": 72,
+          "y": 94
         },
         "label": "PC 8-11",
         "rotation": 0,
@@ -680,8 +680,8 @@
         "deviceId": "dev00000011",
         "unitLetter": "",
         "position": {
-          "x": 107,
-          "y": 102
+          "x": 111,
+          "y": 93
         },
         "label": "PC 12-15",
         "rotation": 0,
@@ -792,10 +792,10 @@
         "deviceId": "dev00000496",
         "unitLetter": "",
         "position": {
-          "x": 155,
-          "y": 34
+          "x": 156,
+          "y": 35
         },
-        "label": "FETCH DET",
+        "label": "SRC",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -806,8 +806,8 @@
         "deviceId": "dev000004a2",
         "unitLetter": "",
         "position": {
-          "x": 199,
-          "y": 36
+          "x": 192,
+          "y": 37
         },
         "label": "PCINC INV",
         "rotation": 0,
@@ -1171,7 +1171,7 @@
         "unitLetter": "",
         "position": {
           "x": 92,
-          "y": 208
+          "y": 211
         },
         "label": "ALU",
         "rotation": 0,
@@ -1227,7 +1227,7 @@
         "unitLetter": "",
         "position": {
           "x": 144,
-          "y": 193
+          "y": 194
         },
         "label": "",
         "rotation": 0,
@@ -1292,8 +1292,8 @@
         "id": "vcc000003ef",
         "label": "",
         "position": {
-          "x": 5,
-          "y": 97
+          "x": 9,
+          "y": 88
         },
         "rotation": 0,
         "layer": 0,
@@ -1317,8 +1317,8 @@
         "id": "gnd000003f0",
         "label": "",
         "position": {
-          "x": -16,
-          "y": 125
+          "x": -12,
+          "y": 116
         },
         "rotation": 0,
         "layer": 0,
@@ -1342,8 +1342,8 @@
         "id": "vcc000003fb",
         "label": "",
         "position": {
-          "x": 45,
-          "y": 93
+          "x": 49,
+          "y": 84
         },
         "rotation": 0,
         "layer": 0,
@@ -1367,8 +1367,8 @@
         "id": "gnd000003fc",
         "label": "",
         "position": {
-          "x": 25,
-          "y": 123
+          "x": 29,
+          "y": 114
         },
         "rotation": 0,
         "layer": 0,
@@ -1392,8 +1392,8 @@
         "id": "vcc00000406",
         "label": "",
         "position": {
-          "x": 79,
-          "y": 96
+          "x": 83,
+          "y": 87
         },
         "rotation": 0,
         "layer": 0,
@@ -1417,8 +1417,8 @@
         "id": "gnd00000407",
         "label": "",
         "position": {
-          "x": 66,
-          "y": 123
+          "x": 70,
+          "y": 114
         },
         "rotation": 0,
         "layer": 0,
@@ -1442,8 +1442,8 @@
         "id": "vcc00000411",
         "label": "",
         "position": {
-          "x": 118,
-          "y": 92
+          "x": 122,
+          "y": 83
         },
         "rotation": 0,
         "layer": 0,
@@ -1467,8 +1467,8 @@
         "id": "gnd00000412",
         "label": "",
         "position": {
-          "x": 100,
-          "y": 124
+          "x": 104,
+          "y": 115
         },
         "rotation": 0,
         "layer": 0,
@@ -1892,8 +1892,8 @@
         "id": "vcc000004a4",
         "label": "",
         "position": {
-          "x": 213,
-          "y": 27
+          "x": 206,
+          "y": 28
         },
         "rotation": 0,
         "layer": 0,
@@ -1917,8 +1917,8 @@
         "id": "gnd000004a5",
         "label": "",
         "position": {
-          "x": 195,
-          "y": 53
+          "x": 188,
+          "y": 54
         },
         "rotation": 0,
         "layer": 0,
@@ -2042,8 +2042,8 @@
         "id": "bee02df965984e9195773cf82195a53c",
         "label": "PC",
         "position": {
-          "x": 9,
-          "y": 110
+          "x": 13,
+          "y": 101
         },
         "rotation": 0,
         "layer": 0,
@@ -2092,8 +2092,8 @@
         "id": "662a9aa41bc74529a88394623aba110f",
         "label": "PC",
         "position": {
-          "x": 47,
-          "y": 104
+          "x": 51,
+          "y": 95
         },
         "rotation": 0,
         "layer": 0,
@@ -2117,8 +2117,8 @@
         "id": "4462342328ac4a1a9964f54301007c58",
         "label": "PC",
         "position": {
-          "x": 82,
-          "y": 107
+          "x": 86,
+          "y": 98
         },
         "rotation": 0,
         "layer": 0,
@@ -2142,8 +2142,8 @@
         "id": "60f06682f9de4541a7505d04de6a8d6a",
         "label": "PC",
         "position": {
-          "x": 121,
-          "y": 107
+          "x": 125,
+          "y": 98
         },
         "rotation": 0,
         "layer": 0,
@@ -2267,8 +2267,8 @@
         "id": "b7aef5f14f95030447908abeae274709",
         "label": "/RESET",
         "position": {
-          "x": -13,
-          "y": 104
+          "x": -9,
+          "y": 95
         },
         "rotation": 180,
         "layer": 0,
@@ -2292,8 +2292,8 @@
         "id": "1219b02e0b75b0238e31c7aaaf2738cd",
         "label": "/RESET",
         "position": {
-          "x": 24,
-          "y": 100
+          "x": 28,
+          "y": 91
         },
         "rotation": 180,
         "layer": 0,
@@ -2317,8 +2317,8 @@
         "id": "8579c2ad427700b7ea47f676d7f2ecdb",
         "label": "/RESET",
         "position": {
-          "x": 58,
-          "y": 103
+          "x": 62,
+          "y": 94
         },
         "rotation": 180,
         "layer": 0,
@@ -2342,8 +2342,8 @@
         "id": "40598b5c654ad72d57bb4fd9c90e3da2",
         "label": "/RESET",
         "position": {
-          "x": 99,
-          "y": 102
+          "x": 103,
+          "y": 93
         },
         "rotation": 180,
         "layer": 0,
@@ -2442,8 +2442,8 @@
         "id": "0be547a50feb4249ad01065da8de6283",
         "label": "CLKG",
         "position": {
-          "x": -13,
-          "y": 106
+          "x": -9,
+          "y": 97
         },
         "rotation": 180,
         "layer": 0,
@@ -2467,8 +2467,8 @@
         "id": "8015f82c4eb44b62b96f17d8e3884aa2",
         "label": "CLKG",
         "position": {
-          "x": 24,
-          "y": 102
+          "x": 28,
+          "y": 93
         },
         "rotation": 180,
         "layer": 0,
@@ -2492,8 +2492,8 @@
         "id": "1787b2194a8f4e4c9ece2f0d8ae51ef4",
         "label": "CLKG",
         "position": {
-          "x": 58,
-          "y": 105
+          "x": 62,
+          "y": 96
         },
         "rotation": 180,
         "layer": 0,
@@ -2517,8 +2517,8 @@
         "id": "91903c131d0d465d8fc81dea93967ced",
         "label": "CLKG",
         "position": {
-          "x": 99,
-          "y": 104
+          "x": 103,
+          "y": 95
         },
         "rotation": 180,
         "layer": 0,
@@ -3133,7 +3133,7 @@
         "borderColor": null,
         "startBit": 0,
         "mirrored": true,
-        "color": "Navy",
+        "color": "Blue",
         "fontSize": null,
         "textColor": null
       },
@@ -3158,7 +3158,7 @@
         "borderColor": null,
         "startBit": 0,
         "mirrored": true,
-        "color": "Navy",
+        "color": "Blue",
         "fontSize": null,
         "textColor": null
       },
@@ -3167,8 +3167,8 @@
         "id": "113fbe0ca75af1b94656e4fb2641dcbf",
         "label": "D",
         "position": {
-          "x": -13,
-          "y": 109
+          "x": -9,
+          "y": 100
         },
         "rotation": 0,
         "layer": 0,
@@ -3183,7 +3183,7 @@
         "borderColor": null,
         "startBit": 0,
         "mirrored": true,
-        "color": "Purple",
+        "color": "Blue",
         "fontSize": null,
         "textColor": null
       },
@@ -3192,8 +3192,8 @@
         "id": "fdbaddd02eda1c08ef0e10229888f76b",
         "label": "D",
         "position": {
-          "x": 24,
-          "y": 106
+          "x": 28,
+          "y": 97
         },
         "rotation": 0,
         "layer": 0,
@@ -3208,7 +3208,7 @@
         "borderColor": null,
         "startBit": 4,
         "mirrored": true,
-        "color": "Purple",
+        "color": "Blue",
         "fontSize": null,
         "textColor": null
       },
@@ -3217,8 +3217,8 @@
         "id": "2e7b9d103edb2be7341409c193043c28",
         "label": "D",
         "position": {
-          "x": 58,
-          "y": 108
+          "x": 62,
+          "y": 99
         },
         "rotation": 0,
         "layer": 0,
@@ -3233,7 +3233,7 @@
         "borderColor": null,
         "startBit": 0,
         "mirrored": true,
-        "color": "Purple",
+        "color": "Blue",
         "fontSize": null,
         "textColor": null
       },
@@ -3242,8 +3242,8 @@
         "id": "c9d2086911b7e1347393e920fc0b0910",
         "label": "D",
         "position": {
-          "x": 99,
-          "y": 108
+          "x": 103,
+          "y": 99
         },
         "rotation": 0,
         "layer": 0,
@@ -3258,7 +3258,7 @@
         "borderColor": null,
         "startBit": 4,
         "mirrored": true,
-        "color": "Purple",
+        "color": "Blue",
         "fontSize": null,
         "textColor": null
       },
@@ -4233,7 +4233,7 @@
         "borderColor": null,
         "startBit": 0,
         "mirrored": true,
-        "color": "Navy",
+        "color": "Blue",
         "fontSize": null,
         "textColor": null
       },
@@ -4283,7 +4283,7 @@
         "borderColor": null,
         "startBit": 4,
         "mirrored": true,
-        "color": "Navy",
+        "color": "Blue",
         "fontSize": null,
         "textColor": null
       },
@@ -4392,8 +4392,8 @@
         "id": "e26924394a914aae99d68f3c8d4cf79e",
         "label": "/PCHI",
         "position": {
-          "x": 82,
-          "y": 117
+          "x": 86,
+          "y": 108
         },
         "rotation": 0,
         "layer": 0,
@@ -4417,8 +4417,8 @@
         "id": "37f181594a424c57a2c3d5c84be595b4",
         "label": "/PCHI",
         "position": {
-          "x": 121,
-          "y": 116
+          "x": 125,
+          "y": 107
         },
         "rotation": 0,
         "layer": 0,
@@ -4442,8 +4442,8 @@
         "id": "8d42fc8883614baf9bad5f1ef66678b0",
         "label": "/PCLO",
         "position": {
-          "x": 46,
-          "y": 114
+          "x": 50,
+          "y": 105
         },
         "rotation": 0,
         "layer": 0,
@@ -4467,8 +4467,8 @@
         "id": "ef139c1b7773403e906d08d0a5f7c12d",
         "label": "/PCLO",
         "position": {
-          "x": 9,
-          "y": 118
+          "x": 13,
+          "y": 109
         },
         "rotation": 0,
         "layer": 0,
@@ -4518,7 +4518,7 @@
         "label": "",
         "position": {
           "x": 85,
-          "y": 238
+          "y": 241
         },
         "rotation": 0,
         "layer": 0,
@@ -4718,7 +4718,7 @@
         "label": "VCC",
         "position": {
           "x": 111,
-          "y": 201
+          "y": 204
         },
         "rotation": 0,
         "layer": 0,
@@ -4933,7 +4933,7 @@
         "borderColor": null,
         "startBit": 0,
         "mirrored": true,
-        "color": "Navy",
+        "color": "Blue",
         "fontSize": null,
         "textColor": null
       },
@@ -4983,7 +4983,7 @@
         "borderColor": null,
         "startBit": 0,
         "mirrored": true,
-        "color": "Navy",
+        "color": "Blue",
         "fontSize": null,
         "textColor": null
       },
@@ -5008,7 +5008,7 @@
         "borderColor": null,
         "startBit": 0,
         "mirrored": false,
-        "color": "Navy",
+        "color": "Blue",
         "fontSize": null,
         "textColor": null
       },
@@ -5293,7 +5293,7 @@
         "label": "S",
         "position": {
           "x": 79,
-          "y": 213
+          "y": 216
         },
         "rotation": 180,
         "layer": 0,
@@ -5468,7 +5468,7 @@
         "label": "M",
         "position": {
           "x": 79,
-          "y": 222
+          "y": 225
         },
         "rotation": 180,
         "layer": 0,
@@ -5686,6 +5686,231 @@
         "color": "Green",
         "fontSize": null,
         "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "12c6487cc9f6472b8c7791e818a93bf4",
+        "label": "/RAM",
+        "position": {
+          "x": 168,
+          "y": 35
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "13561f5568334d828b4efafbe4fd837f",
+        "label": "/RAM",
+        "position": {
+          "x": -7,
+          "y": 46
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "0ffc560f51c24352be48d0c63a32922f",
+        "label": "PCINC",
+        "position": {
+          "x": 186,
+          "y": 39
+        },
+        "rotation": 180,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "29e5e0026a254dd5bf539a60e4d8ac59",
+        "label": "PCINC",
+        "position": {
+          "x": -9,
+          "y": 107
+        },
+        "rotation": 180,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "8040a11a3ce84a4d83c5557eceb15707",
+        "label": "PCINC",
+        "position": {
+          "x": 28,
+          "y": 103
+        },
+        "rotation": 180,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "13674b38800c472ab15c7bd9d315fe4e",
+        "label": "PCINC",
+        "position": {
+          "x": 62,
+          "y": 106
+        },
+        "rotation": 180,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "14de93fac6d5447d8de3b344bc19ee61",
+        "label": "PCINC",
+        "position": {
+          "x": 103,
+          "y": 105
+        },
+        "rotation": 180,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "32c4d6ba648c4e6c9aca07b5c7eba690",
+        "label": "/ALU",
+        "position": {
+          "x": 167,
+          "y": 39
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "06366724a02a46a4a5a00584ed85c1d8",
+        "label": "/ALU",
+        "position": {
+          "x": 138,
+          "y": 194
+        },
+        "rotation": 180,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
       }
     ],
     "connections": [
@@ -5771,7 +5996,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c000003ed",
@@ -5785,7 +6010,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c000003f1",
@@ -5827,7 +6052,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c000003fd",
@@ -5855,7 +6080,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000408",
@@ -5883,7 +6108,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000413",
@@ -5911,7 +6136,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c0000041e",
@@ -5967,7 +6192,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000424",
@@ -5981,7 +6206,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000425",
@@ -5995,7 +6220,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000426",
@@ -6009,7 +6234,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000427",
@@ -6023,7 +6248,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c0000042a",
@@ -6051,7 +6276,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c0000042c",
@@ -6065,7 +6290,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000434",
@@ -6079,7 +6304,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000435",
@@ -6093,7 +6318,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000436",
@@ -6107,7 +6332,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000437",
@@ -6121,7 +6346,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c0000043a",
@@ -6149,7 +6374,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c0000043c",
@@ -6163,7 +6388,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000444",
@@ -6177,7 +6402,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000445",
@@ -6191,7 +6416,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000446",
@@ -6205,7 +6430,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000447",
@@ -6219,7 +6444,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c0000044a",
@@ -6247,7 +6472,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000450",
@@ -6261,7 +6486,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000451",
@@ -6275,7 +6500,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000453",
@@ -6289,7 +6514,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000456",
@@ -6317,7 +6542,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c0000045c",
@@ -6331,7 +6556,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c0000045d",
@@ -6345,7 +6570,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c0000045f",
@@ -6359,7 +6584,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000462",
@@ -6387,7 +6612,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000468",
@@ -6401,7 +6626,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000469",
@@ -6415,7 +6640,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c0000046b",
@@ -6429,7 +6654,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000470",
@@ -6457,7 +6682,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000494",
@@ -6471,7 +6696,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00000495",
@@ -6485,7 +6710,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c0000049a",
@@ -6513,7 +6738,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c0000049f",
@@ -6527,7 +6752,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c000004a0",
@@ -6541,7 +6766,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c000004a1",
@@ -6583,7 +6808,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c000004a8",
@@ -6611,7 +6836,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c000004aa",
@@ -6625,7 +6850,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c000004ab",
@@ -6639,7 +6864,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c000004ac",
@@ -6653,7 +6878,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c000004ad",
@@ -6667,63 +6892,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
-      },
-      {
-        "id": "c000004ae",
-        "a": {
-          "itemId": "u000004a3",
-          "pinNumber": 2,
-          "external": false
-        },
-        "b": {
-          "itemId": "u0000000c",
-          "pinNumber": 7,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
-        "id": "c000004af",
-        "a": {
-          "itemId": "u000004a3",
-          "pinNumber": 2,
-          "external": false
-        },
-        "b": {
-          "itemId": "u0000000e",
-          "pinNumber": 7,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
-        "id": "c000004b0",
-        "a": {
-          "itemId": "u000004a3",
-          "pinNumber": 2,
-          "external": false
-        },
-        "b": {
-          "itemId": "u00000010",
-          "pinNumber": 7,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
-        "id": "c000004b1",
-        "a": {
-          "itemId": "u000004a3",
-          "pinNumber": 2,
-          "external": false
-        },
-        "b": {
-          "itemId": "u00000012",
-          "pinNumber": 7,
-          "external": false
-        },
-        "color": "Yellow"
+        "color": "Navy"
       },
       {
         "id": "c0000138c",
@@ -6751,7 +6920,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c0000138e",
@@ -6765,7 +6934,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c0000138f",
@@ -6779,7 +6948,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c00001398",
@@ -6807,7 +6976,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c0000139a",
@@ -6863,7 +7032,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c0000139e",
@@ -6877,7 +7046,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c0000139f",
@@ -6891,7 +7060,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "0bf8bd8b9f574b708269c55ed60dfafa",
@@ -7325,7 +7494,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "4425cebcb1404e3085e870d184ac9375",
@@ -7647,7 +7816,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "d26137ca4e7291dfb6d3fbbce37af5cd",
@@ -7661,7 +7830,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "441f4abf86c17557361a18904569686e",
@@ -7675,7 +7844,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "1cf8f26a11737949e86bc437bc08dea7",
@@ -7717,7 +7886,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "9f43003a62a88f34cff658de90c733bc",
@@ -7731,7 +7900,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "98ca09bdc694d3b762edd9928a086482",
@@ -7745,7 +7914,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "23c2f3145126ef75859825e3a5f80975",
@@ -7787,7 +7956,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "832147bd85f29fbc83258bfea55a474d",
@@ -7801,7 +7970,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "54a561b3a13aa1e4831594235473a3b9",
@@ -7815,7 +7984,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "82a3810546089d2fe99aff7ba57a84f7",
@@ -7829,7 +7998,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "043fbd31fe444c31e73395084660ba89",
@@ -7843,7 +8012,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "f21bde952e1172ed15f35cbc8a5f91d0",
@@ -7857,7 +8026,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "afd7a920bf4d8058f848917321d548d5",
@@ -7871,7 +8040,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "980c760200e210d7185701b33c2199c5",
@@ -8375,7 +8544,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "29b8ab94569242b5bffd156769b57e4e",
@@ -8389,7 +8558,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "9f83d67bd4f54bab90220d647e97245b",
@@ -8403,7 +8572,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "2ec738b93c434266b6fd4d997a344454",
@@ -8417,7 +8586,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "761595bb9fa64b1c89c891d465d06692",
@@ -8431,7 +8600,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "26dca78cc9a5456e990741d6060964b7",
@@ -8445,7 +8614,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "ac34b6ab3ea24fa09db473f390093194",
@@ -8459,7 +8628,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "40375aee0687417d9968185678665ec1",
@@ -8473,7 +8642,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "815e1163d9654a2a8b0cb6fb5f8d8645",
@@ -8501,7 +8670,7 @@
           "pinNumber": 1,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "1d9d7c632676fe499126aab9424a9523",
@@ -8515,7 +8684,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "dff2e38e928b02ce52060b3a172cbcad",
@@ -8529,7 +8698,7 @@
           "pinNumber": 3,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "2b2da4b0f038ab37cc819673a4918b17",
@@ -8543,7 +8712,7 @@
           "pinNumber": 4,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "818812afd1482eb5f3834c4c2e3299fb",
@@ -8557,7 +8726,7 @@
           "pinNumber": 5,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "a2ebc74aa6d3843442c90abf69430748",
@@ -8571,7 +8740,7 @@
           "pinNumber": 6,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "068d0538ea768a2a77c06b5aef1f0495",
@@ -8585,7 +8754,7 @@
           "pinNumber": 7,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "d31f3de4e7f75055b31e1bddb1570f97",
@@ -8599,7 +8768,7 @@
           "pinNumber": 8,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "7a0fc124a91f1d4fddd7181725be3df7",
@@ -8613,7 +8782,7 @@
           "pinNumber": 1,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "f692774cebca3e994f88853547eec405",
@@ -8627,7 +8796,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "a9ac5ab863756b1c4feb9a582ca20a18",
@@ -8641,7 +8810,7 @@
           "pinNumber": 3,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "f0e5ebeda43cce9c18d85998c353ebac",
@@ -8655,7 +8824,7 @@
           "pinNumber": 4,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "6ed4a87fc2d02151c41762a36e28d854",
@@ -8669,7 +8838,7 @@
           "pinNumber": 5,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "09a46d73a249d5f4e61a46012787cc6b",
@@ -8683,7 +8852,7 @@
           "pinNumber": 6,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "15ab5c0f3744d1d7fa2ed979fd3dcc9d",
@@ -8697,7 +8866,7 @@
           "pinNumber": 7,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "804cd73876c19e0eb9b83d428660d3fb",
@@ -8711,7 +8880,7 @@
           "pinNumber": 8,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "e409d081ebc3a2bbb78fef80ecae57ec",
@@ -8725,7 +8894,7 @@
           "pinNumber": 1,
           "external": false
         },
-        "color": "Purple"
+        "color": "Blue"
       },
       {
         "id": "cf60dc9cc46daa8998d36c42354f726d",
@@ -8739,7 +8908,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Purple"
+        "color": "Blue"
       },
       {
         "id": "1be1b586cf43628008a766d16bb98910",
@@ -8753,7 +8922,7 @@
           "pinNumber": 3,
           "external": false
         },
-        "color": "Purple"
+        "color": "Blue"
       },
       {
         "id": "fd776e32492d909d2766b5cd9727bfc4",
@@ -8767,7 +8936,7 @@
           "pinNumber": 4,
           "external": false
         },
-        "color": "Purple"
+        "color": "Blue"
       },
       {
         "id": "3cb5446c9bd0add19bf8632f475277be",
@@ -8781,7 +8950,7 @@
           "pinNumber": 1,
           "external": false
         },
-        "color": "Purple"
+        "color": "Blue"
       },
       {
         "id": "ac5a0c50c855bdff90ffe605ad1a690f",
@@ -8795,7 +8964,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Purple"
+        "color": "Blue"
       },
       {
         "id": "b0b2d60ee12bfa200af9953c140e9c3c",
@@ -8809,7 +8978,7 @@
           "pinNumber": 3,
           "external": false
         },
-        "color": "Purple"
+        "color": "Blue"
       },
       {
         "id": "122b9363e0feba10bfc14e6cb72f2737",
@@ -8823,7 +8992,7 @@
           "pinNumber": 4,
           "external": false
         },
-        "color": "Purple"
+        "color": "Blue"
       },
       {
         "id": "a78538c35c62b1bbdb60ec7a0c1ea967",
@@ -8837,7 +9006,7 @@
           "pinNumber": 1,
           "external": false
         },
-        "color": "Purple"
+        "color": "Blue"
       },
       {
         "id": "6de8c3cbc6a7cf9a0a3adc011ccc773f",
@@ -8851,7 +9020,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Purple"
+        "color": "Blue"
       },
       {
         "id": "9c76cb7d23236ae3954bc4e84e057012",
@@ -8865,7 +9034,7 @@
           "pinNumber": 3,
           "external": false
         },
-        "color": "Purple"
+        "color": "Blue"
       },
       {
         "id": "1573dffa59ec0553487faa42c8ac3097",
@@ -8879,7 +9048,7 @@
           "pinNumber": 4,
           "external": false
         },
-        "color": "Purple"
+        "color": "Blue"
       },
       {
         "id": "a6b783aaa451d07ab653f80f651ff2ee",
@@ -8893,7 +9062,7 @@
           "pinNumber": 1,
           "external": false
         },
-        "color": "Purple"
+        "color": "Blue"
       },
       {
         "id": "5851b8d71ae7c417eba126aade0326c6",
@@ -8907,7 +9076,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Purple"
+        "color": "Blue"
       },
       {
         "id": "f136dc9c91b6fdca772b292d43c27e90",
@@ -8921,7 +9090,7 @@
           "pinNumber": 3,
           "external": false
         },
-        "color": "Purple"
+        "color": "Blue"
       },
       {
         "id": "f18764ad0b41daa98a428ed687d15a5e",
@@ -8935,21 +9104,7 @@
           "pinNumber": 4,
           "external": false
         },
-        "color": "Purple"
-      },
-      {
-        "id": "23280c661b81b2e216a032db1a829ca5",
-        "a": {
-          "itemId": "u00000005",
-          "pinNumber": 22,
-          "external": false
-        },
-        "b": {
-          "itemId": "u00000497",
-          "pinNumber": 15,
-          "external": false
-        },
-        "color": "Yellow"
+        "color": "Blue"
       },
       {
         "id": "9c7c397a753e4dfb9ed6e7a0fc389479",
@@ -8963,7 +9118,7 @@
           "pinNumber": 12,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "bd2225bbc62e41f78bb4ee64cb8a1136",
@@ -9397,7 +9552,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "6f7675e5045f4d6f9eeb87e0b8a862ab",
@@ -9411,7 +9566,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "1919c3fc76c84135804b7d18e04fa187",
@@ -9425,7 +9580,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "e2862bdbb7e947d6added27143060154",
@@ -9439,7 +9594,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "3c153f39af0c4a9d9af5bf476bcf9859",
@@ -10083,7 +10238,7 @@
           "pinNumber": 8,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "1a65e12f3f3a435fa838e0de3f0b1494",
@@ -10111,7 +10266,7 @@
           "pinNumber": 8,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "e4fb7993d51e4e5db9403e1f21b54958",
@@ -10251,7 +10406,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "b4d4b104ed84664ef5b51e027d612611",
@@ -10265,7 +10420,7 @@
           "pinNumber": 5,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "8591e689a0be5326fe2cb7de14231e74",
@@ -10279,7 +10434,7 @@
           "pinNumber": 11,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "e029a15f026b2971e5db8f8db71c8b28",
@@ -10293,7 +10448,7 @@
           "pinNumber": 14,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "bf644234fef5304c261ab2714fb79efe",
@@ -10419,7 +10574,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "b4a59375d4bd72d2556bb19b7c233bf7",
@@ -10433,7 +10588,7 @@
           "pinNumber": 5,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "ac7ff293dab747e028923e13914953b6",
@@ -10447,7 +10602,7 @@
           "pinNumber": 11,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "52c171db1ba4e3fe3849e3a19fd1c67b",
@@ -10461,7 +10616,7 @@
           "pinNumber": 14,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "854029961cd17ced317414ea9e5e2e42",
@@ -10531,7 +10686,7 @@
           "pinNumber": 15,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "a135541b30df4cc08436f7c8cc770cd2",
@@ -10545,7 +10700,7 @@
           "pinNumber": 15,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "08d764ae267547e98bd8fdac75cf5998",
@@ -10755,7 +10910,7 @@
           "pinNumber": 10,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "bc1429dfe7234021ae0c945a6c580464",
@@ -10769,7 +10924,7 @@
           "pinNumber": 10,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "cd7b5baaaac6415f95f4fa3e2fe18496",
@@ -10783,7 +10938,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "8600f6915da449a6aab8f36ab25efd2b",
@@ -10811,7 +10966,7 @@
           "pinNumber": 12,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "bbafe862f7374684a21d8aaec5fb1358",
@@ -10839,7 +10994,7 @@
           "pinNumber": 10,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "95657237991049a3a4faea23d6bf31ed",
@@ -10895,7 +11050,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "40ac01c190334d3aa143f54f91ce30e0",
@@ -10909,7 +11064,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "211b2d41ccd14de88be9fd1dc723292c",
@@ -10923,7 +11078,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "15058b7603dc4866800a3fce10f61d2f",
@@ -10993,7 +11148,7 @@
           "pinNumber": 3,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "07d4840b2a93cb5ca901446dc428a26c",
@@ -11007,7 +11162,7 @@
           "pinNumber": 4,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "4a2b13477e8716c698c1bdff40af2b79",
@@ -11021,7 +11176,7 @@
           "pinNumber": 7,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "d5f6f0c66a5aa0061f11dcc3477d5426",
@@ -11035,7 +11190,7 @@
           "pinNumber": 8,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "b18fc3fbd85d99d40df2ee6c5ec6de03",
@@ -11049,7 +11204,7 @@
           "pinNumber": 13,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "e51b3e37a950ea77e133fcec9c861eb8",
@@ -11063,7 +11218,7 @@
           "pinNumber": 14,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "4e929563e524dad1cd0c3f0a204a719b",
@@ -11077,7 +11232,7 @@
           "pinNumber": 17,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "50983ed7855a4318081b21fd9dda2906",
@@ -11091,7 +11246,7 @@
           "pinNumber": 18,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "7455ce579be5918e1ee77ee3878e5ad6",
@@ -11231,7 +11386,7 @@
           "pinNumber": 3,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "d70067725ba3cc06793884bd53d0b848",
@@ -11245,7 +11400,7 @@
           "pinNumber": 4,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "8f5ec49638805b39743454c3b749e50d",
@@ -11259,7 +11414,7 @@
           "pinNumber": 7,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "15f5ee4b8f0dfc6ad0b69a4dc2379bc7",
@@ -11273,7 +11428,7 @@
           "pinNumber": 8,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "3883f65a16397eda4690c2340902b572",
@@ -11287,7 +11442,7 @@
           "pinNumber": 13,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "757c7ec1686e32b3aef0bec650576988",
@@ -11301,7 +11456,7 @@
           "pinNumber": 14,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "abcf3520527eef64246d2cab70bb2d83",
@@ -11315,7 +11470,7 @@
           "pinNumber": 17,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "256b53e584685d80fa757221447af87f",
@@ -11329,7 +11484,7 @@
           "pinNumber": 18,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "5bf1d6f8d94c38a7e0c978867c8a8adb",
@@ -11581,7 +11736,7 @@
           "pinNumber": 1,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "370e544567a3f3784ba2854a1d77b772",
@@ -11595,7 +11750,7 @@
           "pinNumber": 2,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "a636a78331a6d3970e9980182d6912a7",
@@ -11609,7 +11764,7 @@
           "pinNumber": 3,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "dc11b39a22aa438cd9d600ee97c98cf8",
@@ -11623,7 +11778,7 @@
           "pinNumber": 4,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "260b57df27d8ac86c437daee499a455c",
@@ -11637,7 +11792,7 @@
           "pinNumber": 5,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "15e36a5f9cc47fc9f72511d94a376db4",
@@ -11651,7 +11806,7 @@
           "pinNumber": 6,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "3d67c7f28d1abb6630834514f6dc56ef",
@@ -11665,7 +11820,7 @@
           "pinNumber": 7,
           "external": false
         },
-        "color": "Navy"
+        "color": "Blue"
       },
       {
         "id": "1bfdf1f2e6e2b6cceff763d4a6263d5c",
@@ -11679,21 +11834,7 @@
           "pinNumber": 8,
           "external": false
         },
-        "color": "Navy"
-      },
-      {
-        "id": "b6294094ca8d03529724975715f4a23f",
-        "a": {
-          "itemId": "4027e7752c6d4572baeb6a71dfeb2f7e",
-          "pinNumber": 1,
-          "external": false
-        },
-        "b": {
-          "itemId": "u00000497",
-          "pinNumber": 14,
-          "external": false
-        },
-        "color": "Yellow"
+        "color": "Blue"
       },
       {
         "id": "c3c6b7f79cb5fa4bea244b38977f7de9",
@@ -11707,7 +11848,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": null
+        "color": "Navy"
       },
       {
         "id": "56755b1d9ac0404f8fe6212357a18923",
@@ -11805,7 +11946,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "28af25c91e4f18c1f3821eeec68004eb",
@@ -11819,7 +11960,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "76e8248c42786c62f1a3fc6942a61435",
@@ -11847,7 +11988,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "ac44e10480e1775f88513ada45a9b636",
@@ -11903,7 +12044,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "9969d0b2646fa7b62086bea0cb49f257",
@@ -11945,7 +12086,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "85bfa159c9267047c8b99508cf674039",
@@ -11959,7 +12100,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "d4436dc28a2ac4d8530eb8477cf6329e",
@@ -11987,7 +12128,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "3b3f4353ce8afe5d9aebe3fd6fb34da7",
@@ -12001,7 +12142,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "922e5aa36be54d4e832c2cc586c44a47",
@@ -12085,7 +12226,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "dcb8f785d6422bb56b8689713848c4f2",
@@ -12099,7 +12240,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "c62a912ee93986aba0706695ad8a0cb7",
@@ -12141,7 +12282,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "85682a2fe7d1ff91c4590fb2a500cab1",
@@ -12155,7 +12296,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "834a891731f2ee820f316cf91e7a43fe",
@@ -12169,7 +12310,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "b58c0b14bb860fc10c7d5a157b264924",
@@ -12183,7 +12324,7 @@
           "pinNumber": 0,
           "external": false
         },
-        "color": "Blue"
+        "color": "Navy"
       },
       {
         "id": "8001c072911b41ac9b40d9a05b3509e6",
@@ -12506,6 +12647,132 @@
           "external": false
         },
         "color": "Green"
+      },
+      {
+        "id": "c31b16dfb63945cbaf33e3301a950260",
+        "a": {
+          "itemId": "u00000497",
+          "pinNumber": 15,
+          "external": false
+        },
+        "b": {
+          "itemId": "12c6487cc9f6472b8c7791e818a93bf4",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "8bf21df9732a4509b00620f5faffbf8f",
+        "a": {
+          "itemId": "u00000005",
+          "pinNumber": 22,
+          "external": false
+        },
+        "b": {
+          "itemId": "13561f5568334d828b4efafbe4fd837f",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "c83430118244460cabba4593f931bff1",
+        "a": {
+          "itemId": "0ffc560f51c24352be48d0c63a32922f",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "u000004a3",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "949c3ffa5fb9482eab52c26523f86f53",
+        "a": {
+          "itemId": "29e5e0026a254dd5bf539a60e4d8ac59",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "u0000000c",
+          "pinNumber": 7,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "49f5020273b94db195766ee914ceff93",
+        "a": {
+          "itemId": "8040a11a3ce84a4d83c5557eceb15707",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "u0000000e",
+          "pinNumber": 7,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "7330710e1d6f422187ac5f0df9fd7f7a",
+        "a": {
+          "itemId": "13674b38800c472ab15c7bd9d315fe4e",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "u00000010",
+          "pinNumber": 7,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "2c2deab949364c30a27346e940d09434",
+        "a": {
+          "itemId": "14de93fac6d5447d8de3b344bc19ee61",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "u00000012",
+          "pinNumber": 7,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "8e798244812445a2a54fdd3394cfd52e",
+        "a": {
+          "itemId": "06366724a02a46a4a5a00584ed85c1d8",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "4027e7752c6d4572baeb6a71dfeb2f7e",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "f63cfb566fe04eefa41da91d43a12c41",
+        "a": {
+          "itemId": "u00000497",
+          "pinNumber": 14,
+          "external": false
+        },
+        "b": {
+          "itemId": "32c4d6ba648c4e6c9aca07b5c7eba690",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
       }
     ],
     "links": [],
@@ -12518,10 +12785,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 1.029139,
+    "zoom": 4.1634436,
     "pan": {
-      "x": 240,
-      "y": -498
+      "x": -2756,
+      "y": -353
     }
   }
 }
