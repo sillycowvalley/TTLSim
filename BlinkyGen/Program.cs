@@ -7,6 +7,7 @@ using BlinkyMGen;
 // From the one canonical instruction table it emits, into <outputFolder>:
 //   BLINKY_M_UOPA.pld, BLINKY_M_UOPB.pld     Stage 2 decoder GALs
 //   BLINKY_M_SEQ_<bank>.pld, SEQ_ENTRY.pld   Stage 1 sequencer GALs
+//   BlinkyMGalTest/BlinkyMGalTest.ino        Arduino Mega GAL burn tester
 //   blinky_m_control.html                    three-view control reference
 //   OpcodeTable.cs                           BlinkyASM opcode map
 //   dictionary.txt                           the micro-op dictionary listing
@@ -38,9 +39,16 @@ Console.Write("Generating");
 void Tick() { Console.Write('.'); Console.Out.Flush(); }
 
 PldEmitter.EmitAll(outDir, dict, seq, Tick);
+
+// The GAL burn tester is derived from the .pld files just emitted, so it runs
+// after EmitAll. The Arduino IDE requires a sketch in a folder of its own
+// name; Write creates that subfolder.
+BlinkyMGalTester.Write(outDir, Path.Combine(outDir, "BlinkyMGalTest", "BlinkyMGalTest.ino")); Tick();
+
 HtmlMatrix.Emit(Path.Combine(outDir, "blinky_m_control.html"), program, dict, seq); Tick();
 AsmTableEmitter.Emit(Path.Combine(outDir, "OpcodeTable.cs"), program); Tick();
 WriteDictionaryListing(Path.Combine(outDir, "dictionary.txt"), program, dict, seq); Tick();
+
 
 stopwatch.Stop();
 Console.WriteLine(" done");
