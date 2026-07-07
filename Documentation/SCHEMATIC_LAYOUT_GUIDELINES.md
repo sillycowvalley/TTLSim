@@ -47,15 +47,61 @@ Rule of thumb: if a VCC or GND wire has to cross *any* signal wire to reach its 
 
 The user has rejected layouts where I clustered power symbols too close to the chips. The lesson is: be generous with the clearance.
 
+## Tying off unused inputs
+
+When an unused chip input needs a fixed level, tie it to the **GND or VCC symbol already connected to that same chip**, not a fresh symbol. Reusing the chip's own supply keeps the initial layout from turning into a supply-wire tangle before the user has had a chance to arrange it.
+
+Do tie them off — a part left with genuinely floating inputs is flagged by the simulator (TTL010 "unused", TTL011 "floating input"), and a part with a required pin unconnected can be dropped from the run entirely (TTL021 "absent from the simulation"). A constant that feeds a shared bus is a separate case — it must be *driven*, not just tied; see **Tristate bus discipline**.
+
 ## Wire colours
 
-Set wire colour at generation time, don't leave them all `null`:
+Set wire colour at generation time, don't leave them all `null`. Use this fixed legend so every schematic reads the same — one colour per signal class:
 
-- **VCC wires: `"Red"`.** Every connection where one endpoint references a `vcc_*` symbol.
-- **GND wires: `"Black"`.** Every connection where one endpoint references a `gnd_*` symbol. (Implementation note: `SchematicSerializer` writes `null` for Black wires, so on round-trip these will read back as `null` in the file. Black is the default colour, so this is invisible-but-correct behaviour. Setting `"Black"` explicitly in generated JSON is harmless — it deserialises identically.)
-- **Signal wires** keep their semantic colour assignment from the conversation: green for one bus, blue for another, orange for ALU outputs, purple for select-line inputs, yellow for clock/edge-triggered control. Stick to one colour per logical signal bundle.
+| Signal class | Colour |
+|---|---|
+| VCC | `"Red"` |
+| GND | `"Navy"` |
+| Data bus (D0–D7) | `"Blue"` |
+| Carry (ripple Cn+4 → Cn, mux Cn) | `"Gray"` |
+| Clock (CLK, gated CLK) | `"Orange"` |
+| Control — strobes / enables (SRC & DST decoder outputs, `/FETCH`, `/PCLO`, `/PCHI`, `/TRST`, load and output enables) | `"Yellow"` |
+| Address bus (PC → memory) | `"Olive"` |
+| Opcode & micro-op index (OPL, OPH, IDX) | `"Green"` |
+| Register / ALU operand feeds (IR·A·B outputs, latch → ALU, ALU → bus driver, the S select bus) | `"Cyan"` |
 
-Pick colours during generation, not as a post-pass — it's cheaper and avoids the awkward bulk-recolour edit later.
+- **VCC wires** are every connection with an endpoint on a `vcc_*` symbol; **GND wires** every connection with an endpoint on a `gnd_*` symbol.
+- Stick to one colour per logical signal bundle — don't split a bus across two colours.
+- Pick colours during generation, not as a post-pass — it's cheaper and avoids the awkward bulk-recolour edit later.
+
+## Active-low naming
+
+Net names carry their polarity, matching the `!` convention already used in the PLD source:
+
+- An active-low net takes a **`/` prefix** — `/RESET`, `/FETCH`, `/TRST`, `/PCLO`, `/A`. A net earns the `/` exactly when it is `!X` in the generated PLD, **or** it is driven by a decoder ('138/'154 pull their selected line low), **or** it drives an active-low pin (`/LOAD`, `/E`, `/OE`, `/CLR`, `/CE`). Those three conditions always agree.
+- **Source output-enables take an `OE` suffix** — `/RAMOE`, `/ALUOE`, `/TOSOE`. This keeps a source strobe distinct from the same-named *load* strobe on the destination side. TOS, BP and FLAGS are each both a bus source and a bus destination, so a bare `/TOS` on both decoders would be the *same net* and would short the drive to the load. `/TOSOE` (drive onto the bus) versus `/TOS` (load from the bus) keeps them apart.
+- Clocks and multi-bit buses carry no polarity marker — a clock is an edge, not a level, and a data or address bus has no single active sense.
+
+## Named buses
+
+Multi-bit signals ride a named netlabel bus rather than point-to-point wires: D, PC, OPL, OPH, IDX, SRC, DST, S, BANKEN, and so on.
+
+- **Same label = same net.** A source tap labelled `SRC` and a consumer tap labelled `SRC0` are *different* nets — the mismatch silently disconnects the bus with no error raised. Every tap on a bus, source and consumer alike, must carry the identical label string.
+- **Build the bus full-width at first touch.** A structural bus is cut to its final width the first time it's placed, even if only one tap is wired, so it never has to be re-cut when the next participant arrives.
+- Bit order is explicit in each tap's `startBit` and width — verify it rather than trusting pin order (see **Pin-order traps**).
+
+## Tristate bus discipline
+
+On a shared (tristate) bus, exactly one driver may be active at a time:
+
+- Each source gates its `/OE` off the SRC decoder; every other source sits in high-Z. The same holds for the address bus (AMODE-selected drivers) and the micro-op index bus (BANKEN-selected sequencers).
+- A **constant** bit on a shared bus must be *actively driven* to its level while its owner is selected — e.g. a sequencer index bit that is always 0 is emitted as a driven GND (`IDX0 = GND`), output-enabled by BANKEN like every other line, not tied off on the board and not left floating. A floating "constant" corrupts the shared bus the moment that owner is selected.
+
+## Pin-order traps
+
+Two datasheet gotchas that have produced real bit-reversal bugs — check the pin numbers against the part, don't assume ascending pins mean ascending significance:
+
+- **'161 counter outputs run high-pin / low-significance**: QA = pin 14, QB = 13, QC = 12, QD = 11. Wiring a nibble to a bus in ascending pin order reverses the bits within the nibble.
+- **'154 address inputs put the LSB on the high pin**: A (LSB) = pin 23, B = 22, C = 21, D (MSB) = pin 20 — the reverse of the intuitive order. The same caution applies to any part where the least-significant input sits on the higher pin number. This one hides on bit-palindrome codes (0, 9, 15) and only surfaces on a non-palindrome value, so it can pass a limited test and still be wrong.
 
 ## Rotate passives that need to span a vertical or unusual route
 
@@ -121,6 +167,8 @@ The `label` field on a Unit shows beneath the designator on the canvas. Keep lab
 - Buttons: short imperative or noun — `"Load A"`, `"Reset"`, `"Step"`. Two words is the upper bound.
 - Passives: typically empty `""`, unless the value is unusual enough to call out (`"10k"` for a debounce resistor, `"PU"` for a one-off pull-up).
 
+**Relabel a chip when its role changes** — don't carry a legacy name. A '138 first used only to derive PCINC but later serving as the source-select decoder should read `"SRC"` (the twin of the `"DST"` '154), not its original working name. The label tracks what the chip *does now*, not what it did when it first went on the sheet.
+
 Long labels eat horizontal space and force wider component spacing. Pick the shortest label that identifies the role.
 
 The apostrophe in part numbers (e.g. `74'181`) serialises as `\u0027` in JSON. When generating, prefer just `"ALU"` rather than `"ALU '181"` to avoid both the visual noise and the escape sequence.
@@ -144,7 +192,9 @@ The `wires` field exists in the schema but the user does manual wire routing in 
 1. Every `connections` entry references either a unit `id` from the `units` array or an item `id` from the `items` array. No dangling refs.
 2. Every chip has both its VCC pin (whichever pin number the part's `PowerPin` is) and its GND pin (`GroundPin`) wired to a VCC/GND symbol. No chip with a floating power pin.
 3. Every VCC and GND symbol in `items` has at least one connection pointing to it (no floating symbols).
-4. The canvas extent (max x, max y, min x, min y) is reasonable for the schematic size — if it's too compact, add spacing; too sparse, the zoom-to-fit will leave huge gaps.
+4. No chip left with a floating signal input — tie unused inputs off (see **Tying off unused inputs**), or the part may be dropped from the simulation.
+5. Every bus tap carries the exact bus label — no `SRC` / `SRC0` style mismatches that split a net (see **Named buses**).
+6. The canvas extent (max x, max y, min x, min y) is reasonable for the schematic size — if it's too compact, add spacing; too sparse, the zoom-to-fit will leave huge gaps.
 
 ## When unsure, ask before generating
 
@@ -158,6 +208,6 @@ The most expensive mistakes across a schematic-generation session are:
 
 2. **Clustering VCC/GND symbols too tightly to their consumers.** They need substantial clearance — at least 15–20 cells from the consuming group's edge — so wires can take L-shaped routes through empty canvas. When the user pushes back on this, the fix is in this document; check it before redoing the work.
 
-3. **Doing batch transformations by hand-edit when a script is cleaner.** A 60-connection bulk recolour by individual `str_replace` calls is slow and error-prone; a single `awk` pass over the JSON is faster and safer. The user doesn't see the script — they just see the result. (Apologies if Python keeps slipping in for this kind of thing — use `awk`, `sed`, or `dotnet script` instead per the user's preference.)
+3. **Doing batch transformations by hand-edit when a script is cleaner.** A 60-connection bulk recolour by individual `str_replace` calls is slow and error-prone; a single scripted pass over the JSON is faster and safer. The user doesn't see the script — they just see the result. (Apologies if Python keeps slipping in for this kind of thing — use `dotnet script`, `awk`, or `sed` instead per the user's preference; never Python.)
 
 4. **Not reading the source before claiming a fact about it.** Pin numbers, part identifiers, supported chips, colour-name validity, default behaviour of fields — all of these have lived in the source tree and have been wrong in my generated work when I went from memory. The project files are the truth; the search tool is fast; use it. The standing rule from the user: if I haven't verified it in this turn, I should say "I haven't checked," not assert.

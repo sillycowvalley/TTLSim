@@ -82,6 +82,12 @@ public sealed partial class SchematicCanvas
 
         foreach (var connection in Schematic.ActiveConnections)
             DrawConnector(g, connection);
+
+        // Debug: visualise the actual hit-test rectangles (tight Bounds, NOT
+        // the router-inflated RoutingBounds filled in pink above) plus each
+        // pin's world position. Drawn last in the debug block so the teal
+        // outlines and pin dots sit on top of the pink fill.
+        DrawHitTestBounds(g);
 #endif
 
         foreach (var connection in Schematic.ActiveConnections)
@@ -184,6 +190,47 @@ public sealed partial class SchematicCanvas
 
         using var pen = new Pen(color, 1.0f) { DashStyle = DashStyle.Dot };
         g.DrawLine(pen, a.X * p, a.Y * p, b.X * p, b.Y * p);
+    }
+
+    /// <summary>
+    /// Debug overlay: stroke every active item's hit-test <c>Bounds</c> -- the
+    /// exact rectangle the selection hit-test (HitTestForeground /
+    /// HitTestBackground) tests against -- and dot each pin's world position.
+    ///
+    /// <para>This is deliberately distinct from the pink RoutingBounds fill:
+    /// RoutingBounds is the router-inflated footprint (a net label inflates it
+    /// by one cell all round), whereas clicking uses the tight Bounds. This
+    /// overlay shows the rectangle a click is actually tested against.</para>
+    ///
+    /// <para>Use it to confirm the hit region tracks the drawn symbol through
+    /// rotation and mirroring. A net label's box is fixed-width and
+    /// horizontally symmetric, so mirroring leaves Bounds unchanged and only
+    /// swaps which edge the pins sit on -- the pin dots should land on OPPOSITE
+    /// edges of the SAME teal rectangle in the two mirror states.</para>
+    /// </summary>
+    private void DrawHitTestBounds(Graphics g)
+    {
+        int p = GridPitch;
+
+        // Teal dashed outline for the hit rectangle; orange dots for pins.
+        // Both sit clear of the pink RoutingBounds fill so the two overlays
+        // read as separate things.
+        using var boundsPen = new Pen(Color.FromArgb(220, 0, 150, 136), 1.4f)
+        { DashStyle = DashStyle.Dash };
+        using var pinBrush = new SolidBrush(Color.FromArgb(230, 240, 140, 0));
+
+        foreach (var item in Schematic.ActiveItems)
+        {
+            var b = item.Bounds;
+            g.DrawRectangle(boundsPen,
+                b.X * p, b.Y * p, b.Width * p, b.Height * p);
+
+            foreach (var pin in item.Pins)
+            {
+                var w = pin.WorldPosition;
+                g.FillEllipse(pinBrush, w.X * p - 3, w.Y * p - 3, 6, 6);
+            }
+        }
     }
 #endif
     /// <summary>
