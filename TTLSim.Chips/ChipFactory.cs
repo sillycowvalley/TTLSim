@@ -472,29 +472,37 @@ public sealed class ChipFactory : IChipFactory
     }
 
 
+    // Replaces the existing TryCreateHc181 in TTLSim.Chips/ChipFactory.cs.
     private static IChip? TryCreateHc181(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
     {
-        // Required pins from ChipPartDefinition.Ic74181 (pin 12 GND and pin
-        // 24 VCC are excluded -- power pins aren't wired through the chip
-        // model, they're consumed by the build pipeline). All 22 signal pins
-        // must be present; nothing on the '181 is optional.
-        int[] needed = { 1, 2, 3, 4, 5, 6, 7, 8,
-                         9, 10, 11, 13,
-                         14, 15, 16, 17,
-                         18, 19, 20, 21, 22, 23 };
+        // Required pins are the INPUTS only: 1,2 B0/A0, 3..6 S3..S0, 7 Cn,
+        // 8 M, 18..23 B3/A3/B2/A2/B1/A1. The eight outputs -- F0..F3
+        // (9,10,11,13), A=B (14), /G (15), /P (16) and Cn+4 (17) -- are
+        // OPTIONAL: an open output drives nothing and must never block
+        // instantiation (cf. the '138/'154 decoders, the '161/'163 counters
+        // and the '283 carry-out). A '181 used as a plain adder slice
+        // routinely leaves A=B and the /P //G lookahead pair open, and the
+        // top slice of a chain leaves Cn+4 open. TTL011 still flags genuinely
+        // unwired INPUTS at design time. Pin 12 GND and pin 24 VCC are
+        // consumed by the build pipeline, not wired through the chip model.
+        int[] needed = { 1, 2, 3, 4, 5, 6, 7, 8, 18, 19, 20, 21, 22, 23 };
         foreach (int p in needed)
             if (!pinToNet.TryGetValue(p, out Net? n) || n is null) return null;
 
         Net Get(int pin) => pinToNet[pin];
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);   // local stand-in, drives nothing
 
         return new Hc181(
             b0: Get(1), a0: Get(2),
             s3: Get(3), s2: Get(4), s1: Get(5), s0: Get(6),
             cn: Get(7), m: Get(8),
-            f0: Get(9), f1: Get(10), f2: Get(11), f3: Get(13),
-            aeqb: Get(14),
-            y: Get(15), x: Get(16),
-            cnP4: Get(17),
+            f0: Opt(9, "f0-nc"), f1: Opt(10, "f1-nc"),
+            f2: Opt(11, "f2-nc"), f3: Opt(13, "f3-nc"),
+            aeqb: Opt(14, "aeqb-nc"),
+            y: Opt(15, "y-nc"), x: Opt(16, "x-nc"),
+            cnP4: Opt(17, "cnp4-nc"),
             b3: Get(18), a3: Get(19), b2: Get(20), a2: Get(21),
             b1: Get(22), a1: Get(23),
             delayPs: TtlTiming.ResolvePs(device));
