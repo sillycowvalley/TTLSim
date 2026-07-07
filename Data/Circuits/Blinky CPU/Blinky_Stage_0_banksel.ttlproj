@@ -670,7 +670,7 @@
           "y": 27
         },
         "label": "IR",
-        "rotation": 90,
+        "rotation": 0,
         "layer": 0,
         "switchClosed": null,
         "mirrored": null
@@ -989,7 +989,7 @@
         "unitLetter": "",
         "position": {
           "x": 38,
-          "y": 41
+          "y": 46
         },
         "label": "",
         "rotation": 0,
@@ -1003,7 +1003,7 @@
         "unitLetter": "",
         "position": {
           "x": 38,
-          "y": 9
+          "y": 4
         },
         "label": "",
         "rotation": 0,
@@ -1568,10 +1568,10 @@
         "id": "vcc0000046e",
         "label": "",
         "position": {
-          "x": 111,
-          "y": 41
+          "x": 104,
+          "y": 15
         },
-        "rotation": 90,
+        "rotation": 0,
         "layer": 0,
         "frequencyHz": null,
         "dutyCycle": null,
@@ -1593,10 +1593,10 @@
         "id": "gnd0000046f",
         "label": "",
         "position": {
-          "x": 77,
-          "y": 28
+          "x": 87,
+          "y": 54
         },
-        "rotation": 90,
+        "rotation": 0,
         "layer": 0,
         "frequencyHz": null,
         "dutyCycle": null,
@@ -2343,10 +2343,10 @@
         "id": "73baede7bfc649cea5e4422fee4d3ee5",
         "label": "CLKG",
         "position": {
-          "x": 86,
+          "x": 113,
           "y": 45
         },
-        "rotation": 90,
+        "rotation": 0,
         "layer": 0,
         "frequencyHz": null,
         "dutyCycle": null,
@@ -2918,10 +2918,10 @@
         "id": "e743e9dc602af6b44474dc770817743e",
         "label": "D",
         "position": {
-          "x": 122,
+          "x": 113,
           "y": 33
         },
-        "rotation": 0,
+        "rotation": 180,
         "layer": 0,
         "frequencyHz": null,
         "dutyCycle": null,
@@ -2933,7 +2933,7 @@
         "fillColor": null,
         "borderColor": null,
         "startBit": 0,
-        "mirrored": false,
+        "mirrored": true,
         "color": "Navy",
         "fontSize": null,
         "textColor": null
@@ -3769,7 +3769,7 @@
         "label": "VCC",
         "position": {
           "x": 54,
-          "y": 37
+          "y": 42
         },
         "rotation": 0,
         "layer": 0,
@@ -3794,7 +3794,7 @@
         "label": "",
         "position": {
           "x": 33,
-          "y": 63
+          "y": 68
         },
         "rotation": 0,
         "layer": 0,
@@ -3818,8 +3818,8 @@
         "id": "3ed45c71312f43e9b9f84bfd306e1477",
         "label": "VCC",
         "position": {
-          "x": 54,
-          "y": 5
+          "x": 55,
+          "y": 0
         },
         "rotation": 0,
         "layer": 0,
@@ -3844,7 +3844,7 @@
         "label": "",
         "position": {
           "x": 34,
-          "y": 30
+          "y": 25
         },
         "rotation": 0,
         "layer": 0,
@@ -3919,7 +3919,7 @@
         "label": "/FETCH",
         "position": {
           "x": 22,
-          "y": 41
+          "y": 46
         },
         "rotation": 180,
         "layer": 0,
@@ -3944,7 +3944,7 @@
         "label": "/FETCH",
         "position": {
           "x": 22,
-          "y": 9
+          "y": 4
         },
         "rotation": 180,
         "layer": 0,
@@ -3968,10 +3968,10 @@
         "id": "503748ae10bf2f85450154d3de25cb01",
         "label": "/FETCH",
         "position": {
-          "x": 104,
-          "y": 24
+          "x": 86,
+          "y": 27
         },
-        "rotation": 270,
+        "rotation": 180,
         "layer": 0,
         "frequencyHz": null,
         "dutyCycle": null,
@@ -3994,7 +3994,7 @@
         "label": "D",
         "position": {
           "x": 22,
-          "y": 45
+          "y": 50
         },
         "rotation": 0,
         "layer": 0,
@@ -4018,8 +4018,8 @@
         "id": "219183c49c515245422d365dd3290c62",
         "label": "OPL",
         "position": {
-          "x": 52,
-          "y": 46
+          "x": 54,
+          "y": 51
         },
         "rotation": 0,
         "layer": 0,
@@ -4044,7 +4044,7 @@
         "label": "D",
         "position": {
           "x": 22,
-          "y": 14
+          "y": 9
         },
         "rotation": 0,
         "layer": 0,
@@ -4060,6 +4060,56 @@
         "startBit": 4,
         "mirrored": true,
         "color": "Navy",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "645e6ddb4d1c4d14a3beb7624d5b8b3a",
+        "label": "OPH",
+        "position": {
+          "x": 55,
+          "y": 15
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 4,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Green",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "2903949f40194baf940c1f6a5a0b6cfc",
+        "label": "OPH",
+        "position": {
+          "x": 182,
+          "y": 98
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 4,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Green",
         "fontSize": null,
         "textColor": null
       }
@@ -8952,62 +9002,6 @@
         "color": "Cyan"
       },
       {
-        "id": "251449962120e1bd5e04345bd1123012",
-        "a": {
-          "itemId": "062702b09b1f4ef793b17c39e17b6893",
-          "pinNumber": 4,
-          "external": false
-        },
-        "b": {
-          "itemId": "u00001389",
-          "pinNumber": 23,
-          "external": false
-        },
-        "color": "Green"
-      },
-      {
-        "id": "48b11988656ab61f83c1b2820558ce4a",
-        "a": {
-          "itemId": "062702b09b1f4ef793b17c39e17b6893",
-          "pinNumber": 7,
-          "external": false
-        },
-        "b": {
-          "itemId": "u00001389",
-          "pinNumber": 22,
-          "external": false
-        },
-        "color": "Green"
-      },
-      {
-        "id": "e483a61f845bd2f3b926a022be96ae63",
-        "a": {
-          "itemId": "062702b09b1f4ef793b17c39e17b6893",
-          "pinNumber": 9,
-          "external": false
-        },
-        "b": {
-          "itemId": "u00001389",
-          "pinNumber": 21,
-          "external": false
-        },
-        "color": "Green"
-      },
-      {
-        "id": "51e3dd97dcf3e72553cb670be3317a90",
-        "a": {
-          "itemId": "062702b09b1f4ef793b17c39e17b6893",
-          "pinNumber": 12,
-          "external": false
-        },
-        "b": {
-          "itemId": "u00001389",
-          "pinNumber": 20,
-          "external": false
-        },
-        "color": "Green"
-      },
-      {
         "id": "373989e2c29a4fbeaa6b6bb7bea7be27",
         "a": {
           "itemId": "86bd4cf6aa0c4594a2686da8ed7e90bf",
@@ -9034,6 +9028,118 @@
           "external": false
         },
         "color": "Blue"
+      },
+      {
+        "id": "08d764ae267547e98bd8fdac75cf5998",
+        "a": {
+          "itemId": "645e6ddb4d1c4d14a3beb7624d5b8b3a",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "062702b09b1f4ef793b17c39e17b6893",
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": "Green"
+      },
+      {
+        "id": "44777bd81078469dabae985d520825a5",
+        "a": {
+          "itemId": "645e6ddb4d1c4d14a3beb7624d5b8b3a",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "062702b09b1f4ef793b17c39e17b6893",
+          "pinNumber": 7,
+          "external": false
+        },
+        "color": "Green"
+      },
+      {
+        "id": "f09b584bdb48486bb2088a8495ce556c",
+        "a": {
+          "itemId": "645e6ddb4d1c4d14a3beb7624d5b8b3a",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "062702b09b1f4ef793b17c39e17b6893",
+          "pinNumber": 9,
+          "external": false
+        },
+        "color": "Green"
+      },
+      {
+        "id": "e27b522a8ed14c1b80b7e5e613fdb2d8",
+        "a": {
+          "itemId": "645e6ddb4d1c4d14a3beb7624d5b8b3a",
+          "pinNumber": 4,
+          "external": false
+        },
+        "b": {
+          "itemId": "062702b09b1f4ef793b17c39e17b6893",
+          "pinNumber": 12,
+          "external": false
+        },
+        "color": "Green"
+      },
+      {
+        "id": "feb200e72c5b426fa38d2df3a753f9e2",
+        "a": {
+          "itemId": "u00001389",
+          "pinNumber": 23,
+          "external": false
+        },
+        "b": {
+          "itemId": "2903949f40194baf940c1f6a5a0b6cfc",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Green"
+      },
+      {
+        "id": "7d9f3e3946734777bc92e7f8ff627e9f",
+        "a": {
+          "itemId": "u00001389",
+          "pinNumber": 22,
+          "external": false
+        },
+        "b": {
+          "itemId": "2903949f40194baf940c1f6a5a0b6cfc",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Green"
+      },
+      {
+        "id": "b94ae1c121504dc7bb4474db859cbdaa",
+        "a": {
+          "itemId": "u00001389",
+          "pinNumber": 21,
+          "external": false
+        },
+        "b": {
+          "itemId": "2903949f40194baf940c1f6a5a0b6cfc",
+          "pinNumber": 3,
+          "external": false
+        },
+        "color": "Green"
+      },
+      {
+        "id": "5233a551802644f5881630fa5bfda727",
+        "a": {
+          "itemId": "u00001389",
+          "pinNumber": 20,
+          "external": false
+        },
+        "b": {
+          "itemId": "2903949f40194baf940c1f6a5a0b6cfc",
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": "Green"
       }
     ],
     "links": [],
@@ -9046,10 +9152,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 1.3166528,
+    "zoom": 2.7897663,
     "pan": {
-      "x": -12,
-      "y": 6
+      "x": -91,
+      "y": -32
     }
   }
 }
