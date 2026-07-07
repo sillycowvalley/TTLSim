@@ -35,26 +35,22 @@ namespace TTLSim.UI.Components;
 /// </para>
 ///
 /// <para>
-/// Geometry: the bounding box is a fixed <see cref="BoxWidth"/> cells wide and
+/// Geometry: the drawn box is a fixed <see cref="BoxWidth"/> cells wide and
 /// the PINS SIT ON ITS VERTICAL CENTRE COLUMN, so the rotation pivot (the box
 /// centre, per <see cref="SchematicItem"/>) always lands on the pin column.
-/// Height is EXACTLY width + 1: pins on rows 1..width with the standard one
-/// unit of margin at each end. No even-rounding -- the pivot row H / 2 =
-/// (width + 1) / 2 is an integer for every width and always lands on a pin
-/// row, so a width-1 label rotates exactly about its connection blob and a
-/// wider port rotates about the middle pin of its column. (The
-/// HeaderOutputUnit even-height rule is NOT needed here: it exists to centre
-/// a pivot on a box whose pins hug one edge; with the pins already on the
-/// centre column, rounding would only add a phantom extra pin row on
-/// even widths.) The stub and text extend one side of the pin column; long
-/// bit names may overhang the fixed box -- <see cref="Bounds"/> (hit-test)
-/// and <see cref="RoutingBounds"/> (router keep-out) are BOTH widened to the
-/// measured text so a click and a wire both respect the whole label.
+/// Height is EXACTLY width + 1: pins on rows 1..width with one unit of margin
+/// at each end so the pivot row (width + 1) / 2 is an integer and lands on a
+/// pin row (a width-1 label pivots about its blob; a wider port about its
+/// middle pin). Nothing draws that box outline -- it exists only to size the
+/// pivot -- so <see cref="Bounds"/> (hit-test) and <see cref="RoutingBounds"/>
+/// (router keep-out) are built from the actual ink (blobs, stubs, bracket, and
+/// the measured bit-name text) rather than the box, and so carry none of the
+/// box's empty end margins. Long names extend the bounds to their real length.
 /// </para>
 ///
 /// <para>
 /// <see cref="Mirrored"/> flips the label across its long axis: the stub,
-/// bracket, and text swap to the opposite side of the pin column and the pins'
+/// bracket, and text move to the opposite side of the pin column and the pins'
 /// facing direction flips. Because the pins live on the centre column, the
 /// mirror toggle NEVER MOVES A PIN'S WORLD POSITION -- the EXISTING Pin
 /// objects keep their location (only LocalDirection changes), so Connections
@@ -90,26 +86,15 @@ public sealed class NetLabelItem : SchematicItem
     public const int MaxWidth = 16;
 
     /// <summary>
-    /// Fixed bounding-box width in cells. EVEN, and the pins sit at
-    /// x = BoxWidth / 2 -- the box's centre column -- so the rotation pivot
-    /// is always on the pin column.
+    /// Fixed box width in cells. EVEN, and the pins sit at x = BoxWidth / 2 --
+    /// the box's centre column -- so the rotation pivot is always on the pin
+    /// column.
     /// </summary>
     private const int BoxWidth = 4;
 
-    /// <summary>
-    /// R0/R180 router keep-out on the wire-approach side of the pin column:
-    /// one cell keeps foreign wires off the blobs without wasting space
-    /// (the connecting wire's own corridor is carved by the router).
-    /// </summary>
-    private const int PinSideCells = 1;
-
-    /// <summary>
-    /// R0/R180 router keep-out on the TEXT side of the pin column: the stub
-    /// plus room for bit names up to about three characters (names start
-    /// 1.3 cells inward of the pin). This is only the MINIMUM -- the actual
-    /// keep-out is widened to the measured text by <see cref="RoutingBounds"/>.
-    /// </summary>
-    private const int TextSideCells = 3;
+    /// <summary>Connection-blob radius in cells (the 4-logical-unit terminal
+    /// dot drawn at each pin), used to seed the hit-test bounds.</summary>
+    private const float BlobRadiusCells = 0.4f;
 
     /// <summary>
     /// Cells a bit name is inset inward from its pin endpoint before the first
@@ -329,16 +314,11 @@ public sealed class NetLabelItem : SchematicItem
     }
 
     /// <summary>
-    /// Bounding box: fixed <see cref="BoxWidth"/> cells wide, pins on the
-    /// centre column. Height is EXACTLY width + 1 -- pins on rows 1..width
-    /// with one unit of margin at each end, no even-rounding. The pivot row
-    /// (width + 1) / 2 is always an integer and always a pin row: a width-1
-    /// label pivots exactly about its connection blob. (Rounding the height
-    /// up to even, as HeaderOutputUnit does, would add a phantom extra pin
-    /// row on every EVEN width -- the header needs it because its pins hug
-    /// one edge of the box; ours sit on the pivot column already.) The box
-    /// never moves when Mirrored toggles -- only which side the stub and
-    /// text sit on.
+    /// Box: fixed <see cref="BoxWidth"/> cells wide, pins on the centre
+    /// column, height EXACTLY width + 1 (one unit of margin at each end so the
+    /// pivot row stays an integer pin row -- see the class remarks). The box
+    /// itself is never drawn and never bounds anything; <see cref="Bounds"/>
+    /// and <see cref="RoutingBounds"/> measure the ink instead.
     /// </summary>
     private void ApplySizeForWidth()
     {
@@ -368,29 +348,15 @@ public sealed class NetLabelItem : SchematicItem
         }
     }
 
-    /// <summary>The plain structural box (stub field + pin rows), rotation
-    /// aware -- what the base <see cref="SchematicItem.Bounds"/> would return.
-    /// Text overhang is added on top of this in <see cref="Bounds"/>.</summary>
-    private Rectangle StructuralBox()
-    {
-        if (Rotation == Rotation.R0 || Rotation == Rotation.R180)
-            return new Rectangle(Position, Size);
-
-        int cx = Position.X + Size.Width / 2;
-        int cy = Position.Y + Size.Height / 2;
-        int w = Size.Height;
-        int h = Size.Width;
-        return new Rectangle(cx - w / 2, cy - h / 2, w, h);
-    }
-
     /// <summary>
-    /// Hit-test rectangle: the structural box UNIONED with each bit name's
-    /// drawn extent, so a click anywhere over a name selects the label. Built
-    /// the same way DrawText lays the names out -- anchored to each pin's world
-    /// position and offset inward along its facing -- so it tracks the text
-    /// through every rotation and mirror without a per-orientation special
-    /// case. The one non-upright path (a multi-bit port at 90/270, whose names
-    /// run rotated along the stub) is handled explicitly, matching DrawText.
+    /// Hit-test rectangle: the tight extent of the DRAWN ink -- each pin's
+    /// connection blob plus its bit name -- with no reliance on the pivot box,
+    /// so it carries none of the box's empty end margins. Names are placed the
+    /// same way <see cref="DrawText"/> places them (anchored to the pin's world
+    /// position, inset inward along its facing), so the box tracks the text
+    /// through every rotation and mirror. The one non-upright path (a multi-bit
+    /// port at 90/270, whose names run rotated along the stub) is handled
+    /// explicitly, matching DrawText.
     /// </summary>
     public override Rectangle Bounds
     {
@@ -398,8 +364,8 @@ public sealed class NetLabelItem : SchematicItem
         {
             EnsureMetrics();
 
-            RectangleF box = StructuralBox();
-            float left = box.Left, top = box.Top, right = box.Right, bottom = box.Bottom;
+            float left = float.MaxValue, top = float.MaxValue;
+            float right = float.MinValue, bottom = float.MinValue;
 
             void Include(float x0, float y0, float x1, float y1)
             {
@@ -411,9 +377,15 @@ public sealed class NetLabelItem : SchematicItem
 
             foreach (var pin in Pins)
             {
-                (float bw, float bh) = bitCellSizes[pin.Number - 1];
                 float gx = pin.WorldPosition.X;
                 float gy = pin.WorldPosition.Y;
+
+                // Connection blob at the pin endpoint.
+                Include(gx - BlobRadiusCells, gy - BlobRadiusCells,
+                        gx + BlobRadiusCells, gy + BlobRadiusCells);
+
+                // Bit name, laid out exactly as DrawText places it.
+                (float bw, float bh) = bitCellSizes[pin.Number - 1];
                 bool vertical = pin.Direction is PinDirection.Up or PinDirection.Down;
 
                 if (width > 1 && vertical)
@@ -462,57 +434,27 @@ public sealed class NetLabelItem : SchematicItem
     }
 
     /// <summary>
-    /// Router keep-out: the pin-column-anchored minimum (one cell on the
-    /// wire-approach side, <see cref="TextSideCells"/> on the text side)
-    /// UNIONED with the text-aware <see cref="Bounds"/>, so wires clear the
-    /// full bit-name text just as clicks now hit it. The minimum still
-    /// guarantees the tight wire-side margin even for a one-character name;
-    /// the union extends the text side to the real glyph length.
+    /// Router keep-out: the text-aware <see cref="Bounds"/> plus one cell of
+    /// clearance on the wire-approach side (the way the pins face), so foreign
+    /// wires don't hug the connection blobs. Every pin faces the same way, so
+    /// pin 1's direction is the label's. No end margins -- the wire side is the
+    /// only side widened past the ink.
     /// </summary>
-    public override Rectangle RoutingBounds => Rectangle.Union(PinColumnKeepOut(), Bounds);
-
-    /// <summary>
-    /// The pin-column-anchored keep-out minimum, rotation aware. Spans
-    /// <see cref="PinSideCells"/> on the wire-approach side and
-    /// <see cref="TextSideCells"/> on the text side (sides selected by
-    /// Mirrored). ASYMMETRIC about the pivot, so every rotation maps it
-    /// through the pivot; <see cref="RotateCell"/> matches Pin.WorldPosition's
-    /// convention exactly.
-    /// </summary>
-    private Rectangle PinColumnKeepOut()
+    public override Rectangle RoutingBounds
     {
-        int pinX = Position.X + PinColumn;
-        int left = mirrored
-            ? pinX - TextSideCells
-            : pinX - PinSideCells;
-        var unrotated = new Rectangle(
-            left, Position.Y,
-            PinSideCells + TextSideCells, Size.Height);
-
-        if (Rotation == Rotation.R0) return unrotated;
-
-        Point a = RotateCell(unrotated.Left, unrotated.Top);
-        Point b = RotateCell(unrotated.Right, unrotated.Bottom);
-        return Rectangle.FromLTRB(
-            Math.Min(a.X, b.X), Math.Min(a.Y, b.Y),
-            Math.Max(a.X, b.X), Math.Max(a.Y, b.Y));
-    }
-
-    /// <summary>
-    /// Rotate one grid point about the pivot by the item's current rotation,
-    /// using the same clockwise convention as <see cref="Pin.WorldPosition"/>.
-    /// </summary>
-    private Point RotateCell(int x, int y)
-    {
-        int dx = x - Pivot.X;
-        int dy = y - Pivot.Y;
-        return Rotation switch
+        get
         {
-            Rotation.R90 => new Point(Pivot.X - dy, Pivot.Y + dx),
-            Rotation.R180 => new Point(Pivot.X - dx, Pivot.Y - dy),
-            Rotation.R270 => new Point(Pivot.X + dy, Pivot.Y - dx),
-            _ => new Point(x, y)
-        };
+            var b = Bounds;
+            if (Pins.Count == 0) return b;
+
+            return Pins[0].Direction switch
+            {
+                PinDirection.Left => Rectangle.FromLTRB(b.Left - 1, b.Top, b.Right, b.Bottom),
+                PinDirection.Right => Rectangle.FromLTRB(b.Left, b.Top, b.Right + 1, b.Bottom),
+                PinDirection.Up => Rectangle.FromLTRB(b.Left, b.Top - 1, b.Right, b.Bottom),
+                _ => Rectangle.FromLTRB(b.Left, b.Top, b.Right, b.Bottom + 1),
+            };
+        }
     }
 
     public override void Draw(Graphics g, RenderContext ctx)
