@@ -87,9 +87,13 @@ public abstract class SchematicItem
     /// Visual bounding rectangle in grid units, taking rotation into account.
     /// For 90/270 rotations the width/height are swapped and the rectangle
     /// is repositioned so its centre matches the unrotated centre.
+    ///
+    /// Virtual so an item whose drawn extent is not captured by Size alone
+    /// (a net label, whose bit names overhang the box) can widen the hit-test
+    /// rectangle to match what it actually draws.
     /// </summary>
     [Browsable(false)]
-    public Rectangle Bounds
+    public virtual Rectangle Bounds
     {
         get
         {

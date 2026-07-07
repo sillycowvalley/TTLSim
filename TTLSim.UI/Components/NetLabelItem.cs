@@ -47,8 +47,9 @@ namespace TTLSim.UI.Components;
 /// a pivot on a box whose pins hug one edge; with the pins already on the
 /// centre column, rounding would only add a phantom extra pin row on
 /// even widths.) The stub and text extend one side of the pin column; long
-/// bit names may overhang the box -- a cosmetic overhang, like the
-/// capacitor's plates.
+/// bit names may overhang the fixed box -- <see cref="Bounds"/> (hit-test)
+/// and <see cref="RoutingBounds"/> (router keep-out) are BOTH widened to the
+/// measured text so a click and a wire both respect the whole label.
 /// </para>
 ///
 /// <para>
@@ -105,9 +106,37 @@ public sealed class NetLabelItem : SchematicItem
     /// <summary>
     /// R0/R180 router keep-out on the TEXT side of the pin column: the stub
     /// plus room for bit names up to about three characters (names start
-    /// 1.3 cells inward of the pin).
+    /// 1.3 cells inward of the pin). This is only the MINIMUM -- the actual
+    /// keep-out is widened to the measured text by <see cref="RoutingBounds"/>.
     /// </summary>
     private const int TextSideCells = 3;
+
+    /// <summary>
+    /// Cells a bit name is inset inward from its pin endpoint before the first
+    /// glyph -- matches DrawText's <c>textInset = p + p * 0.30f</c> (one stub
+    /// cell plus a 0.3-cell gap past the bracket), expressed in cells.
+    /// </summary>
+    private const float TextInsetCells = 1.30f;
+
+    /// <summary>
+    /// Logical units per grid cell. Must match the canvas grid pitch
+    /// (<see cref="RenderContext.GridPitch"/>); text is measured in logical
+    /// units and divided by this to get cells.
+    /// </summary>
+    private const float GridPitchCells = 5f;
+
+    // Off-screen measuring context so bit-name extents can be computed in the
+    // MODEL (Bounds / RoutingBounds), not just during paint -- the router then
+    // sees text-aware bounds even before the first repaint. The font must
+    // match RenderContext.PinFont, which is what DrawText renders bit names in.
+    private static readonly Bitmap MeasureBitmap = new(1, 1);
+    private static readonly Graphics MeasureGraphics = Graphics.FromImage(MeasureBitmap);
+    private static readonly Font BitNameFont = new("Segoe UI", 2.75f);
+
+    // Cached bit-name extents (in cells), indexed by pin number - 1, rebuilt
+    // whenever anything that changes a name changes (see EnsureMetrics).
+    private string? metricsSignature;
+    private (float W, float H)[] bitCellSizes = Array.Empty<(float, float)>();
 
     private int width;
     private int startBit;
@@ -316,40 +345,157 @@ public sealed class NetLabelItem : SchematicItem
         Size = new Size(BoxWidth, width + 1);
     }
 
+    // ------------------------------------------------------------------ bounds
+
     /// <summary>
-    /// Router keep-out, anchored to the pin column rather than the box: it
-    /// spans <see cref="PinSideCells"/> on the wire-approach side and
-    /// <see cref="TextSideCells"/> on the text side (sides selected by
-    /// Mirrored) -- tight against the blobs, just enough for
-    /// three-character names; longer names overhang cosmetically, exactly
-    /// as at R0. ONE rect for every rotation: at 90/270 a multi-bit port's
-    /// names now run ALONG the stubs (see <see cref="DrawText"/>), so the
-    /// text side needs the same depth sideways as upright -- the old
-    /// plain-box special case assumed a single upright text row and is
-    /// gone. The rect is ASYMMETRIC about the pivot, so every rotation
-    /// maps it through the pivot; <see cref="RotateCell"/> matches
-    /// Pin.WorldPosition's convention exactly.
+    /// Rebuild the cached per-pin bit-name extents (in cells) when any input
+    /// that affects a name changes. BitName(1) folds in the HigherBitsProbe
+    /// decision, so it goes in the signature: if the probe flips a lone "A0"
+    /// between "A" and "A0", the measured width follows.
     /// </summary>
-    public override Rectangle RoutingBounds
+    private void EnsureMetrics()
+    {
+        string signature = $"{Label}|{width}|{startBit}|{BitName(1)}";
+        if (signature == metricsSignature && bitCellSizes.Length == width)
+            return;
+
+        metricsSignature = signature;
+        bitCellSizes = new (float, float)[width];
+        for (int n = 1; n <= width; n++)
+        {
+            SizeF px = MeasureGraphics.MeasureString(BitName(n), BitNameFont);
+            bitCellSizes[n - 1] = (px.Width / GridPitchCells, px.Height / GridPitchCells);
+        }
+    }
+
+    /// <summary>The plain structural box (stub field + pin rows), rotation
+    /// aware -- what the base <see cref="SchematicItem.Bounds"/> would return.
+    /// Text overhang is added on top of this in <see cref="Bounds"/>.</summary>
+    private Rectangle StructuralBox()
+    {
+        if (Rotation == Rotation.R0 || Rotation == Rotation.R180)
+            return new Rectangle(Position, Size);
+
+        int cx = Position.X + Size.Width / 2;
+        int cy = Position.Y + Size.Height / 2;
+        int w = Size.Height;
+        int h = Size.Width;
+        return new Rectangle(cx - w / 2, cy - h / 2, w, h);
+    }
+
+    /// <summary>
+    /// Hit-test rectangle: the structural box UNIONED with each bit name's
+    /// drawn extent, so a click anywhere over a name selects the label. Built
+    /// the same way DrawText lays the names out -- anchored to each pin's world
+    /// position and offset inward along its facing -- so it tracks the text
+    /// through every rotation and mirror without a per-orientation special
+    /// case. The one non-upright path (a multi-bit port at 90/270, whose names
+    /// run rotated along the stub) is handled explicitly, matching DrawText.
+    /// </summary>
+    public override Rectangle Bounds
     {
         get
         {
-            int pinX = Position.X + PinColumn;
-            int left = mirrored
-                ? pinX - TextSideCells
-                : pinX - PinSideCells;
-            var unrotated = new Rectangle(
-                left, Position.Y,
-                PinSideCells + TextSideCells, Size.Height);
+            EnsureMetrics();
 
-            if (Rotation == Rotation.R0) return unrotated;
+            RectangleF box = StructuralBox();
+            float left = box.Left, top = box.Top, right = box.Right, bottom = box.Bottom;
 
-            Point a = RotateCell(unrotated.Left, unrotated.Top);
-            Point b = RotateCell(unrotated.Right, unrotated.Bottom);
-            return Rectangle.FromLTRB(
-                Math.Min(a.X, b.X), Math.Min(a.Y, b.Y),
-                Math.Max(a.X, b.X), Math.Max(a.Y, b.Y));
+            void Include(float x0, float y0, float x1, float y1)
+            {
+                if (x0 < left) left = x0;
+                if (y0 < top) top = y0;
+                if (x1 > right) right = x1;
+                if (y1 > bottom) bottom = y1;
+            }
+
+            foreach (var pin in Pins)
+            {
+                (float bw, float bh) = bitCellSizes[pin.Number - 1];
+                float gx = pin.WorldPosition.X;
+                float gy = pin.WorldPosition.Y;
+                bool vertical = pin.Direction is PinDirection.Up or PinDirection.Down;
+
+                if (width > 1 && vertical)
+                {
+                    // Name runs ROTATED along the stub: bw tall, bh wide,
+                    // centred across the pin column, on the inward side.
+                    if (pin.Direction == PinDirection.Down)   // wire below, text above
+                        Include(gx - bh / 2f, gy - TextInsetCells - bw,
+                                gx + bh / 2f, gy - TextInsetCells);
+                    else                                       // Up: wire above, text below
+                        Include(gx - bh / 2f, gy + TextInsetCells,
+                                gx + bh / 2f, gy + TextInsetCells + bw);
+                }
+                else
+                {
+                    // Upright name: extends inward from the pin, centred across
+                    // the pin row/column -- the UprightTextOrigin cases.
+                    switch (pin.Direction)
+                    {
+                        case PinDirection.Left:
+                            Include(gx + TextInsetCells, gy - bh / 2f,
+                                    gx + TextInsetCells + bw, gy + bh / 2f);
+                            break;
+                        case PinDirection.Right:
+                            Include(gx - TextInsetCells - bw, gy - bh / 2f,
+                                    gx - TextInsetCells, gy + bh / 2f);
+                            break;
+                        case PinDirection.Up:
+                            Include(gx - bw / 2f, gy + TextInsetCells,
+                                    gx + bw / 2f, gy + TextInsetCells + bh);
+                            break;
+                        default: // Down
+                            Include(gx - bw / 2f, gy - TextInsetCells - bh,
+                                    gx + bw / 2f, gy - TextInsetCells);
+                            break;
+                    }
+                }
+            }
+
+            int L = (int)Math.Floor(left);
+            int T = (int)Math.Floor(top);
+            int R = (int)Math.Ceiling(right);
+            int B = (int)Math.Ceiling(bottom);
+            return Rectangle.FromLTRB(L, T, R, B);
         }
+    }
+
+    /// <summary>
+    /// Router keep-out: the pin-column-anchored minimum (one cell on the
+    /// wire-approach side, <see cref="TextSideCells"/> on the text side)
+    /// UNIONED with the text-aware <see cref="Bounds"/>, so wires clear the
+    /// full bit-name text just as clicks now hit it. The minimum still
+    /// guarantees the tight wire-side margin even for a one-character name;
+    /// the union extends the text side to the real glyph length.
+    /// </summary>
+    public override Rectangle RoutingBounds => Rectangle.Union(PinColumnKeepOut(), Bounds);
+
+    /// <summary>
+    /// The pin-column-anchored keep-out minimum, rotation aware. Spans
+    /// <see cref="PinSideCells"/> on the wire-approach side and
+    /// <see cref="TextSideCells"/> on the text side (sides selected by
+    /// Mirrored). ASYMMETRIC about the pivot, so every rotation maps it
+    /// through the pivot; <see cref="RotateCell"/> matches Pin.WorldPosition's
+    /// convention exactly.
+    /// </summary>
+    private Rectangle PinColumnKeepOut()
+    {
+        int pinX = Position.X + PinColumn;
+        int left = mirrored
+            ? pinX - TextSideCells
+            : pinX - PinSideCells;
+        var unrotated = new Rectangle(
+            left, Position.Y,
+            PinSideCells + TextSideCells, Size.Height);
+
+        if (Rotation == Rotation.R0) return unrotated;
+
+        Point a = RotateCell(unrotated.Left, unrotated.Top);
+        Point b = RotateCell(unrotated.Right, unrotated.Bottom);
+        return Rectangle.FromLTRB(
+            Math.Min(a.X, b.X), Math.Min(a.Y, b.Y),
+            Math.Max(a.X, b.X), Math.Max(a.Y, b.Y));
     }
 
     /// <summary>
