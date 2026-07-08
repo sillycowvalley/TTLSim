@@ -266,6 +266,14 @@ public sealed class SchematicBuilder
             }
         }
 
+        // Phase 1f: logic-family output/input level compatibility. A bipolar-TTL
+        // output (e.g. 74LS181) driving a plain-CMOS input (74HC/74AC) sits in
+        // that input's forbidden band and needs an HCT/ACT fence. Lives in its
+        // own checker (TTL030); see FamilyBoundaryCheck for the level rationale.
+        // Runs before the error gate so, at Error severity, a missing fence
+        // blocks the build like the short-circuit and power errors above.
+        diagnostics.AddRange(FamilyBoundaryCheck.Check(input, netTable));
+
         // If we've hit errors, don't try to build chips.
         bool anyErrors = diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error);
         if (anyErrors)

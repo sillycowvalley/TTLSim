@@ -538,7 +538,7 @@
         "designator": "U24",
         "partKind": "chip",
         "partIdentifier": "181",
-        "family": "LS",
+        "family": "HC",
         "value": null,
         "program": null,
         "propagationDelayNs": null,
@@ -552,7 +552,7 @@
         "designator": "U27",
         "partKind": "chip",
         "partIdentifier": "181",
-        "family": "LS",
+        "family": "HC",
         "value": null,
         "program": null,
         "propagationDelayNs": null,
@@ -607,8 +607,8 @@
         "id": "50a63e5eec5f44049340d8b3c1051b23",
         "designator": "U25",
         "partKind": "chip",
-        "partIdentifier": "541",
-        "family": "HC",
+        "partIdentifier": "245",
+        "family": "HCT",
         "value": null,
         "program": null,
         "propagationDelayNs": null,
@@ -4729,7 +4729,7 @@
         "id": "18bb392bc7534242aca7a5f57ed4acbf",
         "label": "",
         "position": {
-          "x": 191,
+          "x": 192,
           "y": 294
         },
         "rotation": 0,
@@ -5054,8 +5054,8 @@
         "id": "7650b7a8c5ac948989f727e81c119d73",
         "label": "D",
         "position": {
-          "x": 218,
-          "y": 276
+          "x": 215,
+          "y": 277
         },
         "rotation": 0,
         "layer": 0,
@@ -5954,10 +5954,10 @@
         "id": "06366724a02a46a4a5a00584ed85c1d8",
         "label": "/ALU",
         "position": {
-          "x": 190,
-          "y": 269
+          "x": 215,
+          "y": 272
         },
-        "rotation": 180,
+        "rotation": 0,
         "layer": 0,
         "frequencyHz": null,
         "dutyCycle": null,
@@ -12424,11 +12424,11 @@
           "external": false
         },
         "b": {
-          "itemId": "18bb392bc7534242aca7a5f57ed4acbf",
-          "pinNumber": 0,
+          "itemId": "06366724a02a46a4a5a00584ed85c1d8",
+          "pinNumber": 1,
           "external": false
         },
-        "color": "Navy"
+        "color": "Yellow"
       },
       {
         "id": "56755b1d9ac0404f8fe6212357a18923",
@@ -13329,8 +13329,8 @@
       {
         "id": "8e798244812445a2a54fdd3394cfd52e",
         "a": {
-          "itemId": "06366724a02a46a4a5a00584ed85c1d8",
-          "pinNumber": 1,
+          "itemId": "0a665421af394825ade7b1d0fce3adab",
+          "pinNumber": 0,
           "external": false
         },
         "b": {
@@ -13338,7 +13338,7 @@
           "pinNumber": 1,
           "external": false
         },
-        "color": "Yellow"
+        "color": "Red"
       },
       {
         "id": "f63cfb566fe04eefa41da91d43a12c41",
@@ -14261,10 +14261,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 2.6653485,
+    "zoom": 0.49817207,
     "pan": {
-      "x": -1574,
-      "y": -3086
+      "x": 737,
+      "y": 29
     }
   }
 }
