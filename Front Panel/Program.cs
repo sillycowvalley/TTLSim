@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
@@ -28,6 +29,16 @@ namespace BlinkyMFrontPanel
 {
     // ------------------------------------------------------------------ signal
     internal enum Group { Address, Data, Control }
+
+    // One capture: the raw 32-bit word plus the PC-side arrival time (free-running
+    // microseconds from app start). The log's saved timestamp is this minus the
+    // first row's value, so it reads 0 at the start of each capture (Clear resets it).
+    internal struct Sample
+    {
+        public uint Word;
+        public long RawMicros;
+        public Sample(uint word, long rawMicros) { Word = word; RawMicros = rawMicros; }
+    }
 
     internal sealed class Signal
     {
@@ -323,7 +334,8 @@ namespace BlinkyMFrontPanel
         private readonly Button clearButton;
         private readonly Button saveButton;
 
-        private readonly List<uint> logWords = new List<uint>();
+        private readonly List<Sample> logSamples = new List<Sample>();
+        private readonly Stopwatch clock = Stopwatch.StartNew();
         private readonly StringBuilder rxBuffer = new StringBuilder();
 
         private SerialPort serialPort;
@@ -486,7 +498,7 @@ namespace BlinkyMFrontPanel
             try { chunk = serialPort.ReadExisting(); }
             catch { return; }
 
-            List<uint> frames = null;
+            List<Sample> frames = null;
             lock (rxBuffer)
             {
                 rxBuffer.Append(chunk);
@@ -498,8 +510,8 @@ namespace BlinkyMFrontPanel
                     uint value;
                     if (TryParseFrame(line, out value))
                     {
-                        if (frames == null) frames = new List<uint>();
-                        frames.Add(value);
+                        if (frames == null) frames = new List<Sample>();
+                        frames.Add(new Sample(value, CurrentMicros()));
                     }
                 }
             }
@@ -508,9 +520,14 @@ namespace BlinkyMFrontPanel
             try
             {
                 if (IsHandleCreated)
-                    BeginInvoke(new Action<List<uint>>(ApplyFrames), frames);
+                    BeginInvoke(new Action<List<Sample>>(ApplyFrames), frames);
             }
             catch { /* handle destroyed during shutdown */ }
+        }
+
+        private long CurrentMicros()
+        {
+            return clock.ElapsedTicks * 1000000L / Stopwatch.Frequency;
         }
 
         private static int IndexOfNewline(StringBuilder sb)
@@ -533,28 +550,29 @@ namespace BlinkyMFrontPanel
             return uint.TryParse(line, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value);
         }
 
-        private void ApplyFrames(List<uint> frames)
+        private void ApplyFrames(List<Sample> frames)
         {
             uint last = ledPanel.Word;
-            foreach (uint w in frames)
+            foreach (Sample s in frames)
             {
-                logWords.Add(w);
-                last = w;
+                logSamples.Add(s);
+                last = s.Word;
             }
             ledPanel.Word = last;
-            ledPanel.CycleCount = logWords.Count;
+            ledPanel.CycleCount = logSamples.Count;
         }
 
         private void ClearClick(object sender, EventArgs e)
         {
-            logWords.Clear();
+            logSamples.Clear();
             ledPanel.CycleCount = 0;
-            // LEDs keep showing the last captured state.
+            // LEDs keep showing the last captured state. The next sample becomes
+            // the new t=0, so the saved timestamp restarts from zero.
         }
 
         private void SaveClick(object sender, EventArgs e)
         {
-            if (logWords.Count == 0)
+            if (logSamples.Count == 0)
             {
                 MessageBox.Show(this, "The log is empty.", "Nothing to save",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -592,23 +610,35 @@ namespace BlinkyMFrontPanel
             {
                 w.WriteLine("# Blinky-M Virtual Front Panel capture log");
                 w.WriteLine("# Saved: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                w.WriteLine("# Micros  = PC-side elapsed microseconds since the first row (Clear resets to 0).");
+                w.WriteLine("# dMicros = elapsed since the previous row.");
+                w.WriteLine("#   These are host arrival times (include USB/OS jitter), not edge-exact device timing.");
                 w.WriteLine("# Word is a 32-bit hex value, bit 0 = A0.");
                 w.WriteLine("#   bits 0-15  = A0..A15  (address) -> Addr column, 16-bit hex");
                 w.WriteLine("#   bits 16-23 = D0..D7   (data)    -> Data column, 8-bit hex");
                 w.WriteLine("#   bits 24-31 = CLKG /RESET /FETCH T0 T1 T2 HALT N  (raw pin levels, 1 = high)");
                 w.WriteLine("# Active-low signals: /RESET, /FETCH (asserted when 0).");
                 w.WriteLine("# Tab-separated. Lines starting with # are comments.");
-                w.WriteLine("Cycle\tWord\tAddr\tData\t" + string.Join("\t", ControlNames));
-                for (int i = 0; i < logWords.Count; i++)
+                w.WriteLine("Cycle\tMicros\tdMicros\tWord\tAddr\tData\t" + string.Join("\t", ControlNames));
+
+                long origin = logSamples[0].RawMicros;
+                long prev = origin;
+                for (int i = 0; i < logSamples.Count; i++)
                 {
-                    uint word = logWords[i];
-                    string[] fields = new string[4 + 8];
+                    Sample s = logSamples[i];
+                    uint word = s.Word;
+                    long micros = s.RawMicros - origin;
+                    long dmicros = s.RawMicros - prev;
+                    prev = s.RawMicros;
+                    string[] fields = new string[6 + 8];
                     fields[0] = i.ToString();
-                    fields[1] = word.ToString("X8");
-                    fields[2] = (word & 0xFFFFu).ToString("X4");
-                    fields[3] = ((word >> 16) & 0xFFu).ToString("X2");
+                    fields[1] = micros.ToString();
+                    fields[2] = dmicros.ToString();
+                    fields[3] = word.ToString("X8");
+                    fields[4] = (word & 0xFFFFu).ToString("X4");
+                    fields[5] = ((word >> 16) & 0xFFu).ToString("X2");
                     for (int b = 0; b < 8; b++)
-                        fields[4 + b] = (((word >> (24 + b)) & 1u) != 0) ? "1" : "0";
+                        fields[6 + b] = (((word >> (24 + b)) & 1u) != 0) ? "1" : "0";
                     w.WriteLine(string.Join("\t", fields));
                 }
             }
