@@ -538,7 +538,7 @@
         "designator": "U24",
         "partKind": "chip",
         "partIdentifier": "181",
-        "family": "HC",
+        "family": "LS",
         "value": null,
         "program": null,
         "propagationDelayNs": null,
@@ -552,7 +552,7 @@
         "designator": "U27",
         "partKind": "chip",
         "partIdentifier": "181",
-        "family": "HC",
+        "family": "LS",
         "value": null,
         "program": null,
         "propagationDelayNs": null,
@@ -946,8 +946,8 @@
         "deviceId": "18e1f0d7674e2b717cb37b28a8c0d520",
         "unitLetter": "",
         "position": {
-          "x": -232,
-          "y": 73
+          "x": -231,
+          "y": 75
         },
         "label": "HALT HOLD",
         "rotation": 0,
@@ -2304,7 +2304,7 @@
         "id": "1f174ee0b8594e27874dc52f0bd61e45",
         "label": "/RESET",
         "position": {
-          "x": -272,
+          "x": -270,
           "y": 71
         },
         "rotation": 270,
@@ -2779,8 +2779,8 @@
         "id": "f82c3203a1ffd209fc8dbaba3a7347fb",
         "label": "",
         "position": {
-          "x": -223,
-          "y": 65
+          "x": -222,
+          "y": 67
         },
         "rotation": 0,
         "layer": 0,
@@ -2804,8 +2804,8 @@
         "id": "c63083c9d9e7fe2834eb71f59e455f8e",
         "label": "",
         "position": {
-          "x": -236,
-          "y": 93
+          "x": -235,
+          "y": 95
         },
         "rotation": 0,
         "layer": 0,
@@ -4029,8 +4029,8 @@
         "id": "9dc97b6cc7054830860593292cf25484",
         "label": "BANKEN",
         "position": {
-          "x": -236,
-          "y": 73
+          "x": -235,
+          "y": 75
         },
         "rotation": 180,
         "layer": 0,
@@ -4154,8 +4154,8 @@
         "id": "319055fdbb2ab97f35c3633d4da6af6b",
         "label": "T",
         "position": {
-          "x": -216,
-          "y": 82
+          "x": -215,
+          "y": 84
         },
         "rotation": 180,
         "layer": 0,
@@ -4179,8 +4179,8 @@
         "id": "23a5cae569004bf4a21bfe83ca98f846",
         "label": "/FETCH",
         "position": {
-          "x": -216,
-          "y": 85
+          "x": -215,
+          "y": 87
         },
         "rotation": 0,
         "layer": 0,
@@ -6673,6 +6673,31 @@
         "color": null,
         "fontSize": 22,
         "textColor": "Grey"
+      },
+      {
+        "type": "netlabel",
+        "id": "42557183cfb14d18b11a9c83e182cb3c",
+        "label": "HALT",
+        "position": {
+          "x": -270,
+          "y": 81
+        },
+        "rotation": 180,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
       }
     ],
     "connections": [
@@ -14249,6 +14274,20 @@
           "external": false
         },
         "color": "Olive"
+      },
+      {
+        "id": "930e97d60c424f078b10cfbfd37f53f5",
+        "a": {
+          "itemId": "42557183cfb14d18b11a9c83e182cb3c",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "a9d5d766e6b4aee20c99724983c5abd8",
+          "pinNumber": 5,
+          "external": false
+        },
+        "color": "Yellow"
       }
     ],
     "links": [],
@@ -14261,10 +14300,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 0.49817207,
+    "zoom": 2.3176978,
     "pan": {
-      "x": 737,
-      "y": 29
+      "x": 3482,
+      "y": -319
     }
   }
 }
