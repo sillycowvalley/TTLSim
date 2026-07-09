@@ -979,18 +979,32 @@ public sealed class ChipFactory : IChipFactory
 
     private IChip? TryCreateHc153(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
     {
-        // Required pins from ChipPartDefinition.Ic74153 (pin 16 VCC and pin 8
-        // GND excluded). All 14 signal pins must be present.
-        int[] needed = { 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15 };
+        // The inputs are required: both enables (/1E pin 1, /2E pin 15), both
+        // shared selects (S1 pin 2, S0 pin 14) and all eight data inputs
+        // (1I0..1I3 pins 6,5,4,3; 2I0..2I3 pins 10,11,12,13). Pin 16 VCC and
+        // pin 8 GND are excluded -- power isn't wired through the chip model.
+        //
+        // The two outputs 1Y (pin 7) and 2Y (pin 9) are OPTIONAL: a half-used
+        // '153, or one whose Y feeds nothing yet, leaves them open. An open
+        // output drives nothing and must never block instantiation, so an
+        // unconnected Y gets a local stand-in net (cf. the '161/'163 Q outputs
+        // and the '283 carry-out). Floating-INPUT diagnostics (TTL011) still
+        // flag genuinely unwired inputs at design time.
+        int[] needed = { 1, 2, 3, 4, 5, 6, 10, 11, 12, 13, 14, 15 };
         foreach (int p in needed)
             if (!pinToNet.TryGetValue(p, out Net? n) || n is null) return null;
 
         Net Get(int pin) => pinToNet[pin];
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);   // local stand-in, drives nothing
 
         return new Hc153(
             e1N: Get(1), s1: Get(2),
-            i1_3: Get(3), i1_2: Get(4), i1_1: Get(5), i1_0: Get(6), y1: Get(7),
-            y2: Get(9), i2_0: Get(10), i2_1: Get(11), i2_2: Get(12), i2_3: Get(13),
+            i1_3: Get(3), i1_2: Get(4), i1_1: Get(5), i1_0: Get(6),
+            y1: Opt(7, "1y-nc"),
+            y2: Opt(9, "2y-nc"),
+            i2_0: Get(10), i2_1: Get(11), i2_2: Get(12), i2_3: Get(13),
             s0: Get(14), e2N: Get(15),
             label: "153", logger: logger,
             delayPs: TtlTiming.ResolvePs(device));
