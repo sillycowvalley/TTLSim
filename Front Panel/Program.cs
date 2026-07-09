@@ -99,6 +99,7 @@ namespace BlinkyMFrontPanel
         private uint word;
         private int cycleCount;
         private bool connected;
+        private bool logFull;
         private string portInfo = "OFFLINE";
 
         public uint Word
@@ -117,6 +118,12 @@ namespace BlinkyMFrontPanel
         {
             get { return connected; }
             set { connected = value; Invalidate(); }
+        }
+
+        public bool LogFull
+        {
+            get { return logFull; }
+            set { if (logFull != value) { logFull = value; Invalidate(); } }
         }
 
         public string PortInfo
@@ -242,6 +249,8 @@ namespace BlinkyMFrontPanel
             // Footer: cycle count + link status.
             DrawString(g, "CYCLES", cycleLabelFont, LabelColor, 40f, 370f, sfLeft);
             DrawString(g, cycleCount.ToString(), cycleFont, BrightColor, 40f, 398f, sfLeft);
+            if (logFull)
+                DrawString(g, "LOG FULL", cycleLabelFont, DataColor, 190f, 400f, sfLeft);
 
             Color statusColor = connected ? AddrColor : DataColor;
             DrawString(g, (connected ? "\u25CF  " : "\u25CB  ") + portInfo, statusFont, statusColor, 744f, 400f, sfRight);
@@ -326,6 +335,7 @@ namespace BlinkyMFrontPanel
     internal sealed class MainForm : Form
     {
         private const int Baud = 115200;
+        private const int MaxLogTicks = 10000;   // log only the first N captures; display stays live
 
         private readonly LedPanel ledPanel;
         private readonly Panel buttonStrip;
@@ -333,9 +343,15 @@ namespace BlinkyMFrontPanel
         private readonly Button connectButton;
         private readonly Button clearButton;
         private readonly Button saveButton;
+        private readonly Timer uiTimer;          // ~30 Hz display refresh, decoupled from serial rate
 
         private readonly List<Sample> logSamples = new List<Sample>();
         private readonly Stopwatch clock = Stopwatch.StartNew();
+        private readonly object stateLock = new object();
+
+        private uint latestWord;                 // most recent frame (serial thread writes, timer reads)
+        private int latestCount;
+        private bool stateDirty;
         private readonly StringBuilder rxBuffer = new StringBuilder();
 
         private SerialPort serialPort;
@@ -392,6 +408,10 @@ namespace BlinkyMFrontPanel
             Controls.Add(ledPanel);
             Controls.Add(buttonStrip);
             PositionRightButtons();
+
+            uiTimer = new Timer { Interval = 33 };      // ~30 Hz
+            uiTimer.Tick += UiTimerTick;
+            uiTimer.Start();
 
             LoadSettings();
             RefreshPorts();
@@ -517,12 +537,17 @@ namespace BlinkyMFrontPanel
             }
 
             if (frames == null) return;
-            try
+            lock (stateLock)
             {
-                if (IsHandleCreated)
-                    BeginInvoke(new Action<List<Sample>>(ApplyFrames), frames);
+                foreach (Sample s in frames)
+                {
+                    if (logSamples.Count < MaxLogTicks)
+                        logSamples.Add(s);
+                    latestWord = s.Word;
+                }
+                latestCount = logSamples.Count;
+                stateDirty = true;
             }
-            catch { /* handle destroyed during shutdown */ }
         }
 
         private long CurrentMicros()
@@ -550,29 +575,42 @@ namespace BlinkyMFrontPanel
             return uint.TryParse(line, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value);
         }
 
-        private void ApplyFrames(List<Sample> frames)
+        private void UiTimerTick(object sender, EventArgs e)
         {
-            uint last = ledPanel.Word;
-            foreach (Sample s in frames)
+            uint word; int count;
+            lock (stateLock)
             {
-                logSamples.Add(s);
-                last = s.Word;
+                if (!stateDirty) return;
+                word = latestWord;
+                count = latestCount;
+                stateDirty = false;
             }
-            ledPanel.Word = last;
-            ledPanel.CycleCount = logSamples.Count;
+            ledPanel.Word = word;                       // property setters invalidate;
+            ledPanel.CycleCount = count;                // at most once per timer tick
+            ledPanel.LogFull = count >= MaxLogTicks;
         }
 
         private void ClearClick(object sender, EventArgs e)
         {
-            logSamples.Clear();
-            ledPanel.CycleCount = 0;
+            lock (stateLock)
+            {
+                logSamples.Clear();
+                latestCount = 0;
+                stateDirty = true;
+            }
             // LEDs keep showing the last captured state. The next sample becomes
-            // the new t=0, so the saved timestamp restarts from zero.
+            // the new t=0, and a fresh 10,000-tick log window opens.
         }
 
         private void SaveClick(object sender, EventArgs e)
         {
-            if (logSamples.Count == 0)
+            Sample[] snapshot;
+            lock (stateLock)
+            {
+                snapshot = logSamples.ToArray();
+            }
+
+            if (snapshot.Length == 0)
             {
                 MessageBox.Show(this, "The log is empty.", "Nothing to save",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -592,7 +630,7 @@ namespace BlinkyMFrontPanel
 
                 try
                 {
-                    WriteLog(dlg.FileName);
+                    WriteLog(dlg.FileName, snapshot);
                     saveDir = Path.GetDirectoryName(dlg.FileName);
                     SaveSettings();
                 }
@@ -604,7 +642,7 @@ namespace BlinkyMFrontPanel
             }
         }
 
-        private void WriteLog(string path)
+        private void WriteLog(string path, Sample[] samples)
         {
             using (StreamWriter w = new StreamWriter(path, false, Encoding.UTF8))
             {
@@ -621,11 +659,11 @@ namespace BlinkyMFrontPanel
                 w.WriteLine("# Tab-separated. Lines starting with # are comments.");
                 w.WriteLine("Cycle\tMicros\tdMicros\tWord\tAddr\tData\t" + string.Join("\t", ControlNames));
 
-                long origin = logSamples[0].RawMicros;
+                long origin = samples[0].RawMicros;
                 long prev = origin;
-                for (int i = 0; i < logSamples.Count; i++)
+                for (int i = 0; i < samples.Length; i++)
                 {
-                    Sample s = logSamples[i];
+                    Sample s = samples[i];
                     uint word = s.Word;
                     long micros = s.RawMicros - origin;
                     long dmicros = s.RawMicros - prev;

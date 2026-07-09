@@ -74,6 +74,16 @@ static const uint8_t TAP_HALT   = 29,  TAP_N      = 28;
 #endif
 
 // ------------------------------------------------------------------ sampling
+// On the Teensy, digitalReadFast with a compile-time-constant pin compiles to
+// a single GPIO register read (~ns); the sample is unrolled against the named
+// constants to keep every pin constant. The Mega build maps to plain
+// digitalRead and simply runs slower.
+#if defined(BOARD_TEENSY41)
+#define FASTREAD(p) digitalReadFast(p)
+#else
+#define FASTREAD(p) digitalRead(p)
+#endif
+
 struct PanelPin {
   uint8_t pin;
   bool    pullup;    // true -> INPUT_PULLUP (defined idle on a tri-state line)
@@ -102,23 +112,52 @@ static int prevClkg  = LOW;
 static int prevReset = LOW;
 
 uint32_t samplePins() {
-  uint32_t word = 0;
-  for (uint8_t i = 0; i < 32; i++) {
-    if (digitalRead(panelPins[i].pin) == HIGH) {
-      word |= ((uint32_t)1 << i);
-    }
-  }
-  return word;
+  uint32_t w = 0;
+  // Unrolled: digitalReadFast needs compile-time-constant pins.
+  if (FASTREAD(TAP_A0))     w |= 1u << 0;
+  if (FASTREAD(TAP_A1))     w |= 1u << 1;
+  if (FASTREAD(TAP_A2))     w |= 1u << 2;
+  if (FASTREAD(TAP_A3))     w |= 1u << 3;
+  if (FASTREAD(TAP_A4))     w |= 1u << 4;
+  if (FASTREAD(TAP_A5))     w |= 1u << 5;
+  if (FASTREAD(TAP_A6))     w |= 1u << 6;
+  if (FASTREAD(TAP_A7))     w |= 1u << 7;
+  if (FASTREAD(TAP_A8))     w |= 1u << 8;
+  if (FASTREAD(TAP_A9))     w |= 1u << 9;
+  if (FASTREAD(TAP_A10))    w |= 1u << 10;
+  if (FASTREAD(TAP_A11))    w |= 1u << 11;
+  if (FASTREAD(TAP_A12))    w |= 1u << 12;
+  if (FASTREAD(TAP_A13))    w |= 1u << 13;
+  if (FASTREAD(TAP_A14))    w |= 1u << 14;
+  if (FASTREAD(TAP_A15))    w |= 1u << 15;
+  if (FASTREAD(TAP_D0))     w |= 1u << 16;
+  if (FASTREAD(TAP_D1))     w |= 1u << 17;
+  if (FASTREAD(TAP_D2))     w |= 1u << 18;
+  if (FASTREAD(TAP_D3))     w |= 1u << 19;
+  if (FASTREAD(TAP_D4))     w |= 1u << 20;
+  if (FASTREAD(TAP_D5))     w |= 1u << 21;
+  if (FASTREAD(TAP_D6))     w |= 1u << 22;
+  if (FASTREAD(TAP_D7))     w |= 1u << 23;
+  if (FASTREAD(TAP_CLKG))   w |= 1u << 24;
+  if (FASTREAD(TAP_NRESET)) w |= 1u << 25;
+  if (FASTREAD(TAP_NFETCH)) w |= 1u << 26;
+  if (FASTREAD(TAP_T0))     w |= 1u << 27;
+  if (FASTREAD(TAP_T1))     w |= 1u << 28;
+  if (FASTREAD(TAP_T2))     w |= 1u << 29;
+  if (FASTREAD(TAP_HALT))   w |= 1u << 30;
+  if (FASTREAD(TAP_N))      w |= 1u << 31;
+  return w;
 }
 
 void printFrame(uint32_t word) {
   static const char hexDigits[] = "0123456789ABCDEF";
-  char buf[9];
+  char buf[10];
   for (int8_t nib = 7; nib >= 0; nib--) {
     buf[7 - nib] = hexDigits[(word >> (nib * 4)) & 0x0F];
   }
-  buf[8] = '\0';
-  Serial.println(buf);
+  buf[8] = '\n';
+  buf[9] = '\0';
+  Serial.write(buf, 9);   // single buffered write, LF-terminated
 }
 
 void setup() {
@@ -131,8 +170,8 @@ void setup() {
 }
 
 void loop() {
-  int clkg  = digitalRead(TAP_CLKG);
-  int reset = digitalRead(TAP_NRESET);
+  int clkg  = FASTREAD(TAP_CLKG);
+  int reset = FASTREAD(TAP_NRESET);
 
   bool clkgEdge  = (clkg != prevClkg) && (clkg == (captureEdgeRising ? HIGH : LOW));
   bool resetEdge = (reset != prevReset);              // both edges of /RESET
