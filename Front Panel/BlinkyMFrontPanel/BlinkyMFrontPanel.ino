@@ -27,8 +27,8 @@
 //     bits 24-31 : CLKG /RESET /FETCH T0 T1 T2 HALT N  (header odds 39..53)
 // ============================================================================
 
-#define BOARD_TEENSY41
-//#define BOARD_MEGA
+//#define BOARD_TEENSY41
+#define BOARD_MEGA
 
 #if defined(BOARD_MEGA) && defined(BOARD_TEENSY41)
 #error "Define only one of BOARD_MEGA / BOARD_TEENSY41."
@@ -114,38 +114,38 @@ static int prevReset = LOW;
 uint32_t samplePins() {
   uint32_t w = 0;
   // Unrolled: digitalReadFast needs compile-time-constant pins.
-  if (FASTREAD(TAP_A0))     w |= 1u << 0;
-  if (FASTREAD(TAP_A1))     w |= 1u << 1;
-  if (FASTREAD(TAP_A2))     w |= 1u << 2;
-  if (FASTREAD(TAP_A3))     w |= 1u << 3;
-  if (FASTREAD(TAP_A4))     w |= 1u << 4;
-  if (FASTREAD(TAP_A5))     w |= 1u << 5;
-  if (FASTREAD(TAP_A6))     w |= 1u << 6;
-  if (FASTREAD(TAP_A7))     w |= 1u << 7;
-  if (FASTREAD(TAP_A8))     w |= 1u << 8;
-  if (FASTREAD(TAP_A9))     w |= 1u << 9;
-  if (FASTREAD(TAP_A10))    w |= 1u << 10;
-  if (FASTREAD(TAP_A11))    w |= 1u << 11;
-  if (FASTREAD(TAP_A12))    w |= 1u << 12;
-  if (FASTREAD(TAP_A13))    w |= 1u << 13;
-  if (FASTREAD(TAP_A14))    w |= 1u << 14;
-  if (FASTREAD(TAP_A15))    w |= 1u << 15;
-  if (FASTREAD(TAP_D0))     w |= 1u << 16;
-  if (FASTREAD(TAP_D1))     w |= 1u << 17;
-  if (FASTREAD(TAP_D2))     w |= 1u << 18;
-  if (FASTREAD(TAP_D3))     w |= 1u << 19;
-  if (FASTREAD(TAP_D4))     w |= 1u << 20;
-  if (FASTREAD(TAP_D5))     w |= 1u << 21;
-  if (FASTREAD(TAP_D6))     w |= 1u << 22;
-  if (FASTREAD(TAP_D7))     w |= 1u << 23;
-  if (FASTREAD(TAP_CLKG))   w |= 1u << 24;
-  if (FASTREAD(TAP_NRESET)) w |= 1u << 25;
-  if (FASTREAD(TAP_NFETCH)) w |= 1u << 26;
-  if (FASTREAD(TAP_T0))     w |= 1u << 27;
-  if (FASTREAD(TAP_T1))     w |= 1u << 28;
-  if (FASTREAD(TAP_T2))     w |= 1u << 29;
-  if (FASTREAD(TAP_HALT))   w |= 1u << 30;
-  if (FASTREAD(TAP_N))      w |= 1u << 31;
+  if (FASTREAD(TAP_A0))     w |= 1UL << 0;
+  if (FASTREAD(TAP_A1))     w |= 1UL << 1;
+  if (FASTREAD(TAP_A2))     w |= 1UL << 2;
+  if (FASTREAD(TAP_A3))     w |= 1UL << 3;
+  if (FASTREAD(TAP_A4))     w |= 1UL << 4;
+  if (FASTREAD(TAP_A5))     w |= 1UL << 5;
+  if (FASTREAD(TAP_A6))     w |= 1UL << 6;
+  if (FASTREAD(TAP_A7))     w |= 1UL << 7;
+  if (FASTREAD(TAP_A8))     w |= 1UL << 8;
+  if (FASTREAD(TAP_A9))     w |= 1UL << 9;
+  if (FASTREAD(TAP_A10))    w |= 1UL << 10;
+  if (FASTREAD(TAP_A11))    w |= 1UL << 11;
+  if (FASTREAD(TAP_A12))    w |= 1UL << 12;
+  if (FASTREAD(TAP_A13))    w |= 1UL << 13;
+  if (FASTREAD(TAP_A14))    w |= 1UL << 14;
+  if (FASTREAD(TAP_A15))    w |= 1UL << 15;
+  if (FASTREAD(TAP_D0))     w |= 1UL << 16;
+  if (FASTREAD(TAP_D1))     w |= 1UL << 17;
+  if (FASTREAD(TAP_D2))     w |= 1UL << 18;
+  if (FASTREAD(TAP_D3))     w |= 1UL << 19;
+  if (FASTREAD(TAP_D4))     w |= 1UL << 20;
+  if (FASTREAD(TAP_D5))     w |= 1UL << 21;
+  if (FASTREAD(TAP_D6))     w |= 1UL << 22;
+  if (FASTREAD(TAP_D7))     w |= 1UL << 23;
+  if (FASTREAD(TAP_CLKG))   w |= 1UL << 24;
+  if (FASTREAD(TAP_NRESET)) w |= 1UL << 25;
+  if (FASTREAD(TAP_NFETCH)) w |= 1UL << 26;
+  if (FASTREAD(TAP_T0))     w |= 1UL << 27;
+  if (FASTREAD(TAP_T1))     w |= 1UL << 28;
+  if (FASTREAD(TAP_T2))     w |= 1UL << 29;
+  if (FASTREAD(TAP_HALT))   w |= 1UL << 30;
+  if (FASTREAD(TAP_N))      w |= 1UL << 31;
   return w;
 }
 
