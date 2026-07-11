@@ -110,7 +110,11 @@ deliberately placing something on another layer.
 - **passive** — the passive identifier: e.g. `"resistor"`, `"led"`,
   `"capacitor"`, `"button"`, `"switch"`, `"spdt-switch"`, `"jumper-2pin"`,
   `"jumper-3pin"`. The human-facing value (resistance, colour) goes in `value`.
-- **header** — the header-out identifier (2/3/4/6/8-pin variants).
+- **header** — `hdr-out-N` where N is the pin count: `"hdr-out-2"`,
+  `"hdr-out-4"`, `"hdr-out-8"` are verified in a loaded file (2026-07); the
+  library offers 2/3/4/6/8-pin variants, so `hdr-out-3` / `hdr-out-6` follow
+  the same pattern but are unverified. There is no 10-pin variant — a wider
+  interface uses an 8-pin header with unconnected pins, or two headers.
 - **display** — the seven-segment identifier.
 
 **An unknown `partIdentifier` fails the whole open** — the loader reports

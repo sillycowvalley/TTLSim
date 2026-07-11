@@ -47,6 +47,16 @@ Rule of thumb: if a VCC or GND wire has to cross *any* signal wire to reach its 
 
 The clearance has been rejected in **both directions** now: layouts with power symbols clustered against the chips, and layouts with them pushed 30–40 cells out. The calibration that was accepted (netlabel-dominated capture, per-chip local symbols, 2026-07): **VCC at (bodyX + 20, bodyY − 4)** — 20 cells right of the body's left edge, slightly above; **GND at (bodyX − 16, bodyBottom + 5)** — 16 cells left, 5 below the body. On a netlabel-heavy sheet the long wires the big clearances were protecting mostly don't exist, so moderate offsets win. Start there and tune.
 
+## Header pinning convention
+
+For every header (`hdr-out-N`): **GND is always pin 1**, and **if the header
+carries VCC, VCC is always the highest pin number** — signals sit between the
+rails, and any unused pins sit between the last signal and VCC. So an 8-pin
+control header reads GND, sig, sig, sig, sig, NC, NC, VCC and a 4-pin input
+header reads GND, sig, sig, sig. A header needing more signals than the
+8-pin variant offers is split across two headers, each carrying its own
+pin-1 GND.
+
 ## Netlabel placement — same side, pin-aligned
 
 Verified against the editor (2026-07), after getting all three wrong in one generated file:
