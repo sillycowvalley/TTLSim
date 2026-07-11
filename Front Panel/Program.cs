@@ -4,7 +4,9 @@
 //  Reads the firmware's plain 8-hex lines (one per capture) from the serial
 //  port and renders a white-on-black instrument panel: 16-bit address bus,
 //  8-bit data bus, and eight control lines. Shows a running cycle count, and
-//  offers Clear and Save (TSV, remembering the last folder across runs).
+//  offers Clear, Save (raw TSV log) and Disasm (annotated disassembly steps,
+//  folded out of the same log by Disassembler.cs). Both remember the last
+//  folder across runs.
 //
 //  Frame bit order (LSB first), matching the firmware and hookup diagram:
 //     bits  0-15 : A0..A15
@@ -343,6 +345,8 @@ namespace BlinkyMFrontPanel
         private readonly Button connectButton;
         private readonly Button clearButton;
         private readonly Button saveButton;
+        private readonly Button disasmButton;
+        private readonly CheckBox verboseCheck;
         private readonly Timer uiTimer;          // ~30 Hz display refresh, decoupled from serial rate
 
         private readonly List<Sample> logSamples = new List<Sample>();
@@ -399,8 +403,27 @@ namespace BlinkyMFrontPanel
             clearButton = MakeButton("Clear", 0);
             clearButton.Click += ClearClick;
 
+            disasmButton = MakeButton("Disasm", 0);
+            disasmButton.Width = 100;
+            disasmButton.Click += DisasmClick;
+
+            verboseCheck = new CheckBox
+            {
+                Text = "T-states",
+                Checked = true,
+                AutoSize = true,
+                Top = 19,
+                Left = 0,
+                ForeColor = ColorTranslator.FromHtml("#b7bdc2"),
+                BackColor = Color.Transparent,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Arial", 9f, FontStyle.Regular)
+            };
+
             buttonStrip.Controls.Add(portCombo);
             buttonStrip.Controls.Add(connectButton);
+            buttonStrip.Controls.Add(verboseCheck);
+            buttonStrip.Controls.Add(disasmButton);
             buttonStrip.Controls.Add(clearButton);
             buttonStrip.Controls.Add(saveButton);
             buttonStrip.Resize += delegate { PositionRightButtons(); };
@@ -442,8 +465,11 @@ namespace BlinkyMFrontPanel
         private void PositionRightButtons()
         {
             if (buttonStrip == null || saveButton == null || clearButton == null) return;
+            if (disasmButton == null || verboseCheck == null) return;
             saveButton.Left = buttonStrip.ClientSize.Width - saveButton.Width - 12;
             clearButton.Left = saveButton.Left - clearButton.Width - 8;
+            disasmButton.Left = clearButton.Left - disasmButton.Width - 8;
+            verboseCheck.Left = disasmButton.Left - verboseCheck.Width - 8;
         }
 
         private void RefreshPorts()
@@ -631,6 +657,47 @@ namespace BlinkyMFrontPanel
                 try
                 {
                     WriteLog(dlg.FileName, snapshot);
+                    saveDir = Path.GetDirectoryName(dlg.FileName);
+                    SaveSettings();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, "Could not save:\n" + ex.Message, "Save error",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void DisasmClick(object sender, EventArgs e)
+        {
+            Sample[] snapshot;
+            lock (stateLock)
+            {
+                snapshot = logSamples.ToArray();
+            }
+
+            if (snapshot.Length == 0)
+            {
+                MessageBox.Show(this, "The log is empty.", "Nothing to disassemble",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            using (SaveFileDialog dlg = new SaveFileDialog())
+            {
+                dlg.Filter = "Disassembly (*.dis)|*.dis|Text file (*.txt)|*.txt|All files (*.*)|*.*";
+                dlg.DefaultExt = "dis";
+                dlg.FileName = "blinkym_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".dis";
+                dlg.RestoreDirectory = false;
+                if (!string.IsNullOrEmpty(saveDir) && Directory.Exists(saveDir))
+                    dlg.InitialDirectory = saveDir;
+
+                if (dlg.ShowDialog(this) != DialogResult.OK) return;
+
+                try
+                {
+                    File.WriteAllText(dlg.FileName,
+                        Disassembler.Build(snapshot, verboseCheck.Checked), Encoding.UTF8);
                     saveDir = Path.GetDirectoryName(dlg.FileName);
                     SaveSettings();
                 }
