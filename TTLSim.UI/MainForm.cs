@@ -20,6 +20,7 @@ public sealed class MainForm : Form
     private readonly LibraryPanel library;
     private readonly EnterAwarePropertyGrid propertyGrid;
     private readonly LayersPanel layersPanel;
+    private readonly NetLabelsPanel netLabelsPanel;
     private readonly StatusStrip statusStrip;
     private readonly ToolStripStatusLabel coordsLabel;
     private readonly ToolStripStatusLabel zoomLabel;
@@ -333,6 +334,17 @@ public sealed class MainForm : Form
         };
         leftPanel.Controls.Add(leftHeader);
 
+        // Net Labels panel pinned to the bottom of the left (Components) column.
+        // library (Fill) was added first so it claims the space between the
+        // header (Top) and this panel (Bottom) -- same layering as the Layers
+        // panel in the right column.
+        netLabelsPanel = new NetLabelsPanel(canvas)
+        {
+            Dock = DockStyle.Bottom,
+            Height = 260
+        };
+        leftPanel.Controls.Add(netLabelsPanel);
+
 
 
         propertyGrid.PropertyValueChanged += (_, e) =>
@@ -459,7 +471,7 @@ public sealed class MainForm : Form
             {
                 0 => "Nothing selected",
                 1 => items.Length == 1
-                    ? $"Selected: {items[0].GetType().Name}"
+                    ? DescribeSingleItem(items[0])
                     : connections.Length == 1 ? "Selected: Connection" : "Selected: Header Link",
                 _ => $"Selected: {total} items"
             };
@@ -476,12 +488,42 @@ public sealed class MainForm : Form
             UpdateHexMenuItems();
             UpdateGalMenuItems();
             layersPanel.OnSelectionChanged();
+            netLabelsPanel.OnSelectionChanged();
         };
 
         // Initial enabled state for the clipboard items, before any
         // selection change or menu open has occurred.
         UpdateEditMenuItems();
         UpdateHexMenuItems();
+    }
+
+    /// <summary>
+    /// Status-bar text for a single selected item. A net label additionally
+    /// reports how many labels in the schematic carry the same name -- the
+    /// figure the Net Labels panel lists -- so the count is visible without
+    /// leaving the canvas. A count of 1 means the label ties to nothing: it is
+    /// the only tap of that name anywhere.
+    /// </summary>
+    private string DescribeSingleItem(SchematicItem item)
+    {
+        if (item is not Components.NetLabelItem label)
+            return $"Selected: {item.GetType().Name}";
+
+        if (string.IsNullOrWhiteSpace(label.Label))
+            return "Selected: Net Label (unnamed) — ties nothing";
+
+        int lo = label.StartBit;
+        int hi = label.StartBit + label.Width - 1;
+        string shown = label.Width == 1
+            ? label.BitName(1)
+            : $"{label.Label}[{lo}..{hi}]";
+
+        int count = NetLabelIndex.CountOf(canvas.Schematic, label.Label);
+        string tally = count == 1
+            ? $"only label named \"{label.Label}\" — ties nothing"
+            : $"{count} labels named \"{label.Label}\"";
+
+        return $"Selected: Net Label {shown} — {tally}";
     }
 
     /// <summary>
@@ -1154,6 +1196,7 @@ public sealed class MainForm : Form
         simController.Invalidate();
         canvas.CurrentLayerId = 0;
         layersPanel.RefreshLayers();
+        netLabelsPanel.RefreshLabels();
     }
 
     private void UpdateTitle()
