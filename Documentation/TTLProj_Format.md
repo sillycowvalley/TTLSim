@@ -6,8 +6,9 @@ only; for layout aesthetics (spacing, where to place power symbols, label
 brevity) see `SCHEMATIC_LAYOUT_GUIDELINES.md`.
 
 A `.ttlproj` is a UTF-8 JSON file, pretty-printed, **camelCase** property
-names. The reader is case-insensitive on names but always write camelCase to
-match the editor's own output.
+names, **CRLF line endings** — the editor's own saves are CRLF, so generated
+and surgically edited files must match. The reader is case-insensitive on
+names but always write camelCase to match the editor's own output.
 
 ---
 
@@ -73,7 +74,7 @@ deliberately placing something on another layer.
 {
   "id": "dev-u1",
   "designator": "U1",
-  "partKind": "ic",
+  "partKind": "chip",
   "partIdentifier": "00",
   "family": "HC",
   "value": null,
@@ -90,32 +91,48 @@ deliberately placing something on another layer.
 |---|---|---|
 | `id` | string | Referenced by each unit's `deviceId`. |
 | `designator` | string | `"U1"`, `"R3"`, etc. Drawn on the canvas. |
-| `partKind` | string | One of `"ic"`, `"passive"`, `"header"`, `"display"`. |
+| `partKind` | string | One of `"chip"`, `"passive"`, `"header"`, `"display"`. Write `"chip"` for every IC — `"ic"` is the pre-migration legacy kind (see `GATE_TTLPROJ_MIGRATION.md`). |
 | `partIdentifier` | string | The library key for the part (see below). |
-| `family` | string? | ICs only. The TTL family name: `"Standard"`, `"LS"`, `"HC"`, `"HCT"`, etc. Null for non-ICs. |
+| `family` | string? | ICs only. The TTL family name: `"Standard"`, `"LS"`, `"HC"`, `"HCT"`, etc. Null for non-ICs and for parts with no family (NE555/NE556, DS1813, GALs, memories). |
 | `value` | string? | Passives only. `"10k"`, `"red"`, `"100n"`, etc. |
 | `program` | string? | Memory/PLD only. Embedded program image: Intel HEX text for EEPROM/ROM, JEDEC text for a GAL. Null otherwise. |
 | `propagationDelayNs` | int? | Memory/PLD only. Explicit delay override in ns; null = use the part's default speed grade. |
-| `function1` | string? | 555/556 only. Timer-1 role: `"Schmitt"` or `"Astable"`. |
-| `function2` | string? | 556 only. Timer-2 role. |
-| `frequencyHz1` | double? | 555/556 only. Timer-1 astable frequency. |
-| `frequencyHz2` | double? | 556 only. Timer-2 astable frequency. |
+| `function1` | string? | NE555/NE556 only. Timer-1 role: `"Schmitt"` or `"Astable"`. |
+| `function2` | string? | NE556 only. Timer-2 role. |
+| `frequencyHz1` | double? | NE555/NE556 only. Timer-1 astable frequency. |
+| `frequencyHz2` | double? | NE556 only. Timer-2 astable frequency. |
 
 **`partIdentifier` by kind:**
 
-- **ic** — the chip's part number as it appears in the TTLSim library: `"00"`,
-  `"08"`, `"32"`, `"181"`, `"374"`, `"GAL16V8"`, `"GAL20V8"`, `"DS1813"`, and so
-  on. No `74`/`74HC` prefix — just the number, with the family carried
-  separately in `family`.
+- **chip** — the part number as it appears in the TTLSim library. No
+  `74`/`74HC` prefix — just the number, with the family carried separately in
+  `family`.
 - **passive** — the passive identifier: e.g. `"resistor"`, `"led"`,
   `"capacitor"`, `"button"`, `"switch"`, `"spdt-switch"`, `"jumper-2pin"`,
   `"jumper-3pin"`. The human-facing value (resistance, colour) goes in `value`.
 - **header** — the header-out identifier (2/3/4/6/8-pin variants).
 - **display** — the seven-segment identifier.
 
-Only the IC examples above are confirmed verbatim here; for any other part take
-the identifier from the library entry in TTLSim and place it in the file
-unchanged.
+**An unknown `partIdentifier` fails the whole open** — the loader reports
+"Unknown chip part number" and refuses the file, all-or-nothing. Verify every
+identifier against this list before generating. Known chip identifiers (from
+the loader, 2026-07):
+
+- **74-series** (bare numbers): `00`, `02`, `04`, `08`, `10`, `14`, `20`,
+  `30`, `32`, `47`, `48`, `74`, `86`, `107`, `138`, `139`, `151`, `153`,
+  `154`, `157`, `161`, `163`, `173`, `175`, `181`, `182`, `189`, `191`,
+  `193`, `244`, `245`, `257`, `273`, `283`, `299`, `373`, `374`, `377`,
+  `390`, `393`, `541`, `574`, `595`, `688`. Note `"74"` is the '74 dual D
+  flip-flop itself, not a prefix.
+- **Timers**: `NE555`, `NE556` — the NE prefix is part of the key; bare
+  `"555"`/`"556"` are not identifiers.
+- **PLDs**: `GAL16V8`, `GAL20V8`, `GAL22V10`.
+- **Memories**: `28C16`, `28C64`, `28C128`, `28C256`, `2114`, `6116`,
+  `6264`, `62256`, `CY7C199`, `W24512`.
+- **Supervisor**: `DS1813`.
+
+The list tracks the app, not this document — when the app is newer than this
+list, the loader's error dialog enumerates the current set.
 
 ---
 
@@ -424,7 +441,7 @@ the gate output published on a named net.
       {
         "id": "dev-u1",
         "designator": "U1",
-        "partKind": "ic",
+        "partKind": "chip",
         "partIdentifier": "00",
         "family": "HC"
       }

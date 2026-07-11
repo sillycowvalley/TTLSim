@@ -45,7 +45,17 @@ Practical placements seen in good layouts:
 
 Rule of thumb: if a VCC or GND wire has to cross *any* signal wire to reach its symbol, the symbol is in the wrong place. Move it further away — usually further out, not closer in. The router can handle long L-shaped paths through empty canvas just fine; what it can't fix is symbols crowded into the signal flow.
 
-The user has rejected layouts where I clustered power symbols too close to the chips. The lesson is: be generous with the clearance.
+The clearance has been rejected in **both directions** now: layouts with power symbols clustered against the chips, and layouts with them pushed 30–40 cells out. The calibration that was accepted (netlabel-dominated capture, per-chip local symbols, 2026-07): **VCC at (bodyX + 20, bodyY − 4)** — 20 cells right of the body's left edge, slightly above; **GND at (bodyX − 16, bodyBottom + 5)** — 16 cells left, 5 below the body. On a netlabel-heavy sheet the long wires the big clearances were protecting mostly don't exist, so moderate offsets win. Start there and tune.
+
+## Netlabel placement — same side, pin-aligned
+
+Verified against the editor (2026-07), after getting all three wrong in one generated file:
+
+- **DIP box pin geometry.** Pins 1..N/2 run **down the left side**, N/2+1..N run **up the right side** (package order). Pin rows sit on a **2-cell vertical pitch**, and **pin 1's row is level with the body top** — there is no header offset. So a pin's row is `bodyY + row × 2`, where row = pin − 1 on the left and row = N − pin on the right. The body is ~16 cells wide.
+- **Put every netlabel tap on the same side as its pin**, y-aligned to that pin's row. A tap floating on the wrong side or off-row forces the router to wrap the label wire around the body.
+- **Rotate left-side taps 180°**; right-side taps stay at rotation 0, so both point at the body.
+- Working offsets from the accepted layout: left tap at `bodyX − 7`, right tap at `bodyX + 20` (body width + 4 cells of clearance).
+- **Compute, don't hand-place.** With ~200 taps, per-tap coordinates guessed by hand produce exactly the wrong-side / wrong-row / wrong-rotation errors above. Derive placement from the pin number in the generator, and make the generator's validator fail the build on any tap whose side or rotation disagrees with its pin — that class of error then can't regress.
 
 ## Tying off unused inputs
 
@@ -129,6 +139,7 @@ Bigger gaps. The signal path between groups is where most wires live, and they n
 - 15–20 cells between a switch bank and the chip it feeds.
 - 15–20 cells between a chip's output column and the LED bank that displays it.
 - 25–35 cells between a chip and the next chip in the data flow (e.g. between a '173 register and the '181 ALU it feeds via inverters).
+- For a large module (accepted at 19 ICs, 2026-07): chip columns on a **60-cell x pitch**, chips within a column on a **44-cell y pitch**, buttons/switches on the far left, LED bank on the far right — canvas ~420 × 220. The earlier 200 × 140 guidance is for 5–8 ICs; scale the canvas with the IC count rather than compressing the pitches.
 
 ## Functional bands
 
@@ -214,3 +225,5 @@ The most expensive mistakes across a schematic-generation session are:
 3. **Doing batch transformations by hand-edit when a script is cleaner.** A 60-connection bulk recolour by individual `str_replace` calls is slow and error-prone; a single scripted pass over the JSON is faster and safer. The user doesn't see the script — they just see the result. (Apologies if Python keeps slipping in for this kind of thing — use `dotnet script`, `awk`, or `sed` instead per the user's preference; never Python.)
 
 4. **Not reading the source before claiming a fact about it.** Pin numbers, part identifiers, supported chips, colour-name validity, default behaviour of fields — all of these have lived in the source tree and have been wrong in my generated work when I went from memory. The project files are the truth; the search tool is fast; use it. The standing rule from the user: if I haven't verified it in this turn, I should say "I haven't checked," not assert.
+
+5. **Guessing a part identifier or symbol geometry instead of verifying it.** Two concrete instances from one session: `"556"` used as a partIdentifier (the key is `"NE556"`) made the **entire file refuse to open** — the loader is all-or-nothing on unknown part numbers; and an assumed 2-cell header offset above pin 1 put every tap two rows below its pin. The known-identifier list lives in `TTLProj_Format.md`; the pin geometry lives in **Netlabel placement** above. When generating with an unverified constant, parameterise it, say it's unverified, and expect to re-emit.
