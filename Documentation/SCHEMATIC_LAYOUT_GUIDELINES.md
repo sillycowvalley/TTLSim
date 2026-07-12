@@ -141,6 +141,8 @@ Two datasheet gotchas that have produced real bit-reversal bugs — check the pi
 
 - **'161 counter outputs run high-pin / low-significance**: QA = pin 14, QB = 13, QC = 12, QD = 11. Wiring a nibble to a bus in ascending pin order reverses the bits within the nibble.
 - **'154 address inputs put the LSB on the high pin**: A (LSB) = pin 23, B = 22, C = 21, D (MSB) = pin 20 — the reverse of the intuitive order. The same caution applies to any part where the least-significant input sits on the higher pin number. This one hides on bit-palindrome codes (0, 9, 15) and only surfaces on a non-palindrome value, so it can pass a limited test and still be wrong.
+- **DS1813 (TO-92): pin 1 = /RST, pin 2 = VCC, pin 3 = GND** — verified against the Maxim datasheet's pin table (2026-07) after a capture wired it GND/RST/VCC, powering the part backwards and grounding its reset output. Two traps at once: the intuition that pin 1 is ground on a TO-92 supervisor, and the datasheet's TO-92 package drawing being a **bottom view**. For any non-74 part, read the pin table, not the drawing.
+- **'273 upper quadrant flips D/Q order**: pins 12–15 run D4, Q4, Q5, D5 but pins 16–19 run **Q6, D6, D7, Q7** — the D/Q order inverts between the two groups. Assuming 16 = D6 tied a Q output to GND (caught by TTL004 "output shorted" + TTL011 "floating input" on the first sim build, 2026-07). Pins 12–15 were verified by the v1 module; 16–19 had never been exercised — an unused-pin tie-off deserves the same pin-map scrutiny as a signal.
 
 ## Rotate passives that need to span a vertical or unusual route
 
