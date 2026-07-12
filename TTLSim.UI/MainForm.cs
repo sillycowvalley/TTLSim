@@ -334,16 +334,32 @@ public sealed class MainForm : Form
         };
         leftPanel.Controls.Add(leftHeader);
 
-        // Net Labels panel pinned to the bottom of the left (Components) column.
-        // library (Fill) was added first so it claims the space between the
-        // header (Top) and this panel (Bottom) -- same layering as the Layers
-        // panel in the right column.
+        // Net Labels panel pinned to the bottom of the left (Components) column,
+        // with a drag splitter above it so the library/labels split is
+        // adjustable. WinForms docks in reverse add order, so the splitter is
+        // ADDED FIRST and the panel second: the panel claims the bottom edge,
+        // the splitter lands directly above it, and library (Fill) takes the
+        // rest -- the same add-order trick as the output panel's splitter.
+        var netLabelsSplitter = new Splitter
+        {
+            Dock = DockStyle.Bottom,
+            Height = 4,
+            MinExtra = 80,   // never squash the library below this
+            MinSize = 60     // never squash the labels panel below this
+        };
+        leftPanel.Controls.Add(netLabelsSplitter);
         netLabelsPanel = new NetLabelsPanel(canvas)
         {
             Dock = DockStyle.Bottom,
             Height = 260
         };
         leftPanel.Controls.Add(netLabelsPanel);
+
+        // A row click in the Net Labels panel puts its own summary -- including
+        // the full error description for a red row -- in the status bar. This
+        // fires AFTER the canvas selection is applied, so it overwrites the
+        // generic "Selected: ..." text with the richer one.
+        netLabelsPanel.StatusRequested += (_, msg) => selectionLabel.Text = msg;
 
 
 
@@ -499,31 +515,33 @@ public sealed class MainForm : Form
 
     /// <summary>
     /// Status-bar text for a single selected item. A net label additionally
-    /// reports how many labels in the schematic carry the same name -- the
-    /// figure the Net Labels panel lists -- so the count is visible without
-    /// leaving the canvas. A count of 1 means the label ties to nothing: it is
-    /// the only tap of that name anywhere.
+    /// reports how many labels in the schematic carry the same name, and -- when
+    /// its name group has an error (ties nothing, lone bits, or a name
+    /// collision like "D0" vs "D" bit 0) -- the full error description, the same
+    /// text the Net Labels panel shows for its red rows.
     /// </summary>
     private string DescribeSingleItem(SchematicItem item)
     {
         if (item is not Components.NetLabelItem label)
             return $"Selected: {item.GetType().Name}";
 
-        if (string.IsNullOrWhiteSpace(label.Label))
-            return "Selected: Net Label (unnamed) — ties nothing";
+        // The panel and the status bar must agree on what counts as an error,
+        // so both read the same index. Build() is a linear scan of Items --
+        // cheap at selection-change frequency.
+        var groups = NetLabelIndex.Build(canvas.Schematic);
+        string name = string.IsNullOrWhiteSpace(label.Label) ? "" : label.Label;
+        NetLabelGroup? group = groups.FirstOrDefault(
+            g => string.Equals(g.Name, name, StringComparison.Ordinal));
 
-        int lo = label.StartBit;
-        int hi = label.StartBit + label.Width - 1;
         string shown = label.Width == 1
             ? label.BitName(1)
-            : $"{label.Label}[{lo}..{hi}]";
+            : $"{(name.Length == 0 ? "?" : name)}[{label.StartBit}..{label.StartBit + label.Width - 1}]";
 
-        int count = NetLabelIndex.CountOf(canvas.Schematic, label.Label);
-        string tally = count == 1
-            ? $"only label named \"{label.Label}\" — ties nothing"
-            : $"{count} labels named \"{label.Label}\"";
+        if (group?.Diagnostic is { } diag)
+            return $"Selected: Net Label {shown} — ERROR — {diag}";
 
-        return $"Selected: Net Label {shown} — {tally}";
+        int count = group?.Count ?? 1;
+        return $"Selected: Net Label {shown} — {count} label{(count == 1 ? "" : "s")} named \"{name}\"";
     }
 
     /// <summary>

@@ -57,6 +57,20 @@ header reads GND, sig, sig, sig. A header needing more signals than the
 8-pin variant offers is split across two headers, each carrying its own
 pin-1 GND.
 
+## Netlabels are for routing between packages
+
+A netlabel exists to carry a signal somewhere a drawn wire would be
+unreadable. If **every endpoint of a would-be net sits on one chip**, don't
+create the net — connect the pins directly. The common cases are SR-latch
+cross-couples and a gate output feeding a sibling gate in the same package
+(a 2026-07 cleanup removed six of these: ARM//ARM, /SREQ, /ENTRY, HOLD,
+/RUNLEG, /STEPLEG — each a tap pair plus two connections replaced by one
+self-connection). The cost of the direct wire is losing that name as a
+probe point in the simulator; in practice the complementary or downstream
+signal keeps a named tap, so nothing is lost. Add this to the generator's
+validator: flag any net whose connection endpoints all resolve to a single
+unit.
+
 ## Netlabel placement — same side, pin-aligned
 
 Verified against the editor (2026-07), after getting all three wrong in one generated file:
@@ -111,6 +125,8 @@ Multi-bit signals ride a named netlabel bus rather than point-to-point wires: D,
 - **Same label = same net.** A source tap labelled `SRC` and a consumer tap labelled `SRC0` are *different* nets — the mismatch silently disconnects the bus with no error raised. Every tap on a bus, source and consumer alike, must carry the identical label string.
 - **Build the bus full-width at first touch.** A structural bus is cut to its final width the first time it's placed, even if only one tap is wired, so it never has to be re-cut when the next participant arrives.
 - Bit order is explicit in each tap's `startBit` and width — verify it rather than trusting pin order (see **Pin-order traps**).
+- **A bus bit is a tap, never its own net.** Bit N of bus `T` is a tap labelled `T` with `startBit: N` — not a separate net named `T0`/`T1`. Suffix-indexed names look connected on the canvas but are electrically distinct nets, and mixing the two styles splits the bus silently (a repair pass in 2026-07 found half a T bus converted and half still on `Tn` names — plus one converted tap with the wrong startBit, which would have lit the T1 LED for T2). The litmus is what the suffix *means*: a **bit index** (`T0`, `DIV1`) makes it a bus tap; a ratio, designator, or role (`CD2` = the ÷2 tap, `Q3` = '273 FF3's output) is a legitimately scalar net.
+- **Bus taps can be any width.** A 4-bit consumer takes one `width: 4` tap with its pins 1..4 mapping to bits startBit..startBit+3 — preferable to four single-bit taps when the pins are adjacent (e.g. a header carrying T0–T3).
 
 ## Tristate bus discipline
 
@@ -217,7 +233,8 @@ The `wires` field exists in the schema but the user does manual wire routing in 
 2. Every chip has both its VCC pin (whichever pin number the part's `PowerPin` is) and its GND pin (`GroundPin`) wired to a VCC/GND symbol. No chip with a floating power pin.
 3. Every VCC and GND symbol in `items` has at least one connection pointing to it (no floating symbols).
 4. No chip left with a floating signal input — tie unused inputs off (see **Tying off unused inputs**), or the part may be dropped from the simulation.
-5. Every bus tap carries the exact bus label — no `SRC` / `SRC0` style mismatches that split a net (see **Named buses**).
+5. Every bus tap carries the exact bus label — no `SRC` / `SRC0` style mismatches that split a net, and no bit-index-suffixed net names at all — bit N is a tap with `startBit: N` (see **Named buses**).
+5a. No net whose endpoints all land on a single chip — those are direct pin-to-pin connections, not netlabels (see **Netlabels are for routing between packages**).
 6. The canvas extent (max x, max y, min x, min y) is reasonable for the schematic size — if it's too compact, add spacing; too sparse, the zoom-to-fit will leave huge gaps.
 
 ## When unsure, ask before generating

@@ -412,6 +412,7 @@ public sealed class ChipFactory : IChipFactory
             "74" => TryCreateHc74(device, pinToNet),
             "138" => TryCreateHc138(device, pinToNet),
             "139" => TryCreateHc139(device, pinToNet),
+            "151" => TryCreateHc151(device, pinToNet),
             "153" => TryCreateHc153(device, pinToNet),
             "154" => TryCreateHc154(device, pinToNet),
             "157" => TryCreateHc157(device, pinToNet),
@@ -977,6 +978,39 @@ public sealed class ChipFactory : IChipFactory
             delayPs: TtlTiming.ResolvePs(device));
     }
 
+    private IChip? TryCreateHc151(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        // The inputs are required: all eight data inputs (I0..I3 pins 4,3,2,1;
+        // I4..I7 pins 15,14,13,12), the three selects (S2 pin 9, S1 pin 10,
+        // S0 pin 11) and the enable (/E pin 7). Pin 16 VCC and pin 8 GND are
+        // excluded -- power isn't wired through the chip model.
+        //
+        // The two outputs Y (pin 5) and /Y (pin 6) are OPTIONAL: nearly every
+        // real use wires only one of the pair (the Mini Blinky TOS source mux
+        // uses Y and leaves /Y open). An open output drives nothing and must
+        // never block instantiation, so an unconnected output gets a local
+        // stand-in net (cf. the '153 Y outputs and the '161/'163 Qs).
+        // Floating-INPUT diagnostics (TTL011) still flag genuinely unwired
+        // inputs at design time.
+        int[] needed = { 1, 2, 3, 4, 7, 9, 10, 11, 12, 13, 14, 15 };
+        foreach (int p in needed)
+            if (!pinToNet.TryGetValue(p, out Net? n) || n is null) return null;
+
+        Net Get(int pin) => pinToNet[pin];
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);   // local stand-in, drives nothing
+
+        return new Hc151(
+            i3: Get(1), i2: Get(2), i1: Get(3), i0: Get(4),
+            y: Opt(5, "y-nc"), yN: Opt(6, "yn-nc"),
+            eN: Get(7),
+            s2: Get(9), s1: Get(10), s0: Get(11),
+            i7: Get(12), i6: Get(13), i5: Get(14), i4: Get(15),
+            label: "151", logger: logger,
+            delayPs: TtlTiming.ResolvePs(device));
+    }
+
     private IChip? TryCreateHc153(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
     {
         // The inputs are required: both enables (/1E pin 1, /2E pin 15), both
@@ -1022,7 +1056,7 @@ public sealed class ChipFactory : IChipFactory
     public bool IsSimulated(BuildDevice device) => device.PartIdentifier switch
     {
         // Box-chip ICs (per-unit dispatch in CreateForUnit).
-        "47" or "74" or "138" or "139" or "153" or "154" or "157" or "161" or "163" or "173" or "181" or "182" or "191"
+        "47" or "74" or "138" or "139" or "151" or "153" or "154" or "157" or "161" or "163" or "173" or "181" or "182" or "191"
             or "244" or "245" or "257" or "273" or "283" or "374" or "377" or "541" or "688" or "7seg-ca"
             => true,
         // Reset supervisor (per-unit dispatch in CreateForUnit).

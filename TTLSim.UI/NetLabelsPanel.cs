@@ -22,12 +22,14 @@ namespace TTLSim.UI.View;
 ///   rather than by cycling.</item>
 /// </list>
 ///
-/// <para>Two defect classes fall straight out of the data and are coloured:
-/// a name whose every bit is tapped only once TIES NOTHING (red) -- almost
-/// always a typo, or a label placed and then forgotten -- and a name where SOME
-/// bits are lone taps (amber) -- typically a bus port whose width or start bit
-/// does not line up with its partner. Unnamed labels tie nothing by definition
-/// and are grouped first.</para>
+/// <para>Errors render RED, and selecting a red row puts the full description in
+/// the status bar (via <see cref="StatusRequested"/>). Three defect classes fall
+/// straight out of the data: a name that TIES NOTHING (no bit tapped twice --
+/// includes unnamed labels), a name with LONE BITS (some bits tapped only once
+/// -- a bus port whose width or start bit doesn't line up with its partner), and
+/// a NAME COLLISION ("D0" vs "D" bit 0: visually identical renderings that are
+/// different nets). A label row is itself red when any bit IT carries is a lone
+/// tap, so inside a red group the broken instance is the red child.</para>
 ///
 /// <para>The list is schematic-wide and ignores layer visibility, matching
 /// <see cref="NetLabelIndex"/> and the label's own naming probes: hiding a layer
@@ -42,10 +44,16 @@ public sealed class NetLabelsPanel : UserControl
     private readonly Font regularFont;
     private readonly Font boldFont;
 
-    // Colours for the two defect classes, plus the greyed hidden-layer state.
-    private static readonly Color TiesNothingColor = Color.FromArgb(180, 30, 30);
-    private static readonly Color LoneBitsColor = Color.FromArgb(170, 105, 0);
+    private static readonly Color ErrorColor = Color.FromArgb(180, 30, 30);
     private static readonly Color HiddenColor = SystemColors.GrayText;
+
+    /// <summary>
+    /// Raised when the panel wants a message shown in the status bar: the
+    /// selected row's summary, including the full error description for a red
+    /// row. Fired AFTER the canvas selection is applied, so it lands on top of
+    /// the generic "Selected: N items" text the SelectionChanged handler wrote.
+    /// </summary>
+    public event EventHandler<string>? StatusRequested;
 
     // Guards the tree's AfterSelect while we rebuild or sync rows, so a
     // programmatic selection never bounces back into the canvas.
@@ -71,7 +79,6 @@ public sealed class NetLabelsPanel : UserControl
             ShowLines = true,
             ShowPlusMinus = true,
             ShowRootLines = true,
-            ShowNodeToolTips = true,
             ItemHeight = 20,
             Font = regularFont
         };
@@ -135,33 +142,41 @@ public sealed class NetLabelsPanel : UserControl
         {
             tree.Nodes.Clear();
 
+            int errorCount = 0;
             foreach (var group in groups)
             {
                 var groupNode = tree.Nodes.Add($"{group.DisplayName}  \u00d7{group.Count}");
                 groupNode.Tag = group;
-                groupNode.ToolTipText = GroupToolTip(group);
 
-                if (group.TiesNothing) groupNode.ForeColor = TiesNothingColor;
-                else if (group.HasLoneBits) groupNode.ForeColor = LoneBitsColor;
+                if (group.HasError)
+                {
+                    groupNode.ForeColor = ErrorColor;
+                    errorCount++;
+                }
 
                 foreach (var label in group.Labels)
                 {
                     var labelNode = groupNode.Nodes.Add(LabelText(group, label));
                     labelNode.Tag = label;
+
                     if (!canvas.Schematic.IsItemActive(label))
-                    {
                         labelNode.ForeColor = HiddenColor;
-                        labelNode.ToolTipText = "On a hidden layer -- shown for naming, not selectable.";
-                    }
+                    else if (LabelHasLoneBit(group, label))
+                        labelNode.ForeColor = ErrorColor;
                 }
 
-                if (expanded.Contains(group.Name))
+                // Errors auto-expand so the broken instance is visible without
+                // hunting; healthy groups keep whatever the user had.
+                if (group.HasError || expanded.Contains(group.Name))
                     groupNode.Expand();
             }
 
             header.Text = groups.Count == 0
                 ? "Net Labels"
-                : $"Net Labels  ({groups.Count} name{(groups.Count == 1 ? "" : "s")})";
+                : errorCount == 0
+                    ? $"Net Labels  ({groups.Count} name{(groups.Count == 1 ? "" : "s")})"
+                    : $"Net Labels  ({groups.Count} name{(groups.Count == 1 ? "" : "s")}, {errorCount} with errors)";
+            header.ForeColor = errorCount == 0 ? SystemColors.ControlText : ErrorColor;
         }
         finally
         {
@@ -170,6 +185,21 @@ public sealed class NetLabelsPanel : UserControl
         }
 
         signature = sig;
+    }
+
+    /// <summary>True when any bit THIS label's pins carry is tapped only once
+    /// in the whole schematic -- the per-instance version of the group's
+    /// lone-bit error, so the red child inside a red group is the broken one.</summary>
+    private static bool LabelHasLoneBit(NetLabelGroup group, NetLabelItem label)
+    {
+        if (group.IsUnnamed) return true;   // unnamed always ties nothing
+        foreach (var pin in label.Pins)
+        {
+            int bit = label.BitOfPin(pin.Number);
+            if (group.PinsPerBit.TryGetValue(bit, out int n) && n < 2)
+                return true;
+        }
+        return false;
     }
 
     /// <summary>
@@ -194,33 +224,6 @@ public sealed class NetLabelsPanel : UserControl
         if (layerId > 0 && layerId < canvas.Schematic.Layers.Count)
             sb.Append("   \u00b7 ").Append(canvas.Schematic.Layers[layerId].Name);
 
-        return sb.ToString();
-    }
-
-    private static string GroupToolTip(NetLabelGroup group)
-    {
-        if (group.IsUnnamed)
-            return "Unnamed labels tie nothing. Give each a name, or delete it.";
-
-        var sb = new StringBuilder();
-        sb.Append(group.Count).Append(group.Count == 1 ? " label carries " : " labels carry ")
-          .Append('"').Append(group.Name).Append('"').Append('.');
-
-        if (group.TiesNothing)
-        {
-            sb.AppendLine().Append("Ties nothing: no bit of this name is tapped twice.");
-        }
-        else
-        {
-            var lone = group.LoneBits.ToList();
-            if (lone.Count > 0)
-            {
-                sb.AppendLine().Append("Tapped only once: bit")
-                  .Append(lone.Count == 1 ? " " : "s ")
-                  .Append(string.Join(", ", lone))
-                  .Append(" -- these tie nothing.");
-            }
-        }
         return sb.ToString();
     }
 
@@ -259,18 +262,48 @@ public sealed class NetLabelsPanel : UserControl
         switch (e.Node.Tag)
         {
             case NetLabelItem label:
-                // One label: select it and bring it into view. This is the
-                // step-to-instance navigation.
-                canvas.SelectItems(new[] { (SchematicItem)label }, center: true);
-                break;
+                {
+                    // One label: select it and bring it into view. This is the
+                    // step-to-instance navigation. The group (the parent node's
+                    // tag) supplies the diagnostic for the status bar.
+                    canvas.SelectItems(new[] { (SchematicItem)label }, center: true);
+
+                    var group = e.Node.Parent?.Tag as NetLabelGroup;
+                    StatusRequested?.Invoke(this, LabelStatus(group, label));
+                    break;
+                }
 
             case NetLabelGroup group:
-                // Every label carrying this name. No centring -- they can be
-                // anywhere on the sheet, and a centroid of scattered labels
-                // would land on empty grid.
-                canvas.SelectItems(group.Labels.Cast<SchematicItem>(), center: false);
-                break;
+                {
+                    // Every label carrying this name. No centring -- they can be
+                    // anywhere on the sheet, and a centroid of scattered labels
+                    // would land on empty grid.
+                    canvas.SelectItems(group.Labels.Cast<SchematicItem>(), center: false);
+
+                    string status = $"{group.DisplayName}: {group.Count} label{(group.Count == 1 ? "" : "s")}";
+                    if (group.Diagnostic is { } diag)
+                        status = $"ERROR — {diag}";
+                    StatusRequested?.Invoke(this, status);
+                    break;
+                }
         }
+    }
+
+    /// <summary>Status-bar text for one selected label row: what it is, plus
+    /// its group's full error description when there is one.</summary>
+    private static string LabelStatus(NetLabelGroup? group, NetLabelItem label)
+    {
+        string shown = label.Width == 1
+            ? label.BitName(1)
+            : $"{(string.IsNullOrWhiteSpace(label.Label) ? "?" : label.Label)}"
+              + $"[{label.StartBit}..{label.StartBit + label.Width - 1}]";
+
+        if (group?.Diagnostic is { } diag)
+            return $"Net Label {shown} — ERROR — {diag}";
+
+        return group is null
+            ? $"Net Label {shown}"
+            : $"Net Label {shown} — {group.Count} label{(group.Count == 1 ? "" : "s")} named \"{group.Name}\"";
     }
 
     /// <summary>

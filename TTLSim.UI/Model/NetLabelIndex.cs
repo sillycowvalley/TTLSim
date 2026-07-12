@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using TTLSim.UI.Components;
 
 namespace TTLSim.UI.Model;
@@ -64,6 +65,54 @@ public sealed class NetLabelGroup
     /// <summary>True when at least one bit -- but not all -- is a lone tap.</summary>
     public bool HasLoneBits => !TiesNothing && PinsPerBit.Any(kv => kv.Value < 2);
 
+    /// <summary>
+    /// Set by <see cref="NetLabelIndex.Build"/>'s alias pass: describes a
+    /// NAME COLLISION with another group. "D0" and ("D", bit 0) are DIFFERENT
+    /// electrical nets under the (name, bit) tie key, yet both can render as
+    /// "D0" on the canvas -- two visually identical labels that silently do
+    /// not connect. Null when no such collision exists.
+    /// </summary>
+    public string? AliasNote { get; internal set; }
+
+    /// <summary>True when this group has any diagnostic at all -- shown red in
+    /// the Net Labels panel.</summary>
+    public bool HasError => TiesNothing || HasLoneBits || AliasNote is not null;
+
+    /// <summary>
+    /// Full diagnostic text for the status bar, or null when the group is
+    /// healthy. One line per problem, joined with " | " so the single-line
+    /// status label carries all of it.
+    /// </summary>
+    public string? Diagnostic
+    {
+        get
+        {
+            var parts = new List<string>();
+
+            if (IsUnnamed)
+            {
+                parts.Add("Unnamed labels tie nothing — name each one or delete it");
+            }
+            else if (TiesNothing)
+            {
+                parts.Add(Count == 1
+                    ? $"Only label named \"{Name}\" — ties nothing"
+                    : $"No bit of \"{Name}\" is tapped twice — ties nothing");
+            }
+            else if (HasLoneBits)
+            {
+                var lone = LoneBits.ToList();
+                parts.Add($"Bit{(lone.Count == 1 ? "" : "s")} {string.Join(", ", lone)} "
+                        + $"of \"{Name}\" tapped only once — tie{(lone.Count == 1 ? "s" : "")} nothing");
+            }
+
+            if (AliasNote is not null)
+                parts.Add(AliasNote);
+
+            return parts.Count == 0 ? null : string.Join("  |  ", parts);
+        }
+    }
+
     /// <summary>"D[0..7]", "CLK", or "(unnamed)". The bit range is shown only
     /// when the name is used as a bus (any label wider than one bit) or when
     /// its taps span more than bit 0.</summary>
@@ -82,15 +131,17 @@ public sealed class NetLabelGroup
 
 /// <summary>
 /// Builds the by-name view of a schematic's net labels. Shared by the Net Labels
-/// panel (which lists it) and the status bar (which reports the count for the
-/// selected label), so both agree on what "occurs N times" means.
+/// panel (which lists it) and the status bar (which reports the count and
+/// diagnostics for the selected label), so both agree on what "occurs N times"
+/// means and on what counts as an error.
 /// </summary>
 public static class NetLabelIndex
 {
     /// <summary>
     /// Every distinct net-label name in the schematic, ordered with the unnamed
     /// group (if any) first -- it is always a defect -- and then by name,
-    /// ordinal (the same comparison the tie keys use).
+    /// ordinal (the same comparison the tie keys use). Includes the alias pass
+    /// (see <see cref="NetLabelGroup.AliasNote"/>).
     /// </summary>
     public static List<NetLabelGroup> Build(Schematic schematic)
     {
@@ -117,28 +168,66 @@ public static class NetLabelIndex
             }
         }
 
-        return byName
+        var groups = byName
             .Select(kv => new NetLabelGroup(kv.Key, kv.Value, pinsPerBit[kv.Key]))
             .OrderBy(g => g.IsUnnamed ? 0 : 1)
+            // Sort ignoring the active-low '/' prefix so "/RESET" files under R
+            // next to "RESET", not in a slash-block at the top. The full name is
+            // the tiebreak, so "/CS" and "CS" keep a stable relative order.
+            .ThenBy(g => g.Name.TrimStart('/'), StringComparer.Ordinal)
             .ThenBy(g => g.Name, StringComparer.Ordinal)
             .ToList();
+
+        DetectAliases(groups);
+        return groups;
     }
 
     /// <summary>
-    /// How many net labels in the schematic carry the given name (including the
-    /// one asking). Ordinal match, blank names counted together. Used by the
-    /// status bar, which only needs the one figure and not the whole index.
+    /// Flag name collisions between groups: a group literally named "D0" and a
+    /// group named "D" that carries bit 0 are DIFFERENT nets under the
+    /// (name, bit) tie key, yet the "D" port's bit-0 pin renders "D0" -- the two
+    /// look identical on the canvas and silently do not connect. Both groups
+    /// get an <see cref="NetLabelGroup.AliasNote"/>.
+    ///
+    /// <para>The trailing digits must be in canonical form ("D0", not "D00")
+    /// for the renderings to actually coincide -- <see cref="NetLabelItem.BitName"/>
+    /// never emits leading zeros -- so non-canonical digit tails are skipped.</para>
     /// </summary>
-    public static int CountOf(Schematic schematic, string? name)
+    private static void DetectAliases(List<NetLabelGroup> groups)
     {
-        string target = string.IsNullOrWhiteSpace(name) ? "" : name!;
-        int count = 0;
-        foreach (var item in schematic.Items)
+        var byName = new Dictionary<string, NetLabelGroup>(StringComparer.Ordinal);
+        foreach (var g in groups)
+            if (!g.IsUnnamed)
+                byName[g.Name] = g;
+
+        foreach (var g in groups)
         {
-            if (item is not NetLabelItem label) continue;
-            string other = string.IsNullOrWhiteSpace(label.Label) ? "" : label.Label;
-            if (string.Equals(other, target, StringComparison.Ordinal)) count++;
+            if (g.IsUnnamed) continue;
+
+            // Split "D12" into base "D" + digits "12". Skip names with no
+            // trailing digits, or that are all digits (no base to collide with).
+            string name = g.Name;
+            int split = name.Length;
+            while (split > 0 && char.IsDigit(name[split - 1])) split--;
+            if (split == name.Length || split == 0) continue;
+
+            string baseName = name.Substring(0, split);
+            string digits = name.Substring(split);
+            if (!int.TryParse(digits, out int bit)) continue;
+            if (digits != bit.ToString()) continue;   // "D00" never renders from a "D" port
+
+            if (!byName.TryGetValue(baseName, out var baseGroup)) continue;
+            if (!baseGroup.PinsPerBit.ContainsKey(bit)) continue;
+
+            g.AliasNote =
+                $"NAME COLLISION: \"{name}\" is a different net from \"{baseName}\" bit {bit}, "
+              + $"but both render as \"{name}\" — they do NOT connect";
+            baseGroup.AliasNote = Append(baseGroup.AliasNote,
+                $"NAME COLLISION: bit {bit} renders as \"{name}\", identical to the separate "
+              + $"net named \"{name}\" — they do NOT connect");
         }
-        return count;
     }
+
+    private static string Append(string? existing, string more) =>
+        existing is null ? more : existing + "  |  " + more;
 }

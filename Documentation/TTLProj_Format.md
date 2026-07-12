@@ -294,6 +294,12 @@ Connections attach to netlabel pins exactly like any other pin ref:
 - Prefer slice taps (`width`/`startBit`) over full-width taps with unused
   pins: a consumer that reads only bits 4–7 should carry a `width: 4,
   startBit: 4` tap, not an 8-wide tap with four floating pins.
+- Never name a net with a bit-index suffix: bit N of bus `T` is a tap
+  labelled `T` with `startBit: N`, not a net named `"T0"` — the suffixed
+  name is a different net and silently splits the bus.
+- Don't emit a netlabel at all when every endpoint is on one chip (latch
+  cross-couples, gate-to-gate inside a package) — use a direct pin-to-pin
+  connection. See `SCHEMATIC_LAYOUT_GUIDELINES.md` for both rules.
 
 ---
 

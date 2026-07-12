@@ -89,6 +89,8 @@ public static class TtlTiming
         ["HC:138"] = new(38_000),  // 3:8 decoder
         ["LS:139"] = new(38_000),
         ["HC:139"] = new(33_000),  // dual 2:4 decoder
+        ["LS:151"] = new(33_000),
+        ["HC:151"] = new(43_000),  // 8:1 mux (select -> Y path)
         ["LS:153"] = new(22_000),
         ["HC:153"] = new(34_000),  // dual 4:1 mux
         ["LS:154"] = new(36_000),
