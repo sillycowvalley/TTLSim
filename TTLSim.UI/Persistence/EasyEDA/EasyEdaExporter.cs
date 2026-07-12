@@ -128,6 +128,7 @@ public static class EasyEDAExporter
     private static Dictionary<string, CataloguePart> CollectUsedParts(Schematic schematic)
     {
         var result = new Dictionary<string, CataloguePart>();
+        var valueFailures = new List<string>();
 
         foreach (var device in schematic.Devices)
         {
@@ -137,10 +138,27 @@ public static class EasyEDAExporter
             // the rule is "device has at least one active unit".
             if (!device.Units.Any(u => schematic.IsItemActive(u))) continue;
 
-            CataloguePart part = EasyEDACatalogue.LookupForDevice(device);
-            if (result.ContainsKey(part.SymbolUuid)) continue;
-            result[part.SymbolUuid] = part;
+            // Value failures (missing/unparseable resistor or capacitor
+            // values) are collected across the WHOLE schematic and thrown as
+            // one aggregate below, so a single dialog names every offending
+            // part instead of failing at the first and making the user
+            // re-export once per part. Missing-mapping failures
+            // (NotImplementedException) still throw immediately -- they mean
+            // the exporter can't handle the part at all.
+            try
+            {
+                CataloguePart part = EasyEDACatalogue.LookupForDevice(device);
+                if (result.ContainsKey(part.SymbolUuid)) continue;
+                result[part.SymbolUuid] = part;
+            }
+            catch (ExportValueException ex)
+            {
+                valueFailures.Add(ex.Message);
+            }
         }
+
+        if (valueFailures.Count > 0)
+            throw new ExportValueException(string.Join("\n\n", valueFailures));
 
         foreach (var item in schematic.Items)
         {

@@ -1672,56 +1672,6 @@
         "textColor": null
       },
       {
-        "type": "netlabel",
-        "id": "nlcan4",
-        "label": "OSC555",
-        "position": {
-          "x": 0,
-          "y": 107
-        },
-        "rotation": 180,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": 1,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "startBit": 0,
-        "mirrored": false,
-        "color": "Orange",
-        "fontSize": null,
-        "textColor": null
-      },
-      {
-        "type": "netlabel",
-        "id": "nlcan3",
-        "label": "/OSC555",
-        "position": {
-          "x": 0,
-          "y": 109
-        },
-        "rotation": 180,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": 1,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "startBit": 0,
-        "mirrored": false,
-        "color": "Orange",
-        "fontSize": null,
-        "textColor": null
-      },
-      {
         "type": "gnd",
         "id": "42d969f67a8a42b88b8ef039e53ea852",
         "label": "",
@@ -1843,56 +1793,6 @@
         "startBit": null,
         "mirrored": null,
         "color": null,
-        "fontSize": null,
-        "textColor": null
-      },
-      {
-        "type": "netlabel",
-        "id": "nldiv3",
-        "label": "OSCCAN",
-        "position": {
-          "x": -39,
-          "y": 155
-        },
-        "rotation": 180,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": 1,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "startBit": 0,
-        "mirrored": false,
-        "color": "Orange",
-        "fontSize": null,
-        "textColor": null
-      },
-      {
-        "type": "netlabel",
-        "id": "nldiv4",
-        "label": "/OSCCAN",
-        "position": {
-          "x": -39,
-          "y": 157
-        },
-        "rotation": 180,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": 1,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "startBit": 0,
-        "mirrored": false,
-        "color": "Orange",
         "fontSize": null,
         "textColor": null
       },
@@ -2043,106 +1943,6 @@
         "startBit": null,
         "mirrored": null,
         "color": null,
-        "fontSize": null,
-        "textColor": null
-      },
-      {
-        "type": "netlabel",
-        "id": "nlmx1",
-        "label": "/OSC555",
-        "position": {
-          "x": -152,
-          "y": 40
-        },
-        "rotation": 180,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": 1,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "startBit": 0,
-        "mirrored": false,
-        "color": "Orange",
-        "fontSize": null,
-        "textColor": null
-      },
-      {
-        "type": "netlabel",
-        "id": "nlmx2",
-        "label": "/OSCCAN",
-        "position": {
-          "x": -133,
-          "y": 42
-        },
-        "rotation": 0,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": 1,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "startBit": 0,
-        "mirrored": false,
-        "color": "Orange",
-        "fontSize": null,
-        "textColor": null
-      },
-      {
-        "type": "netlabel",
-        "id": "nlmx3",
-        "label": "OSC555",
-        "position": {
-          "x": -94,
-          "y": 38
-        },
-        "rotation": 180,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": 1,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "startBit": 0,
-        "mirrored": false,
-        "color": "Orange",
-        "fontSize": null,
-        "textColor": null
-      },
-      {
-        "type": "netlabel",
-        "id": "nlmx4",
-        "label": "OSCCAN",
-        "position": {
-          "x": -94,
-          "y": 44
-        },
-        "rotation": 180,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": 1,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "startBit": 0,
-        "mirrored": false,
-        "color": "Orange",
         "fontSize": null,
         "textColor": null
       },
@@ -3224,34 +3024,6 @@
         "color": "Red"
       },
       {
-        "id": "ccan_07",
-        "a": {
-          "itemId": "9543727442e34e3ba881e4fa67d2d294",
-          "pinNumber": 3,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlcan4",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Orange"
-      },
-      {
-        "id": "ccan_08",
-        "a": {
-          "itemId": "9543727442e34e3ba881e4fa67d2d294",
-          "pinNumber": 4,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlcan3",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Orange"
-      },
-      {
         "id": "ccan_09",
         "a": {
           "itemId": "9543727442e34e3ba881e4fa67d2d294",
@@ -3672,34 +3444,6 @@
         "color": "Yellow"
       },
       {
-        "id": "cdiv_26",
-        "a": {
-          "itemId": "572935981f9241ad8657f801ccfe1659",
-          "pinNumber": 5,
-          "external": false
-        },
-        "b": {
-          "itemId": "nldiv3",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Orange"
-      },
-      {
-        "id": "cdiv_27",
-        "a": {
-          "itemId": "572935981f9241ad8657f801ccfe1659",
-          "pinNumber": 6,
-          "external": false
-        },
-        "b": {
-          "itemId": "nldiv4",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Orange"
-      },
-      {
         "id": "cdiv_28",
         "a": {
           "itemId": "572935981f9241ad8657f801ccfe1659",
@@ -4050,34 +3794,6 @@
         "color": "Red"
       },
       {
-        "id": "cmux_05",
-        "a": {
-          "itemId": "041968bf16bb48dc9a0293fac694ef1a",
-          "pinNumber": 3,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlmx1",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Orange"
-      },
-      {
-        "id": "cmux_06",
-        "a": {
-          "itemId": "041968bf16bb48dc9a0293fac694ef1a",
-          "pinNumber": 11,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlmx2",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Orange"
-      },
-      {
         "id": "cmux_07",
         "a": {
           "itemId": "uU2",
@@ -4246,20 +3962,6 @@
         "color": "Navy"
       },
       {
-        "id": "cmux_19",
-        "a": {
-          "itemId": "9b5c95ecb8f34cc2abcf45e806f53597",
-          "pinNumber": 1,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlmx3",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Orange"
-      },
-      {
         "id": "cmux_20",
         "a": {
           "itemId": "041968bf16bb48dc9a0293fac694ef1a",
@@ -4272,20 +3974,6 @@
           "external": false
         },
         "color": "Yellow"
-      },
-      {
-        "id": "cmux_21",
-        "a": {
-          "itemId": "9b5c95ecb8f34cc2abcf45e806f53597",
-          "pinNumber": 4,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlmx4",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Orange"
       },
       {
         "id": "cmux_22",
@@ -4412,6 +4100,62 @@
           "external": false
         },
         "color": "Navy"
+      },
+      {
+        "id": "e143ebd13b26447a9001840f137490e0",
+        "a": {
+          "itemId": "572935981f9241ad8657f801ccfe1659",
+          "pinNumber": 5,
+          "external": false
+        },
+        "b": {
+          "itemId": "9b5c95ecb8f34cc2abcf45e806f53597",
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": "Orange"
+      },
+      {
+        "id": "2b9beb88d3914dd09301a589225e4370",
+        "a": {
+          "itemId": "041968bf16bb48dc9a0293fac694ef1a",
+          "pinNumber": 11,
+          "external": false
+        },
+        "b": {
+          "itemId": "572935981f9241ad8657f801ccfe1659",
+          "pinNumber": 6,
+          "external": false
+        },
+        "color": "Orange"
+      },
+      {
+        "id": "1498dc5b01464173b0ffbdcd844087f2",
+        "a": {
+          "itemId": "9543727442e34e3ba881e4fa67d2d294",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "9b5c95ecb8f34cc2abcf45e806f53597",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Orange"
+      },
+      {
+        "id": "b6735a747f7f42aa897abcedc959d59e",
+        "a": {
+          "itemId": "041968bf16bb48dc9a0293fac694ef1a",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "9543727442e34e3ba881e4fa67d2d294",
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": "Orange"
       }
     ],
     "links": [],
@@ -4424,10 +4168,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 2.0663834,
+    "zoom": 1.0273583,
     "pan": {
-      "x": 680,
-      "y": -15
+      "x": 954,
+      "y": -68
     }
   }
 }

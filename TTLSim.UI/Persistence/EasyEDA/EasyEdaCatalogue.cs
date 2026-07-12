@@ -1137,16 +1137,41 @@ public static class EasyEDACatalogue
     // accurate BOM has to substitute the right MPNs in EasyEDA after
     // import.
 
+    /// <summary>
+    /// The value text for a passive: <see cref="Device.Value"/> -- the property
+    /// the grid edits and the canvas draws beneath the designator -- falling
+    /// back to the unit's Label for files that predate Device.Value, where the
+    /// value was typed into the unit Label instead.
+    /// </summary>
+    private static string ReadPassiveValue(Device device)
+    {
+        string value = device.Value ?? "";
+        if (!string.IsNullOrWhiteSpace(value)) return value;
+
+        foreach (var u in device.Units)
+            return u.Label ?? "";
+        return "";
+    }
+
+    /// <summary>
+    /// Build the value-failure exception for one passive, distinguishing
+    /// "no value set" from "unparseable value". ExportValueException, NOT
+    /// NotImplementedException: the part IS mapped for export; only its Value
+    /// needs fixing, and MainForm headlines the two differently.
+    /// </summary>
+    private static ExportValueException ValueError(
+        Device device, string kind, string label, FormatException ex, string supported)
+    {
+        string problem = string.IsNullOrWhiteSpace(label)
+            ? "has no value. Set its Value in the property grid."
+            : $"has an unparseable value '{label}'. {ex.Message}";
+        return new ExportValueException(
+            $"{kind} {device.Designator} {problem} {supported}");
+    }
+
     private static CataloguePart BuildResistorPart(Device device)
     {
-        // Find the resistor's unit (resistors are 1-unit devices) and read
-        // its Label to get the value text the user typed.
-        string label = "";
-        foreach (var u in device.Units)
-        {
-            label = u.Label ?? "";
-            break;
-        }
+        string label = ReadPassiveValue(device);
 
         string displayValue;
         try
@@ -1155,9 +1180,7 @@ public static class EasyEDACatalogue
         }
         catch (FormatException ex)
         {
-            throw new NotImplementedException(
-                $"EasyEDA export: resistor {device.Designator} has an unparseable " +
-                $"value '{label}'. {ex.Message} " +
+            throw ValueError(device, "resistor", label, ex,
                 "Supported value forms: 100, 100R, 220Ω, 2k2, 2K2, 1.5K, 1M, 1M5.");
         }
 
@@ -1296,12 +1319,7 @@ public static class EasyEDACatalogue
 
     private static CataloguePart BuildResistorNetworkPart(Device device)
     {
-        string label = "";
-        foreach (var u in device.Units)
-        {
-            label = u.Label ?? "";
-            break;
-        }
+        string label = ReadPassiveValue(device);
 
         string displayValue;
         try
@@ -1310,9 +1328,7 @@ public static class EasyEDACatalogue
         }
         catch (FormatException ex)
         {
-            throw new NotImplementedException(
-                $"EasyEDA export: resistor network {device.Designator} has an unparseable " +
-                $"value '{label}'. {ex.Message} " +
+            throw ValueError(device, "resistor network", label, ex,
                 "Supported value forms: 100, 100R, 220Ω, 2k2, 2K2, 1.5K, 1M, 1M5.");
         }
 
@@ -2331,12 +2347,7 @@ public static class EasyEDACatalogue
 
     private static CataloguePart BuildCapacitorPart(Device device)
     {
-        string label = "";
-        foreach (var u in device.Units)
-        {
-            label = u.Label ?? "";
-            break;
-        }
+        string label = ReadPassiveValue(device);
 
         string displayValue;
         try
@@ -2345,9 +2356,7 @@ public static class EasyEDACatalogue
         }
         catch (FormatException ex)
         {
-            throw new NotImplementedException(
-                $"EasyEDA export: capacitor {device.Designator} has an unparseable " +
-                $"value '{label}'. {ex.Message} " +
+            throw ValueError(device, "capacitor", label, ex,
                 "Supported value forms: 100 (=100pF), 100p, 10n, 1u, 4u7, 4.7u, 1m.");
         }
 
@@ -2392,12 +2401,7 @@ public static class EasyEDACatalogue
 
     private static CataloguePart BuildPolarizedCapacitorPart(Device device)
     {
-        string label = "";
-        foreach (var u in device.Units)
-        {
-            label = u.Label ?? "";
-            break;
-        }
+        string label = ReadPassiveValue(device);
 
         string displayValue;
         try
@@ -2406,9 +2410,7 @@ public static class EasyEDACatalogue
         }
         catch (FormatException ex)
         {
-            throw new NotImplementedException(
-                $"EasyEDA export: polarised capacitor {device.Designator} has an unparseable " +
-                $"value '{label}'. {ex.Message} " +
+            throw ValueError(device, "polarised capacitor", label, ex,
                 "Supported value forms: 100 (=100pF), 100p, 10n, 1u, 4u7, 4.7u, 1m.");
         }
 

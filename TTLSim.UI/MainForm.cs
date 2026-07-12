@@ -726,6 +726,13 @@ public sealed class MainForm : Form
             outputPanel.Show("Export EasyEDA", result.Diagnostics);
             outputPanel.Visible = result.Diagnostics.Count > 0;
         }
+        catch (Persistence.EasyEDA.ExportValueException ex)
+        {
+            MessageBox.Show(this,
+            "Some parts have missing or invalid values:\n\n"
+             + ex.Message,
+            "Export EasyEDA", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
         catch (NotImplementedException ex)
         {
             MessageBox.Show(this,
