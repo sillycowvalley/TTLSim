@@ -1325,7 +1325,7 @@
         "unitLetter": "",
         "position": {
           "x": -68,
-          "y": 33
+          "y": 39
         },
         "label": "CLK",
         "rotation": 0,
@@ -1339,7 +1339,7 @@
         "unitLetter": "",
         "position": {
           "x": -58,
-          "y": 33
+          "y": 39
         },
         "label": "",
         "rotation": 0,
@@ -1353,7 +1353,7 @@
         "unitLetter": "",
         "position": {
           "x": -92,
-          "y": 46
+          "y": 58
         },
         "label": "",
         "rotation": 0,
@@ -1367,7 +1367,7 @@
         "unitLetter": "",
         "position": {
           "x": -92,
-          "y": 21
+          "y": 27
         },
         "label": "GATE",
         "rotation": 0,
@@ -2033,7 +2033,7 @@
         "label": "VCC",
         "position": {
           "x": -73,
-          "y": 41
+          "y": 53
         },
         "rotation": 0,
         "layer": 0,
@@ -2057,8 +2057,8 @@
         "id": "53b533c7be3c407aa01054e1a9ccf67b",
         "label": "",
         "position": {
-          "x": -110,
-          "y": 71
+          "x": -111,
+          "y": 83
         },
         "rotation": 0,
         "layer": 0,
@@ -2083,7 +2083,7 @@
         "label": "",
         "position": {
           "x": -72,
-          "y": 17
+          "y": 23
         },
         "rotation": 0,
         "layer": 0,
@@ -2108,7 +2108,7 @@
         "label": "",
         "position": {
           "x": -111,
-          "y": 36
+          "y": 42
         },
         "rotation": 0,
         "layer": 0,
@@ -2133,7 +2133,7 @@
         "label": "/RST",
         "position": {
           "x": -106,
-          "y": 46
+          "y": 58
         },
         "rotation": 180,
         "layer": 0,
@@ -2183,7 +2183,7 @@
         "label": "CLK",
         "position": {
           "x": -73,
-          "y": 28
+          "y": 34
         },
         "rotation": 0,
         "layer": 0,
@@ -2208,7 +2208,7 @@
         "label": "",
         "position": {
           "x": -53,
-          "y": 41
+          "y": 47
         },
         "rotation": 0,
         "layer": 0,
@@ -4604,20 +4604,6 @@
         "color": "Orange"
       },
       {
-        "id": "cstA_25",
-        "a": {
-          "itemId": "2fb4b5c2e16949e8b1100162e0ed9f64",
-          "pinNumber": 14,
-          "external": false
-        },
-        "b": {
-          "itemId": "uU12",
-          "pinNumber": 2,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
         "id": "cstA_26",
         "a": {
           "itemId": "96161bcefcd4426badfbc77d63baff61",
@@ -4627,20 +4613,6 @@
         "b": {
           "itemId": "uU12",
           "pinNumber": 4,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
-        "id": "cstA_27",
-        "a": {
-          "itemId": "2fb4b5c2e16949e8b1100162e0ed9f64",
-          "pinNumber": 13,
-          "external": false
-        },
-        "b": {
-          "itemId": "uU12",
-          "pinNumber": 5,
           "external": false
         },
         "color": "Yellow"
@@ -4786,10 +4758,10 @@
         "color": "Yellow"
       },
       {
-        "id": "cstA_19",
+        "id": "c23dcc7c5a39494b8eb04122e52a052e",
         "a": {
-          "itemId": "uU1",
-          "pinNumber": 6,
+          "itemId": "uU12",
+          "pinNumber": 2,
           "external": false
         },
         "b": {
@@ -4800,7 +4772,21 @@
         "color": "Yellow"
       },
       {
-        "id": "cstA_18",
+        "id": "9ed1088c7e98447eafbc915d654ea88c",
+        "a": {
+          "itemId": "2fb4b5c2e16949e8b1100162e0ed9f64",
+          "pinNumber": 12,
+          "external": false
+        },
+        "b": {
+          "itemId": "uU12",
+          "pinNumber": 5,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "6e4278f80ae844b0a99e427ffd67f091",
         "a": {
           "itemId": "uU1",
           "pinNumber": 3,
@@ -4808,7 +4794,21 @@
         },
         "b": {
           "itemId": "2fb4b5c2e16949e8b1100162e0ed9f64",
-          "pinNumber": 12,
+          "pinNumber": 13,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "4267f4ed2db4418394909aab47e9807b",
+        "a": {
+          "itemId": "uU1",
+          "pinNumber": 6,
+          "external": false
+        },
+        "b": {
+          "itemId": "2fb4b5c2e16949e8b1100162e0ed9f64",
+          "pinNumber": 14,
           "external": false
         },
         "color": "Yellow"
@@ -4824,10 +4824,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 2.6482575,
+    "zoom": 1.1449151,
     "pan": {
-      "x": 1398,
-      "y": -22
+      "x": 833,
+      "y": 137
     }
   }
 }
