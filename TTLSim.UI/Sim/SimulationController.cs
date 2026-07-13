@@ -28,6 +28,18 @@ public sealed class SimulationController
 
     private DateTime lastFrameWallClock;
 
+    // Nets we've already reported a contention on, so a short that flaps
+    // between agreeing and disagreeing doesn't fill the log or re-pause the
+    // run every cycle. Cleared on each Build.
+    private readonly HashSet<int> reportedFaults = new();
+
+    // Set by the fault handler (which runs deep inside Simulator.RunUntil) and
+    // consumed by the caller once the run returns. We can't Pause() from inside
+    // the event loop -- the loop is still on the stack and Pause() would leave
+    // it running to the end of its window anyway; RequestStop + this flag makes
+    // the halt land on the faulting tick.
+    private bool breakPending;
+
     // Fetched fresh per access rather than cached: Logging.Log.Reset()
     // (called on Build) disposes and replaces the logger factory, which
     // would leave a cached ILogger stale.
@@ -58,6 +70,26 @@ public sealed class SimulationController
     /// <summary>Raised after each timer tick once simulator has advanced. UI redraws here.</summary>
     public event EventHandler? Ticked;
 
+    /// <summary>
+    /// Halt the run the moment a net goes into contention, at the exact tick it
+    /// happens -- debugger-breakpoint ergonomics for an electrical fault. Turn
+    /// it off to let the sim run on through the short (the net just sits at
+    /// Unknown, as real silicon sits in the forbidden band).
+    /// </summary>
+    public bool BreakOnElectricalFault { get; set; } = true;
+
+    /// <summary>
+    /// Raised the first time each net goes into contention during a run. The
+    /// payload names the net, the tick, and how many drivers are pulling each
+    /// way; Net.Pins names every pin on the shorted node. MainForm can hang a
+    /// red OutputPanel row off this.
+    /// </summary>
+    public event EventHandler<NetFaultEventArgs>? ElectricalFault;
+
+    /// <summary>Nets currently in contention, or empty if the circuit is sound.</summary>
+    public IReadOnlyCollection<int> FaultedNetIds =>
+        simulator?.FaultedNetIds ?? Array.Empty<int>();
+
 
     public IReadOnlyDictionary<SchematicItem, ButtonInput> ButtonBindings { get; private set; } =
     new Dictionary<SchematicItem, ButtonInput>();
@@ -77,6 +109,9 @@ public sealed class SimulationController
         buildResult = new SchematicBuilder(factory, log).Build(input);
 
         simulator = buildResult.Simulator;
+        reportedFaults.Clear();
+        breakPending = false;
+
         DisplayBindings = BuildDisplayMap();
         ButtonBindings = BuildButtonMap();
         SwitchBindings = BuildSwitchMap();
@@ -84,6 +119,7 @@ public sealed class SimulationController
 
         if (simulator is not null)
         {
+            simulator.ElectricalFault += OnElectricalFault;
             simulator.Start();
             // Drain only what's at tick 0 -- the Initialize events for VCC, GND
             // and the chips' initial output schedules. Do NOT keep going; the
@@ -146,6 +182,7 @@ public sealed class SimulationController
         if (simulator is null) return;
         sw.SetThrowB(throwB, (IScheduler)simulator);
         simulator.RunUntil(simulator.CurrentTick);
+        HandleBreakPending();
     }
 
     /// <summary>Press or release a button during simulation.</summary>
@@ -156,6 +193,7 @@ public sealed class SimulationController
         // The press schedules tick-0 events; drain them so the canvas reflects
         // the change on the next repaint without waiting for the timer.
         simulator.RunUntil(simulator.CurrentTick);
+        HandleBreakPending();
     }
 
     /// <summary>Open or close a switch during simulation.</summary>
@@ -166,6 +204,7 @@ public sealed class SimulationController
         // Drain the tick-0 events the toggle scheduled so the canvas reflects
         // the change on the next repaint without waiting for the timer.
         simulator.RunUntil(simulator.CurrentTick);
+        HandleBreakPending();
     }
 
     /// <summary>
@@ -417,8 +456,11 @@ public sealed class SimulationController
         if (State == SimState.Edit) return;
         // If running/paused, force back to Edit -- the simulator instance is stale.
         timer.Stop();
+        if (simulator is not null) simulator.ElectricalFault -= OnElectricalFault;
         simulator = null;
         buildResult = null;
+        reportedFaults.Clear();
+        breakPending = false;
         SetState(SimState.Edit);
     }
 
@@ -463,10 +505,62 @@ public sealed class SimulationController
             : simulator.CurrentTick;
         // Run until just after the next pending event.
         simulator.RunUntil(simulator.CurrentTick + 1);
+        HandleBreakPending();
         Ticked?.Invoke(this, EventArgs.Empty);
     }
 
     // ------------------------------------------------------------ internals
+
+    /// <summary>
+    /// A net has gone into contention. Log it, tell anyone listening, and --
+    /// unless the user has turned the break off -- stop the run right here so
+    /// the canvas shows the circuit at the instant the short appeared rather
+    /// than 16 ms of simulated chaos later.
+    ///
+    /// Runs inside Simulator.RunUntil, on the UI thread (the sim timer's).
+    /// Reported once per net per build: a short that alternately agrees and
+    /// disagrees with itself would otherwise re-fire every clock edge.
+    /// </summary>
+    private void OnElectricalFault(object? sender, NetFaultEventArgs e)
+    {
+        string pins = string.Join(", ", e.Net.Pins
+            .Select(p => $"{ResolveDesignator(p.ItemId)}.{p.PinNumber}")
+            .OrderBy(s => s, StringComparer.Ordinal));
+
+        if (!reportedFaults.Add(e.Net.Id))
+        {
+            log.LogDebug("SIM001 net {Net} re-entered contention at t={Tick}", e.Net.Name, e.Tick);
+            return;
+        }
+
+        log.LogError(
+            "SIM001 electrical fault on net {Net} at t={Tick} ps [{Pins}]: "
+            + "{High} {Strength} driver(s) asserting High against {Low} asserting Low.",
+            e.Net.Name, e.Tick, pins,
+            e.Fault.HighDrivers, e.Fault.Strength, e.Fault.LowDrivers);
+
+        ElectricalFault?.Invoke(this, e);
+
+        // Only break out of a free-running simulation. The tick-0 drain in
+        // Build() runs with State == Edit and must be allowed to finish, or a
+        // circuit that powers up shorted would never finish building.
+        if (BreakOnElectricalFault && State == SimState.Running)
+        {
+            simulator?.RequestStop();
+            breakPending = true;
+        }
+    }
+
+    /// <summary>
+    /// Consume a break requested by the fault handler. Called after every
+    /// RunUntil, once the event loop has unwound.
+    /// </summary>
+    private void HandleBreakPending()
+    {
+        if (!breakPending) return;
+        breakPending = false;
+        Pause();
+    }
 
     private void OnTimerTick(object? sender, EventArgs e)
     {
@@ -482,6 +576,7 @@ public sealed class SimulationController
         if (simDelta < 1) simDelta = 1;
 
         simulator.RunUntil(simulator.CurrentTick + simDelta);
+        HandleBreakPending();
         Ticked?.Invoke(this, EventArgs.Empty);
     }
 
@@ -524,8 +619,11 @@ public sealed class SimulationController
     {
         if (State == SimState.Edit) return;
         timer.Stop();
+        if (simulator is not null) simulator.ElectricalFault -= OnElectricalFault;
         simulator = null;
         buildResult = null;
+        reportedFaults.Clear();
+        breakPending = false;
         DisplayBindings = new Dictionary<SchematicItem, SevenSegCa>();
         SetState(SimState.Edit);
         log.LogInformation("Build cleared");

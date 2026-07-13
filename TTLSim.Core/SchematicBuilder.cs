@@ -4,12 +4,24 @@ public sealed class SchematicBuilder
 {
     private readonly IChipFactory chipFactory;
     private readonly Microsoft.Extensions.Logging.ILogger? logger;
+    private readonly DiagnosticSeverity contentionSeverity;
 
+    /// <param name="contentionIsWarning">
+    /// Downgrade the TTL005 output-contention check from Error to Warning, so
+    /// a schematic with two outputs on a net still builds and runs. Off by
+    /// default: two totem-pole outputs on one wire is a short circuit, and
+    /// running the simulation anyway just produces a permanently Unknown net
+    /// that hides the real fault.
+    /// </param>
     public SchematicBuilder(IChipFactory? chipFactory = null,
-        Microsoft.Extensions.Logging.ILogger? logger = null)
+        Microsoft.Extensions.Logging.ILogger? logger = null,
+        bool contentionIsWarning = false)
     {
         this.chipFactory = chipFactory ?? NullChipFactory.Instance;
         this.logger = logger;
+        this.contentionSeverity = contentionIsWarning
+            ? DiagnosticSeverity.Warning
+            : DiagnosticSeverity.Error;
     }
 
     public BuildResult Build(IBuildInput input)
@@ -274,6 +286,16 @@ public sealed class SchematicBuilder
         // blocks the build like the short-circuit and power errors above.
         diagnostics.AddRange(FamilyBoundaryCheck.Check(input, netTable));
 
+        // Phase 1g: electrical sanity scan over the finished net table --
+        // output-vs-output contention (TTL005) and input-only nets with nothing
+        // driving them (TTL013). Both are things TTL004 and TTL011 look like
+        // they'd catch but don't: TTL004 only sees an output fighting a RAIL,
+        // and TTL011 only sees a pin on NO net at all. An input wired to
+        // another input is "connected", and two outputs wired together are both
+        // "connected" -- yet the first stays Unknown forever and the second is
+        // a dead short. Runs before the error gate so a short blocks the build.
+        diagnostics.AddRange(ScanNetsForElectricalFaults(input, netTable));
+
         // If we've hit errors, don't try to build chips.
         bool anyErrors = diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error);
         if (anyErrors)
@@ -366,6 +388,137 @@ public sealed class SchematicBuilder
             }
         }
         return map;
+    }
+
+    /// <summary>One output pin, tagged with enough context to name it in a message.</summary>
+    private readonly record struct OutputPinRef(
+        string Label, string UnitId, int Pin, string PartIdentifier);
+
+    /// <summary>
+    /// Phase 1g. Walks every net once and emits two diagnostics.
+    ///
+    /// <para>
+    /// <b>TTL005 -- output contention.</b> Two or more output pins on one net,
+    /// where EVERY contributing part is a known push-pull device (see
+    /// <see cref="TotemPoleParts"/>). That's a hard short: both stages drive
+    /// all the time, so the moment they disagree there's a path from VCC to GND
+    /// through two output transistors. The classic cause is a swapped
+    /// input/output pin -- D and Q on a register sit on adjacent pins, so
+    /// wiring a latch into Q instead of D lands an output on an output and
+    /// leaves the D input dangling (which TTL013 then catches as the other half
+    /// of the same mistake).
+    /// </para>
+    /// <para>
+    /// If ANY part on the net is not in the totem-pole table -- a '245, a GAL,
+    /// an EEPROM, or simply a part nobody has classified -- this stays silent
+    /// and hands the job to the runtime detector (Net.DetectFault), which sees
+    /// actual contention rather than guessing from part numbers. A shared bus
+    /// must not error at build time.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>TTL013 -- undriven input net.</b> A net whose every pin is a declared
+    /// logic input. Nothing can ever drive it, so it sits at Unknown for the
+    /// whole run and quietly poisons everything downstream. Passives, headers,
+    /// rails, clocks and net labels all contribute pins that are NOT declared
+    /// logic inputs, so their presence on a net is enough to exempt it -- a
+    /// pull-up's resistor terminal, a header's off-board pin and a VCC symbol
+    /// each count as "something might drive this". That keeps the check
+    /// conservative: it fires only when the net is unambiguously input-only.
+    /// </para>
+    /// </summary>
+    private List<Diagnostic> ScanNetsForElectricalFaults(IBuildInput input, NetTable netTable)
+    {
+        List<Diagnostic> result = new();
+
+        Dictionary<int, List<OutputPinRef>> outputsOnNet = new();
+        HashSet<PinRef> logicInputPins = new();
+        Dictionary<PinRef, string> pinLabels = new();
+
+        foreach (BuildDevice dev in input.Devices)
+        {
+            foreach (BuildUnit unit in dev.Units)
+            {
+                string label = unit.Letter == '\0'
+                    ? dev.Designator
+                    : $"{dev.Designator}{unit.Letter}";
+
+                foreach (int pin in OutputPinsOf(unit))
+                {
+                    PinRef pinRef = new(unit.UnitId, pin);
+                    pinLabels[pinRef] = label;
+
+                    Net? net = netTable.FindNet(pinRef);
+                    if (net is null) continue;
+
+                    if (!outputsOnNet.TryGetValue(net.Id, out List<OutputPinRef>? list))
+                        outputsOnNet[net.Id] = list = new List<OutputPinRef>();
+                    list.Add(new OutputPinRef(label, unit.UnitId, pin, dev.PartIdentifier));
+                }
+
+                // Passive terminals are listed as "inputs" by the build adapter
+                // for want of anywhere better, but a resistor or a switch very
+                // much can drive a net (PullDriver / contact pass-through), so
+                // they must not count towards "this net is inputs-only".
+                if (dev.IsPassive) continue;
+
+                foreach (int pin in unit.InputPinNumbers)
+                {
+                    PinRef pinRef = new(unit.UnitId, pin);
+                    logicInputPins.Add(pinRef);
+                    pinLabels[pinRef] = label;
+                }
+            }
+        }
+
+        // TTL005 -- two or more always-driving outputs on one net.
+        foreach ((int netId, List<OutputPinRef> pins) in outputsOnNet)
+        {
+            if (pins.Count < 2) continue;
+            if (!pins.All(p => TotemPoleParts.IsTotemPole(p.PartIdentifier))) continue;
+
+            string names = string.Join(", ", pins
+                .OrderBy(p => p.Label, StringComparer.Ordinal)
+                .ThenBy(p => p.Pin)
+                .Select(p => $"{p.Label} pin {p.Pin} ('{p.PartIdentifier})"));
+
+            result.Add(new Diagnostic(
+                contentionSeverity,
+                Code: "TTL005",
+                Message: $"Output contention on net {netId}: {names} all drive it. "
+                       + "Two totem-pole outputs on one net is a short circuit -- "
+                       + "check for a swapped input/output pin.",
+                NetId: netId,
+                ItemIds: pins.Select(p => p.UnitId).Distinct().ToList()));
+        }
+
+        // TTL013 -- net made entirely of logic inputs; nothing can drive it.
+        foreach (Net net in netTable.Nets)
+        {
+            if (net.Pins.Count == 0) continue;
+            if (outputsOnNet.ContainsKey(net.Id)) continue;
+
+            bool inputsOnly = true;
+            foreach (PinRef pin in net.Pins)
+            {
+                if (!logicInputPins.Contains(pin)) { inputsOnly = false; break; }
+            }
+            if (!inputsOnly) continue;
+
+            string names = string.Join(", ", net.Pins
+                .Select(p => $"{pinLabels.GetValueOrDefault(p, p.ItemId)} pin {p.PinNumber}")
+                .OrderBy(s => s, StringComparer.Ordinal));
+
+            result.Add(new Diagnostic(
+                DiagnosticSeverity.Warning,
+                Code: "TTL013",
+                Message: $"Net {net.Id} has nothing driving it: {names} are all inputs. "
+                       + "It will stay Unknown for the whole run.",
+                NetId: net.Id,
+                ItemIds: net.Pins.Select(p => p.ItemId).Distinct().ToList()));
+        }
+
+        return result;
     }
 
     /// <summary>All output pin numbers on a unit -- the single gate-style
