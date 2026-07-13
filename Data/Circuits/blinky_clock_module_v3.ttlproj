@@ -408,34 +408,6 @@
         "frequencyHz2": null
       },
       {
-        "id": "dD6",
-        "designator": "D6",
-        "partKind": "passive",
-        "partIdentifier": "led",
-        "family": null,
-        "value": "Orange",
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dR12",
-        "designator": "R12",
-        "partKind": "passive",
-        "partIdentifier": "resistor",
-        "family": null,
-        "value": "330R",
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
         "id": "da9113d06e0d4a91b57312feaec00c28",
         "designator": "U5",
         "partKind": "chip",
@@ -554,34 +526,6 @@
         "partIdentifier": "resistor",
         "family": null,
         "value": "10k",
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dD7",
-        "designator": "D7",
-        "partKind": "passive",
-        "partIdentifier": "led",
-        "family": null,
-        "value": "Orange",
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dR13",
-        "designator": "R16",
-        "partKind": "passive",
-        "partIdentifier": "resistor",
-        "family": null,
-        "value": "330R",
         "program": null,
         "propagationDelayNs": null,
         "function1": null,
@@ -1255,7 +1199,7 @@
         "unitLetter": "",
         "position": {
           "x": 2,
-          "y": -22
+          "y": -19
         },
         "label": "RESET",
         "rotation": 180,
@@ -1269,7 +1213,7 @@
         "unitLetter": "",
         "position": {
           "x": 9,
-          "y": -22
+          "y": -19
         },
         "label": "",
         "rotation": 180,
@@ -1408,10 +1352,10 @@
         "deviceId": "dD5",
         "unitLetter": "",
         "position": {
-          "x": 20,
+          "x": 39,
           "y": 83
         },
-        "label": "RAW",
+        "label": "STEPRAW",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1422,36 +1366,8 @@
         "deviceId": "dR11",
         "unitLetter": "",
         "position": {
-          "x": 27,
+          "x": 46,
           "y": 83
-        },
-        "label": "",
-        "rotation": 0,
-        "layer": 0,
-        "switchClosed": null,
-        "mirrored": null
-      },
-      {
-        "id": "uD6",
-        "deviceId": "dD6",
-        "unitLetter": "",
-        "position": {
-          "x": 20,
-          "y": 89
-        },
-        "label": "OSC",
-        "rotation": 0,
-        "layer": 0,
-        "switchClosed": null,
-        "mirrored": null
-      },
-      {
-        "id": "uR12",
-        "deviceId": "dR12",
-        "unitLetter": "",
-        "position": {
-          "x": 27,
-          "y": 89
         },
         "label": "",
         "rotation": 0,
@@ -1581,34 +1497,6 @@
         },
         "label": "",
         "rotation": 0,
-        "layer": 0,
-        "switchClosed": null,
-        "mirrored": null
-      },
-      {
-        "id": "uD7",
-        "deviceId": "dD7",
-        "unitLetter": "",
-        "position": {
-          "x": -39,
-          "y": 169
-        },
-        "label": "CAN",
-        "rotation": 180,
-        "layer": 0,
-        "switchClosed": null,
-        "mirrored": null
-      },
-      {
-        "id": "uR13",
-        "deviceId": "dR13",
-        "unitLetter": "",
-        "position": {
-          "x": -51,
-          "y": 169
-        },
-        "label": "",
-        "rotation": 180,
         "layer": 0,
         "switchClosed": null,
         "mirrored": null
@@ -2279,8 +2167,8 @@
         "id": "gnd_556",
         "label": "",
         "position": {
-          "x": 40,
-          "y": 94
+          "x": 53,
+          "y": 95
         },
         "rotation": 0,
         "layer": 0,
@@ -4993,48 +4881,6 @@
         "color": "Navy"
       },
       {
-        "id": "c556_26",
-        "a": {
-          "itemId": "205dedb7007f42638f949b8eeed4383e",
-          "pinNumber": 9,
-          "external": false
-        },
-        "b": {
-          "itemId": "uD6",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Orange"
-      },
-      {
-        "id": "c556_27",
-        "a": {
-          "itemId": "uD6",
-          "pinNumber": 2,
-          "external": false
-        },
-        "b": {
-          "itemId": "uR12",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Orange"
-      },
-      {
-        "id": "c556_28",
-        "a": {
-          "itemId": "uR12",
-          "pinNumber": 2,
-          "external": false
-        },
-        "b": {
-          "itemId": "gnd_556",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Navy"
-      },
-      {
         "id": "c7f190d009b74be28c9d7a65ded40b12",
         "a": {
           "itemId": "cfeb525fe895426cb7e50c7b63802127",
@@ -5425,48 +5271,6 @@
           "external": false
         },
         "color": "Yellow"
-      },
-      {
-        "id": "cdiv_28",
-        "a": {
-          "itemId": "572935981f9241ad8657f801ccfe1659",
-          "pinNumber": 5,
-          "external": false
-        },
-        "b": {
-          "itemId": "uD7",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Orange"
-      },
-      {
-        "id": "cdiv_29",
-        "a": {
-          "itemId": "uD7",
-          "pinNumber": 2,
-          "external": false
-        },
-        "b": {
-          "itemId": "uR13",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Orange"
-      },
-      {
-        "id": "cdiv_30",
-        "a": {
-          "itemId": "uR13",
-          "pinNumber": 2,
-          "external": false
-        },
-        "b": {
-          "itemId": "gnd_div",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Navy"
       },
       {
         "id": "cdiv_31",
@@ -8027,10 +7831,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 1.3166523,
+    "zoom": 0.654609,
     "pan": {
-      "x": 606,
-      "y": -44
+      "x": 763,
+      "y": 514
     }
   }
 }
