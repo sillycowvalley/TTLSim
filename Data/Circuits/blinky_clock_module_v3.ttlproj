@@ -2226,6 +2226,56 @@
         "color": null,
         "fontSize": null,
         "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "4eecc858ce90482f8796c2e633fcd4c7",
+        "label": "RST",
+        "position": {
+          "x": 29,
+          "y": 106
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "d431e3d0801d479ab52f6186bfcf41cb",
+        "label": "/RST",
+        "position": {
+          "x": 29,
+          "y": 104
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
       }
     ],
     "connections": [
@@ -3278,20 +3328,6 @@
           "external": false
         },
         "color": "Red"
-      },
-      {
-        "id": "ccan_12",
-        "a": {
-          "itemId": "9543727442e34e3ba881e4fa67d2d294",
-          "pinNumber": 13,
-          "external": false
-        },
-        "b": {
-          "itemId": "cfeb525fe895426cb7e50c7b63802127",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Navy"
       },
       {
         "id": "852984146aab41c5a498f9361ee087ac",
@@ -4526,34 +4562,6 @@
         "color": "Yellow"
       },
       {
-        "id": "cstA_20",
-        "a": {
-          "itemId": "2fb4b5c2e16949e8b1100162e0ed9f64",
-          "pinNumber": 3,
-          "external": false
-        },
-        "b": {
-          "itemId": "53b533c7be3c407aa01054e1a9ccf67b",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Navy"
-      },
-      {
-        "id": "cstA_21",
-        "a": {
-          "itemId": "2fb4b5c2e16949e8b1100162e0ed9f64",
-          "pinNumber": 4,
-          "external": false
-        },
-        "b": {
-          "itemId": "53b533c7be3c407aa01054e1a9ccf67b",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Navy"
-      },
-      {
         "id": "cstA_22",
         "a": {
           "itemId": "2fb4b5c2e16949e8b1100162e0ed9f64",
@@ -4734,6 +4742,76 @@
           "external": false
         },
         "color": "Navy"
+      },
+      {
+        "id": "331cca20f1f6417ab12fd11fd58522fe",
+        "a": {
+          "itemId": "2fb4b5c2e16949e8b1100162e0ed9f64",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "2fb4b5c2e16949e8b1100162e0ed9f64",
+          "pinNumber": 20,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "22f6cde03efd45caa81d863039840d0e",
+        "a": {
+          "itemId": "2fb4b5c2e16949e8b1100162e0ed9f64",
+          "pinNumber": 4,
+          "external": false
+        },
+        "b": {
+          "itemId": "2fb4b5c2e16949e8b1100162e0ed9f64",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "e272e2d43b9942ce92fac02214a4b04a",
+        "a": {
+          "itemId": "9543727442e34e3ba881e4fa67d2d294",
+          "pinNumber": 12,
+          "external": false
+        },
+        "b": {
+          "itemId": "4eecc858ce90482f8796c2e633fcd4c7",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "a192fa78f9974b0b8bada25e3cc9dafc",
+        "a": {
+          "itemId": "9543727442e34e3ba881e4fa67d2d294",
+          "pinNumber": 13,
+          "external": false
+        },
+        "b": {
+          "itemId": "2fb4b5c2e16949e8b1100162e0ed9f64",
+          "pinNumber": 5,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "7de084f75e874b1183a07edb09fffdb5",
+        "a": {
+          "itemId": "9543727442e34e3ba881e4fa67d2d294",
+          "pinNumber": 13,
+          "external": false
+        },
+        "b": {
+          "itemId": "d431e3d0801d479ab52f6186bfcf41cb",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
       }
     ],
     "links": [],
@@ -4746,10 +4824,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 2.0024629,
+    "zoom": 6.1255774,
     "pan": {
-      "x": 873,
-      "y": 39
+      "x": 20,
+      "y": -2813
     }
   }
 }
