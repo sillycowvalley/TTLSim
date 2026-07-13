@@ -721,7 +721,7 @@
         "partKind": "passive",
         "partIdentifier": "led",
         "family": null,
-        "value": "green",
+        "value": "Blue",
         "program": null,
         "propagationDelayNs": null,
         "function1": null,
@@ -749,7 +749,7 @@
         "partKind": "passive",
         "partIdentifier": "led",
         "family": null,
-        "value": "green",
+        "value": "Blue",
         "program": null,
         "propagationDelayNs": null,
         "function1": null,
@@ -777,7 +777,7 @@
         "partKind": "passive",
         "partIdentifier": "led",
         "family": null,
-        "value": "green",
+        "value": "Blue",
         "program": null,
         "propagationDelayNs": null,
         "function1": null,
@@ -805,7 +805,7 @@
         "partKind": "passive",
         "partIdentifier": "led",
         "family": null,
-        "value": "green",
+        "value": "Blue",
         "program": null,
         "propagationDelayNs": null,
         "function1": null,
@@ -3246,7 +3246,7 @@
         "label": "",
         "position": {
           "x": -165,
-          "y": -4
+          "y": -6
         },
         "rotation": 0,
         "layer": 0,
@@ -3445,8 +3445,8 @@
         "id": "nlC3",
         "label": "HALT",
         "position": {
-          "x": -98,
-          "y": 62
+          "x": -211,
+          "y": 76
         },
         "rotation": 0,
         "layer": 0,
@@ -6754,7 +6754,7 @@
         },
         "b": {
           "itemId": "3945c6cfdd60437498870e253e769eee",
-          "pinNumber": 2,
+          "pinNumber": 8,
           "external": false
         },
         "color": "Orange"
@@ -6768,7 +6768,7 @@
         },
         "b": {
           "itemId": "3945c6cfdd60437498870e253e769eee",
-          "pinNumber": 3,
+          "pinNumber": 9,
           "external": false
         },
         "color": "Orange"
@@ -6782,7 +6782,7 @@
         },
         "b": {
           "itemId": "3945c6cfdd60437498870e253e769eee",
-          "pinNumber": 5,
+          "pinNumber": 11,
           "external": false
         },
         "color": "Orange"
@@ -6796,7 +6796,7 @@
         },
         "b": {
           "itemId": "3945c6cfdd60437498870e253e769eee",
-          "pinNumber": 6,
+          "pinNumber": 12,
           "external": false
         },
         "color": "Orange"
@@ -6810,7 +6810,7 @@
         },
         "b": {
           "itemId": "3945c6cfdd60437498870e253e769eee",
-          "pinNumber": 8,
+          "pinNumber": 2,
           "external": false
         },
         "color": "Yellow"
@@ -6824,7 +6824,7 @@
         },
         "b": {
           "itemId": "3945c6cfdd60437498870e253e769eee",
-          "pinNumber": 9,
+          "pinNumber": 3,
           "external": false
         },
         "color": "Yellow"
@@ -6833,7 +6833,7 @@
         "id": "cstC_22",
         "a": {
           "itemId": "3945c6cfdd60437498870e253e769eee",
-          "pinNumber": 10,
+          "pinNumber": 1,
           "external": false
         },
         "b": {
@@ -6852,7 +6852,7 @@
         },
         "b": {
           "itemId": "3945c6cfdd60437498870e253e769eee",
-          "pinNumber": 11,
+          "pinNumber": 5,
           "external": false
         },
         "color": "Yellow"
@@ -6866,7 +6866,7 @@
         },
         "b": {
           "itemId": "3945c6cfdd60437498870e253e769eee",
-          "pinNumber": 12,
+          "pinNumber": 6,
           "external": false
         },
         "color": "Yellow"
@@ -6875,7 +6875,7 @@
         "id": "cstC_25",
         "a": {
           "itemId": "3945c6cfdd60437498870e253e769eee",
-          "pinNumber": 13,
+          "pinNumber": 4,
           "external": false
         },
         "b": {
@@ -7127,7 +7127,7 @@
         "id": "cstC_43",
         "a": {
           "itemId": "3945c6cfdd60437498870e253e769eee",
-          "pinNumber": 1,
+          "pinNumber": 10,
           "external": false
         },
         "b": {
@@ -7141,7 +7141,7 @@
         "id": "cstC_44",
         "a": {
           "itemId": "3945c6cfdd60437498870e253e769eee",
-          "pinNumber": 4,
+          "pinNumber": 13,
           "external": false
         },
         "b": {
@@ -7334,48 +7334,6 @@
         "color": "Yellow"
       },
       {
-        "id": "cstC_58",
-        "a": {
-          "itemId": "f0b04607303d4725b12572f524a38126",
-          "pinNumber": 11,
-          "external": false
-        },
-        "b": {
-          "itemId": "uU18",
-          "pinNumber": 10,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
-        "id": "cstC_59",
-        "a": {
-          "itemId": "uU18",
-          "pinNumber": 12,
-          "external": false
-        },
-        "b": {
-          "itemId": "gnd_u18",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Navy"
-      },
-      {
-        "id": "cstC_60",
-        "a": {
-          "itemId": "uU18",
-          "pinNumber": 13,
-          "external": false
-        },
-        "b": {
-          "itemId": "gnd_u18",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Navy"
-      },
-      {
         "id": "cstC_61",
         "a": {
           "itemId": "uU12",
@@ -7388,6 +7346,48 @@
           "external": false
         },
         "color": "Orange"
+      },
+      {
+        "id": "cfx2_01",
+        "a": {
+          "itemId": "uU18",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "uU18",
+          "pinNumber": 12,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "cfx2_02",
+        "a": {
+          "itemId": "uU18",
+          "pinNumber": 12,
+          "external": false
+        },
+        "b": {
+          "itemId": "uU18",
+          "pinNumber": 13,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "cfx2_03",
+        "a": {
+          "itemId": "uU18",
+          "pinNumber": 11,
+          "external": false
+        },
+        "b": {
+          "itemId": "uU18",
+          "pinNumber": 10,
+          "external": false
+        },
+        "color": "Yellow"
       }
     ],
     "links": [],
@@ -7400,10 +7400,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 2.0024633,
+    "zoom": 1.7412726,
     "pan": {
-      "x": 2569,
-      "y": -605
+      "x": 1820,
+      "y": 525
     }
   }
 }
