@@ -1324,11 +1324,11 @@
         "deviceId": "dD8",
         "unitLetter": "",
         "position": {
-          "x": -49,
-          "y": -36
+          "x": -68,
+          "y": 33
         },
-        "label": "OSC",
-        "rotation": 180,
+        "label": "CLK",
+        "rotation": 0,
         "layer": 0,
         "switchClosed": null,
         "mirrored": null
@@ -1338,11 +1338,11 @@
         "deviceId": "dR17",
         "unitLetter": "",
         "position": {
-          "x": -57,
-          "y": -36
+          "x": -58,
+          "y": 33
         },
         "label": "",
-        "rotation": 180,
+        "rotation": 0,
         "layer": 0,
         "switchClosed": null,
         "mirrored": null
@@ -2183,7 +2183,7 @@
         "label": "CLK",
         "position": {
           "x": -73,
-          "y": 33
+          "y": 28
         },
         "rotation": 0,
         "layer": 0,
@@ -2199,6 +2199,31 @@
         "startBit": 0,
         "mirrored": false,
         "color": "Orange",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "gnd",
+        "id": "16936f1061484eb79b8b924d68a4b800",
+        "label": "",
+        "position": {
+          "x": -53,
+          "y": 41
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
         "fontSize": null,
         "textColor": null
       }
@@ -4109,20 +4134,6 @@
         "color": "Orange"
       },
       {
-        "id": "cmux_28",
-        "a": {
-          "itemId": "uR17",
-          "pinNumber": 2,
-          "external": false
-        },
-        "b": {
-          "itemId": "7026ca6a4bc348189ac67e44129aebec",
-          "pinNumber": 0,
-          "external": false
-        },
-        "color": "Navy"
-      },
-      {
         "id": "e143ebd13b26447a9001840f137490e0",
         "a": {
           "itemId": "572935981f9241ad8657f801ccfe1659",
@@ -4515,34 +4526,6 @@
         "color": "Yellow"
       },
       {
-        "id": "cstA_18",
-        "a": {
-          "itemId": "uU1",
-          "pinNumber": 3,
-          "external": false
-        },
-        "b": {
-          "itemId": "2fb4b5c2e16949e8b1100162e0ed9f64",
-          "pinNumber": 12,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
-        "id": "cstA_19",
-        "a": {
-          "itemId": "uU1",
-          "pinNumber": 6,
-          "external": false
-        },
-        "b": {
-          "itemId": "2fb4b5c2e16949e8b1100162e0ed9f64",
-          "pinNumber": 15,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
         "id": "cstA_20",
         "a": {
           "itemId": "2fb4b5c2e16949e8b1100162e0ed9f64",
@@ -4709,6 +4692,48 @@
           "external": false
         },
         "color": "Orange"
+      },
+      {
+        "id": "cstA_18",
+        "a": {
+          "itemId": "uU1",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "2fb4b5c2e16949e8b1100162e0ed9f64",
+          "pinNumber": 12,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "cstA_19",
+        "a": {
+          "itemId": "uU1",
+          "pinNumber": 6,
+          "external": false
+        },
+        "b": {
+          "itemId": "2fb4b5c2e16949e8b1100162e0ed9f64",
+          "pinNumber": 15,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "46c404711d3c4672a97cc72664ad35f5",
+        "a": {
+          "itemId": "16936f1061484eb79b8b924d68a4b800",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "uR17",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Navy"
       }
     ],
     "links": [],
@@ -4721,10 +4746,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 1.3166519,
+    "zoom": 2.0024629,
     "pan": {
-      "x": 980,
-      "y": 571
+      "x": 873,
+      "y": 39
     }
   }
 }
