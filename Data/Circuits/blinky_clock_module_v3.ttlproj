@@ -686,6 +686,20 @@
         "function2": null,
         "frequencyHz1": null,
         "frequencyHz2": null
+      },
+      {
+        "id": "1e62ef171f8543809f9a73cad74a6605",
+        "designator": "U13",
+        "partKind": "chip",
+        "partIdentifier": "161",
+        "family": "HC",
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
       }
     ],
     "units": [
@@ -1368,6 +1382,20 @@
         "position": {
           "x": -92,
           "y": 58
+        },
+        "label": "",
+        "rotation": 0,
+        "layer": 0,
+        "switchClosed": null,
+        "mirrored": null
+      },
+      {
+        "id": "4b827f91d51742bda9a27297e8902889",
+        "deviceId": "1e62ef171f8543809f9a73cad74a6605",
+        "unitLetter": "",
+        "position": {
+          "x": -121,
+          "y": 107
         },
         "label": "",
         "rotation": 0,
@@ -2249,6 +2277,56 @@
         "startBit": 0,
         "mirrored": false,
         "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "vcc",
+        "id": "5360caacab3a4efbbaf8f5156f5bd484",
+        "label": "VCC",
+        "position": {
+          "x": -106,
+          "y": 100
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "gnd",
+        "id": "7c6398eb0bf34b0cb65f94f2d6e723cb",
+        "label": "",
+        "position": {
+          "x": -128,
+          "y": 127
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
         "fontSize": null,
         "textColor": null
       }
@@ -4773,6 +4851,34 @@
           "external": false
         },
         "color": "Navy"
+      },
+      {
+        "id": "03cf3356de7c49b1bc96c5f7f62dd363",
+        "a": {
+          "itemId": "7c6398eb0bf34b0cb65f94f2d6e723cb",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "4b827f91d51742bda9a27297e8902889",
+          "pinNumber": 8,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "6d6932d12ec94a5095acd0401cfca66f",
+        "a": {
+          "itemId": "4b827f91d51742bda9a27297e8902889",
+          "pinNumber": 16,
+          "external": false
+        },
+        "b": {
+          "itemId": "5360caacab3a4efbbaf8f5156f5bd484",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Red"
       }
     ],
     "links": [],
@@ -4785,10 +4891,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 2.0024633,
+    "zoom": 2.6482577,
     "pan": {
-      "x": 953,
-      "y": 549
+      "x": 1915,
+      "y": -959
     }
   }
 }
