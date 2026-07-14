@@ -674,18 +674,28 @@ public sealed class ChipFactory : IChipFactory
 
     private IChip? TryCreateHc139(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
     {
-        // Required pins from ChipPartDefinition.Ic74139 (pin 16 VCC and pin 8
-        // GND excluded). All 14 signal pins must be present.
-        int[] needed = { 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15 };
+        // Required pins are the INPUTS only: 1 /AE, 2/3 AA0/AA1, 15 /BE,
+        // 14/13 BA0/BA1. The eight /Y outputs are OPTIONAL -- an address
+        // decoder routinely leaves unused selects open (a 2-bank register
+        // file uses /Y0//Y1 and leaves /Y2//Y3 for the 4-bank build), and an
+        // open output must never block instantiation -- the '138/'154
+        // decoder precedent, previously missed on this chip. TTL011 still
+        // flags genuinely unwired INPUTS at design time.
+        int[] needed = { 1, 2, 3, 13, 14, 15 };
         foreach (int p in needed)
             if (!pinToNet.TryGetValue(p, out Net? n) || n is null) return null;
 
         Net Get(int pin) => pinToNet[pin];
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);   // local stand-in, drives nothing
 
         return new Hc139(
             aeN: Get(1), aa0: Get(2), aa1: Get(3),
-            ay0N: Get(4), ay1N: Get(5), ay2N: Get(6), ay3N: Get(7),
-            by3N: Get(9), by2N: Get(10), by1N: Get(11), by0N: Get(12),
+            ay0N: Opt(4, "ay0-nc"), ay1N: Opt(5, "ay1-nc"),
+            ay2N: Opt(6, "ay2-nc"), ay3N: Opt(7, "ay3-nc"),
+            by3N: Opt(9, "by3-nc"), by2N: Opt(10, "by2-nc"),
+            by1N: Opt(11, "by1-nc"), by0N: Opt(12, "by0-nc"),
             ba1: Get(13), ba0: Get(14), beN: Get(15),
             label: "139", logger: logger,
             delayPs: TtlTiming.ResolvePs(device));
