@@ -1428,6 +1428,20 @@
         "function2": null,
         "frequencyHz1": null,
         "frequencyHz2": null
+      },
+      {
+        "id": "b9a2dafab8834132949755763038910e",
+        "designator": "C22",
+        "partKind": "passive",
+        "partIdentifier": "polarized-capacitor",
+        "family": null,
+        "value": "47uF",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
       }
     ],
     "units": [
@@ -2360,7 +2374,7 @@
         "deviceId": "7268db5d95da489ca940596cf01cf85e",
         "unitLetter": "",
         "position": {
-          "x": -226,
+          "x": -230,
           "y": -91
         },
         "label": "Power",
@@ -2852,6 +2866,20 @@
         "position": {
           "x": -94,
           "y": -92
+        },
+        "label": "",
+        "rotation": 90,
+        "layer": 0,
+        "switchClosed": null,
+        "mirrored": null
+      },
+      {
+        "id": "9b445652a2854e54a329e3bcedfb35df",
+        "deviceId": "b9a2dafab8834132949755763038910e",
+        "unitLetter": "",
+        "position": {
+          "x": -221,
+          "y": -90
         },
         "label": "",
         "rotation": 90,
@@ -9669,6 +9697,34 @@
           "external": false
         },
         "color": "Navy"
+      },
+      {
+        "id": "2f8d15f7162c477eb7d3c552ed3819d6",
+        "a": {
+          "itemId": "f6bca3118a8c4a728cebd1358c9ee9bb",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "9b445652a2854e54a329e3bcedfb35df",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "6e730f01519543ca84d0a7188f432a54",
+        "a": {
+          "itemId": "9b445652a2854e54a329e3bcedfb35df",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "4a135a405eed4ef087c5387ae4ee8e5a",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Red"
       }
     ],
     "links": [],
@@ -9681,10 +9737,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 0.58469903,
+    "zoom": 1.7886072,
     "pan": {
-      "x": 1041,
-      "y": 331
+      "x": 2283,
+      "y": 1091
     }
   }
 }
