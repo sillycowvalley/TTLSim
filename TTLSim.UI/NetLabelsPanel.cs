@@ -35,6 +35,12 @@ namespace TTLSim.UI.View;
 /// <see cref="NetLabelIndex"/> and the label's own naming probes: hiding a layer
 /// must not silently change what a name means. Labels on a hidden layer are
 /// greyed and cannot be selected, matching the canvas's activity rule.</para>
+///
+/// <para>The header carries a Copy button that puts the whole listing on the
+/// clipboard as plain text -- the summary line, then one line per name and one
+/// indented line per label, with ERROR annotations carrying the full diagnostic
+/// text. Ctrl+C in the tree copies the selected row (a name row brings its
+/// labels along), or everything when nothing is selected.</para>
 /// </summary>
 public sealed class NetLabelsPanel : UserControl
 {
@@ -43,6 +49,7 @@ public sealed class NetLabelsPanel : UserControl
     private readonly Label header;
     private readonly Font regularFont;
     private readonly Font boldFont;
+    private readonly ToolTip toolTip = new();
 
     private static readonly Color ErrorColor = Color.FromArgb(180, 30, 30);
     private static readonly Color HiddenColor = SystemColors.GrayText;
@@ -83,6 +90,15 @@ public sealed class NetLabelsPanel : UserControl
             Font = regularFont
         };
         tree.AfterSelect += OnAfterSelect;
+        tree.KeyDown += (_, e) =>
+        {
+            if (e.Control && e.KeyCode == Keys.C)
+            {
+                // Selected row when there is one; the whole pane otherwise.
+                CopyToClipboard(selectedOnly: tree.SelectedNode is not null);
+                e.Handled = true;
+            }
+        };
 
         header = new Label
         {
@@ -94,6 +110,21 @@ public sealed class NetLabelsPanel : UserControl
             BackColor = SystemColors.ControlLight,
             Font = boldFont
         };
+
+        var copyButton = new Button
+        {
+            Text = "Copy",
+            Dock = DockStyle.Right,
+            Width = 46,
+            FlatStyle = FlatStyle.Flat,
+            Font = new Font("Segoe UI", 8f),
+            TabStop = false,
+            BackColor = SystemColors.ControlLight
+        };
+        copyButton.FlatAppearance.BorderSize = 0;
+        copyButton.Click += (_, _) => CopyToClipboard(selectedOnly: false);
+        toolTip.SetToolTip(copyButton, "Copy the net-label listing (with errors) to the clipboard as text");
+        header.Controls.Add(copyButton);
 
         Controls.Add(tree);
         Controls.Add(header);
@@ -252,6 +283,77 @@ public sealed class NetLabelsPanel : UserControl
         return sb.ToString();
     }
 
+    // ------------------------------------------------------------------ copy
+
+    /// <summary>
+    /// Put the listing on the clipboard as plain text: the header summary
+    /// line, then one line per name and one tab-indented line per label,
+    /// with ERROR annotations carrying the full diagnostic description --
+    /// the same text a red row shows in the status bar. Built from a fresh
+    /// <see cref="NetLabelIndex"/> pass rather than scraped from tree rows,
+    /// so it cannot drift from the model.
+    /// </summary>
+    private void CopyToClipboard(bool selectedOnly)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine(header.Text);
+
+        if (selectedOnly && tree.SelectedNode is { } node)
+        {
+            switch (node.Tag)
+            {
+                case NetLabelGroup group:
+                    AppendGroup(sb, group);
+                    break;
+                case NetLabelItem label when node.Parent?.Tag is NetLabelGroup parent:
+                    AppendLabel(sb, parent, label);
+                    break;
+                default:
+                    return;
+            }
+        }
+        else
+        {
+            var groups = NetLabelIndex.Build(canvas.Schematic);
+            if (groups.Count == 0) return;   // nothing to export
+            foreach (var group in groups)
+                AppendGroup(sb, group);
+        }
+
+        try
+        {
+            Clipboard.SetText(sb.ToString());
+        }
+        catch (System.Runtime.InteropServices.ExternalException)
+        {
+            // Another process holds the clipboard open. Rare, transient,
+            // and not worth a dialog -- the user can just click again.
+        }
+    }
+
+    private void AppendGroup(StringBuilder sb, NetLabelGroup group)
+    {
+        sb.Append(group.DisplayName).Append("  \u00d7").Append(group.Count);
+        if (group.Diagnostic is { } diag)
+            sb.Append('\t').Append("ERROR \u2014 ").Append(diag);
+        else if (group.HasError)
+            sb.Append('\t').Append("ERROR");
+        sb.AppendLine();
+
+        foreach (var label in group.Labels)
+            AppendLabel(sb, group, label);
+    }
+
+    private void AppendLabel(StringBuilder sb, NetLabelGroup group, NetLabelItem label)
+    {
+        sb.Append('\t').Append(LabelText(group, label));
+        if (!canvas.Schematic.IsItemActive(label))
+            sb.Append('\t').Append("hidden");
+        if (LabelHasLoneBit(group, label))
+            sb.Append('\t').Append("ERROR");
+        sb.AppendLine();
+    }
+
     // ------------------------------------------------------------------ selection
 
     private void OnAfterSelect(object? sender, TreeViewEventArgs e)
@@ -282,7 +384,7 @@ public sealed class NetLabelsPanel : UserControl
 
                     string status = $"{group.DisplayName}: {group.Count} label{(group.Count == 1 ? "" : "s")}";
                     if (group.Diagnostic is { } diag)
-                        status = $"ERROR — {diag}";
+                        status = $"ERROR \u2014 {diag}";
                     StatusRequested?.Invoke(this, status);
                     break;
                 }
@@ -299,11 +401,11 @@ public sealed class NetLabelsPanel : UserControl
               + $"[{label.StartBit}..{label.StartBit + label.Width - 1}]";
 
         if (group?.Diagnostic is { } diag)
-            return $"Net Label {shown} — ERROR — {diag}";
+            return $"Net Label {shown} \u2014 ERROR \u2014 {diag}";
 
         return group is null
             ? $"Net Label {shown}"
-            : $"Net Label {shown} — {group.Count} label{(group.Count == 1 ? "" : "s")} named \"{group.Name}\"";
+            : $"Net Label {shown} \u2014 {group.Count} label{(group.Count == 1 ? "" : "s")} named \"{group.Name}\"";
     }
 
     /// <summary>
