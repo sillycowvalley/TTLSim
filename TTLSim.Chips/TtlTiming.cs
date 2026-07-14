@@ -1,4 +1,4 @@
-using TTLSim.Core;
+﻿using TTLSim.Core;
 
 namespace TTLSim.Chips;
 
@@ -111,6 +111,8 @@ public static class TtlTiming
         ["HC:47"] = new(100_000), // BCD→7-seg decoder (slow)
         ["LS:688"] = new(25_000),
         ["HC:688"] = new(45_000),  // 8-bit identity comparator
+        ["LS:670"] = new(35_000),
+        ["HC:670"] = new(45_000),  // 4x4 register file (read address → Q)
 
 
         // ---- clocked (tCO = clock → Q, max) -----------------------------

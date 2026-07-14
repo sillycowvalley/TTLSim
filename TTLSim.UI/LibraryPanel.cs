@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -43,7 +43,7 @@ public sealed class LibraryPanel : UserControl
     private static readonly HashSet<string> SimulatedChipIdentifiers = new(StringComparer.Ordinal)
     {
         "00", "02", "04", "08", "10", "14", "20", "30", "32", "86",
-        "47", "74", "138", "139", "151", "153", "154", "157", "161", "163", "173", "181", "182", "191", "244", "245", "257", "273", "283", "374", "377", "390", "393", "541", "688",
+        "47", "74", "138", "139", "151", "153", "154", "157", "161", "163", "173", "181", "182", "191", "244", "245", "257", "273", "283", "374", "377", "390", "393", "541", "670", "688",
         "DS1813",
         "7seg-ca",
         "NE555", "NE556",
@@ -216,6 +216,7 @@ public sealed class LibraryPanel : UserControl
         AddBoxPart(registers, ChipPartDefinition.Ic74377, "Octal D Register, /EN");
         AddBoxPart(registers, ChipPartDefinition.Ic74574, "Octal D Register, 3-state");
         AddBoxPart(registers, ChipPartDefinition.Ic74595, "8-bit Shift Register, 3-state");
+        AddBoxPart(registers, ChipPartDefinition.Ic74670, "4x4 Register File, 3-state");
         registers.Expand();
 
         var counters = logicRoot.Nodes.Add(IcCategoryLabels.DisplayName(IcCategory.Counters));

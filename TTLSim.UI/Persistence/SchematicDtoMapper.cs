@@ -98,6 +98,7 @@ public static class SchematicDtoMapper
             [ChipPartDefinition.Ic74574.PartNumber] = ChipPartDefinition.Ic74574,
             [ChipPartDefinition.Ic74299.PartNumber] = ChipPartDefinition.Ic74299,
             [ChipPartDefinition.Ic74595.PartNumber] = ChipPartDefinition.Ic74595,
+            [ChipPartDefinition.Ic74670.PartNumber] = ChipPartDefinition.Ic74670,
 
             // Counters
             [ChipPartDefinition.Ic74161.PartNumber] = ChipPartDefinition.Ic74161,

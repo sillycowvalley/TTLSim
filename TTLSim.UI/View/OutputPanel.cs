@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Text;
 using System.Windows.Forms;
 using TTLSim.Core;
 
@@ -10,11 +11,18 @@ namespace TTLSim.UI.View;
 /// Docked panel that lists build diagnostics. Selecting a row that has
 /// a locator (ItemId) raises LocateRequested so the host form can pan
 /// the canvas and select the offending item.
+///
+/// The header carries a Copy button that puts every displayed diagnostic
+/// on the clipboard as tab-separated text (severity, code, message,
+/// location), preceded by the header summary line -- pasteable into a
+/// bug report, a chat, or a spreadsheet. Ctrl+C in the list copies the
+/// selected row, or everything when nothing is selected.
 /// </summary>
 public sealed class OutputPanel : Panel
 {
     private readonly ListView list;
     private readonly Label header;
+    private readonly ToolTip toolTip = new();
 
     /// <summary>Raised when the user activates a diagnostic that has a locator.</summary>
     public event EventHandler<DiagnosticLocateEventArgs>? LocateRequested;
@@ -49,6 +57,22 @@ public sealed class OutputPanel : Panel
         closeButton.Click += (_, _) => Visible = false;
         header.Controls.Add(closeButton);
 
+        // Added after the close button, so it docks to its left.
+        var copyButton = new Button
+        {
+            Text = "Copy",
+            Dock = DockStyle.Right,
+            Width = 46,
+            FlatStyle = FlatStyle.Flat,
+            Font = new Font("Segoe UI", 8f),
+            TabStop = false,
+            BackColor = SystemColors.ControlLight
+        };
+        copyButton.FlatAppearance.BorderSize = 0;
+        copyButton.Click += (_, _) => CopyToClipboard(selectedOnly: false);
+        toolTip.SetToolTip(copyButton, "Copy all diagnostics to the clipboard as text");
+        header.Controls.Add(copyButton);
+
         list = new ListView
         {
             Dock = DockStyle.Fill,
@@ -70,6 +94,12 @@ public sealed class OutputPanel : Panel
             if (e.KeyCode == Keys.Enter)
             {
                 RaiseLocate();
+                e.Handled = true;
+            }
+            else if (e.Control && e.KeyCode == Keys.C)
+            {
+                // Selected row when there is one; the whole pane otherwise.
+                CopyToClipboard(selectedOnly: list.SelectedItems.Count > 0);
                 e.Handled = true;
             }
         };
@@ -133,6 +163,64 @@ public sealed class OutputPanel : Panel
         list.Items.Clear();
         header.Text = "Output";
     }
+
+    // ------------------------------------------------------------- copy
+
+    /// <summary>
+    /// Put the pane's diagnostics on the clipboard as plain text: the
+    /// header summary line, then one tab-separated line per diagnostic
+    /// (severity, code, message, location). Tab separation pastes cleanly
+    /// into spreadsheets and stays readable as text.
+    /// </summary>
+    private void CopyToClipboard(bool selectedOnly)
+    {
+        IEnumerable<ListViewItem> rows = selectedOnly
+            ? SelectedRows()
+            : AllRows();
+
+        var sb = new StringBuilder();
+        sb.AppendLine(header.Text);
+        int count = 0;
+        foreach (ListViewItem row in rows)
+        {
+            if (row.Tag is not Diagnostic d) continue;
+            sb.Append(SeverityWord(d.Severity)).Append('\t')
+              .Append(d.Code).Append('\t')
+              .Append(d.Message).Append('\t')
+              .AppendLine(LocationText(d));
+            count++;
+        }
+        if (count == 0) return;   // nothing to export; leave the clipboard alone
+
+        try
+        {
+            Clipboard.SetText(sb.ToString());
+        }
+        catch (System.Runtime.InteropServices.ExternalException)
+        {
+            // Another process holds the clipboard open. Rare, transient,
+            // and not worth a dialog -- the user can just click again.
+        }
+    }
+
+    private IEnumerable<ListViewItem> AllRows()
+    {
+        foreach (ListViewItem row in list.Items) yield return row;
+    }
+
+    private IEnumerable<ListViewItem> SelectedRows()
+    {
+        foreach (ListViewItem row in list.SelectedItems) yield return row;
+    }
+
+    private static string SeverityWord(DiagnosticSeverity s) => s switch
+    {
+        DiagnosticSeverity.Error => "error",
+        DiagnosticSeverity.Warning => "warning",
+        _ => "info"
+    };
+
+    // ------------------------------------------------------------- locate
 
     private void RaiseLocate()
     {

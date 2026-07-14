@@ -1038,6 +1038,32 @@ public sealed record ChipPartDefinition(
         IsSeries74: true
         );
 
+    /// <summary>74HC670 4x4 register file with 3-state outputs, 16-pin DIP.
+    /// Four 4-bit words with SEPARATE read and write ports: WB/WA address
+    /// the word written, RB/RA the word read, simultaneously and
+    /// independently (xB the MSB). The write is a TRANSPARENT LATCH while
+    /// /GW is LOW -- not edge-triggered -- which is why the Blinky/Thumby
+    /// boards gate /GW with the clock-low phase. /GR HIGH puts Q1..Q4 in
+    /// high-Z, so bank-stacked '670s share port wires behind
+    /// decode-guaranteed exclusive enables. Stack for width, bank for
+    /// depth: the machine-register-file building block.</summary>
+    public static readonly ChipPartDefinition Ic74670 = new(
+        PartNumber: "670", PinCount: 16, PowerPin: 16, GroundPin: 8,
+        BodyWidth: 8,
+        Pins: new ChipPin[]
+        {
+            new("D2",  1),              new("VCC", 16),
+            new("D3",  2),              new("D1",  15),
+            new("D4",  3),              new("WA",  14),
+            new("RB",  4),              new("WB",  13),
+            new("RA",  5),              new("/GW", 12),
+            new("Q4",  6, Out),         new("/GR", 11),
+            new("Q3",  7, Out),         new("Q1",  10, Out),
+            new("GND", 8),              new("Q2",   9, Out),
+        },
+        IsSeries74: true
+        );
+
     // ---- RAM ----------------------------------------------------------
 
     /// <summary>74189 64-bit RAM (16 words x 4 bits) with 3-state outputs,

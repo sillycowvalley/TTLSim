@@ -430,6 +430,7 @@ public sealed class ChipFactory : IChipFactory
             "374" => TryCreateHc374(device, pinToNet),
             "377" => TryCreateHc377(device, pinToNet),
             "541" => TryCreateHc541(device, pinToNet),
+            "670" => TryCreateHc670(device, pinToNet),
             "688" => TryCreateHc688(device, pinToNet),
             "DS1813" => TryCreateDs1813(pinToNet),
             "GAL16V8" or "GAL20V8" or "GAL22V10" => TryCreateGal(device, pinToNet),
@@ -921,6 +922,33 @@ public sealed class ChipFactory : IChipFactory
             delayPs: TtlTiming.ResolvePs(device));
     }
 
+    private IChip? TryCreateHc670(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        // Required pins are the INPUTS only: 15/1/2/3 D1..D4, 14/13 WA/WB,
+        // 12 /GW, 5/4 RA/RB, 11 /GR. The four Q outputs (10, 9, 7, 6 =
+        // Q1..Q4) are OPTIONAL -- an open output drives nothing and must
+        // never block instantiation (the '181 lesson, applied from the
+        // start). TTL011 still flags genuinely unwired INPUTS at design
+        // time.
+        int[] needed = { 1, 2, 3, 4, 5, 11, 12, 13, 14, 15 };
+        foreach (int p in needed)
+            if (!pinToNet.TryGetValue(p, out Net? n) || n is null) return null;
+
+        Net Get(int pin) => pinToNet[pin];
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);   // local stand-in, drives nothing
+
+        return new Hc670(
+            d1: Get(15), d2: Get(1), d3: Get(2), d4: Get(3),
+            wa: Get(14), wb: Get(13), gwN: Get(12),
+            ra: Get(5), rb: Get(4), grN: Get(11),
+            q1: Opt(10, "q1-nc"), q2: Opt(9, "q2-nc"),
+            q3: Opt(7, "q3-nc"), q4: Opt(6, "q4-nc"),
+            label: "670", logger: logger,
+            delayPs: TtlTiming.ResolvePs(device));
+    }
+
     private IChip? TryCreateHc283(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
     {
         // C4 (pin 9) is the carry-out cascade pin and is OPTIONAL -- the
@@ -1057,7 +1085,7 @@ public sealed class ChipFactory : IChipFactory
     {
         // Box-chip ICs (per-unit dispatch in CreateForUnit).
         "47" or "74" or "138" or "139" or "151" or "153" or "154" or "157" or "161" or "163" or "173" or "181" or "182" or "191"
-            or "244" or "245" or "257" or "273" or "283" or "374" or "377" or "541" or "688" or "7seg-ca"
+            or "244" or "245" or "257" or "273" or "283" or "374" or "377" or "541" or "670" or "688" or "7seg-ca"
             => true,
         // Reset supervisor (per-unit dispatch in CreateForUnit).
         "DS1813"
