@@ -126,6 +126,48 @@
         "function2": null,
         "frequencyHz1": null,
         "frequencyHz2": null
+      },
+      {
+        "id": "7880abdf225e40c89b855cf8ecce6777",
+        "designator": "J1",
+        "partKind": "passive",
+        "partIdentifier": "jumper-2pin",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "eee3e7f6a4fa4de6b23efda1e0725ce1",
+        "designator": "J2",
+        "partKind": "passive",
+        "partIdentifier": "jumper-3pin",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "377f08d3822c411d8fcfd56c71dda3cc",
+        "designator": "H8",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-6",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
       }
     ],
     "units": [
@@ -254,6 +296,48 @@
         "layer": 0,
         "switchClosed": null,
         "mirrored": null
+      },
+      {
+        "id": "000e7d32749b49ebbd1ff7719278018b",
+        "deviceId": "7880abdf225e40c89b855cf8ecce6777",
+        "unitLetter": "",
+        "position": {
+          "x": 2,
+          "y": 34
+        },
+        "label": "",
+        "rotation": 0,
+        "layer": 0,
+        "switchClosed": false,
+        "mirrored": null
+      },
+      {
+        "id": "c7ad7fd818074b0c84da6817a83bcf3c",
+        "deviceId": "eee3e7f6a4fa4de6b23efda1e0725ce1",
+        "unitLetter": "",
+        "position": {
+          "x": 1,
+          "y": 41
+        },
+        "label": "",
+        "rotation": 0,
+        "layer": 0,
+        "switchClosed": false,
+        "mirrored": null
+      },
+      {
+        "id": "eef46dc34a8a4e78b0f6de2474430dde",
+        "deviceId": "377f08d3822c411d8fcfd56c71dda3cc",
+        "unitLetter": "",
+        "position": {
+          "x": 2,
+          "y": 52
+        },
+        "label": "",
+        "rotation": 0,
+        "layer": 0,
+        "switchClosed": null,
+        "mirrored": false
       }
     ],
     "items": [
