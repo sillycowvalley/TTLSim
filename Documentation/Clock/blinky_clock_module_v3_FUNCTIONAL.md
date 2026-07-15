@@ -36,27 +36,83 @@ its one-shot is machine-cleared mid-press.
 free-run on a surprise-MHz can.
 
 **LEDs**: STEP MODE · RUN 555 · RUN XTAL (radio, exactly one lit) · RESET ·
-HALT · CLK activity · T0–T3 · PWR.
+HALT · CLK activity · STEP RAW (debouncer output, bench diagnostic) ·
+T0–T3 · PWR.
 
-## Pins
+## Headers
 
-**Outputs**: **CLK** (the machine clock — mode-gated and halt-gated; the only
-clock exported), **RST** (active-high, async assert / synchronous release),
-**/RST**, **HALT**, **FETCH** (high during T = 0, the first cycle of each
-instruction — 6502-SYNC-like but an *output*, decoded from the on-board T
-counter), **T0–T3**, GND (pin 1 of every header). VCC on the power header only.
+GND is pin 1 of every header; VCC appears on H1 only. All nine outbound
+signals leave through 100R series resistors; both machine inputs are pulled
+up with 4k7 (absent source = inert).
 
-**Inputs**: **/TRST** — the machine asserts during an instruction's final T
-state; synchronously reloads the T counter to 0. **/HALTREQ** — the single
-halt request line; any source, any reason; multiple sources are combined on
-the machine side.
+### H1 — Power (2-pin)
+
+| Pin | Signal |
+|---|---|
+| 1 | GND |
+| 2 | VCC |
+
+### H2 — Machine control (8-pin)
+
+| Pin | Signal | Dir | Description |
+|---|---|---|---|
+| 1 | GND | — | return |
+| 2 | CLK | out | the machine clock — mode-gated and halt-gated; the only clock exported |
+| 3 | RST | out | active-high reset: async assert, released synchronously two clock edges after the supervisor |
+| 4 | /RST | out | active-low reset, straight from the supervisor net |
+| 5 | HALT | out | high while the machine is frozen by the halt flop |
+| 6 | /HALTREQ | **in** | the single halt request line; any source, any reason — multiple sources combine on the machine side (shares the net with the panel's HALT REQ button) |
+| 7–8 | NC | | |
+
+### H3 — T service (8-pin)
+
+| Pin | Signal | Dir | Description |
+|---|---|---|---|
+| 1 | GND | — | return |
+| 2–5 | T0–T3 | out | the T-state count |
+| 6 | FETCH | out | high during T = 0, the first cycle of each instruction — 6502-SYNC-like but an *output*, decoded from the on-board (authoritative) T counter |
+| 7 | /TRST | **in** | machine asserts during an instruction's final T state; synchronous reload to 0. Strap to pin 1 for single-cycle machines |
+| 8 | NC | | |
+
+### H4 — CANIN (2-pin) + J1 jumper
+
+External clock injection for the XTAL leg without wearing the can socket:
+0–5 V squarewave in (bench function generator, external oscillator board).
+J1 (3-pin jumper, pin 2 common) selects the source: X1 socket side or H4.
+Default shunt position: X1.
+
+| Pin | Signal |
+|---|---|
+| 1 | GND |
+| 2 | CANIN |
+
+### H5 — RV1 EXT (2-pin)
+
+Parallels the RV1 trimmer's two terminals for an external/panel pot. Fit the
+trimmer *or* the external pot; both fitted puts them in parallel and speeds
+the astable.
+
+### TP1 — Test points (8-pin strip)
+
+The five nets bring-up proved most diagnostic, plus a scope-clip ground.
+
+| Pin | Signal | Why it's here |
+|---|---|---|
+| 1 | GND | scope/DMM clip |
+| 2 | /OSC | the free-running board clock — everything stateful samples on it, including while halted |
+| 3 | OSC | the mux output, pre-gating: proves source selection and handoff |
+| 4 | /RST | reset domain: supervisor, /MR, halt clears |
+| 5 | SREQ | the NEXT CYCLE one-shot: press storage and the Q3 clear |
+| 6 | CLK | the machine clock as exported (post mode- and halt-gating) |
+| 7–8 | NC | |
 
 ## Machine integration
 
 - **Multi-cycle machine**: supply /TRST; consume CLK, RST/(/RST); optionally
   consume T0–T3/FETCH as its sequencer state or run its own counter.
-- **Single-cycle machine**: strap /TRST **low** — T pins at 0, FETCH is
-  permanently true, NEXT INSTR degenerates (correctly) to NEXT CYCLE.
+- **Single-cycle machine**: strap /TRST low (H3.7 → H3.1 on the plug) — T
+  pins at 0, FETCH is permanently true, NEXT INSTR degenerates (correctly)
+  to NEXT CYCLE.
 - **Breakpoints**: an external comparator card asserts /HALTREQ on match;
   qualify with FETCH for true PC breakpoints vs plain watchpoints.
 - **HALT instruction**: the machine decodes it and asserts /HALTREQ.
