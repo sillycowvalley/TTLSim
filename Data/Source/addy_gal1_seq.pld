@@ -1,0 +1,75 @@
+Name     addy_gal1_seq;
+Partno   ADDY-GAL1;
+Revision 01;
+Designer BlinkyJED;
+Device   G22V10;
+
+/* Addy CPU -- GAL1: sequencer / ALU control.
+   All outputs combinational. T states: T0 = !TB1&!TB0 (fetch),
+   T1 = !TB1&TB0 (PC writeback / operand fetch), T2 = TB1&!TB0 (execute).
+
+   Opcode classes (IR[15:14]): 00 reg ALU, 01 imm ALU, 10 conditional,
+   11 special. IR13 = suppress-write (ALU classes), IR11 = subtract /
+   polarity, IR12 = operand kill-steer / cond-arithmetic subtract.        */
+
+/* ---- inputs ---- */
+PIN 1  = TB0;        /* T counter bit 0 (clock module H3)                 */
+PIN 2  = TB1;        /* T counter bit 1                                   */
+PIN 3  = RST;        /* reset, active high (clock module H2.3)            */
+PIN 4  = Z;          /* zero flag ('74 Q)                                 */
+PIN 5  = IR15;
+PIN 6  = IR14;
+PIN 7  = IR13;
+PIN 8  = IR12;
+PIN 9  = IR11;
+
+/* ---- outputs ---- */
+PIN 14 = WE;         /* register file write enable, active high           */
+PIN 15 = SUB;        /* B-bus XOR invert ('86s)                           */
+PIN 16 = CIN;        /* adder carry in                                    */
+PIN 17 = WSEL7;      /* OR onto WADDR bits -> write address 7             */
+PIN 18 = ASELRS;     /* AADDR '157 select: 1 = rs, 0 = rd                 */
+PIN 19 = FLAGEN;     /* flag recirculating-mux select: 1 = capture new    */
+PIN 20 = !TRST;      /* T counter sync reload, asserted (low) during T2   */
+PIN 21 = !HALTREQ;   /* halt request to clock module, asserted during T2  */
+
+/* WE: reset vector (r7 <- 0), T1 PC writeback, T2 per opcode:
+   ALU classes with write (!IR15&!IR13), conditionals gated by Z xor
+   polarity, and IN (11001).                                              */
+WE = RST
+   # (!TB1 &  TB0)
+   # ( TB1 & !TB0 & !IR15 & !IR13)
+   # ( TB1 & !TB0 &  IR15 & !IR14 & ((!IR11 & Z) # (IR11 & !Z)))
+   # ( TB1 & !TB0 &  IR15 &  IR14 & !IR13 & !IR12 & IR11);
+
+/* SUB: c00/c01 subtract ops via IR11 (ADDIH excluded), plus the
+   conditional-arithmetic subtracts SUBIZ/SUBINZ (c10, IR13=1, IR12=1).   */
+SUB = TB1 & !TB0 & !RST &
+      ( (!IR15 & IR11 & (!IR14 # !IR12))
+      # ( IR15 & !IR14 & IR13 & IR12) );
+
+/* CIN: +1 for the PC increment at T1, else follows SUB (two's comp).     */
+CIN = (!TB1 & TB0 & !RST)
+    # ( TB1 & !TB0 & !RST &
+        ( (!IR15 & IR11 & (!IR14 # !IR12))
+        # ( IR15 & !IR14 & IR13 & IR12) ) );
+
+/* Write address forced to 7 for the T1 PC writeback and the reset vector. */
+WSEL7 = (!TB1 & TB0) # RST;
+
+/* AADDR = rs for reg-ALU (c00), conditional moves (c10 move-style,
+   IR13=0 IR12=0), and OUT (11000); rd otherwise (imm ALU read-mod-write,
+   conditional arithmetic).                                                */
+ASELRS = (!IR15 & !IR14)
+       # ( IR15 & !IR14 & !IR13 & !IR12)
+       # ( IR15 &  IR14 & !IR13 & !IR12 & !IR11);
+
+/* Flags capture on any class-00 / class-01 op completing at T2.           */
+FLAGEN = TB1 & !TB0 & !RST & !IR15;
+
+/* T counter reloads every T2 -> three states per instruction, forever.    */
+TRST = TB1 & !TB0;
+
+/* HLT = 11111 (erased EEPROM word). Asserted during T2; PC already
+   points past the HLT, so any resume continues cleanly.                   */
+HALTREQ = TB1 & !TB0 & !RST & IR15 & IR14 & IR13 & IR12 & IR11;

@@ -1,0 +1,66 @@
+Name     addy_gal2_ena;
+Partno   ADDY-GAL2;
+Revision 01;
+Designer BlinkyJED;
+Device   G22V10;
+
+/* Addy CPU -- GAL2: operand-bus source enables + misc clock enables.
+   All outputs combinational. At most one B-bus source enabled at a time;
+   a disabled bus reads zero through its pulldowns.                       */
+
+/* ---- inputs ---- */
+PIN 1  = TB0;        /* T counter bit 0                                   */
+PIN 2  = TB1;        /* T counter bit 1                                   */
+PIN 3  = RST;        /* reset, active high                                */
+PIN 4  = !EQH;       /* '688 P=Q, result[15:8] == 0 (active low)          */
+PIN 5  = !EQL;       /* '688 P=Q, result[7:0]  == 0 (active low)          */
+PIN 6  = IR15;
+PIN 7  = IR14;
+PIN 8  = IR13;
+PIN 9  = IR12;
+PIN 10 = IR11;
+
+/* ---- outputs ---- */
+PIN 14 = !IRCE;      /* IR '377 clock enable: load at the edge ending T0  */
+PIN 15 = !BOE;       /* B '574 output enable (register operand rt)        */
+PIN 16 = !IMHOE;     /* imm-high '541 (IR[7:0] -> bits 15:8, ADDIH)       */
+PIN 17 = !INOE;      /* input-switch '541 (IN)                            */
+PIN 18 = !AOE;       /* A '574 output enable                              */
+PIN 19 = !IMMOE;     /* imm8 '541 (IR[7:0] -> bits 7:0)                   */
+PIN 20 = !LEDCE;     /* LED '377 clock enable (OUT)                       */
+PIN 21 = ZNEW;       /* combined zero detect -> flag recirculating mux    */
+
+/* IR loads exactly once per instruction, at the fetch edge.              */
+IRCE = !TB1 & !TB0;
+
+/* A drives the adder: T1 (PC+1), and at T2 for every op that reads a
+   register through port A -- all of c00, c01 except LDI, c10 move-style
+   reg source and all c10 arithmetic, and OUT. Off during reset (T=0).    */
+AOE = (!TB1 & TB0)
+    # ( TB1 & !TB0 &
+        ( (!IR15 & !IR14)
+        # (!IR15 &  IR14 & (!IR12 # IR11))
+        # ( IR15 & !IR14 & (!IR12 # IR13))
+        # ( IR15 &  IR14 & !IR13 & !IR12 & !IR11) ) );
+
+/* B '574: register operand rt, c00 two-register ops only (IR12 kills B
+   for MOV / TST).                                                        */
+BOE = TB1 & !TB0 & !IR15 & !IR14 & !IR12;
+
+/* imm8 low: c01 ADDI/SUBI/LDI/CMPI (everything but ADDIH), and c10
+   immediate forms -- LDIZ/LDINZ (IR12) and ADDIZ..SUBINZ (IR13).         */
+IMMOE = TB1 & !TB0 &
+        ( (!IR15 & IR14 & (!IR12 # !IR11))
+        # ( IR15 & !IR14 & (IR12 # IR13)) );
+
+/* imm8 shifted onto bits 15:8: ADDIH = 01011.                            */
+IMHOE = TB1 & !TB0 & !IR15 & IR14 & !IR13 & IR12 & IR11;
+
+/* input switches: IN = 11001.                                            */
+INOE = TB1 & !TB0 & IR15 & IR14 & !IR13 & !IR12 & IR11;
+
+/* LED register loads at the edge ending T2 of an OUT (11000).            */
+LEDCE = TB1 & !TB0 & !RST & IR15 & IR14 & !IR13 & !IR12 & !IR11;
+
+/* 16-bit zero: both '688 halves equal to ground.                         */
+ZNEW = EQH & EQL;
