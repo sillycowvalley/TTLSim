@@ -446,6 +446,7 @@ public sealed class ChipFactory : IChipFactory
             "374" => TryCreateHc374(device, pinToNet),
             "377" => TryCreateHc377(device, pinToNet),
             "541" => TryCreateHc541(device, pinToNet),
+            "573" => TryCreateHc573(device, pinToNet),
             "574" => TryCreateHc574(device, pinToNet),
             "670" => TryCreateHc670(device, pinToNet),
             "688" => TryCreateHc688(device, pinToNet),
@@ -543,6 +544,35 @@ public sealed class ChipFactory : IChipFactory
             q4: Opt(15, "q4-nc"), q5: Opt(14, "q5-nc"),
             q6: Opt(13, "q6-nc"), q7: Opt(12, "q7-nc"),
             label: "574", logger: logger,
+            delayPs: TtlTiming.ResolvePs(device));
+    }
+
+    private IChip? TryCreateHc573(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        // The '574's transparent sibling: same flow-through frame (D0..D7
+        // = pins 2..9, each Q directly opposite so Q0=19 down to Q7=12)
+        // with LE on pin 11 instead of a clock. /OE and LE are required --
+        // a floating latch enable is a real fault (an open latch tracks
+        // whatever noise reaches D); everything else Opt(), per the
+        // '374/'574 policy.
+        if (!pinToNet.TryGetValue(1, out Net? oeN) || oeN is null) return null;
+        if (!pinToNet.TryGetValue(11, out Net? le) || le is null) return null;
+
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);
+
+        return new Hc573(
+            oeN: oeN, le: le,
+            d0: Opt(2, "d0-nc"), d1: Opt(3, "d1-nc"),
+            d2: Opt(4, "d2-nc"), d3: Opt(5, "d3-nc"),
+            d4: Opt(6, "d4-nc"), d5: Opt(7, "d5-nc"),
+            d6: Opt(8, "d6-nc"), d7: Opt(9, "d7-nc"),
+            q0: Opt(19, "q0-nc"), q1: Opt(18, "q1-nc"),
+            q2: Opt(17, "q2-nc"), q3: Opt(16, "q3-nc"),
+            q4: Opt(15, "q4-nc"), q5: Opt(14, "q5-nc"),
+            q6: Opt(13, "q6-nc"), q7: Opt(12, "q7-nc"),
+            label: "573", logger: logger,
             delayPs: TtlTiming.ResolvePs(device));
     }
 
@@ -1202,7 +1232,7 @@ public sealed class ChipFactory : IChipFactory
     {
         // Box-chip ICs (per-unit dispatch in CreateForUnit).
         "47" or "74" or "138" or "139" or "151" or "153" or "154" or "157" or "161" or "163" or "173" or "181" or "182" or "191" or "194"
-            or "244" or "245" or "257" or "273" or "283" or "299" or "374" or "377" or "541" or "574" or "670" or "688" or "7seg-ca"
+            or "244" or "245" or "257" or "273" or "283" or "299" or "374" or "377" or "541" or "573" or "574" or "670" or "688" or "7seg-ca"
             => true,
         // Reset supervisor (per-unit dispatch in CreateForUnit).
         "DS1813"

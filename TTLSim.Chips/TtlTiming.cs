@@ -136,6 +136,8 @@ public static class TtlTiming
         ["LS:574"] = new(28_000),
         ["HC:574"] = new(44_000),  // '374 silicon core, flow-through pinout; rows anchored to the '374 (legacy TI-class HC; newer processes spec 35)
         ["HCT:574"] = new(44_000),
+        ["HC:573"] = new(45_000),
+        ["HCT:573"] = new(53_000), // transparent latch (Nexperia -40..125 max; D->Q and LE->Q both hit the row value, OE paths faster; no LS row until an LS sheet is verified)
         ["LS:377"] = new(30_000),
         ["HC:377"] = new(44_000),  // octal D flip-flop, clock enable
         ["LS:191"] = new(27_000),
