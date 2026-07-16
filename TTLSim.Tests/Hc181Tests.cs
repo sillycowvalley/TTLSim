@@ -286,21 +286,52 @@ public class Hc181Tests
         Assert.True(r.ReadGenerate());
     }
 
+    // SUB P/G convention, in this rig's ACTIVE-HIGH terms: P asserts when
+    // A >= B, G asserts when A > B. Derivation: SUB computes A + /B, and
+    // with /B = 15 - B, generate (carry-out regardless of Cn) means
+    // A + 15 - B >= 16, i.e. A > B; propagate means >= 15, i.e. A >= B.
+    // Equivalently: SUB carry-out asserted = no borrow = A >= B, and the
+    // cascade identity carry-out = G + P.carry-in only holds this way
+    // round (the Hc182Tests 16-bit SUB sweep proves it exhaustively).
+    //
+    // The "A <= B / A < B" phrasing seen in the '181 datasheet narrative
+    // and the Thumby carry notes is the ACTIVE-LOW-DATA description of the
+    // same pin behaviour; asserting it against this rig's active-high
+    // values inverts the polarity -- the exact trap that produced an
+    // earlier, wrong version of these two tests (caught because A=3,B=5
+    // is the one case in this file where the two conventions disagree;
+    // the A=B case below coincidentally passes under either).
+
     [Fact]
-    public void Sub_propagate_asserts_when_A_le_B()
+    public void Sub_propagate_asserts_at_equality_but_generate_does_not()
     {
-        // A=5, B=5: A <= B so P asserts. A == B so G (asserts at A < B) does not.
+        // A=5, B=5: A >= B so P asserts; A == B so G (asserts at A > B)
+        // does not. Note A=B is the one operand relation where the correct
+        // (>=, >) and inverted (<=, <) conventions agree on P -- this test
+        // alone cannot detect an inverted model; the two below can.
         var r = Build(a: 5, b: 5, s: 0b0110, modeLogic: false, carryIn: false);
         Assert.True(r.ReadPropagate());
         Assert.False(r.ReadGenerate());
     }
 
     [Fact]
-    public void Sub_generate_asserts_when_A_lt_B()
+    public void Sub_generate_asserts_when_A_gt_B()
     {
-        // A=3, B=5: A < B so both P and G assert.
-        var r = Build(a: 3, b: 5, s: 0b0110, modeLogic: false, carryIn: false);
+        // A=5, B=3: A > B so both P and G assert (A + /B = 17 >= 16 --
+        // carry out with or without carry in).
+        var r = Build(a: 5, b: 3, s: 0b0110, modeLogic: false, carryIn: false);
         Assert.True(r.ReadPropagate());
         Assert.True(r.ReadGenerate());
+    }
+
+    [Fact]
+    public void Sub_neither_asserts_when_A_lt_B()
+    {
+        // A=3, B=5: A + /B = 13 < 15 -- no carry out even with carry in,
+        // so neither P nor G asserts. This is the polarity canary: an
+        // Hc181 with the inverted (<=, <) SUB convention asserts BOTH here.
+        var r = Build(a: 3, b: 5, s: 0b0110, modeLogic: false, carryIn: false);
+        Assert.False(r.ReadPropagate());
+        Assert.False(r.ReadGenerate());
     }
 }

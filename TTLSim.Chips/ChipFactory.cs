@@ -79,7 +79,7 @@ public sealed class ChipFactory : IChipFactory
         }
 
         if (device.PartIdentifier is "00" or "02" or "04" or "08" or "10"
-            or "14" or "20" or "30" or "32" or "86")
+            or "14" or "20" or "30" or "32" or "86" or "125" or "126")
         {
             foreach (var (_, pinMap) in unitPinMaps)
                 foreach (IChip chip in CreateGateChip(device, pinMap))
@@ -293,6 +293,20 @@ public sealed class ChipFactory : IChipFactory
                 gates = new[] { (new[] {1,2}, 3), (new[] {4,5}, 6),
                                 (new[] {9,10}, 8), (new[] {12,13}, 11) };
                 make = (i, y) => new Hc86(i[0], i[1], y, delayPs);
+                break;
+            case "125":
+                // Quad 3-state buffer, independent active-LOW enables.
+                // i[0] = /OE, i[1] = A. Sections whose Y is unwired are
+                // skipped by the loop below, like any unused gate.
+                gates = new[] { (new[] {1,2}, 3), (new[] {4,5}, 6),
+                                (new[] {10,9}, 8), (new[] {13,12}, 11) };
+                make = (i, y) => new Hc125(i[0], i[1], y, enableActiveLow: true, delayPs: delayPs);
+                break;
+            case "126":
+                // The '125 with active-HIGH enables; same section layout.
+                gates = new[] { (new[] {1,2}, 3), (new[] {4,5}, 6),
+                                (new[] {10,9}, 8), (new[] {13,12}, 11) };
+                make = (i, y) => new Hc125(i[0], i[1], y, enableActiveLow: false, delayPs: delayPs);
                 break;
             case "04":
                 gates = new[] { (new[] {1}, 2), (new[] {3}, 4), (new[] {5}, 6),
@@ -1113,9 +1127,11 @@ public sealed class ChipFactory : IChipFactory
             or "CY7C199" or "6116" or "2114" or "6264" or "W24512"
             => true,
         // Gate ICs -- all single-part boxes, special-cased at the top of
-        // CreateForUnits (CreateGateChip). Plus the dual counters.
+        // CreateForUnits (CreateGateChip). Plus the dual counters and the
+        // '125/'126 tri-state buffer sections, which ride the same
+        // one-core-per-section dispatch.
         "00" or "02" or "04" or "08" or "10" or "14" or "20" or "30"
-            or "32" or "86" or "390" or "393"
+            or "32" or "86" or "125" or "126" or "390" or "393"
             => true,
         // Electrically modelled passives.
         "resistor" or "resnet-sip9" or "button" or "button-4" or "switch" or "spdt-switch" or "jumper-2pin" or "jumper-3pin" or "diode"

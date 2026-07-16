@@ -107,6 +107,10 @@ public static class TtlTiming
         ["HC:245"] = new(30_000),  // octal transceiver
         ["LS:541"] = new(18_000),
         ["HC:541"] = new(30_000),  // octal buffer
+        ["LS:125"] = new(25_000),
+        ["HC:125"] = new(36_000),  // quad 3-state buffer (worst path: LS enable tPZL 25 ns; HC tpd/ten/tdis all 36 ns full-range)
+        ["LS:126"] = new(25_000),
+        ["HC:126"] = new(36_000),  // as the '125, active-high enables
         ["LS:47"] = new(100_000),
         ["HC:47"] = new(100_000), // BCD→7-seg decoder (slow)
         ["LS:688"] = new(25_000),
