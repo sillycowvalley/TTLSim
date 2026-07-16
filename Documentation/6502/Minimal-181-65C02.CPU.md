@@ -56,7 +56,10 @@ Key structural decisions:
   **/TRST** on each instruction's final cycle to reload T to 0. FETCH always
   happens at T = 0 — and because the microcode address still holds the *old*
   IR during T0, every opcode's T0 word is the identical generic FETCH; no
-  opcode-specific work can hide there.
+  opcode-specific work can hide there. (One deliberate exception: opcode
+  $00's T0 does not fetch — safe because $00 only ever reaches IR via reset
+  forcing or by being fetched as data, and in both cases the right next step
+  is the RESET sequence, not a fetch.)
 - **No address mux.** Address-bus sources take turns via output enables
   (ADDR field): the PC through '541s, the MAR through '574s, or — the page
   trick — **MARL with the PAGE driver** supplying the high byte.
@@ -80,6 +83,17 @@ Key structural decisions:
   hardwired path off B while PCH loads from the data bus — a full 16-bit
   jump in one edge. (Synchronous load dominates count on the '161, so a
   jump and PCINC cannot share a cycle — visible in RTS.)
+- **Reset is microcode, vectored at $FFFC/$FFFD — 6502-authentic, zero ICs.**
+  RST drives the three microcode ROMs' /OE pins, and resistor networks pull
+  the floating control word to a chosen constant: BUS=ALU, ASIDE=$00,
+  F=pass($00), DST=IR. The module guarantees clocked edges during supervised
+  reset, so **IR is forced to $00** before release. Opcode $00 — the 6502's
+  BRK slot, otherwise unused — is the RESET pseudo-opcode: an 11-cycle
+  microcode sequence that reads the vector at $FFFC/$FFFD and loads PC. The
+  PC '161s' /CLR pins are tied inactive; the vector load defines PC. A and B
+  are clobbered as scratch (registers are undefined after reset — also
+  6502-authentic). One free consequence: a wild jump into $00-filled memory
+  executes RESET and reboots cleanly through the vector.
 - **SP counts itself** ('193s), so push/pop never touch the ALU. SP count
   pulses are folded into composite DST codes, since they always coincide
   with a specific bus destination (or none).
@@ -315,6 +329,7 @@ RMB3 and RMB6 literally the same ROM contents.
 |---|---|---|---|---|
 | NOP | $EA | 1 | 2 | END at T0 |
 | STP | $DB | 2 | 3 | asserts /HALTREQ — machine freezes on the module's panel |
+| RESET | $00 | 11 | 7 | pseudo-opcode in the BRK slot; forced into IR by reset, reads $FFFC/$FFFD, loads PC; clobbers A, B; identical ROM contents across all 8 flag combinations (flags are undefined at reset) |
 
 **Total: 133 opcodes** from roughly 22 distinct microcode shapes. 123 opcode
 slots remain free. (Audit: loads/stores 18 · ALU family 43 · register ops 16 ·
@@ -444,6 +459,23 @@ T4: M(ZP:MARL) ← /B  (M=1 S=0101)  flgNZ  END
 T1: F = $00−1+c  (S=1111, CSEL=0 for CLC / 1 for SEC)   flgC   END
 ```
 
+**RESET ($00)** — the vector addresses are *computed*, since the only
+conjurable constants are $00, $01, $FF and their ALU derivatives. A stashes
+$FD; B carries the counting and ends holding the vector low byte
+```
+T0: no fetch                           ; the one exception to generic T0
+T1: MARH ← $FF        (M=1 S=1100)
+T2: B ← $01           ($00 + c)
+T3: B ← B+1  = $02
+T4: A ← /B   = $FD                     ; stash MARL for the high byte
+T5: B ← B+1  = $03
+T6: MARL ← /B = $FC
+T7: B ← M(MAR)                         ; vector low  ($FFFC)
+T8: MARL ← A                           ; $FD (A-side pass)
+T9: bus ← M(MAR); PC ← bus:B           ; vector high ($FFFD)
+T10: END                               ; next T0 fetches from the vector
+```
+
 ---
 
 ## 5. Deliberate omissions vs the 65C02
@@ -456,7 +488,7 @@ T1: F = $00−1+c  (S=1111, CSEL=0 for CLC / 1 for SEC)   flgC   END
 | LSR / ROR | the '181 cannot shift right. **+1 IC** (a '541 with crossed bits on the F→bus path) would add both |
 | BIT, TRB, TSB | no V flag, and the write combinations aren't worth the slots (TRB/TSB partially covered by RMB/SMB) |
 | PHP / PLP | flag register can't drive or load the bus; fixable with a '574 flag register if ever needed |
-| BRK / RTI / interrupts | no interrupt hardware — the clock module's halt/breakpoint machinery covers the debugging role |
+| BRK / RTI / interrupts | no interrupt hardware — the clock module's halt/breakpoint machinery covers the debugging role. The $00 (BRK) slot is repurposed as the RESET pseudo-opcode |
 | SEI / CLI / CLV / SED / CLD | no I, V, or D flags (no decimal mode) |
 | WAI | no interrupts to wait for |
 
@@ -494,7 +526,7 @@ HCT (or HCT buffers) at the LS181 boundary as usual for input thresholds.
 
 | Qty | Part | Role |
 |---|---|---|
-| 1 | 28C256 | program ROM, $8000–$FFFF |
+| 1 | 28C256 | program ROM, $8000–$FFFF · reset vector at $FFFC/$FFFD |
 | 1 | 62256 | RAM, $0000–$7FFF (zero page and stack page $0100 live here) |
 
 A15 is the entire address decoder: A15 → ROM /CS, inverted (spare '04 gate) →
@@ -525,7 +557,9 @@ testable machine**, verified in simulation and on the bench before the next
 layer goes on. Each stage lists the new ICs, the running logic-IC count, the
 new instructions, and the milestone that proves it. Microcode is re-burned at
 every stage; unimplemented opcodes microcode to STP so a wild jump halts
-loudly instead of executing garbage.
+loudly instead of executing garbage ($00 is the exception from stage 5
+onward — it runs the RESET sequence, so wild jumps into zeroed memory
+reboot cleanly).
 
 | Stage | Adds | +ICs | ICs | +Instr | Instr |
 |---|---|---|---|---|---|
@@ -549,6 +583,9 @@ loudly instead of executing garbage.
 count; at the $DB the machine freezes and the module's HALT LED lights.
 NEXT INSTR advances exactly one address. The entire fetch/END/T-counter
 handshake with the module is proven before any datapath exists.
+**Interim boot (stages 1–4):** PC /CLR is strapped to /RST and the memory
+map is temporarily *inverted* (ROM low, RAM high) so clear-to-$0000 lands in
+ROM. The vectored reset arrives at stage 5.
 
 ### Stage 2 — B and the PC load path (+1 → 10)
 **Add:** B ('377); wire the dual PC load (PCL←B hardwire, PCH←bus).
@@ -575,6 +612,12 @@ wrong in interesting ways. Breakpoint-comparator card gets useful here.
 ### Stage 5 — the $00 driver (+1 → 17)
 **Add:** $00 constant '541 (second A-side driver).
 **New (26):** CLA, NEG A, STZ abs, INC abs, DEC abs.
+**Also — the reset vector goes live.** The RESET microcode needs $00, $01
+and $FF, all of which now exist. Flip the memory map to final (ROM high,
+RAM low), lift the PC /CLR strap, wire RST to the microcode ROMs' /OE pins,
+fit the pull networks that define the reset control word (IR ← $00), and
+burn the $00 RESET sequence. From here the machine boots through
+$FFFC/$FFFD like a real 6502.
 
 ### Stage 6 — flags (+4 → 21)
 **Add:** '688 (bus Z-detect) · C ('377) · N,Z ('377) · '153 (CSEL proper —
