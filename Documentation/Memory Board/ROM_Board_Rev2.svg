@@ -1,0 +1,233 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1020" viewBox="0 0 1500 1020" font-family="Helvetica, Arial, sans-serif">
+  <style>
+    .w    { stroke:#222; stroke-width:1; fill:none; }
+    .bus  { stroke:#222; stroke-width:3; fill:none; }
+    .chip { fill:#ffffff; stroke:#222; stroke-width:1.5; }
+    .conn { fill:#eef2fb; stroke:#222; stroke-width:1.5; }
+    .conn2{ fill:#eafaf0; stroke:#222; stroke-width:1.5; }
+    .vcc  { stroke:#c0392b; stroke-width:2; fill:none; }
+    .gnd  { stroke:#2c3e50; stroke-width:2; fill:none; }
+    .ref  { font-size:13px; font-weight:bold; fill:#111; }
+    .part { font-size:11px; font-style:italic; fill:#555; }
+    .pin  { font-size:11px; fill:#111; }
+    .net  { font-size:11px; fill:#103a8c; }
+    .dir  { font-size:10px; fill:#777; }
+    .ttl  { font-size:22px; font-weight:bold; fill:#111; }
+    .sub  { font-size:13px; fill:#555; }
+    .note { font-size:11px; fill:#333; }
+    .nlbl { font-size:11px; font-weight:bold; fill:#111; }
+    text  { dominant-baseline:middle; }
+  </style>
+
+  <rect x="8" y="8" width="1484" height="1004" fill="#ffffff" stroke="#333" stroke-width="1.5"/>
+  <text class="ttl" x="28" y="40">ROM Board Rev 2 — Shadow-ROM Module</text>
+  <text class="sub" x="28" y="62">64K × 8 SRAM, EEPROM-shadowed ROM window (4K/8K/16K/32K, any 4K base) · block-level · net names join like-labelled stubs</text>
+
+  <!-- ===================== BUSES ===================== -->
+  <line class="bus" x1="230" y1="250" x2="1360" y2="250"/>
+  <text class="nlbl" x="600" y="234">A[15:0]</text>
+  <line class="bus" x1="230" y1="620" x2="1360" y2="620"/>
+  <text class="nlbl" x="430" y="604">D[7:0]</text>
+
+  <!-- junction dots -->
+  <circle cx="230" cy="250" r="4" fill="#222"/>
+  <circle cx="890" cy="250" r="4" fill="#222"/>
+  <circle cx="950" cy="250" r="4" fill="#222"/>
+  <circle cx="1030" cy="250" r="4" fill="#222"/>
+  <circle cx="1270" cy="250" r="4" fill="#222"/>
+  <circle cx="230" cy="620" r="4" fill="#222"/>
+  <circle cx="695" cy="620" r="4" fill="#222"/>
+  <circle cx="1100" cy="620" r="4" fill="#222"/>
+  <circle cx="1340" cy="620" r="4" fill="#222"/>
+
+  <!-- ===================== HOST HEADERS (left) ===================== -->
+  <rect class="conn" x="60" y="150" width="120" height="90"/>
+  <text class="ref" x="120" y="172" text-anchor="middle">J1</text>
+  <text class="part" x="120" y="189" text-anchor="middle">ADDR-L · 8-pin</text>
+  <line class="bus" x1="180" y1="205" x2="230" y2="205"/>
+  <text class="nlbl" x="186" y="193">A[7:0]</text>
+  <text class="dir" x="150" y="222" text-anchor="middle">(host)</text>
+
+  <rect class="conn" x="60" y="270" width="120" height="90"/>
+  <text class="ref" x="120" y="292" text-anchor="middle">J2</text>
+  <text class="part" x="120" y="309" text-anchor="middle">ADDR-H · 8-pin</text>
+  <line class="bus" x1="180" y1="325" x2="230" y2="325"/>
+  <text class="nlbl" x="186" y="313">A[15:8]</text>
+  <line class="bus" x1="230" y1="205" x2="230" y2="325"/>
+
+  <rect class="conn" x="60" y="560" width="120" height="90"/>
+  <text class="ref" x="120" y="582" text-anchor="middle">J3</text>
+  <text class="part" x="120" y="599" text-anchor="middle">DATA · 8-pin</text>
+  <line class="bus" x1="180" y1="615" x2="230" y2="615"/>
+  <text class="nlbl" x="186" y="603">D[7:0]</text>
+  <line class="bus" x1="230" y1="615" x2="230" y2="620"/>
+
+  <rect class="conn" x="60" y="700" width="120" height="248"/>
+  <text class="ref" x="120" y="722" text-anchor="middle">J4</text>
+  <text class="part" x="120" y="739" text-anchor="middle">CTL · 8-pin</text>
+  <line class="w" x1="180" y1="762" x2="215" y2="762"/><text class="net" x="220" y="762">HOE</text><text class="dir" x="262" y="762">(/OE in)</text>
+  <line class="w" x1="180" y1="789" x2="215" y2="789"/><text class="net" x="220" y="789">HWE</text><text class="dir" x="262" y="789">(/WE in)</text>
+  <line class="w" x1="180" y1="816" x2="215" y2="816"/><text class="net" x="220" y="816">READY</text><text class="dir" x="272" y="816">(out)</text>
+  <line class="w" x1="180" y1="843" x2="215" y2="843"/><text class="net" x="220" y="843">/WAIT</text><text class="dir" x="268" y="843">(out)</text>
+  <line class="w" x1="180" y1="870" x2="215" y2="870"/><text class="net" x="220" y="870">/RST</text><text class="dir" x="262" y="870">(bidir)</text>
+  <line class="vcc" x1="180" y1="897" x2="215" y2="897"/><text class="pin" x="220" y="897" fill="#c0392b">VCC</text>
+  <line class="gnd" x1="180" y1="922" x2="215" y2="922"/><text class="pin" x="220" y="922" fill="#2c3e50">GND</text>
+  <text class="dir" x="220" y="940">pin 8: reserved</text>
+
+  <!-- ===================== COPY ENGINE (top band) ===================== -->
+  <rect class="chip" x="250" y="80" width="110" height="60"/>
+  <text class="ref" x="260" y="98">X1</text>
+  <text class="part" x="305" y="118" text-anchor="middle">8 MHz can</text>
+  <line class="w" x1="360" y1="110" x2="395" y2="110"/>
+  <text class="net" x="400" y="110">CLK</text>
+
+  <rect class="chip" x="470" y="60" width="220" height="120"/>
+  <text class="ref" x="480" y="78">U3–U6</text>
+  <text class="part" x="560" y="78">4× 74HC163</text>
+  <text class="part" x="580" y="160" text-anchor="middle">16-bit copy counter</text>
+  <line class="w" x1="435" y1="95" x2="470" y2="95"/><text class="net" x="430" y="95" text-anchor="end">CLK</text><text class="pin" x="475" y="95">CLK</text>
+  <line class="w" x1="435" y1="120" x2="470" y2="120"/><text class="net" x="430" y="120" text-anchor="end">/RST</text><text class="pin" x="475" y="120">/CLR</text>
+  <line class="w" x1="435" y1="145" x2="470" y2="145"/><text class="net" x="430" y="145" text-anchor="end">CNTEN</text><text class="pin" x="475" y="145">CEP</text>
+  <line class="bus" x1="690" y1="100" x2="770" y2="100"/>
+  <text class="pin" x="684" y="88" text-anchor="end">Q[15:0]</text>
+  <line class="w" x1="690" y1="150" x2="720" y2="150"/>
+  <text class="net" x="726" y="150">RCO</text>
+
+  <rect class="chip" x="770" y="60" width="160" height="120"/>
+  <text class="ref" x="780" y="78">U7 U8</text>
+  <text class="part" x="855" y="78">2× 74HC541</text>
+  <text class="part" x="850" y="160" text-anchor="middle">copy addr drivers</text>
+  <line class="w" x1="850" y1="180" x2="850" y2="208"/>
+  <text class="net" x="858" y="200">/WAIT</text>
+  <text class="pin" x="842" y="192" text-anchor="end">/OE</text>
+  <line class="bus" x1="930" y1="100" x2="950" y2="100"/>
+  <line class="bus" x1="950" y1="100" x2="950" y2="250"/>
+
+  <!-- A[15:12] tap for DECODE, by net name -->
+  <line class="w" x1="890" y1="250" x2="890" y2="278"/>
+  <text class="net" x="882" y="290" text-anchor="end">A[15:12]</text>
+
+  <!-- ===================== EEPROM ===================== -->
+  <rect class="chip" x="990" y="320" width="190" height="180"/>
+  <text class="ref" x="1000" y="338">U1</text>
+  <text class="part" x="1070" y="338">28C256/128/64</text>
+  <text class="part" x="1085" y="480" text-anchor="middle">ROM image (offset 0)</text>
+  <line class="bus" x1="1030" y1="250" x2="1030" y2="320"/>
+  <text class="pin" x="1038" y="332">A[11:0]</text>
+  <line class="w" x1="955" y1="365" x2="990" y2="365"/><text class="net" x="950" y="365" text-anchor="end">EA14</text><text class="pin" x="995" y="365">A14</text>
+  <line class="w" x1="955" y1="388" x2="990" y2="388"/><text class="net" x="950" y="388" text-anchor="end">EA13</text><text class="pin" x="995" y="388">A13</text>
+  <line class="w" x1="955" y1="411" x2="990" y2="411"/><text class="net" x="950" y="411" text-anchor="end">EA12</text><text class="pin" x="995" y="411">A12</text>
+  <line class="w" x1="955" y1="440" x2="990" y2="440"/><text class="net" x="950" y="440" text-anchor="end">/WAIT</text><text class="pin" x="995" y="440">/CE</text>
+  <line class="w" x1="955" y1="465" x2="990" y2="465"/><text class="net" x="950" y="465" text-anchor="end">EOE</text><text class="pin" x="995" y="465">/OE</text>
+  <line class="bus" x1="1100" y1="500" x2="1100" y2="620"/>
+  <text class="pin" x="1108" y="512">D[7:0]</text>
+
+  <!-- ===================== SRAM ===================== -->
+  <rect class="chip" x="1230" y="320" width="190" height="180"/>
+  <text class="ref" x="1240" y="338">U2</text>
+  <text class="part" x="1305" y="338">W24512</text>
+  <text class="part" x="1325" y="480" text-anchor="middle">64K × 8 SRAM · 15 ns</text>
+  <line class="bus" x1="1270" y1="250" x2="1270" y2="320"/>
+  <text class="pin" x="1278" y="332">A[15:0]</text>
+  <line class="w" x1="1195" y1="370" x2="1230" y2="370"/><text class="net" x="1190" y="370" text-anchor="end">SWE</text><text class="pin" x="1235" y="370">/WE</text>
+  <line class="w" x1="1195" y1="398" x2="1230" y2="398"/><text class="net" x="1190" y="398" text-anchor="end">HOE</text><text class="pin" x="1235" y="398">/OE</text>
+  <line class="gnd" x1="1200" y1="426" x2="1230" y2="426"/><text class="pin" x="1235" y="426">/CE</text>
+  <line class="gnd" x1="1194" y1="432" x2="1206" y2="432"/><line class="gnd" x1="1197" y1="436" x2="1203" y2="436"/>
+  <line class="vcc" x1="1200" y1="454" x2="1230" y2="454"/><text class="pin" x="1235" y="454">CS2</text>
+  <line class="vcc" x1="1192" y1="448" x2="1208" y2="448"/>
+  <text class="pin" x="1186" y="454" text-anchor="end" fill="#c0392b">VCC</text>
+  <line class="bus" x1="1340" y1="500" x2="1340" y2="620"/>
+  <text class="pin" x="1348" y="512">I/O[7:0]</text>
+
+  <!-- ===================== ZERO DRIVER ===================== -->
+  <rect class="chip" x="620" y="430" width="150" height="100"/>
+  <text class="ref" x="630" y="448">U9</text>
+  <text class="part" x="710" y="448">74HC541</text>
+  <text class="part" x="695" y="512" text-anchor="middle">zero driver · 0x00</text>
+  <line class="gnd" x1="585" y1="465" x2="620" y2="465"/>
+  <line class="gnd" x1="577" y1="471" x2="593" y2="471"/><line class="gnd" x1="580" y1="475" x2="590" y2="475"/>
+  <text class="pin" x="625" y="465">A0..A7</text>
+  <line class="w" x1="585" y1="495" x2="620" y2="495"/><text class="net" x="580" y="495" text-anchor="end">ZOE</text><text class="pin" x="625" y="495">/OE</text>
+  <line class="bus" x1="695" y1="530" x2="695" y2="620"/>
+  <text class="pin" x="703" y="542">Y[7:0]</text>
+
+  <!-- ===================== SUPERVISOR ===================== -->
+  <rect class="chip" x="250" y="700" width="130" height="80"/>
+  <text class="ref" x="260" y="718">U12</text>
+  <text class="part" x="325" y="718">DS1813</text>
+  <text class="part" x="315" y="762" text-anchor="middle">supervisor</text>
+  <line class="w" x1="380" y1="735" x2="415" y2="735"/>
+  <text class="net" x="420" y="735">/RST</text>
+  <text class="note" x="250" y="795">SW7: button on RST to GND = re-shadow</text>
+
+  <!-- ===================== COPYCTL GAL ===================== -->
+  <rect class="chip" x="460" y="690" width="190" height="190"/>
+  <text class="ref" x="470" y="708">U10</text>
+  <text class="part" x="555" y="708">ATF16V8C-7</text>
+  <text class="part" x="555" y="862" text-anchor="middle">COPYCTL (registered)</text>
+  <line class="w" x1="425" y1="735" x2="460" y2="735"/><text class="net" x="420" y="735" text-anchor="end">CLK</text><text class="pin" x="465" y="735">CLK</text>
+  <line class="w" x1="425" y1="765" x2="460" y2="765"/><text class="net" x="420" y="765" text-anchor="end">/RST</text><text class="pin" x="465" y="765">/RST</text>
+  <line class="w" x1="425" y1="795" x2="460" y2="795"/><text class="net" x="420" y="795" text-anchor="end">RCO</text><text class="pin" x="465" y="795">RCO</text>
+  <line class="w" x1="425" y1="825" x2="460" y2="825"/><text class="net" x="420" y="825" text-anchor="end">HWE</text><text class="pin" x="465" y="825">HWE</text>
+  <line class="w" x1="650" y1="735" x2="685" y2="735"/><text class="pin" x="645" y="735" text-anchor="end">SWE</text><text class="net" x="690" y="735">SWE</text>
+  <line class="w" x1="650" y1="765" x2="685" y2="765"/><text class="pin" x="645" y="765" text-anchor="end">CNTEN</text><text class="net" x="690" y="765">CNTEN</text>
+  <line class="w" x1="650" y1="795" x2="685" y2="795"/><text class="pin" x="645" y="795" text-anchor="end">DONE</text><text class="net" x="690" y="795">DONE</text>
+  <line class="w" x1="650" y1="825" x2="685" y2="825"/><text class="pin" x="645" y="825" text-anchor="end">DRIVE</text><text class="net" x="690" y="825">DRIVE</text>
+
+  <!-- ===================== DIP CONFIG ===================== -->
+  <rect class="conn2" x="720" y="740" width="140" height="140"/>
+  <text class="ref" x="730" y="758">SW1</text>
+  <text class="part" x="810" y="758">6× DIP</text>
+  <text class="part" x="790" y="862" text-anchor="middle">RN1 pull-ups</text>
+  <line class="vcc" x1="790" y1="740" x2="790" y2="722"/><line class="vcc" x1="780" y1="722" x2="800" y2="722"/>
+  <text class="pin" x="805" y="722" fill="#c0392b">VCC</text>
+  <line class="w" x1="860" y1="790" x2="900" y2="790"/><text class="pin" x="854" y="790" text-anchor="end">SIZE[1:0]</text>
+  <line class="w" x1="860" y1="825" x2="900" y2="825"/><text class="pin" x="854" y="825" text-anchor="end">BASE[3:0]</text>
+
+  <!-- ===================== DECODE GAL ===================== -->
+  <rect class="chip" x="900" y="690" width="210" height="230"/>
+  <text class="ref" x="910" y="708">U11</text>
+  <text class="part" x="1005" y="708">ATF22V10</text>
+  <text class="part" x="1005" y="902" text-anchor="middle">DECODE (combinational)</text>
+  <line class="w" x1="865" y1="730" x2="900" y2="730"/><text class="net" x="860" y="730" text-anchor="end">A[15:12]</text>
+  <line class="w" x1="865" y1="757" x2="900" y2="757"/><text class="net" x="860" y="757" text-anchor="end">DONE</text>
+  <text class="pin" x="905" y="730">A15..12</text>
+  <text class="pin" x="905" y="757">DONE</text>
+  <text class="pin" x="905" y="790">SIZE1,0</text>
+  <text class="pin" x="905" y="825">BASE3..0</text>
+  <line class="w" x1="865" y1="852" x2="900" y2="852"/><text class="net" x="860" y="852" text-anchor="end">DRIVE</text>
+  <text class="pin" x="905" y="852">DRIVE</text>
+  <line class="w" x1="1110" y1="718" x2="1145" y2="718"/><text class="pin" x="1105" y="718" text-anchor="end">EA14</text><text class="net" x="1150" y="718">EA14</text>
+  <line class="w" x1="1110" y1="740" x2="1145" y2="740"/><text class="pin" x="1105" y="740" text-anchor="end">EA13</text><text class="net" x="1150" y="740">EA13</text>
+  <line class="w" x1="1110" y1="762" x2="1145" y2="762"/><text class="pin" x="1105" y="762" text-anchor="end">EA12</text><text class="net" x="1150" y="762">EA12</text>
+  <line class="w" x1="1110" y1="790" x2="1145" y2="790"/><text class="pin" x="1105" y="790" text-anchor="end">READY</text><text class="net" x="1150" y="790">READY</text>
+  <line class="w" x1="1110" y1="815" x2="1145" y2="815"/><text class="pin" x="1105" y="815" text-anchor="end">/WAIT</text><text class="net" x="1150" y="815">/WAIT</text>
+  <line class="w" x1="1110" y1="840" x2="1145" y2="840"/><text class="pin" x="1105" y="840" text-anchor="end">EOE</text><text class="net" x="1150" y="840">EOE</text>
+  <line class="w" x1="1110" y1="865" x2="1145" y2="865"/><text class="pin" x="1105" y="865" text-anchor="end">ZOE</text><text class="net" x="1150" y="865">ZOE</text>
+
+  <!-- ===================== LEDS ===================== -->
+  <circle cx="1290" cy="790" r="8" class="w"/>
+  <line class="w" x1="1250" y1="790" x2="1282" y2="790"/>
+  <text class="net" x="1246" y="790" text-anchor="end">READY</text>
+  <rect class="w" x="1306" y="785" width="28" height="10"/>
+  <line class="w" x1="1298" y1="790" x2="1306" y2="790"/>
+  <line class="gnd" x1="1334" y1="790" x2="1352" y2="790"/>
+  <line class="gnd" x1="1352" y1="784" x2="1352" y2="796"/>
+  <text class="ref" x="1290" y="770" text-anchor="middle">D1</text>
+
+  <circle cx="1290" cy="815" r="8" class="w"/>
+  <line class="w" x1="1250" y1="815" x2="1282" y2="815"/>
+  <text class="net" x="1246" y="815" text-anchor="end">/WAIT</text>
+  <rect class="w" x="1306" y="810" width="28" height="10"/>
+  <line class="w" x1="1298" y1="815" x2="1306" y2="815"/>
+  <line class="gnd" x1="1334" y1="815" x2="1352" y2="815"/>
+  <line class="gnd" x1="1352" y1="809" x2="1352" y2="821"/>
+  <text class="ref" x="1290" y="835" text-anchor="middle">D2</text>
+  <text class="note" x="1246" y="855">D2 lit during copy (~25 ms), steady = wedged</text>
+
+  <!-- ===================== NOTES ===================== -->
+  <text class="note" x="60" y="960">Copy: 3 clocks/byte (SETTLE / WRITE / HOLD), full 64K pass — window shadowed from EEPROM via EOE, everything else zeroed via U9/ZOE. Boot 24.6 ms @ 8 MHz.</text>
+  <text class="note" x="60" y="977">Host read path is raw SRAM (A + HOE direct). Writes: HWE merged with the copy pulse inside U10 (7.5 ns). RN1 also pulls HWE and HOE high for standalone boot.</text>
+  <text class="note" x="60" y="994">/WAIT = EEPROM /CE = U7/U8 /OE: the copier owns the buses only while /WAIT is low. Host must not drive A/D during /WAIT (share /RST and it never will).</text>
+  <text class="note" x="60" y="1008">Per-IC VCC/GND and decoupling omitted for clarity. Socket drawn as 28C256; 28C128/28C64 drop in (EA lines land on absent/NC pins — harmless, see Rev 2 doc §2).</text>
+</svg>

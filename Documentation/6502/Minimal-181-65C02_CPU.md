@@ -8,22 +8,25 @@ critically — the T-state counter, so the CPU carries no sequencer of its own).
 The instruction set is a **65C02 subset with byte-identical encodings**,
 including the full zero-page family, the complete Rockwell bit-manipulation
 set (RMB/SMB/BBR/BBS) with exact flag fidelity, pointer indirection, the Y
-register, right shifts, and a maskable interrupt: a stock 6502/65C02 assembler
-emits directly runnable code for everything implemented. A handful of extra
-instructions (ADD/SUB without carry, NOT/NEG/CLA/SET) occupy otherwise-unused
-opcode slots.
+register, right shifts, and both maskable and non-maskable interrupts: a
+stock 6502/65C02 assembler emits directly runnable code for everything
+implemented. A handful of extra instructions (ADD/SUB without carry,
+NOT/NEG/CLA/SET) occupy otherwise-unused opcode slots.
 
-**Headline numbers:** 40 logic ICs + 4 microcode ROMs on the CPU; ~46 ICs for
-the complete machine with memory. 202 opcodes. Worst-case instruction: 11
-T-states (ALU (zp),Y — the hardware IRQ entry runs 14) of the module's 16
-available. Zero-page, stack, and bit-manipulation accesses match or beat
-65C02 cycle counts; pointer-indirect modes run but pay roughly double.
+**Headline numbers:** 44 logic ICs + 4 microcode ROMs on the CPU; ~50 ICs for
+the complete machine with memory. 202 opcodes. Worst-case instruction: 9
+T-states after the stage-17 result bus (11 before it); interrupt entry runs
+12 — all within the module's 16 available. Zero-page, stack, indexed, and
+bit-manipulation accesses match or beat 65C02 cycle counts; pointer-indirect
+modes run but pay a premium.
 
 The build is staged (§8): stages 1–11 erect the **core machine** (33 logic
 ICs, 3 ROMs, 133 opcodes) whose microcode is fully listed in this document;
 stages 12–16 add the 4th microcode ROM and the **extension datapath** (temp,
-Y, right shift, the P register, interrupts) whose cycle counts below are
-worked estimates, to be pinned down as each stage's microcode is written.
+Y, right shift, the P register, IRQ + NMI); stage 17 is a pure performance
+retrofit (the result bus) that changes no behaviour. Extension cycle counts
+below are worked estimates, to be pinned down as each stage's microcode is
+written.
 
 ---
 
@@ -48,13 +51,14 @@ are retired here, deliberately:
   INX/DEX, indexed address arithmetic, relative branches, JSR pushes, and
   single-bit masks possible with **zero mux ICs** — worth far more than the
   one buffer the hardwired-A trick saved.
-- **The B register exists, and every ALU op pays one cycle to stage its
-  operand into it.** The bus-as-B-port trick silently assumed memory data
-  stays valid on the bus for the whole ALU cycle, and it made
-  read-modify-write awkward (the writeback needs the bus while the operand is
-  still your B input). The +1 staging tax is paid openly — it appears as the
-  uniform +1 in the ALU-family cycle counts — and it buys DEC synthesis,
-  branch-offset staging, and JSR's operand parking in return.
+- **The B register exists** — but where the earlier design hung the B port
+  permanently off the data bus, here the B port gets a 2:1 mux at stage 17
+  (BSEL: B register or the data bus), turning the ALU's F output into a de
+  facto second bus. Until then, every ALU op pays one cycle to stage its
+  operand into B. The staging tax is paid openly — it appears as the
+  uniform +1 in the stage-1–16 cycle counts — and it buys DEC synthesis,
+  branch-offset staging, and JSR's operand parking; stage 17 then buys most
+  of the tax back for two '157s.
 
 The other founding decision the '181 enables: **microcode in EEPROM, flags in
 the address** (§3), which makes conditional branching a table lookup rather
@@ -73,17 +77,19 @@ Single 8-bit data bus, 16-bit address bus, horizontal-ish microcode.
                       │  A  │      │  X  │     │  B  │    │ IR  │
                       │'574 │      │'574 │     │'377 │    │'377 │
                       └──┬──┘      └──┬──┘     └──┬──┘    └──┬──┘
-   A-side mini-bus ──────┴───────────┴──┬─────   │       opcode → μROM addr
-   (one driver enabled per μstep:       │        │ IR6:4 → '238 → '541 = MASK
-    A · X · Y · $00 · PCL · PCH ·    ┌──┴────────┴──┐
-    MASK)                            │  2× 74LS181  │── Cn+8 → C flag / HCARRY
-                                     │  M,S3-0,Cn   │
-                                     └──────┬───────┘
+   A-side mini-bus ──────┴───────────┴──┬──── ┌──┴──┐    opcode → μROM addr
+   (one driver enabled per μstep:       │   BSEL '157 ×2   IR6:4 → '238
+    A · X · Y · $00 · PCL · PCH ·    ┌──┴─────┴────┐        → '541 = MASK
+    MASK)                            │  2× 74LS181 │── Cn+8 → C flag / HCARRY
+                                     │  M,S3-0,Cn  │   (B port ← B reg or bus)
+                                     └──────┬──────┘
                                         F → '541 → data bus
                                         F → SHR '541 (>>1) → data bus
+                                        F → register D inputs (stage 17)
                                                 │
-        flags: Z ('688 on bus), N (bus bit 7), C ('181 carry), TEST (hidden)
+        flags: Z ('688), N (bit 7), C ('181 carry), TEST (hidden) — on F
         P → '541 → data bus (PHP/IRQ) · temp '574 → data bus (pointer scratch)
+        VEC → '541 → data bus ($FA/$FB/$FE/$FF interrupt vector constants)
 
    address bus high ←── '541 PAGE driver ($00 / $01 constant)
    address bus      ←── 2× '541 (PC)  ·  2× '574 MAR (tri-state)
@@ -104,7 +110,8 @@ Key structural decisions:
   opcode-specific work can hide there. (One deliberate exception: opcode
   \$00's T0 does not fetch — safe because \$00 only ever reaches IR via reset
   forcing or by being fetched as data, and in both cases the right next step
-  is the RESET sequence, not a fetch.)
+  is the RESET sequence, not a fetch. The interrupt grant also overrides the
+  generic T0 — see the interrupt bullet.)
 - **No address mux.** Address-bus sources take turns via output enables
   (ADDR field): the PC through '541s, the MAR through '574s, or — the page
   trick — **MARL with the PAGE driver** supplying the high byte.
@@ -148,12 +155,13 @@ Key structural decisions:
   push/pop** — a tax on nearly every instruction, not just a few (an `LDA
   abs` balloons from 4 cycles to ~6; JSR/RTS to 10–11). Six counter ICs
   buy that back everywhere.
-- **Flags watch the data bus, not the ALU.** Z ('688 comparing the bus to
-  \$00) and N (bus bit 7) are latched from the *data bus*; C is latched from
-  the '181 carry chain. Because loads and transfers move data across the bus,
-  **LDA/LDX/PLA/TAX etc. set N and Z with no extra cycle** — exactly the
-  65C02 behaviour, and essential for real 6502 code (`LDA x / BEQ done`).
-  C and N,Z have independent latch enables (FLGC / FLGNZ), matching the
+- **Flags watch the ALU's F output** (originally the data bus; the watchers
+  move to F at stage 17, where F becomes the result path). Z ('688 comparing
+  F to \$00) and N (F bit 7) latch on FLGNZ; C latches from the '181 carry
+  chain on FLGC. Because every load and transfer is an ALU pass, **F carries
+  the loaded value too — LDA/LDX/PLA/TAX etc. still set N and Z with no
+  extra cycle**, exactly the 65C02 behaviour, and essential for real 6502
+  code (`LDA x / BEQ done`). Independent FLGC / FLGNZ enables match the
   65C02 rule that logic ops and loads update N,Z but never C.
 - **Hidden state:** SGN (branch offset bit 7), HCARRY (low-byte carry of
   address arithmetic, deliberately separate from the C flag so branches and
@@ -164,13 +172,13 @@ Key structural decisions:
   hidden flop and **leave N, Z, and C untouched, exactly like the Rockwell
   parts**. Sign extension for branches XOR-steers the '181 S field with SGN;
   the steer condition is decoded (`ASIDE = PCH AND M = 0`), not a control bit.
-- **Extension datapath (stages 12–16).** Four additions ride spare codes and
+- **Extension datapath (stages 12–16).** Five additions ride spare codes and
   the 4th ROM's new bits, touching nothing already built:
-  - **temp** ('574) — a pointer-scratch register loading from the data bus
-    like any DST, and driving it back as the fourth BUS source (the 2-bit
-    core BUS field had one spare code). temp is what makes (zp), (zp,X),
-    (zp),Y and JMP (abs) possible: A and X stay architecturally untouched
-    mid-instruction, exactly as before.
+  - **temp** ('574) — a pointer-scratch register loading like any DST, and
+    driving the data bus as a BUS source (the 2-bit core BUS field had one
+    spare code). temp is what makes (zp), (zp,X), (zp),Y and JMP (abs)
+    possible: A and X stay architecturally untouched mid-instruction,
+    exactly as before.
   - **Y** ('574) — the seventh A-side driver, on one of ASIDE's two spare
     codes. Indexing with Y reuses the entire X machinery (same ALU configs,
     same HCARRY path); only the ASIDE code differs.
@@ -179,10 +187,32 @@ Key structural decisions:
     gate); the shifted-out F bit 0 latches into C. The '181 shifts left only
     (it is an adder — `A+A`); this one buffer is the entire right-shift path.
   - **P register path** — a '541 gathers N·Z·C·I into the 6502 P byte layout
-    to drive the bus (PHP, IRQ push); a '157 steers the Z, C and I latch
-    inputs from their computed sources to the corresponding bus bits when
-    DST=P (PLP, RTI). N needs no steering — it already latches from bus
+    to drive the bus (PHP, interrupt push); a '157 steers the Z, C and I
+    latch inputs from their computed sources to the corresponding bus bits
+    when DST=P (PLP, RTI). N needs no steering — it already latches from
     bit 7, and N *is* bit 7 of P.
+  - **VEC driver** ('541) — the interrupt vector bytes as a jammed constant.
+    The four bytes \$FA, \$FB (NMI vector \$FFFA/B) and \$FE, \$FF (IRQ vector
+    \$FFFE/F) differ in exactly two bits: bit 2 is IRQ-vs-NMI and bit 0 is
+    low-vs-high byte. So six '541 inputs are tied high, bit 2 is wired to
+    the grant flop (which source won), and bit 0 to the VECHI control line.
+    Consequence: **IRQ and NMI share literally identical microcode** — the
+    hardware picks the vector — and entry runs 12 cycles. (Computing the NMI
+    vector RESET-style was costed first and *does not fit*: counting B up to
+    \$05 pushes the sequence to 18 T-states against the T counter's hard
+    16-state wall. The constant driver is not a luxury.)
+- **The result bus (stage 17).** Two '157s put a 2:1 mux on the '181's B
+  port (BSEL: B register, or the data bus directly), and the D inputs of
+  A, X, Y, B, temp, IR, MAR and PCH move from the data bus to the ALU's F
+  output. F becomes the result path; the shared data bus becomes
+  operand-side only (memory, SP, temp, P, VEC drivers — plus the F→bus and
+  SHR drivers for memory writes). Now an operand can come *off the bus,
+  through the ALU, and into its destination in one cycle*: `ADC #` is
+  `A ← A + M(PC)` in a single T-state. The B-staging tax, the abs,X
+  double-penalty, and most of the pointer-walk overhead disappear (§4,
+  stage-17 table). What it cannot fix: T0 as a dedicated generic fetch is
+  the module handshake, so JSR/RTS keep their +1 — the standing price of
+  having no sequencer on the board, and still a good trade.
 
 ### Why zero page earns its slots
 
@@ -252,7 +282,7 @@ never comes for this machine.
 | TESTSEL | 1 | microcode Z address line ← Z flag / TEST flop ('153 section 2) |
 | PCINC | 1 | PC++ |
 | FLGC | 1 | latch C from '181 carry-out |
-| FLGNZ | 1 | latch Z ('688) and N (bit 7) from the data bus |
+| FLGNZ | 1 | latch Z ('688) and N (bit 7) |
 | TRST | 1 | assert /TRST — instruction ends, module reloads T to 0 |
 | HREQ | 1 | assert /HALTREQ (STP) |
 
@@ -263,16 +293,18 @@ consumed the core word's last three spares — the 16th DST code, the '153's
 second section, and the final control bit — simultaneously. **The core word
 is full; that is why stage 12 begins with the 4th ROM.**
 
-### Control word — extension 8 bits (ROM 4, stages 12–16)
+### Control word — extension 8 bits (ROM 4, stages 12–17)
 
 | Field | Bits | Values |
 |---|---|---|
-| BUSX | 1 | extends BUS to 3 bits: adds **P** (flag byte → bus) and **SHR** (F>>1 → bus); one code spare |
-| DSTX | 1 | extends DST to 5 bits: adds **temp**, **Y**, **P←bus** (jam Z·C·I from bus via the '157), and SP-composite variants for the interrupt push; several codes spare |
-| ISET | 1 | set the I flag (SEI, IRQ entry) |
+| BUSX | 1 | extends BUS to 3 bits: adds **P** (flag byte → bus), **SHR** (F>>1 → bus), **VEC** (interrupt vector constant → bus); one code spare |
+| DSTX | 1 | extends DST to 5 bits: adds **temp**, **Y**, **P←bus** (jam Z·C·I via the '157), **MARL+B** (same value, same edge — the stage-17 pointer walks lean on it), SP-composites for the interrupt push, **B+latch SGN+HC** (stage-17 branches); several codes spare |
+| ISET | 1 | set the I flag (SEI, interrupt entry) |
 | ICLR | 1 | clear the I flag (CLI; RTI restores I via P←bus) |
-| IACK | 1 | clear the IRQ pending flop (IRQ entry) |
-| — | 3 | spare |
+| IACK | 1 | clear the granted pending flop (interrupt entry) |
+| VECHI | 1 | VEC driver byte select: vector low / vector high |
+| BSEL | 1 | '181 B port ← B register / data bus (stage 17) |
+| — | 1 | spare |
 
 Until stage 12 the 4th ROM socket is empty and the extension lines are pulled
 to their inactive levels; the core machine neither knows nor cares.
@@ -289,7 +321,7 @@ Of the 64 possible M·S·carry combinations, these earn microcode slots:
 | M | S3–S0 | Cn | A-side | F | Used by |
 |---|---|---|---|---|---|
 | 1 | 1111 | – | A / X / Y / \$00 | pass A-side | STA, STX, STY, STZ, TAX, TXA, TAY, TYA, TXS, PHA, PHX, PHY, CLA |
-| 1 | 1010 | – | – | pass B | PLA/PLX/PLY flag pass, MARL←B, pointer staging |
+| 1 | 1010 | – | – | pass B | PLA/PLX/PLY flag pass, MARL←B, pointer staging, all post-17 loads (B=bus) |
 | 1 | 0000 | – | A | /A | NOT A |
 | 1 | 0101 | – | – | /B | DEC-memory finish |
 | 1 | 1011 | – | A / MASK | A·B | AND, **BBR/BBS test** |
@@ -307,8 +339,9 @@ Of the 64 possible M·S·carry combinations, these earn microcode slots:
 | 0 | 1100 | c | A | A+A+c | ASL (c=0), ROL (c=C) |
 | 0 | 0000/1111 | HC | PCH | PCH ± sign + HCARRY | branch high-byte fix (SGN steers 0000↔1111) |
 
-LSR and ROR use no new ALU configuration at all: F = pass A, taken off the
-SHR driver instead of the straight one.
+LSR and ROR use no new ALU configuration at all: F = pass A (or pass B for
+memory RMW), taken off the SHR driver instead of the straight one. Likewise
+stage 17 adds no configurations — BSEL just changes where B comes from.
 
 The CLC/SEC trick deserves a note: with FLGC and FLGNZ independent, CLC and
 SEC are simply "compute something with a known borrow / no-borrow and latch
@@ -320,33 +353,34 @@ no operand fetch, 2 cycles each, N and Z untouched. Exactly 65C02 semantics.
 ## 4. Instruction set
 
 T0 is always FETCH (IR ← M(PC), PC++) and is included in every cycle count.
-**Cyc** = this CPU; **'C02** = 65C02/Rockwell cycle count for the same
-encoding. All listed opcodes are **byte-identical to the 65C02** unless marked
-✚ (ours only, parked in unused slots). Stage-12–16 families are gathered in
-their own subsection with estimated cycle counts.
+**Cyc** = this CPU at stage 16; **'C02** = 65C02/Rockwell cycle count for the
+same encoding. All listed opcodes are **byte-identical to the 65C02** unless
+marked ✚ (ours only, parked in unused slots). Stage-12–16 families are
+gathered in their own subsection with estimated cycle counts, and the
+stage-17 improvements in the table after that.
 
 ### Loads and stores
 
 | Instr | Op | Cyc | 'C02 | Notes |
 |---|---|---|---|---|
-| LDA # | \$A9 | 2 | 2 | N,Z set from bus — free |
+| LDA # | \$A9 | 2 | 2 | N,Z set on the fly — free |
 | LDA zp | \$A5 | 3 | 3 | **match** — PAGE driver |
 | LDA zp,X | \$B5 | 4 | 4 | **match**; wraps within page zero, 6502-correct |
 | LDA abs | \$AD | 4 | 4 | |
-| LDA abs,X | \$BD | 6 | 4(+1) | 'C02 adds 1 on page cross; we always pay the high-byte fix |
+| LDA abs,X | \$BD | 6 | 4(+1) | 'C02 adds 1 on page cross; we always pay the high-byte fix (stage 17: 4) |
 | LDX # | \$A2 | 2 | 2 | |
 | LDX zp | \$A6 | 3 | 3 | (zp,Y and abs,Y variants arrive at stage 13) |
 | LDX abs | \$AE | 4 | 4 | |
 | STA zp | \$85 | 3 | 3 | |
 | STA zp,X | \$95 | 4 | 4 | |
 | STA abs | \$8D | 4 | 4 | A → ALU pass → bus |
-| STA abs,X | \$9D | 6 | 5 | |
+| STA abs,X | \$9D | 6 | 5 | stage 17: 4 |
 | STX zp | \$86 | 3 | 3 | |
 | STX abs | \$8E | 4 | 4 | |
 | STZ zp | \$64 | 3 | 3 | 65C02 extension; \$00 driver → pass |
 | STZ zp,X | \$74 | 4 | 4 | |
 | STZ abs | \$9C | 4 | 4 | |
-| STZ abs,X | \$9E | 6 | 5 | |
+| STZ abs,X | \$9E | 6 | 5 | stage 17: 4 |
 
 ### ALU operations (A ∘ operand → A, N,Z; arithmetic also C)
 
@@ -362,9 +396,13 @@ their own subsection with estimated cycle counts.
 | SUB ✚ | slot | slot | slot | slot | slot | 3 / 4 / 5 / 5 / 7 | — (idiom: SEC+SBC) |
 | CPX | \$E0 | \$E4 | — | \$EC | — | 3 / 4 / – / 5 / – | 2 / 3 / – / 3 / – |
 
-The uniform +1 across this family is the B-staging cost: the 6502 completes
-the ALU operation under the *next* instruction's fetch (its one-deep pipeline);
-we must land the operand in B, then compute — and T0 is a dedicated fetch.
+The uniform +1 across this family (pre-17) is the B-staging cost: the 6502
+completes the ALU operation under the *next* instruction's fetch (its
+one-deep pipeline); we must land the operand in B, then compute — and T0 is
+a dedicated fetch. **Stage 17 erases this column**: with BSEL the operand
+comes off the bus straight into the B port, and the whole family drops to
+2 / 3 / 3 / 4 / 4 — matching the 65C02, and beating it on zp,X and the
+page-crossing abs,X.
 
 ### Single-operand and register ops (all 2 cycles)
 
@@ -374,9 +412,9 @@ we must land the operand in B, then compute — and T0 is a dedicated fetch.
 | DEC A | \$3A | 2 | |
 | ASL A | \$0A | 2 | A+A, C out |
 | ROL A | \$2A | 2 | A+A+C |
-| INX | \$E8 | 2 | X on A-side, +1, writeback via bus |
+| INX | \$E8 | 2 | X on A-side, +1, writeback |
 | DEX | \$CA | 2 | |
-| TAX | \$AA | 2 | N,Z via bus |
+| TAX | \$AA | 2 | N,Z on the fly |
 | TXA | \$8A | 2 | |
 | TXS | \$9A | 2 | no flags (FLGNZ off) — 6502-correct |
 | TSX | \$BA | 2 | N,Z |
@@ -394,11 +432,11 @@ we must land the operand in B, then compute — and T0 is a dedicated fetch.
 | INC zp | \$E6 | 4 | 5 | **faster** — B+1 via \$00 driver, PAGE high byte |
 | INC zp,X | \$F6 | 5 | 6 | **faster** |
 | INC abs | \$EE | 5 | 6 | **faster** |
-| INC abs,X | \$FE | 7 | 7 | |
-| DEC zp | \$C6 | 5 | 5 | B−1 = /(−B): NEG then NOT, two ALU passes |
-| DEC zp,X | \$D6 | 6 | 6 | |
-| DEC abs | \$CE | 6 | 6 | |
-| DEC abs,X | \$DE | 8 | 7 | |
+| INC abs,X | \$FE | 7 | 7 | stage 17: 5 |
+| DEC zp | \$C6 | 5 | 5 | B−1 = /(−B): NEG then NOT, two ALU passes (stage 17: 4 — the negate rides the load, BSEL=bus) |
+| DEC zp,X | \$D6 | 6 | 6 | stage 17: 5 |
+| DEC abs | \$CE | 6 | 6 | stage 17: 5 |
+| DEC abs,X | \$DE | 8 | 7 | stage 17: 6 |
 
 ### Bit manipulation (Rockwell/WDC set — full flag fidelity)
 
@@ -406,7 +444,7 @@ we must land the operand in B, then compute — and T0 is a dedicated fetch.
 |---|---|---|---|---|
 | RMB0–7 zp | \$07…\$77 | 4 | 5 | **faster**; M ← M·/mask; no flags — Rockwell-correct |
 | SMB0–7 zp | \$87…\$F7 | 4 | 5 | **faster**; M ← M∨mask; no flags |
-| BBR0–7 zp,rel | \$0F…\$7F | 5 nt / 7 t | 5 / 6(+1) | forks on hidden TEST flop; **N, Z, C untouched** |
+| BBR0–7 zp,rel | \$0F…\$7F | 5 nt / 7 t | 5 / 6(+1) | forks on hidden TEST flop; **N, Z, C untouched** (stage 17: 6 taken) |
 | BBS0–7 zp,rel | \$8F…\$FF | 5 nt / 7 t | 5 / 6(+1) | |
 
 The bit index rides in IR6:4 (the Rockwell encoding is perfectly regular), so
@@ -418,10 +456,10 @@ RMB3 and RMB6 literally the same ROM contents.
 | Instr | Op | Cyc | 'C02 | Notes |
 |---|---|---|---|---|
 | JMP abs | \$4C | 3 | 3 | PCL←B, PCH←bus, one edge |
-| BRA | \$80 | 4 | 3(+1) | 65C02 extension |
-| BEQ / BNE | \$F0 / \$D0 | 2 nt / 4 t | 2 / 3(+1) | true relative, flag-preserving |
+| BRA | \$80 | 4 | 3(+1) | 65C02 extension (stage 17: 3) |
+| BEQ / BNE | \$F0 / \$D0 | 2 nt / 4 t | 2 / 3(+1) | true relative, flag-preserving (stage 17: 3 taken) |
 | BCS / BCC | \$B0 / \$90 | 2 / 4 | 2 / 3(+1) | |
-| BMI / BPL | \$30 / \$10 | 2 / 4 | 2 / 3(+1) | N flag from bus bit 7 |
+| BMI / BPL | \$30 / \$10 | 2 / 4 | 2 / 3(+1) | N flag is bit 7 of the result path |
 | JSR abs | \$20 | 7 | 6 | pushes return−1, **byte-identical stack frame** |
 | RTS | \$60 | 7 | 6 | pop-then-increment via PCINC; load dominates count on the '161, so the final PCINC can't merge into the PC load |
 
@@ -454,7 +492,7 @@ to the 65C02.
 | LDA / STA (zp) (12) | \$B2 / \$92 | 9 | 5 | temp holds the pointer low byte through the walk — see listing §5 |
 | ORA AND EOR ADC CMP SBC (zp) (12) | \$12 \$32 \$52 \$72 \$D2 \$F2 | 10 | 5 | walk + B-staging |
 | JMP (abs) (12) | \$6C | 8 | 6 | pointer hi fetched at ptr+1 **without** page carry — NMOS wrap quirk retained (see §6) |
-| JMP (abs,X) (12) | \$7C | 13 | 6 | the long pole of the pointer family; still 3 under budget |
+| JMP (abs,X) (12) | \$7C | 13 | 6 | the long pole of the pointer family (stage 17: 8) |
 | TAY TYA INY DEY (13) | \$A8 \$98 \$C8 \$88 | 2 | 2 | identical shapes to the X twins |
 | LDY # / zp / zp,X / abs / abs,X (13) | \$A0 \$A4 \$B4 \$AC \$BC | 2/3/4/4/6 | 2/3/4/4/4(+1) | |
 | STY zp / zp,X / abs (13) | \$84 \$94 \$8C | 3/4/4 | 3/4/4 | |
@@ -464,7 +502,7 @@ to the 65C02.
 | LDA / STA abs,Y (13) | \$B9 \$99 | 6/6 | 4(+1)/5 | abs,X shapes with ASIDE=Y |
 | ORA AND EOR ADC CMP SBC abs,Y (13) | \$19 \$39 \$59 \$79 \$D9 \$F9 | 7 | 4(+1) | |
 | LDA / STA (zp),Y (13) | \$B1 \$91 | 10 | 5(+1)/6 | pointer walk + Y index + HCARRY fix |
-| ORA AND EOR ADC CMP SBC (zp),Y (13) | \$11 \$31 \$51 \$71 \$D1 \$F1 | 11 | 5(+1) | **the machine's longest instruction** |
+| ORA AND EOR ADC CMP SBC (zp),Y (13) | \$11 \$31 \$51 \$71 \$D1 \$F1 | 11 | 5(+1) | the pre-17 machine's longest instruction |
 | ORA AND EOR ADC STA LDA CMP SBC (zp,X) (13) | \$01 \$21 \$41 \$61 \$81 \$A1 \$C1 \$E1 | 9–10 | 6 | X+ptr wraps in page zero, 6502-correct |
 | LSR A / ROR A (14) | \$4A \$6A | 2 | 2 | pass A via the SHR driver; C ← old bit 0 |
 | LSR zp / zp,X / abs / abs,X (14) | \$46 \$56 \$4E \$5E | 4/5/5/7 | 5/6/6/6(+1) | **faster** in the common modes |
@@ -472,22 +510,53 @@ to the 65C02.
 | PHP / PLP (15) | \$08 \$28 | 3/4 | 3/4 | P '541 out; '157 flag-jam in |
 | CLI / SEI (16) | \$58 \$78 | 2 | 2 | ICLR / ISET bits, nothing else moves |
 | RTI (16) | \$40 | 8 | 6 | pop P, pop PC — no PCINC, unlike RTS |
-| IRQ entry (16) | — (jammed pseudo-opcode) | ~14 | 7 | push PCH, PCL, P · SEI · vector \$FFFE/\$FFFF computed RESET-style |
+| IRQ entry (16) | — (jammed pseudo-opcode) | 12 | 7 | push PCH, PCL, P · SEI · vector via the VEC driver |
+| NMI entry (16) | — (same pseudo-opcode) | 12 | 7 | **identical microcode to IRQ** — the VEC driver's bit 2 selects \$FFFA/B vs \$FFFE/F in hardware; unmaskable, priority over IRQ |
 
 **Total: 202 opcodes** (133 core + 69 extension) from roughly 30 distinct
-microcode shapes. 52 slots remain free after the RESET and IRQ pseudo-opcodes.
-(Extension audit: pointer family 10 · Y family 44 · shifts 10 · P 2 ·
-interrupts 3.)
+microcode shapes. 52 slots remain free after the RESET and interrupt
+pseudo-opcodes. (Extension audit: pointer family 10 · Y family 44 ·
+shifts 10 · P 2 · interrupts 3.)
 
-### Cycle-count scoreboard vs the 65C02
+### Stage 17 — where the cycles go
+
+The result bus removes the "operand and result can't share the bus" limit.
+Families not listed are unchanged. All counts remain estimates until the
+stage-17 microcode rewrite is burned.
+
+| Family | Stage 16 | Stage 17 | 'C02 | Verdict after 17 |
+|---|---|---|---|---|
+| ALU # | 3 | 2 | 2 | match |
+| ALU zp | 4 | 3 | 3 | match |
+| ALU zp,X | 5 | 3 | 4 | **faster** |
+| ALU abs | 5 | 4 | 4 | match |
+| ALU abs,X / abs,Y | 7 | 4 | 4(+1) | match, beats page-cross |
+| LDA/LDX/LDY abs,X / abs,Y | 6 | 4 | 4(+1) | match, beats page-cross |
+| STA/STZ abs,X / abs,Y | 6 | 4 | 5 | **faster** |
+| Branches taken (incl. BRA) | 4 | 3 | 3(+1) | match, beats page-cross |
+| BBR/BBS taken | 7 | 6 | 6(+1) | match |
+| INC abs,X | 7 | 5 | 7 | **faster** |
+| DEC zp / zp,X / abs / abs,X | 5/6/6/8 | 4/5/5/6 | 5/6/6/7 | **faster** |
+| LSR/ROR abs,X | 7 | 5 | 6(+1) | **faster** |
+| LDA (zp) / ALU (zp) | 9 / 10 | 7 / 8 | 5 | +2–3 |
+| (zp,X) family | 9–10 | 7–8 | 6 | +1–2 |
+| LDA / ALU (zp),Y | 10 / 11 | 9 | 5(+1) | +3 |
+| JMP (abs,X) | 13 | 8 | 6 | +2 |
+
+Unchanged and why: JSR (7), RTS (7), RTI (8), JMP abs (3), JMP (abs) (8),
+interrupt entry (12) — all dominated by memory writes, pops, or the
+dedicated-T0 handshake; PHA/PLA and friends likewise. The 2-cycle register
+ops were already at the floor (T0 fetch + 1).
+
+### Cycle-count scoreboard vs the 65C02 (stage 17 machine)
 
 | | |
 |---|---|
-| **Faster** | INC zp/zp,X/abs, **RMB and SMB (all 16)**, **LSR/ROR zp, zp,X, abs**, NOP, STP |
-| **Match** | all zp and zp,X loads/stores, all abs loads/stores, STZ, JMP, branches not-taken, **BBR/BBS not-taken**, PHA/PHX/PHY, PLA/PLX/PLY, PHP/PLP, DEC-memory except abs,X, all 2-cycle register ops, CLC/SEC, CLI/SEI, LSR/ROR A |
-| **+1** | all ALU ops in #/zp/zp,X/abs (B staging), JSR, RTS, branches taken, BBR/BBS taken, STA/STZ abs,X/abs,Y, DEC abs,X, CPY |
-| **+2** | ALU abs,X/abs,Y, LDA abs,X/abs,Y, RTI, JMP (abs) (we always pay the page-cross fix the 'C02 usually skips) |
-| **~2×** | the pointer-indirect family — (zp), (zp,X), (zp),Y, JMP (abs,X) — and IRQ entry: the walks the 6502's dedicated address logic did in hardware run through the one ALU here |
+| **Faster** | ALU/loads/stores zp,X, STA/STZ abs,X/abs,Y, INC (all modes), DEC (all modes), **RMB and SMB (all 16)**, **LSR/ROR memory (all modes)**, NOP, STP — plus every page-crossing indexed access and taken branch the 'C02 charges +1 for |
+| **Match** | the entire # / zp / abs ALU and load/store families, all abs,X/abs,Y reads, STZ, JMP, all branches, **BBR/BBS**, all pushes and pops, PHP/PLP, all 2-cycle register ops, CLC/SEC, CLI/SEI, LSR/ROR A |
+| **+1** | JSR, RTS (the dedicated-T0 price of having no on-board sequencer) |
+| **+2** | RTI, JMP (abs), JMP (abs,X), (zp) and (zp,X) families |
+| **+3–4** | (zp),Y family, interrupt entry — the walks the 6502's dedicated address logic did in hardware run through the one ALU here |
 
 ---
 
@@ -496,7 +565,9 @@ interrupts 3.)
 Notation: `↑` = PCINC · `M(x)` = memory at address x · `ZP:`/`STK:` = ADDR
 selects MARL + PAGE driver (\$00/\$01) · `END` = /TRST asserted · `flgC/flgNZ`
 = latch enables · `HC` = HCARRY. Every instruction begins `T0: IR←M(PC) ↑`
-(FETCH) — identical for all opcodes, since IR is stale during T0.
+(FETCH) — identical for all opcodes, since IR is stale during T0. Listings
+are the stage-1–16 forms; the stage-17 rewrite compresses them per the table
+in §4 without changing any architectural trick.
 
 **LDA zp (\$A5)** — no MARH load ever happens; the PAGE driver *is* the high byte
 ```
@@ -526,6 +597,13 @@ T3: B ← M(PC) ↑                        ; base hi
 T4: MARH ← $00+B (CSEL=HC)             ; hi + page-cross carry
 T5: B ← M(MAR)                         ; operand
 T6: A ← A+B (CSEL=C)       flgC flgNZ  END
+```
+Stage 17 collapses this to three lines — the index add and the operand
+compute each ride their memory read:
+```
+T1: MARL ← X+M(PC) ↑  latch HC         ; BSEL=bus
+T2: MARH ← $00+M(PC) (CSEL=HC) ↑
+T3: A ← A+M(MAR) (CSEL=C)  flgC flgNZ  END
 ```
 
 **RMB n zp (\$n7)** — one shape covers all eight; the '238 reads n from IR6:4.
@@ -618,11 +696,30 @@ T7: MARL ← temp (BUS=TEMP)
 T8: A ← M(MAR)   flgNZ  END  ; 9 cycles
 ```
 
-**RESET (\$00)** — the vector addresses are *computed*, since the only
-conjurable constants are \$00, \$01, \$FF and their ALU derivatives. A stashes
-\$FD; B carries the counting and ends holding the vector low byte. The IRQ
-entry sequence (stage 16) is the same idea grafted onto a JSR-style push:
-push PCH, PCL, P, set I, then compute \$FFFE/\$FFFF the same way
+**IRQ / NMI entry (stage 16)** — one microcode sequence serves both: the
+jammed pseudo-opcode replaces the T0 fetch (PCINC suppressed, so the pushed
+return address is the interrupted PC), and the VEC driver's bit 2 — wired to
+the grant flop — selects the vector in hardware
+```
+T0: IR ← jam (no fetch, no ↑)
+T1: MARL ← SP
+T2: M(STK:MARL) ← PCH          SP--
+T3: MARL ← SP
+T4: M(STK:MARL) ← PCL          SP--
+T5: MARL ← SP
+T6: M(STK:MARL) ← P  (BUS=P)   SP--  ISET IACK
+T7: MARH ← $FF       (M=1 S=1100)
+T8: MARL ← VEC       (BUS=VEC, VECHI=0)   ; $FA or $FE — hardware decides
+T9: B ← M(MAR)                            ; vector low
+T10: MARL ← VEC      (VECHI=1)            ; $FB or $FF
+T11: bus ← M(MAR); PC ← bus:B        END  ; 12 cycles
+```
+
+**RESET (\$00)** — the vector addresses are *computed*, since at stage 5 the
+only conjurable constants are \$00, \$01, \$FF and their ALU derivatives (the
+VEC driver arrives eleven stages later and covers only the interrupt
+vectors). A stashes \$FD; B carries the counting and ends holding the vector
+low byte
 ```
 T0: no fetch                           ; the one exception to generic T0
 T1: MARH ← $FF        (M=1 S=1100)
@@ -648,20 +745,20 @@ T10: END                               ; next T0 fetches from the vector
 | Decimal mode, SED, CLD | the '181 gives nothing there and it is pure microcode bloat |
 | BRK | \$00 is the RESET pseudo-opcode. Software interrupt = JSR to the handler, or an output port wired to /IRQ |
 | WAI | STP plus the module's halt machinery covers the freeze; a wait-for-IRQ gate isn't worth the slot |
-| NMI | one maskable IRQ line only. NMI would be a second pending flop and the \$FFFA vector — priced, not fitted |
 | JMP (\$xxFF) page wrap | the pointer high byte is fetched from \$xx00, the NMOS behaviour; the 65C02's fix costs a cycle and a special case for a pointer nobody should place there |
+| Interrupt timing detail | IRQ/NMI are sampled at instruction boundaries only (the T0 grant), entry is 12 cycles vs the 6502's 7, and the pushed P carries constant V and D bits — semantics match, latency doesn't |
 
 Practical consequence: with stages 12–16 fitted, 65C02 code that avoids
 decimal mode, the V flag, BIT, BRK, and WAI **assembles and runs unmodified**
 — including the pointer idioms, Y-indexed table walks, and interrupt-driven
-I/O. On the core machine (stages 1–11) the remaining rewrites are Y-register
-usage and pointer indirection.
+I/O on both /IRQ and /NMI. On the core machine (stages 1–11) the remaining
+rewrites are Y-register usage and pointer indirection.
 
 ---
 
 ## 7. IC bill of materials
 
-### CPU board — 40 logic ICs + 4 ROMs (core stages 1–11: 33 + 3)
+### CPU board — 44 logic ICs + 4 ROMs (core stages 1–11: 33 + 3)
 
 | Qty | Part | Role |
 |---|---|---|
@@ -670,14 +767,14 @@ usage and pointer indirection.
 | 4 | 74HC377 | B · IR · flag C · flags N,Z (independent latch enables) |
 | 4 | 74HC161 | PC — self-counting, split /LOAD low/high pairs |
 | 2 | 74HC193 | SP — self-counting up/down |
-| 12 | 74HC541 | ALU F→bus · **SHR F>>1→bus (crossed bits)** · PC→addr ×2 · PAGE constant (\$00/\$01) → addr high · PCL→A-side · PCH→A-side · \$00 constant (A-side) · MASK → A-side · SP→bus · **P→bus (flag byte)** · **IRQ opcode jam** |
+| 13 | 74HC541 | ALU F→bus · **SHR F>>1→bus (crossed bits)** · PC→addr ×2 · PAGE constant (\$00/\$01) → addr high · PCL→A-side · PCH→A-side · \$00 constant (A-side) · MASK → A-side · SP→bus · **P→bus (flag byte)** · **VEC→bus (interrupt vector constant)** · **interrupt opcode jam** |
 | 1 | 74HC238 | bit-mask decode: IR6:4 → one-hot \$01<<n |
-| 1 | 74HC688 | Z detect on the data bus |
-| 3 | 74HC74 | SGN + HCARRY · TEST + **I flag** · **IRQ synchronizer + pending** |
+| 1 | 74HC688 | Z detect on the result path |
+| 4 | 74HC74 | SGN + HCARRY · TEST + **I flag** · **IRQ synchronizer + pending** · **NMI edge-detect + pending** |
 | 1 | 74HC86 | SGN steering of the S field (sign extension) |
 | 1 | 74HC153 | section 1: carry-in select (0 / 1 / C / HCARRY) · section 2: Z-address-line select (Z / TEST) |
-| 1 | 74HC157 | flag-source select: Z, C, I latch inputs ← computed / bus bits (PLP, RTI) |
-| 2 | 74HC04 / 74HC00 | glue (carry polarity, ADDR decode, SGN-steer condition, /TRST & write strobes, ROR bit-7 inject, IRQ grant) |
+| 3 | 74HC157 | **B-port mux ×2 (BSEL: B register / data bus — the stage-17 result bus)** · flag-source select (Z, C, I latch inputs ← computed / bus bits for PLP, RTI) |
+| 2 | 74HC04 / 74HC00 | glue (carry polarity, ADDR decode, SGN-steer condition, /TRST & write strobes, ROR bit-7 inject, interrupt grant & priority: NMI unconditional, IRQ = pending·/I·/NMI-pending) |
 | 4 | 28C256 | microcode — 32-bit control word (24 core + 8 extension), 15-bit address |
 
 HCT (or HCT buffers) at the LS181 boundary as usual for input thresholds.
@@ -686,7 +783,7 @@ HCT (or HCT buffers) at the LS181 boundary as usual for input thresholds.
 
 | Qty | Part | Role |
 |---|---|---|
-| 1 | 28C256 | program ROM, \$8000–\$FFFF · reset vector at \$FFFC/\$FFFD · IRQ vector at \$FFFE/\$FFFF |
+| 1 | 28C256 | program ROM, \$8000–\$FFFF · reset vector at \$FFFC/\$FFFD · IRQ vector at \$FFFE/\$FFFF · NMI vector at \$FFFA/\$FFFB |
 | 1 | 62256 | RAM, \$0000–\$7FFF (zero page and stack page \$0100 live here) |
 
 A15 is the entire address decoder: A15 → ROM /CS, inverted (spare '04 gate) →
@@ -699,17 +796,23 @@ single-cycle / single-instruction stepping, halt and breakpoint policy,
 supervised reset, **and the T counter** (T0–T3 into the microcode address,
 /TRST from the control word, /HALTREQ from STP).
 
-**Complete machine: ~46 ICs** plus the module (core stages 1–11: ~38).
+**Complete machine: ~50 ICs** plus the module (core stages 1–11: ~38).
 
 ### Performance
 
 LS181 ripple carry plus ~150 ns EEPROM microcode access bounds the crystal leg
-at roughly 1–2 MHz. Average ~3.5 cycles per instruction on zp-heavy code →
-**~350–550k instructions/sec**, with the module's 555 leg providing the
-0.5–5 Hz blinkenlights mode and NEXT INSTR walking the program fetch-to-fetch.
-Pointer-indirect-heavy code runs at roughly half that rate — the (zp) walks
-cost ~2× the 65C02's cycles — so hot loops prefer zp,X / abs,X / abs,Y, all
-of which stay within one cycle of the 65C02.
+at roughly 1–2 MHz. On the stage-16 machine, average ~3.5 cycles per
+instruction on zp-heavy code → **~350–550k instructions/sec**; the stage-17
+result bus cuts average CPI by roughly 20–25% → **~450–700k**, with the
+module's 555 leg providing the 0.5–5 Hz blinkenlights mode and NEXT INSTR
+walking the program fetch-to-fetch. Pointer-indirect-heavy code still pays a
+premium — the (zp) walks run the 6502's dedicated address logic through the
+one ALU — so hot loops prefer zp,X / abs,X / abs,Y, all of which match or
+beat the 65C02 after stage 17. (Two further orthogonal speed levers, priced
+but not scheduled: a 74182 carry-lookahead between the '181 slices kills the
+ripple delay, and a pipeline register on the microcode outputs — 2–3 '574s —
+overlaps ROM access with execution. Both raise the clock ceiling rather than
+cut cycles.)
 
 ---
 
@@ -725,7 +828,8 @@ onward — it runs the RESET sequence, so wild jumps into zeroed memory
 reboot cleanly).
 
 Stages 1–11 build the core machine on the 24-bit control word; stage 12 fits
-the 4th microcode ROM and everything after rides its extension bits.
+the 4th microcode ROM and everything after rides its extension bits; stage 17
+changes no behaviour and no instruction count — only cycle counts.
 
 | Stage | Adds | +ICs | ICs | +Instr | Instr |
 |---|---|---|---|---|---|
@@ -744,7 +848,8 @@ the 4th microcode ROM and everything after rides its extension bits.
 | 13 | Y register | 1 | 35 | 44 | 187 |
 | 14 | Right-shift path | 1 | 36 | 10 | 197 |
 | 15 | Flag register (PHP/PLP) | 2 | 38 | 2 | 199 |
-| 16 | Interrupts | 2 | 40 | 3 | 202 |
+| 16 | Interrupts (IRQ + NMI) | 4 | 42 | 3 | 202 |
+| 17 | Result bus | 2 | 44 | 0 | 202 |
 
 ### Stage 1 — the fetch loop (9 ICs)
 **Add:** PC (4× '161) · PC→addr ('541 ×2) · IR ('377) · glue ('04, '00) ·
@@ -791,7 +896,7 @@ burn the \$00 RESET sequence. From here the machine boots through
 \$FFFC/\$FFFD like a real 6502.
 
 ### Stage 6 — flags (+4 → 21)
-**Add:** '688 (bus Z-detect) · C ('377) · N,Z ('377) · '153 (CSEL proper —
+**Add:** '688 (Z-detect) · C ('377) · N,Z ('377) · '153 (CSEL proper —
 remove the stage-3 strap).
 **New (35):** ADC #/abs, SBC #/abs, CMP #/abs, ROL A, CLC, SEC — and every
 existing instruction now sets flags correctly.
@@ -842,9 +947,9 @@ microcode word listed in §5, and a perfectly good place to stop.
 
 ### Stage 12 — the 4th ROM and temp (+1 logic, +1 ROM → 34)
 **Add:** 4th 28C256 into its waiting socket (the extension control bits go
-live — BUS grows to 3 bits, DST to 5, plus the I-flag and IACK lines for
-stage 16) · temp ('574: loads from the bus as a new DST code, drives it as
-the fourth BUS source).
+live — BUS grows to 3 bits, DST to 5, plus the interrupt-machinery lines for
+stage 16) · temp ('574: loads like any DST, drives the data bus as a new
+BUS source).
 **New (143):** LDA/STA (zp), ORA/AND/EOR/ADC/CMP/SBC (zp), JMP (abs),
 JMP (abs,X) — pointer indirection, the 6502's defining idiom. A and X remain
 architecturally untouched mid-instruction; temp does all the parking (see
@@ -877,26 +982,52 @@ that are miserable without right shifts.
 **Add:** P→bus '541 (gathers N·Z·C·I into the 6502 P byte layout, constants
 on the unimplemented bits) · '157 steering the Z, C and I latch inputs from
 their computed sources to the corresponding bus bits when DST=P. N needs no
-path — it already latches from bus bit 7, and N *is* bit 7 of P.
+path — it already latches from bit 7, and N *is* bit 7 of P.
 **New (199):** PHP, PLP.
 **Milestone:** PHP / PLP round-trip preserving all flags through a
 subroutine — the interrupt-safe save idiom, and the prerequisite the next
-stage exists for.
+stage exists for (an interrupt must push P).
 **Note:** P pushes/pops as N V 1 B D I Z C with V, D as constants — code
 that pushes P, masks bits, and pulls it back behaves 6502-plausibly.
 
-### Stage 16 — interrupts (+2 → 40)
-**Add:** '74 (IRQ synchronizer + pending flop, edge-armed like the module's
-own halt entry) · IRQ-jam '541 (drives the IRQ pseudo-opcode onto the data
-bus during T0 when an interrupt is granted — memory's /OE suppressed, PCINC
-suppressed so the pushed return address is the *un-incremented* PC) · I flag
-on the spare half of the TEST '74.
-**New (202):** CLI, SEI, RTI — plus the hardware IRQ entry (a jammed
-pseudo-opcode in a free slot, like RESET): push PCH, PCL, P; set I; read the
-vector at \$FFFE/\$FFFF, computed the same way RESET computes \$FFFC/\$FFFD.
-~14 cycles, comfortably inside the 16-T budget.
+### Stage 16 — interrupts, IRQ and NMI (+4 → 42)
+**Add:** '74 (IRQ synchronizer + pending flop) · '74 (NMI edge-detect +
+pending — NMI is edge-sensitive and must latch even while masked work is in
+flight) · **VEC '541** (the four vector bytes as a jammed constant: six
+inputs tied high, bit 2 wired to the grant flop — IRQ vs NMI — and bit 0 to
+the VECHI control line) · interrupt-jam '541 (drives the shared pseudo-opcode
+onto the data bus during T0 when a grant fires — memory's /OE suppressed,
+PCINC suppressed so the pushed return address is the interrupted PC) · I flag
+on the spare half of the TEST '74 · priority glue (NMI grant unconditional;
+IRQ grant = pending·/I·/NMI-pending).
+**New (202):** CLI, SEI, RTI — plus the hardware IRQ **and NMI** entries,
+which are **one and the same 12-cycle microcode sequence** (§5): the VEC
+driver picks \$FFFA/B versus \$FFFE/F in hardware. (The compute-the-vector
+approach used by RESET was costed for NMI first and rejected: counting up to
+\$FA's complement pushes the sequence to 18 T-states, through the T counter's
+hard 16-state wall. The constant driver is what makes NMI fit at all — and
+it shortens IRQ from 14 to 12 as a side effect.)
 **Milestone:** a timer on /IRQ counting ticks in an ISR while the foreground
-blinks a LED — two programs visibly running at once. The module's NEXT INSTR
+blinks a LED — two programs visibly running at once — then the same timer
+moved to /NMI with I set, proving the mask boundary. The module's NEXT INSTR
 walks straight into the ISR entry for debugging, and its /HALTREQ line
 coexists on the same discipline (both are pulled-up, machine-side-combined
-request lines). The machine as documented above.
+request lines).
+
+### Stage 17 — the result bus (+2 → 44)
+**Add:** 2× '157 as a 2:1 mux on the '181's B port (BSEL: B register / data
+bus); rewire the D inputs of A, X, Y, B, temp, IR, MAR and PCH from the data
+bus to the ALU's F output; move the '688 and the N tap from the bus to F
+(strictly better — every load is an ALU pass, so F carries loaded values
+*and* computed results). The data bus becomes operand-side only.
+**New instructions: none. New cycle counts: most of §4's deficit column** —
+ALU # drops to 2, the indexed families to 4, taken branches to 3, the
+pointer walks by 2–5 each (full table in §4). JSR/RTS keep their +1: the
+dedicated generic T0 is the module handshake and no wiring change touches it.
+**Cost that isn't ICs:** every microcode word is rewritten and re-burned —
+which is exactly why this is a stage and not a footnote: the machine before
+and after must produce identical results, only faster.
+**Milestone:** re-run the entire stage-1–16 test suite unmodified and diff
+the outputs byte-for-byte — zero behavioural change — then measure the CPI
+drop on the block-copy and CRC benchmarks (~20–25% expected). The machine as
+documented above.
