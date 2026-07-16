@@ -137,6 +137,8 @@ public static class TtlTiming
         ["HC:377"] = new(44_000),  // octal D flip-flop, clock enable
         ["LS:191"] = new(27_000),
         ["HC:191"] = new(44_000),  // sync up/down counter
+        ["LS:194"] = new(35_000),
+        ["HC:194"] = new(44_000),  // universal shift register (LS: Fairchild CLK->Q tPHL max; HC: Nexperia CP->Q max, full temp range)
         ["LS:390"] = new(35_000),
         ["HC:390"] = new(44_000),  // dual decade counter
         ["LS:393"] = new(35_000),

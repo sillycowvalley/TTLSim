@@ -82,6 +82,14 @@ These were the conflicts between the two source proposals, resolved:
    - **CLR** — '161 /CLR: boot at $0000 (Thumby).
    - **OFF** — reset does not touch PC; the host boots by microcode via
      IR force (6502 clone) or by jamming a vector.
+   - **Permitted substitution**: the '163 is pin-identical and may be
+     populated in place of the '161. JRST=CLR then reads "clear on the
+     first rising edge with /RST held" — legitimate for a host whose
+     reset is guaranteed to span a clock edge, at the price that a
+     stopped-clock or STEP-mode reset no longer snaps the panel to
+     $0000. The '161 stays the default because bring-up runs in STEP
+     and reset is machine-state initialisation, not a clocked
+     datapath operation.
 
 ### IR section
 

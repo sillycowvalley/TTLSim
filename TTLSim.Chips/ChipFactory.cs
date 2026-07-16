@@ -437,6 +437,7 @@ public sealed class ChipFactory : IChipFactory
             "181" => TryCreateHc181(device, pinToNet),
             "182" => TryCreateHc182(device, pinToNet),
             "191" => TryCreateHc191(device, pinToNet),
+            "194" => TryCreateHc194(device, pinToNet),
             "244" => TryCreateHc244(device, pinToNet),
             "245" => TryCreateHc245(device, pinToNet),
             "273" => TryCreateHc273(device, pinToNet),
@@ -451,6 +452,32 @@ public sealed class ChipFactory : IChipFactory
             "7seg-ca" => TryCreateSevenSegCa(pinToNet),
             _ => null
         };
+    }
+
+    private IChip? TryCreateHc194(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        // Required pins are the INPUTS only: 1 /CLR, 2 DSR, 3..6 D0..D3,
+        // 7 DSL, 9 S0, 10 S1, 11 CLK. The four Q outputs (15,14,13,12 =
+        // Q0..Q3) are OPTIONAL -- an open output drives nothing and must
+        // never block instantiation. TTL011 still flags genuinely unwired
+        // INPUTS at design time.
+        int[] needed = { 1, 2, 3, 4, 5, 6, 7, 9, 10, 11 };
+        foreach (int p in needed)
+            if (!pinToNet.TryGetValue(p, out Net? n) || n is null) return null;
+
+        Net Get(int pin) => pinToNet[pin];
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);   // local stand-in, drives nothing
+
+        return new Hc194(
+            clrN: Get(1), dsr: Get(2),
+            d0: Get(3), d1: Get(4), d2: Get(5), d3: Get(6),
+            dsl: Get(7), s0: Get(9), s1: Get(10), clkN: Get(11),
+            q0: Opt(15, "q0-nc"), q1: Opt(14, "q1-nc"),
+            q2: Opt(13, "q2-nc"), q3: Opt(12, "q3-nc"),
+            label: "194", logger: logger,
+            delayPs: TtlTiming.ResolvePs(device));
     }
 
     private static IChip? TryCreateDs1813(IReadOnlyDictionary<int, Net> pinToNet)
@@ -1108,7 +1135,7 @@ public sealed class ChipFactory : IChipFactory
     public bool IsSimulated(BuildDevice device) => device.PartIdentifier switch
     {
         // Box-chip ICs (per-unit dispatch in CreateForUnit).
-        "47" or "74" or "138" or "139" or "151" or "153" or "154" or "157" or "161" or "163" or "173" or "181" or "182" or "191"
+        "47" or "74" or "138" or "139" or "151" or "153" or "154" or "157" or "161" or "163" or "173" or "181" or "182" or "191" or "194"
             or "244" or "245" or "257" or "273" or "283" or "374" or "377" or "541" or "670" or "688" or "7seg-ca"
             => true,
         // Reset supervisor (per-unit dispatch in CreateForUnit).
