@@ -199,21 +199,27 @@ public sealed class LibraryPanel : UserControl
         AddBoxPart(gates, ChipPartDefinition.Ic7430, "8-input NAND");
         AddBoxPart(gates, ChipPartDefinition.Ic7432, "Quad 2-input OR");
         AddBoxPart(gates, ChipPartDefinition.Ic7486, "Quad 2-input XOR");
+        AddBoxPart(gates, ChipPartDefinition.Ic74132, "Quad 2-input Schmitt NAND");
         gates.Expand();
 
         var flipFlops = logicRoot.Nodes.Add(IcCategoryLabels.DisplayName(IcCategory.FlipFlops));
+        AddBoxPart(flipFlops, ChipPartDefinition.Ic7473, "Dual JK Flip-flop, /CLR (VCC=4, GND=11)");
         AddBoxPart(flipFlops, ChipPartDefinition.Ic7474, "Dual D Flip-flop");
         AddBoxPart(flipFlops, ChipPartDefinition.Ic74107, "Dual JK Flip-flop, /CLR");
         AddBoxPart(flipFlops, ChipPartDefinition.Ic74175, "Quad D Flip-flop, /MR");
         flipFlops.Expand();
 
         var registers = logicRoot.Nodes.Add(IcCategoryLabels.DisplayName(IcCategory.Registers));
+        AddBoxPart(registers, ChipPartDefinition.Ic74164, "8-bit SIPO Shift Register");
+        AddBoxPart(registers, ChipPartDefinition.Ic74165, "8-bit PISO Shift Register");
         AddBoxPart(registers, ChipPartDefinition.Ic74173, "4-bit D Register, 3-state");
+        AddBoxPart(registers, ChipPartDefinition.Ic74194, "4-bit Bidirectional Shift Register");
         AddBoxPart(registers, ChipPartDefinition.Ic74273, "Octal D Register, /CLR");
         AddBoxPart(registers, ChipPartDefinition.Ic74299, "8-bit Universal Shift Register");
         AddBoxPart(registers, ChipPartDefinition.Ic74373, "Octal D Latch, 3-state");
         AddBoxPart(registers, ChipPartDefinition.Ic74374, "Octal D Register, 3-state");
         AddBoxPart(registers, ChipPartDefinition.Ic74377, "Octal D Register, /EN");
+        AddBoxPart(registers, ChipPartDefinition.Ic74573, "Octal D Latch, flow-through, 3-state");
         AddBoxPart(registers, ChipPartDefinition.Ic74574, "Octal D Register, 3-state");
         AddBoxPart(registers, ChipPartDefinition.Ic74595, "8-bit Shift Register, 3-state");
         AddBoxPart(registers, ChipPartDefinition.Ic74670, "4x4 Register File, 3-state");
@@ -226,6 +232,9 @@ public sealed class LibraryPanel : UserControl
         AddBoxPart(counters, ChipPartDefinition.Ic74193, "4-bit Up/Down Counter");
         AddBoxPart(counters, ChipPartDefinition.Ic74390, "Dual Decade Counter");
         AddBoxPart(counters, ChipPartDefinition.Ic74393, "Dual 4-bit Counter");
+        AddBoxPart(counters, ChipPartDefinition.Ic74590, "8-bit Counter + Output Register, 3-state");
+        AddBoxPart(counters, ChipPartDefinition.Ic744040, "12-stage Ripple Counter");
+        AddBoxPart(counters, ChipPartDefinition.Ic744060, "14-stage Ripple Counter + Oscillator");
         counters.Expand();
         counters.Expand();
 
@@ -252,6 +261,8 @@ public sealed class LibraryPanel : UserControl
         muxes.Expand();
 
         var buffers = logicRoot.Nodes.Add(IcCategoryLabels.DisplayName(IcCategory.Buffers));
+        AddBoxPart(buffers, ChipPartDefinition.Ic74125, "Quad 3-state Buffer, /OE per gate");
+        AddBoxPart(buffers, ChipPartDefinition.Ic74126, "Quad 3-state Buffer, OE per gate");
         AddBoxPart(buffers, ChipPartDefinition.Ic74244, "Octal Buffer, 2x4-bit");
         AddBoxPart(buffers, ChipPartDefinition.Ic74245, "Octal Bus Transceiver");
         AddBoxPart(buffers, ChipPartDefinition.Ic74541, "Octal Buffer, flow-through");

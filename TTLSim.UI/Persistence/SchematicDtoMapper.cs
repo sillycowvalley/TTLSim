@@ -73,6 +73,7 @@ public static class SchematicDtoMapper
             // Flip-flops & counters
             [ChipPartDefinition.Ic7474.PartNumber] = ChipPartDefinition.Ic7474,
             [ChipPartDefinition.Ic74107.PartNumber] = ChipPartDefinition.Ic74107,
+            [ChipPartDefinition.Ic7473.PartNumber] = ChipPartDefinition.Ic7473,
             [ChipPartDefinition.Ic74390.PartNumber] = ChipPartDefinition.Ic74390,
             [ChipPartDefinition.Ic74393.PartNumber] = ChipPartDefinition.Ic74393,
 
@@ -87,14 +88,19 @@ public static class SchematicDtoMapper
             [ChipPartDefinition.Ic7430.PartNumber] = ChipPartDefinition.Ic7430,
             [ChipPartDefinition.Ic7432.PartNumber] = ChipPartDefinition.Ic7432,
             [ChipPartDefinition.Ic7486.PartNumber] = ChipPartDefinition.Ic7486,
+            [ChipPartDefinition.Ic74132.PartNumber] = ChipPartDefinition.Ic74132,
 
             // Registers
             [ChipPartDefinition.Ic74173.PartNumber] = ChipPartDefinition.Ic74173,
+            [ChipPartDefinition.Ic74164.PartNumber] = ChipPartDefinition.Ic74164,
+            [ChipPartDefinition.Ic74165.PartNumber] = ChipPartDefinition.Ic74165,
+            [ChipPartDefinition.Ic74194.PartNumber] = ChipPartDefinition.Ic74194,
             [ChipPartDefinition.Ic74175.PartNumber] = ChipPartDefinition.Ic74175,
             [ChipPartDefinition.Ic74273.PartNumber] = ChipPartDefinition.Ic74273,
             [ChipPartDefinition.Ic74373.PartNumber] = ChipPartDefinition.Ic74373,
             [ChipPartDefinition.Ic74374.PartNumber] = ChipPartDefinition.Ic74374,
             [ChipPartDefinition.Ic74377.PartNumber] = ChipPartDefinition.Ic74377,
+            [ChipPartDefinition.Ic74573.PartNumber] = ChipPartDefinition.Ic74573,
             [ChipPartDefinition.Ic74574.PartNumber] = ChipPartDefinition.Ic74574,
             [ChipPartDefinition.Ic74299.PartNumber] = ChipPartDefinition.Ic74299,
             [ChipPartDefinition.Ic74595.PartNumber] = ChipPartDefinition.Ic74595,
@@ -105,6 +111,9 @@ public static class SchematicDtoMapper
             [ChipPartDefinition.Ic74163.PartNumber] = ChipPartDefinition.Ic74163,
             [ChipPartDefinition.Ic74191.PartNumber] = ChipPartDefinition.Ic74191,
             [ChipPartDefinition.Ic74193.PartNumber] = ChipPartDefinition.Ic74193,
+            [ChipPartDefinition.Ic74590.PartNumber] = ChipPartDefinition.Ic74590,
+            [ChipPartDefinition.Ic744040.PartNumber] = ChipPartDefinition.Ic744040,
+            [ChipPartDefinition.Ic744060.PartNumber] = ChipPartDefinition.Ic744060,
 
             // RAM
             [ChipPartDefinition.Ic74189.PartNumber] = ChipPartDefinition.Ic74189,
@@ -117,6 +126,8 @@ public static class SchematicDtoMapper
             [ChipPartDefinition.Ic74244.PartNumber] = ChipPartDefinition.Ic74244,
             [ChipPartDefinition.Ic74257.PartNumber] = ChipPartDefinition.Ic74257,
             [ChipPartDefinition.Ic74541.PartNumber] = ChipPartDefinition.Ic74541,
+            [ChipPartDefinition.Ic74125.PartNumber] = ChipPartDefinition.Ic74125,
+            [ChipPartDefinition.Ic74126.PartNumber] = ChipPartDefinition.Ic74126,
 
             // Decoders
             [ChipPartDefinition.Ic74138.PartNumber] = ChipPartDefinition.Ic74138,

@@ -22,7 +22,8 @@
 /// Deliberately absent, and why:
 /// </para>
 /// <list type="bullet">
-///   <item>Tri-state: '173 '244 '245 '257 '299 '373 '374 '541 '573 '574 '595
+///   <item>Tri-state: '125 '126 '173 '244 '245 '257 '299 '373 '374 '541 '573
+///         '574 '590 '595
 ///         '670, all GALs, all EEPROM/SRAM parts. Sharing a net is the whole
 ///         point of them.</item>
 ///   <item>Open-drain / open-collector: '47 (segment drivers), DS1813 (/RST),
@@ -48,10 +49,10 @@ public static class TotemPoleParts
     private static readonly HashSet<string> Ids = new(StringComparer.OrdinalIgnoreCase)
     {
         // Gates -- every output a push-pull stage.
-        "00", "02", "04", "08", "10", "14", "20", "30", "32", "86",
+        "00", "02", "04", "08", "10", "14", "20", "30", "32", "86", "132",
 
         // Flip-flops.
-        "74", "107", "175",
+        "73", "74", "107", "175",
 
         // Registers without an output enable. ('273 has /CLR only; '377 has
         // /CE, which gates the *clock*, not the output stage -- the Qs drive
@@ -60,8 +61,14 @@ public static class TotemPoleParts
         // whatever else is on that bus.)
         "273", "377",
 
+        // Shift registers without an output enable. ('164 Q0..Q7, '165
+        // Q7 and /Q7, '194 Q0..Q3 -- all always driving. The '595 and
+        // '299 are the tri-state shift parts and stay OUT.)
+        "164", "165", "194",
+
         // Counters.
-        "161", "163", "191", "193", "390", "393",
+        // ('590 is NOT here: its register outputs are tri-state.)
+        "161", "163", "191", "193", "390", "393", "4040", "4060",
 
         // Decoders.
         "138", "139", "154",

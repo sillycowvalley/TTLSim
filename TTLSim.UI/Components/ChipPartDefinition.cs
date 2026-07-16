@@ -348,6 +348,30 @@ public sealed record ChipPartDefinition(
         IsSeries74: true
         );
 
+    /// <summary>74xx73 dual JK flip-flop with asynchronous clear, 14-pin DIP.
+    /// Negative-edge clock on the LS/HC versions (the original TTL part is
+    /// pulse-triggered master-slave); /CLR (active low) overrides the clock
+    /// to force Q LOW. Same function as the '107 with a different pinout.
+    /// NONSTANDARD POWER: VCC is pin 4 and GND is pin 11, mid-package --
+    /// the first part in the catalogue without corner supplies. PowerPin /
+    /// GroundPin carry it, but treat this part as the canary for anything
+    /// downstream that quietly assumes corner power.</summary>
+    public static readonly ChipPartDefinition Ic7473 = new(
+        PartNumber: "73", PinCount: 14, PowerPin: 4, GroundPin: 11,
+        BodyWidth: 8,
+        Pins: new ChipPin[]
+        {
+            new("1CLK",  1),              new("1J",    14),
+            new("/1CLR", 2),              new("/1Q",   13, Out),
+            new("1K",    3),              new("1Q",    12, Out),
+            new("VCC",   4),              new("GND",   11),
+            new("2CLK",  5),              new("2K",    10),
+            new("/2CLR", 6),              new("2Q",     9, Out),
+            new("2J",    7),              new("/2Q",    8, Out),
+        },
+        IsSeries74: true
+        );
+
     /// <summary>74HC393 dual 4-bit binary ripple counter, 14-pin DIP.
     /// Each half has its own clock (active-low edge) and async clear
     /// (active high -- unusual for the family). The two halves are
@@ -628,6 +652,32 @@ public sealed record ChipPartDefinition(
             (new[] { 1, 2 }, 3), (new[] { 4, 5 }, 6),
             (new[] { 9, 10 }, 8), (new[] { 12, 13 }, 11)));
 
+    /// <summary>74xx132 quad 2-input Schmitt-trigger NAND, 14-pin DIP. Same
+    /// pinout and gate grouping as the '00; the hysteresis inputs suit slow
+    /// or noisy edges (RC timing, debounce, gated oscillators). Uses the
+    /// plain NAND glyph until a hysteresis-marked variant exists -- the same
+    /// stub arrangement as the '14's SchmittInverterGate.</summary>
+    public static readonly ChipPartDefinition Ic74132 = new(
+        PartNumber: "132", PinCount: 14, PowerPin: 14, GroundPin: 7,
+        BodyWidth: 8,
+        Pins: new ChipPin[]
+        {
+            new("1A",  1),               new("VCC", 14),
+            new("1B",  2),               new("4B",  13),
+            new("1Y",  3, Out),          new("4A",  12),
+            new("2A",  4),               new("4Y",  11, Out),
+            new("2B",  5),               new("3B",  10),
+            new("2Y",  6, Out),          new("3A",   9),
+            new("GND", 7),               new("3Y",   8, Out),
+        },
+        IsSeries74: true,
+        ShowPinName: p => p.Name is "VCC" or "GND",
+        // Same grouping as the 7400; plain NAND glyphs stand in until a
+        // Schmitt-NAND glyph lands.
+        Decorate: d => ChipDecoration.Decor.Array(d, ChipDecoration.Decor.NandGate,
+            (new[] { 1, 2 }, 3), (new[] { 4, 5 }, 6),
+            (new[] { 9, 10 }, 8), (new[] { 12, 13 }, 11)));
+
     /// <summary>74LS390 dual 4-bit decade counter, 16-pin DIP. Each half
     /// is partitioned into an independently-clocked ÷2 section (CKA → QA)
     /// and ÷5 section (CKB → QB,QC,QD), sharing one async master reset MR
@@ -819,6 +869,32 @@ public sealed record ChipPartDefinition(
         IsSeries74: true
         );
 
+    /// <summary>74xx573 octal transparent D latch with 3-state outputs,
+    /// 20-pin DIP. Functionally the '373 with the flow-through pinout:
+    /// D0..D7 down one side, each Q directly opposite its D (D0 pin 2 ->
+    /// Q0 pin 19 ... D7 pin 9 -> Q7 pin 12). Latches are transparent while
+    /// LE is HIGH and hold on its falling edge; /OE HIGH puts Q0..Q7 in
+    /// high-Z (the latch still follows underneath). The '574 is the
+    /// edge-triggered sibling on the same package layout.</summary>
+    public static readonly ChipPartDefinition Ic74573 = new(
+        PartNumber: "573", PinCount: 20, PowerPin: 20, GroundPin: 10,
+        BodyWidth: 8,
+        Pins: new ChipPin[]
+        {
+            new("/OE", 1),              new("VCC", 20),
+            new("D0",  2),              new("Q0",  19, Out),
+            new("D1",  3),              new("Q1",  18, Out),
+            new("D2",  4),              new("Q2",  17, Out),
+            new("D3",  5),              new("Q3",  16, Out),
+            new("D4",  6),              new("Q4",  15, Out),
+            new("D5",  7),              new("Q5",  14, Out),
+            new("D6",  8),              new("Q6",  13, Out),
+            new("D7",  9),              new("Q7",  12, Out),
+            new("GND", 10),             new("LE",  11),
+        },
+        IsSeries74: true
+        );
+
     // ---- Counters ------------------------------------------------------
 
     /// <summary>74HC161 presettable synchronous 4-bit binary counter with
@@ -906,6 +982,84 @@ public sealed record ChipPartDefinition(
             new("Q2",      6, Out),         new("/LD",     11),
             new("Q3",      7, Out),         new("D2",      10),
             new("GND",     8),              new("D3",       9),
+        },
+        IsSeries74: true
+        );
+
+
+    /// <summary>74xx590 8-bit binary counter feeding an 8-bit 3-state output
+    /// register, 16-pin DIP (datasheet QA..QH = Q0..Q7 here). Separate
+    /// positive-edge clocks: CCLK advances the counter (gated by /CCKEN
+    /// LOW), RCLK captures the counter into the output register -- tie them
+    /// together and the register reads one count behind. /CCLR
+    /// asynchronously zeroes the counter (not the register); /OE HIGH puts
+    /// Q0..Q7 in high-Z. /RCO cascades: to the next stage's /CCKEN for two
+    /// stages, or to the next CCLK for longer chains. Pinout verified
+    /// against TI SCLS039F.</summary>
+    public static readonly ChipPartDefinition Ic74590 = new(
+        PartNumber: "590", PinCount: 16, PowerPin: 16, GroundPin: 8,
+        BodyWidth: 8,
+        Pins: new ChipPin[]
+        {
+            new("Q1",  1, Out),          new("VCC",    16),
+            new("Q2",  2, Out),          new("Q0",     15, Out),
+            new("Q3",  3, Out),          new("/OE",    14),
+            new("Q4",  4, Out),          new("RCLK",   13),
+            new("Q5",  5, Out),          new("/CCKEN", 12),
+            new("Q6",  6, Out),          new("CCLK",   11),
+            new("Q7",  7, Out),          new("/CCLR",  10),
+            new("GND", 8),               new("/RCO",    9, Out),
+        },
+        IsSeries74: true
+        );
+
+    /// <summary>74HC4040 12-stage binary ripple counter, 16-pin DIP -- the
+    /// CD4040's 74HC descendant, under the family-neutral "4040" identifier
+    /// (renders as 744040, matching ChipInventory.md). Twelve ripple outputs
+    /// Q0 (divide-by-2) .. Q11 (divide-by-4096); the count advances on the
+    /// FALLING edge of CLK, and MR (active HIGH) asynchronously clears all
+    /// stages. Ripple, not synchronous: each output settles one stage tPD
+    /// after the one below it. Pinout per Nexperia 74HC_HCT4040
+    /// (zero-based Q names as in that datasheet).</summary>
+    public static readonly ChipPartDefinition Ic744040 = new(
+        PartNumber: "4040", PinCount: 16, PowerPin: 16, GroundPin: 8,
+        BodyWidth: 8,
+        Pins: new ChipPin[]
+        {
+            new("Q11", 1, Out),          new("VCC", 16),
+            new("Q5",  2, Out),          new("Q10", 15, Out),
+            new("Q4",  3, Out),          new("Q9",  14, Out),
+            new("Q6",  4, Out),          new("Q7",  13, Out),
+            new("Q3",  5, Out),          new("Q8",  12, Out),
+            new("Q2",  6, Out),          new("MR",  11),
+            new("Q1",  7, Out),          new("CLK", 10),
+            new("GND", 8),               new("Q0",   9, Out),
+        },
+        IsSeries74: true
+        );
+
+    /// <summary>74HC4060 14-stage binary ripple counter with on-chip
+    /// oscillator, 16-pin DIP -- the CD4060's 74HC descendant, under the
+    /// family-neutral "4060" identifier (renders as 744060). Only stages
+    /// Q3..Q9 and Q11..Q13 are pinned out (no Q0..Q2, no Q10). RS is the
+    /// clock input when driven externally (count advances on its FALLING
+    /// edge); RTC/CTC are the RC-oscillator pins and stay floating with an
+    /// external clock. MR (active HIGH) asynchronously clears all stages.
+    /// Pinout per Nexperia 74HC_HCT4060 (zero-based Q names as in that
+    /// datasheet).</summary>
+    public static readonly ChipPartDefinition Ic744060 = new(
+        PartNumber: "4060", PinCount: 16, PowerPin: 16, GroundPin: 8,
+        BodyWidth: 8,
+        Pins: new ChipPin[]
+        {
+            new("Q11", 1, Out),          new("VCC", 16),
+            new("Q12", 2, Out),          new("Q9",  15, Out),
+            new("Q13", 3, Out),          new("Q7",  14, Out),
+            new("Q5",  4, Out),          new("Q8",  13, Out),
+            new("Q4",  5, Out),          new("MR",  12),
+            new("Q6",  6, Out),          new("RS",  11),
+            new("Q3",  7, Out),          new("RTC", 10),
+            new("GND", 8),               new("CTC",  9),
         },
         IsSeries74: true
         );
@@ -1034,6 +1188,74 @@ public sealed record ChipPartDefinition(
             new("QG",     6, Out),       new("SRCLK",  11),
             new("QH",     7, Out),       new("/SRCLR", 10),
             new("GND",    8),            new("QH'",     9, Out),
+        },
+        IsSeries74: true
+        );
+
+    /// <summary>74xx164 8-bit serial-in/parallel-out shift register, 14-pin
+    /// DIP. Two ANDed serial inputs DSA/DSB (tie the unused one HIGH); data
+    /// shifts toward Q7 on the rising CLK edge, with the AND of DSA/DSB
+    /// entering at Q0. /CLR asynchronously zeroes all stages. No output
+    /// enable -- Q0..Q7 always drive.</summary>
+    public static readonly ChipPartDefinition Ic74164 = new(
+        PartNumber: "164", PinCount: 14, PowerPin: 14, GroundPin: 7,
+        BodyWidth: 8,
+        Pins: new ChipPin[]
+        {
+            new("DSA", 1),               new("VCC",  14),
+            new("DSB", 2),               new("Q7",   13, Out),
+            new("Q0",  3, Out),          new("Q6",   12, Out),
+            new("Q1",  4, Out),          new("Q5",   11, Out),
+            new("Q2",  5, Out),          new("Q4",   10, Out),
+            new("Q3",  6, Out),          new("/CLR",  9),
+            new("GND", 7),               new("CLK",   8),
+        },
+        IsSeries74: true
+        );
+
+    /// <summary>74xx165 8-bit parallel-in/serial-out shift register, 16-pin
+    /// DIP. /PL LOW loads D0..D7 asynchronously (the datasheet's SH//LD
+    /// pin); with /PL HIGH, data shifts toward Q7 on the rising CLK edge,
+    /// DS entering at stage 0. /CE HIGH freezes the clock (the datasheet's
+    /// CLK INH). Only the last stage is pinned out -- Q7 and /Q7, both
+    /// always driving (no output enable).</summary>
+    public static readonly ChipPartDefinition Ic74165 = new(
+        PartNumber: "165", PinCount: 16, PowerPin: 16, GroundPin: 8,
+        BodyWidth: 8,
+        Pins: new ChipPin[]
+        {
+            new("/PL", 1),               new("VCC", 16),
+            new("CLK", 2),               new("/CE", 15),
+            new("D4",  3),               new("D3",  14),
+            new("D5",  4),               new("D2",  13),
+            new("D6",  5),               new("D1",  12),
+            new("D7",  6),               new("D0",  11),
+            new("/Q7", 7, Out),          new("DS",  10),
+            new("GND", 8),               new("Q7",   9, Out),
+        },
+        IsSeries74: true
+        );
+
+    /// <summary>74xx194 4-bit bidirectional universal shift register, 16-pin
+    /// DIP. S1/S0 select the mode sampled on each rising CLK edge:
+    /// 00 hold, 01 shift right (toward Q3; DSR enters at Q0), 10 shift left
+    /// (toward Q0; DSL enters at Q3), 11 parallel load D0..D3. /CLR
+    /// asynchronously zeroes all stages. The Mini Blinky TOS register:
+    /// SHL/SHR in one package, with the ALU Rev 2 '153 serial-fill mux
+    /// feeding DSR/DSL.</summary>
+    public static readonly ChipPartDefinition Ic74194 = new(
+        PartNumber: "194", PinCount: 16, PowerPin: 16, GroundPin: 8,
+        BodyWidth: 8,
+        Pins: new ChipPin[]
+        {
+            new("/CLR", 1),              new("VCC", 16),
+            new("DSR",  2),              new("Q0",  15, Out),
+            new("D0",   3),              new("Q1",  14, Out),
+            new("D1",   4),              new("Q2",  13, Out),
+            new("D2",   5),              new("Q3",  12, Out),
+            new("D3",   6),              new("CLK", 11),
+            new("DSL",  7),              new("S1",  10),
+            new("GND",  8),              new("S0",   9),
         },
         IsSeries74: true
         );
@@ -1206,6 +1428,49 @@ public sealed record ChipPartDefinition(
                 (new[] { 6 }, 14), (new[] { 7 }, 13), (new[] { 8 }, 12), (new[] { 9 }, 11));
             ChipDecoration.Decor.Oe541EnableGate(d, 1, 19, 0f);
         }
+        );
+
+    /// <summary>74xx125 quad 3-state buffer with independent active-LOW
+    /// output enables, 14-pin DIP. Four separate one-bit bus drivers:
+    /// /nOE LOW drives nY from nA, HIGH puts nY in high-Z. Slated for the
+    /// Mini Blinky TOS / data-stack write buffers and the I2C module's
+    /// open-drain-style line driver. The '126 is the same part with
+    /// active-HIGH enables. Tri-state, so deliberately absent from
+    /// TotemPoleParts.</summary>
+    public static readonly ChipPartDefinition Ic74125 = new(
+        PartNumber: "125", PinCount: 14, PowerPin: 14, GroundPin: 7,
+        BodyWidth: 8,
+        Pins: new ChipPin[]
+        {
+            new("/1OE", 1),              new("VCC",  14),
+            new("1A",   2),              new("/4OE", 13),
+            new("1Y",   3, Out),         new("4A",   12),
+            new("/2OE", 4),              new("4Y",   11, Out),
+            new("2A",   5),              new("/3OE", 10),
+            new("2Y",   6, Out),         new("3A",    9),
+            new("GND",  7),              new("3Y",    8, Out),
+        },
+        IsSeries74: true
+        );
+
+    /// <summary>74xx126 quad 3-state buffer with independent active-HIGH
+    /// output enables, 14-pin DIP. Identical to the '125 in every respect
+    /// except enable polarity: nOE HIGH drives nY from nA, LOW puts nY in
+    /// high-Z. Tri-state, so deliberately absent from TotemPoleParts.</summary>
+    public static readonly ChipPartDefinition Ic74126 = new(
+        PartNumber: "126", PinCount: 14, PowerPin: 14, GroundPin: 7,
+        BodyWidth: 8,
+        Pins: new ChipPin[]
+        {
+            new("1OE", 1),               new("VCC", 14),
+            new("1A",  2),               new("4OE", 13),
+            new("1Y",  3, Out),          new("4A",  12),
+            new("2OE", 4),               new("4Y",  11, Out),
+            new("2A",  5),               new("3OE", 10),
+            new("2Y",  6, Out),          new("3A",   9),
+            new("GND", 7),               new("3Y",   8, Out),
+        },
+        IsSeries74: true
         );
 
     // ---- Multiplexers --------------------------------------------------
