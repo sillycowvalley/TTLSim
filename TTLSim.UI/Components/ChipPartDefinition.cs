@@ -1165,8 +1165,8 @@ public sealed record ChipPartDefinition(
             new("IO2",  6),              new("IO5",  15),
             new("IO0",  7),              new("IO3",  14),
             new("Q0",   8, Out),         new("IO1",  13),
-            new("/CLR", 9),              new("DSR",  12),
-            new("GND", 10),              new("CLK",  11),
+            new("/CLR", 9),              new("CLK",  12),   // pin 12 = CP
+            new("GND", 10),              new("DSR",  11),   // pin 11 = DSR -- was transposed with CLK until 2026-07; Nexperia Table 2
         },
         IsSeries74: true
         );

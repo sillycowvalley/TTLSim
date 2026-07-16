@@ -19,7 +19,42 @@ accesses match or beat 65C02 cycle counts.
 
 ---
 
-## 1. Architecture overview
+## 1. Design philosophy — why the '181
+
+The 74181 is chosen because it hands you two things minimal designs usually
+fight for:
+
+- **Two independent operand ports** (A and B).
+- **A built-in function set** — add / subtract / logic / pass-through — so
+  "compute" and "move" are the same hardware. Every register transfer is just
+  an ALU pass, and no separate transfer paths need building.
+
+An earlier iteration of this design exploited those ports with two
+buffer-deleting tricks: the accumulator hardwired permanently to the A port,
+and no B register at all (the B port hanging straight off the data bus). Both
+are retired here, deliberately:
+
+- **The A port carries a six-driver tri-state mini-bus instead of a hardwired
+  accumulator.** A, X, a constant \$00, PCL, PCH, and the bit MASK all take
+  turns on the A side. That one decision is what makes INX/DEX, indexed
+  address arithmetic, relative branches, JSR pushes, and single-bit masks
+  possible with **zero mux ICs** — worth far more than the one buffer the
+  hardwired-A trick saved.
+- **The B register exists, and every ALU op pays one cycle to stage its
+  operand into it.** The bus-as-B-port trick silently assumed memory data
+  stays valid on the bus for the whole ALU cycle, and it made
+  read-modify-write awkward (the writeback needs the bus while the operand is
+  still your B input). The +1 staging tax is paid openly — it appears as the
+  uniform +1 in the ALU-family cycle counts — and it buys DEC synthesis,
+  branch-offset staging, and JSR's operand parking in return.
+
+The other founding decision the '181 enables: **microcode in EEPROM, flags in
+the address** (§2), which makes conditional branching a table lookup rather
+than sequencer logic.
+
+---
+
+## 2. Architecture overview
 
 Single 8-bit data bus, 16-bit address bus, horizontal-ish microcode.
 
@@ -57,7 +92,7 @@ Key structural decisions:
   happens at T = 0 — and because the microcode address still holds the *old*
   IR during T0, every opcode's T0 word is the identical generic FETCH; no
   opcode-specific work can hide there. (One deliberate exception: opcode
-  $00's T0 does not fetch — safe because $00 only ever reaches IR via reset
+  \$00's T0 does not fetch — safe because \$00 only ever reaches IR via reset
   forcing or by being fetched as data, and in both cases the right next step
   is the RESET sequence, not a fetch.)
 - **No address mux.** Address-bus sources take turns via output enables
@@ -65,40 +100,46 @@ Key structural decisions:
   trick — **MARL with the PAGE driver** supplying the high byte.
 - **The PAGE driver.** One '541 on the address-bus high half, inputs
   grounded except D0, which is wired to the ADDR field's low decode. It
-  emits **$00 (zero page) or $01 (stack page)** as a constant. Consequence:
+  emits **\$00 (zero page) or \$01 (stack page)** as a constant. Consequence:
   zp and stack accesses never load MARH at all — the microsteps that would
-  manufacture $00/$01 through the ALU simply don't exist.
+  manufacture \$00/\$01 through the ALU simply don't exist.
 - **A-side mini-bus.** The '181's A inputs are a six-driver tri-state bus
-  (A, X, constant $00, PCL, PCH, MASK — one output bank enabled per
+  (A, X, constant \$00, PCL, PCH, MASK — one output bank enabled per
   microstep). This is what makes INX/DEX, indexed address arithmetic,
   relative branches, JSR pushes, and single-bit masks possible with zero
   mux ICs.
 - **The MASK driver.** The Rockwell bit opcodes encode the bit number in the
-  opcode itself (RMBn = $n7, SMBn = $(n+8)7, BBRn = $nF, BBSn = $(n+8)F), so
+  opcode itself (RMBn = \$n7, SMBn = \$(n+8)7, BBRn = \$nF, BBSn = \$(n+8)F), so
   **IR bits 6:4 are the bit index**. A '238 decodes them to a one-hot byte
-  ($01<<n) behind a '541 as the sixth A-side driver — the mask materializes
+  (\$01<<n) behind a '541 as the sixth A-side driver — the mask materializes
   in zero cycles, and A and X are never involved.
 - **PC counts itself** ('161s), so PC increment never touches the ALU.
   Low pair and high pair have separate /LOAD lines: PCL loads from a
   hardwired path off B while PCH loads from the data bus — a full 16-bit
   jump in one edge. (Synchronous load dominates count on the '161, so a
   jump and PCINC cannot share a cycle — visible in RTS.)
-- **Reset is microcode, vectored at $FFFC/$FFFD — 6502-authentic, zero ICs.**
+- **Reset is microcode, vectored at \$FFFC/\$FFFD — 6502-authentic, zero ICs.**
   RST drives the three microcode ROMs' /OE pins, and resistor networks pull
-  the floating control word to a chosen constant: BUS=ALU, ASIDE=$00,
-  F=pass($00), DST=IR. The module guarantees clocked edges during supervised
-  reset, so **IR is forced to $00** before release. Opcode $00 — the 6502's
+  the floating control word to a chosen constant: BUS=ALU, ASIDE=\$00,
+  F=pass(\$00), DST=IR. The module guarantees clocked edges during supervised
+  reset, so **IR is forced to \$00** before release. Opcode \$00 — the 6502's
   BRK slot, otherwise unused — is the RESET pseudo-opcode: an 11-cycle
-  microcode sequence that reads the vector at $FFFC/$FFFD and loads PC. The
+  microcode sequence that reads the vector at \$FFFC/\$FFFD and loads PC. The
   PC '161s' /CLR pins are tied inactive; the vector load defines PC. A and B
   are clobbered as scratch (registers are undefined after reset — also
-  6502-authentic). One free consequence: a wild jump into $00-filled memory
+  6502-authentic). One free consequence: a wild jump into \$00-filled memory
   executes RESET and reboots cleanly through the vector.
 - **SP counts itself** ('193s), so push/pop never touch the ALU. SP count
   pulses are folded into composite DST codes, since they always coincide
-  with a specific bus destination (or none).
+  with a specific bus destination (or none). *Why hardware counters for PC
+  and SP at all?* Routing increments through the '181 instead (two 8-bit
+  passes, low then high with the carry caught in the Cn mux) was costed in
+  the earlier iteration at roughly **+2 T per PC increment and +3 T per
+  push/pop** — a tax on nearly every instruction, not just a few (an `LDA
+  abs` balloons from 4 cycles to ~6; JSR/RTS to 10–11). Six counter ICs
+  buy that back everywhere.
 - **Flags watch the data bus, not the ALU.** Z ('688 comparing the bus to
-  $00) and N (bus bit 7) are latched from the *data bus*; C is latched from
+  \$00) and N (bus bit 7) are latched from the *data bus*; C is latched from
   the '181 carry chain. Because loads and transfers move data across the bus,
   **LDA/LDX/PLA/TAX etc. set N and Z with no extra cycle** — exactly the
   65C02 behaviour, and essential for real 6502 code (`LDA x / BEQ done`).
@@ -121,7 +162,7 @@ dominate real code, so typical programs shrink 15–20% — the classic 6502 idi
 of zero page as a 256-byte pseudo-register file. With the PAGE driver the speed
 argument returns too: **zp loads and stores match the 65C02 cycle-for-cycle**,
 and the RMW and bit instructions beat it. And compatibility demands it:
-assemblers emit the zp encodings automatically for any variable below $0100.
+assemblers emit the zp encodings automatically for any variable below \$0100.
 
 The Rockwell bit family exists precisely for zp-mapped I/O — `SMB3 led_port`,
 `BBR7 acia_status, wait` — which is exactly how this machine's peripherals
@@ -129,7 +170,7 @@ will be addressed.
 
 ---
 
-## 2. Microcode ROM
+## 3. Microcode ROM
 
 | | |
 |---|---|
@@ -145,14 +186,37 @@ pipeline register): the word changes just after the clock edge and settles
 long before the next one — safe at these speeds behind the module's clean
 gated clock.
 
+### Why EEPROM, and why no GAL
+
+The control store is EEPROM and nothing else — the decision deserves its
+reasoning on record:
+
+- An EEPROM is an arbitrary lookup table: independent entries, no logic
+  minimisation, reprogrammed on the bench in seconds. Microcode control words
+  are effectively **random bits**, which is the *worst possible* case for a
+  GAL's sum-of-products structure — a GAL wants correlated, minimisable logic,
+  and there is none here.
+- **Flags in the address** turn conditional branching into pure table lookup.
+  A BEQ at a given T-state simply reads a different control word depending on
+  Z, because Z is an address line. No sequencer logic, no next-state
+  equations, no GAL required for the "hard part."
+- A 28C256 is 32K deep and cheap. Spending address space is free; spending
+  ICs and PLD toolchains is not.
+
+The one scenario where a GAL would pay off — kept in the back pocket, not
+used: if the store ever had to shrink by going **flag-multiplexed**, a GAL
+could collapse the flag lines down to "the one flag this opcode cares about,"
+avoiding the 8× table growth. With 32K × 24 costing three chips, that day
+never comes for this machine.
+
 ### Control word (24 bits)
 
 | Field | Bits | Values |
 |---|---|---|
-| ADDR | 2 | address bus ← PC / MAR / **ZP** (MARL + PAGE=$00) / **STK** (MARL + PAGE=$01) |
+| ADDR | 2 | address bus ← PC / MAR / **ZP** (MARL + PAGE=\$00) / **STK** (MARL + PAGE=\$01) |
 | BUS | 2 | data bus ← MEM / ALU·F / SP |
 | DST | 4 | none · A · X · B · B+latch SGN · B+latch HC · B+SP++ · IR · MARL · MARH · PC (PCH←bus, PCL←B, same edge) · MEM write · MEM+SP−− · SP (TXS) · SP++ alone · **none+latch TEST** |
-| ASIDE | 3 | A-side ← A / X / $00 / PCL / PCH / **MASK** |
+| ASIDE | 3 | A-side ← A / X / \$00 / PCL / PCH / **MASK** |
 | ALU M | 1 | '181 mode |
 | ALU S | 4 | '181 select (XOR-steered by SGN when ASIDE=PCH·M=0) |
 | CSEL | 2 | '181 carry-in ← 0 / 1 / C flag / HCARRY ('153 section 1) |
@@ -181,7 +245,7 @@ Of the 64 possible M·S·carry combinations, these earn microcode slots:
 
 | M | S3–S0 | Cn | A-side | F | Used by |
 |---|---|---|---|---|---|
-| 1 | 1111 | – | A / X / $00 | pass A-side | STA, STX, STZ, TAX, TXA, TXS, PHA, PHX, CLA |
+| 1 | 1111 | – | A / X / \$00 | pass A-side | STA, STX, STZ, TAX, TXA, TXS, PHA, PHX, CLA |
 | 1 | 1010 | – | – | pass B | PLA/PLX flag pass, MARL←B |
 | 1 | 0000 | – | A | /A | NOT A |
 | 1 | 0101 | – | – | /B | DEC-memory finish |
@@ -189,25 +253,25 @@ Of the 64 possible M·S·carry combinations, these earn microcode slots:
 | 1 | 0010 | – | MASK | /A·B | **RMB** (clear bit n) |
 | 1 | 1110 | – | A / MASK | A∨B | ORA, **SMB** (set bit n) |
 | 1 | 0110 | – | A | A⊕B | EOR |
-| 1 | 1100 | – | – | $FF | SET A |
+| 1 | 1100 | – | – | \$FF | SET A |
 | 0 | 1001 | c | A | A+B+c | ADC (c=C), ADD (c=0) |
 | 0 | 1001 | 0 | X | X+B | indexed address low byte (abs,X: latch HCARRY; zp,X: carry ignored → page-zero wrap, the 6502-correct behaviour) |
-| 0 | 1001 | c | $00 | B+c | abs,X high byte +HCARRY, INC mem |
+| 0 | 1001 | c | \$00 | B+c | abs,X high byte +HCARRY, INC mem |
 | 0 | 0110 | c | A / X | side−B−1+c | SBC (c=C), SUB/CMP/CPX (c=1) |
-| 0 | 0110 | 1 | $00 | −B | NEG, DEC-memory step 1 |
+| 0 | 0110 | 1 | \$00 | −B | NEG, DEC-memory step 1 |
 | 0 | 0000 | 1 | A / X | side+1 | INC A, INX |
-| 0 | 1111 | c | A / X / $00 | side−1+c | DEC A, DEX, **CLC** (c=0 → borrow) / **SEC** (c=1 → no borrow) |
+| 0 | 1111 | c | A / X / \$00 | side−1+c | DEC A, DEX, **CLC** (c=0 → borrow) / **SEC** (c=1 → no borrow) |
 | 0 | 1100 | c | A | A+A+c | ASL (c=0), ROL (c=C) |
 | 0 | 0000/1111 | HC | PCH | PCH ± sign + HCARRY | branch high-byte fix (SGN steers 0000↔1111) |
 
 The CLC/SEC trick deserves a note: with FLGC and FLGNZ independent, CLC and
 SEC are simply "compute something with a known borrow / no-borrow and latch
-only C" — S=1111 on the $00 driver with carry-in 0 or 1. No flag-set hardware,
+only C" — S=1111 on the \$00 driver with carry-in 0 or 1. No flag-set hardware,
 no operand fetch, 2 cycles each, N and Z untouched. Exactly 65C02 semantics.
 
 ---
 
-## 3. Instruction set
+## 4. Instruction set
 
 T0 is always FETCH (IR ← M(PC), PC++) and is included in every cycle count.
 **Cyc** = this CPU; **'C02** = 65C02/Rockwell cycle count for the same
@@ -218,38 +282,38 @@ encoding. All listed opcodes are **byte-identical to the 65C02** unless marked
 
 | Instr | Op | Cyc | 'C02 | Notes |
 |---|---|---|---|---|
-| LDA # | $A9 | 2 | 2 | N,Z set from bus — free |
-| LDA zp | $A5 | 3 | 3 | **match** — PAGE driver |
-| LDA zp,X | $B5 | 4 | 4 | **match**; wraps within page zero, 6502-correct |
-| LDA abs | $AD | 4 | 4 | |
-| LDA abs,X | $BD | 6 | 4(+1) | 'C02 adds 1 on page cross; we always pay the high-byte fix |
-| LDX # | $A2 | 2 | 2 | |
-| LDX zp | $A6 | 3 | 3 | (LDX zp,Y / abs,Y omitted — no Y) |
-| LDX abs | $AE | 4 | 4 | |
-| STA zp | $85 | 3 | 3 | |
-| STA zp,X | $95 | 4 | 4 | |
-| STA abs | $8D | 4 | 4 | A → ALU pass → bus |
-| STA abs,X | $9D | 6 | 5 | |
-| STX zp | $86 | 3 | 3 | |
-| STX abs | $8E | 4 | 4 | |
-| STZ zp | $64 | 3 | 3 | 65C02 extension; $00 driver → pass |
-| STZ zp,X | $74 | 4 | 4 | |
-| STZ abs | $9C | 4 | 4 | |
-| STZ abs,X | $9E | 6 | 5 | |
+| LDA # | \$A9 | 2 | 2 | N,Z set from bus — free |
+| LDA zp | \$A5 | 3 | 3 | **match** — PAGE driver |
+| LDA zp,X | \$B5 | 4 | 4 | **match**; wraps within page zero, 6502-correct |
+| LDA abs | \$AD | 4 | 4 | |
+| LDA abs,X | \$BD | 6 | 4(+1) | 'C02 adds 1 on page cross; we always pay the high-byte fix |
+| LDX # | \$A2 | 2 | 2 | |
+| LDX zp | \$A6 | 3 | 3 | (LDX zp,Y / abs,Y omitted — no Y) |
+| LDX abs | \$AE | 4 | 4 | |
+| STA zp | \$85 | 3 | 3 | |
+| STA zp,X | \$95 | 4 | 4 | |
+| STA abs | \$8D | 4 | 4 | A → ALU pass → bus |
+| STA abs,X | \$9D | 6 | 5 | |
+| STX zp | \$86 | 3 | 3 | |
+| STX abs | \$8E | 4 | 4 | |
+| STZ zp | \$64 | 3 | 3 | 65C02 extension; \$00 driver → pass |
+| STZ zp,X | \$74 | 4 | 4 | |
+| STZ abs | \$9C | 4 | 4 | |
+| STZ abs,X | \$9E | 6 | 5 | |
 
 ### ALU operations (A ∘ operand → A, N,Z; arithmetic also C)
 
 | Instr | # | zp | zp,X | abs | abs,X | Cyc (#/zp/zp,X/abs/abs,X) | 'C02 |
 |---|---|---|---|---|---|---|---|
-| ADC | $69 | $65 | $75 | $6D | $7D | 3 / 4 / 5 / 5 / 7 | 2 / 3 / 4 / 4 / 4(+1) |
-| SBC | $E9 | $E5 | $F5 | $ED | $FD | 3 / 4 / 5 / 5 / 7 | 2 / 3 / 4 / 4 / 4(+1) |
-| AND | $29 | $25 | $35 | $2D | $3D | 3 / 4 / 5 / 5 / 7 | 2 / 3 / 4 / 4 / 4(+1) |
-| ORA | $09 | $05 | $15 | $0D | $1D | 3 / 4 / 5 / 5 / 7 | 2 / 3 / 4 / 4 / 4(+1) |
-| EOR | $49 | $45 | $55 | $4D | $5D | 3 / 4 / 5 / 5 / 7 | 2 / 3 / 4 / 4 / 4(+1) |
-| CMP | $C9 | $C5 | $D5 | $CD | $DD | 3 / 4 / 5 / 5 / 7 | 2 / 3 / 4 / 4 / 4(+1) |
+| ADC | \$69 | \$65 | \$75 | \$6D | \$7D | 3 / 4 / 5 / 5 / 7 | 2 / 3 / 4 / 4 / 4(+1) |
+| SBC | \$E9 | \$E5 | \$F5 | \$ED | \$FD | 3 / 4 / 5 / 5 / 7 | 2 / 3 / 4 / 4 / 4(+1) |
+| AND | \$29 | \$25 | \$35 | \$2D | \$3D | 3 / 4 / 5 / 5 / 7 | 2 / 3 / 4 / 4 / 4(+1) |
+| ORA | \$09 | \$05 | \$15 | \$0D | \$1D | 3 / 4 / 5 / 5 / 7 | 2 / 3 / 4 / 4 / 4(+1) |
+| EOR | \$49 | \$45 | \$55 | \$4D | \$5D | 3 / 4 / 5 / 5 / 7 | 2 / 3 / 4 / 4 / 4(+1) |
+| CMP | \$C9 | \$C5 | \$D5 | \$CD | \$DD | 3 / 4 / 5 / 5 / 7 | 2 / 3 / 4 / 4 / 4(+1) |
 | ADD ✚ | slot | slot | slot | slot | slot | 3 / 4 / 5 / 5 / 7 | — (idiom: CLC+ADC) |
 | SUB ✚ | slot | slot | slot | slot | slot | 3 / 4 / 5 / 5 / 7 | — (idiom: SEC+SBC) |
-| CPX | $E0 | $E4 | — | $EC | — | 3 / 4 / – / 5 / – | 2 / 3 / – / 3 / – |
+| CPX | \$E0 | \$E4 | — | \$EC | — | 3 / 4 / – / 5 / – | 2 / 3 / – / 3 / – |
 
 The uniform +1 across this family is the B-staging cost: the 6502 completes
 the ALU operation under the *next* instruction's fetch (its one-deep pipeline);
@@ -259,44 +323,44 @@ we must land the operand in B, then compute — and T0 is a dedicated fetch.
 
 | Instr | Op | 'C02 | Notes |
 |---|---|---|---|
-| INC A | $1A | 2 | 65C02 extension opcode |
-| DEC A | $3A | 2 | |
-| ASL A | $0A | 2 | A+A, C out |
-| ROL A | $2A | 2 | A+A+C |
-| INX | $E8 | 2 | X on A-side, +1, writeback via bus |
-| DEX | $CA | 2 | |
-| TAX | $AA | 2 | N,Z via bus |
-| TXA | $8A | 2 | |
-| TXS | $9A | 2 | no flags (FLGNZ off) — 6502-correct |
-| TSX | $BA | 2 | N,Z |
-| CLC | $18 | 2 | FLGC-only borrow trick (see ALU table) |
-| SEC | $38 | 2 | |
-| NOT A ✚ | slot | — | idiom: EOR #$FF |
-| NEG A ✚ | slot | — | idiom: EOR #$FF + ADC #1 |
+| INC A | \$1A | 2 | 65C02 extension opcode |
+| DEC A | \$3A | 2 | |
+| ASL A | \$0A | 2 | A+A, C out |
+| ROL A | \$2A | 2 | A+A+C |
+| INX | \$E8 | 2 | X on A-side, +1, writeback via bus |
+| DEX | \$CA | 2 | |
+| TAX | \$AA | 2 | N,Z via bus |
+| TXA | \$8A | 2 | |
+| TXS | \$9A | 2 | no flags (FLGNZ off) — 6502-correct |
+| TSX | \$BA | 2 | N,Z |
+| CLC | \$18 | 2 | FLGC-only borrow trick (see ALU table) |
+| SEC | \$38 | 2 | |
+| NOT A ✚ | slot | — | idiom: EOR #\$FF |
+| NEG A ✚ | slot | — | idiom: EOR #\$FF + ADC #1 |
 | CLA ✚ | slot | — | idiom: LDA #0; sets Z |
-| SET A ✚ | slot | — | A ← $FF |
+| SET A ✚ | slot | — | A ← \$FF |
 
 ### Memory read-modify-write
 
 | Instr | Op | Cyc | 'C02 | Notes |
 |---|---|---|---|---|
-| INC zp | $E6 | 4 | 5 | **faster** — B+1 via $00 driver, PAGE high byte |
-| INC zp,X | $F6 | 5 | 6 | **faster** |
-| INC abs | $EE | 5 | 6 | **faster** |
-| INC abs,X | $FE | 7 | 7 | |
-| DEC zp | $C6 | 5 | 5 | B−1 = /(−B): NEG then NOT, two ALU passes |
-| DEC zp,X | $D6 | 6 | 6 | |
-| DEC abs | $CE | 6 | 6 | |
-| DEC abs,X | $DE | 8 | 7 | |
+| INC zp | \$E6 | 4 | 5 | **faster** — B+1 via \$00 driver, PAGE high byte |
+| INC zp,X | \$F6 | 5 | 6 | **faster** |
+| INC abs | \$EE | 5 | 6 | **faster** |
+| INC abs,X | \$FE | 7 | 7 | |
+| DEC zp | \$C6 | 5 | 5 | B−1 = /(−B): NEG then NOT, two ALU passes |
+| DEC zp,X | \$D6 | 6 | 6 | |
+| DEC abs | \$CE | 6 | 6 | |
+| DEC abs,X | \$DE | 8 | 7 | |
 
 ### Bit manipulation (Rockwell/WDC set — full flag fidelity)
 
 | Instr | Op | Cyc | 'C02 | Notes |
 |---|---|---|---|---|
-| RMB0–7 zp | $07…$77 | 4 | 5 | **faster**; M ← M·/mask; no flags — Rockwell-correct |
-| SMB0–7 zp | $87…$F7 | 4 | 5 | **faster**; M ← M∨mask; no flags |
-| BBR0–7 zp,rel | $0F…$7F | 5 nt / 7 t | 5 / 6(+1) | forks on hidden TEST flop; **N, Z, C untouched** |
-| BBS0–7 zp,rel | $8F…$FF | 5 nt / 7 t | 5 / 6(+1) | |
+| RMB0–7 zp | \$07…\$77 | 4 | 5 | **faster**; M ← M·/mask; no flags — Rockwell-correct |
+| SMB0–7 zp | \$87…\$F7 | 4 | 5 | **faster**; M ← M∨mask; no flags |
+| BBR0–7 zp,rel | \$0F…\$7F | 5 nt / 7 t | 5 / 6(+1) | forks on hidden TEST flop; **N, Z, C untouched** |
+| BBS0–7 zp,rel | \$8F…\$FF | 5 nt / 7 t | 5 / 6(+1) | |
 
 The bit index rides in IR6:4 (the Rockwell encoding is perfectly regular), so
 all 32 opcodes share **two** microcode shapes — the '238 mask decode makes
@@ -306,30 +370,30 @@ RMB3 and RMB6 literally the same ROM contents.
 
 | Instr | Op | Cyc | 'C02 | Notes |
 |---|---|---|---|---|
-| JMP abs | $4C | 3 | 3 | PCL←B, PCH←bus, one edge |
-| BRA | $80 | 4 | 3(+1) | 65C02 extension |
-| BEQ / BNE | $F0 / $D0 | 2 nt / 4 t | 2 / 3(+1) | true relative, flag-preserving |
-| BCS / BCC | $B0 / $90 | 2 / 4 | 2 / 3(+1) | |
-| BMI / BPL | $30 / $10 | 2 / 4 | 2 / 3(+1) | N flag from bus bit 7 |
-| JSR abs | $20 | 7 | 6 | pushes return−1, **byte-identical stack frame** |
-| RTS | $60 | 7 | 6 | pop-then-increment via PCINC; load dominates count on the '161, so the final PCINC can't merge into the PC load |
+| JMP abs | \$4C | 3 | 3 | PCL←B, PCH←bus, one edge |
+| BRA | \$80 | 4 | 3(+1) | 65C02 extension |
+| BEQ / BNE | \$F0 / \$D0 | 2 nt / 4 t | 2 / 3(+1) | true relative, flag-preserving |
+| BCS / BCC | \$B0 / \$90 | 2 / 4 | 2 / 3(+1) | |
+| BMI / BPL | \$30 / \$10 | 2 / 4 | 2 / 3(+1) | N flag from bus bit 7 |
+| JSR abs | \$20 | 7 | 6 | pushes return−1, **byte-identical stack frame** |
+| RTS | \$60 | 7 | 6 | pop-then-increment via PCINC; load dominates count on the '161, so the final PCINC can't merge into the PC load |
 
 ### Stack
 
 | Instr | Op | Cyc | 'C02 | Notes |
 |---|---|---|---|---|
-| PHA | $48 | 3 | 3 | **match** — PAGE driver |
-| PLA | $68 | 4 | 4 | SP++ needs its own T1 (T0 is opcode-agnostic) |
-| PHX | $DA | 3 | 3 | |
-| PLX | $FA | 4 | 4 | |
+| PHA | \$48 | 3 | 3 | **match** — PAGE driver |
+| PLA | \$68 | 4 | 4 | SP++ needs its own T1 (T0 is opcode-agnostic) |
+| PHX | \$DA | 3 | 3 | |
+| PLX | \$FA | 4 | 4 | |
 
 ### Miscellaneous
 
 | Instr | Op | Cyc | 'C02 | Notes |
 |---|---|---|---|---|
-| NOP | $EA | 1 | 2 | END at T0 |
-| STP | $DB | 2 | 3 | asserts /HALTREQ — machine freezes on the module's panel |
-| RESET | $00 | 11 | 7 | pseudo-opcode in the BRK slot; forced into IR by reset, reads $FFFC/$FFFD, loads PC; clobbers A, B; identical ROM contents across all 8 flag combinations (flags are undefined at reset) |
+| NOP | \$EA | 1 | 2 | END at T0 |
+| STP | \$DB | 2 | 3 | asserts /HALTREQ — machine freezes on the module's panel |
+| RESET | \$00 | 11 | 7 | pseudo-opcode in the BRK slot; forced into IR by reset, reads \$FFFC/\$FFFD, loads PC; clobbers A, B; identical ROM contents across all 8 flag combinations (flags are undefined at reset) |
 
 **Total: 133 opcodes** from roughly 22 distinct microcode shapes. 123 opcode
 slots remain free. (Audit: loads/stores 18 · ALU family 43 · register ops 16 ·
@@ -346,34 +410,34 @@ memory RMW 8 · control flow 10 · stack 4 · bit family 32 · misc 2.)
 
 ---
 
-## 4. Microcode listings
+## 5. Microcode listings
 
 Notation: `↑` = PCINC · `M(x)` = memory at address x · `ZP:`/`STK:` = ADDR
-selects MARL + PAGE driver ($00/$01) · `END` = /TRST asserted · `flgC/flgNZ`
+selects MARL + PAGE driver (\$00/\$01) · `END` = /TRST asserted · `flgC/flgNZ`
 = latch enables · `HC` = HCARRY. Every instruction begins `T0: IR←M(PC) ↑`
 (FETCH) — identical for all opcodes, since IR is stale during T0.
 
-**LDA zp ($A5)** — no MARH load ever happens; the PAGE driver *is* the high byte
+**LDA zp (\$A5)** — no MARH load ever happens; the PAGE driver *is* the high byte
 ```
 T1: MARL ← M(PC) ↑
 T2: A ← M(ZP:MARL)        flgNZ  END
 ```
 
-**LDA zp,X ($B5)** — indexed, carry deliberately discarded (page-zero wrap)
+**LDA zp,X (\$B5)** — indexed, carry deliberately discarded (page-zero wrap)
 ```
 T1: B ← M(PC) ↑
 T2: MARL ← X+B            ; HCARRY NOT latched — wraps in page zero
 T3: A ← M(ZP:MARL)        flgNZ  END
 ```
 
-**LDA abs ($AD)** — the abs template
+**LDA abs (\$AD)** — the abs template
 ```
 T1: MARL ← M(PC) ↑
 T2: MARH ← M(PC) ↑
 T3: A ← M(MAR)            flgNZ  END
 ```
 
-**ADC abs,X ($7D)** — the abs,X template, including the carry chain
+**ADC abs,X (\$7D)** — the abs,X template, including the carry chain
 ```
 T1: B ← M(PC) ↑                        ; base lo
 T2: MARL ← X+B  (CSEL=0)   latch HC    ; indexed lo
@@ -383,7 +447,7 @@ T5: B ← M(MAR)                         ; operand
 T6: A ← A+B (CSEL=C)       flgC flgNZ  END
 ```
 
-**RMB n zp ($n7)** — one shape covers all eight; the '238 reads n from IR6:4.
+**RMB n zp (\$n7)** — one shape covers all eight; the '238 reads n from IR6:4.
 SMB is identical with F = MASK∨B (S=1110). No flags — Rockwell-correct
 ```
 T1: MARL ← M(PC) ↑
@@ -391,7 +455,7 @@ T2: B ← M(ZP:MARL)
 T3: M(ZP:MARL) ← /MASK·B  (M=1 S=0010, ASIDE=MASK)   END
 ```
 
-**BBR n zp,rel ($nF)** — the machine's only mid-instruction fork: the test
+**BBR n zp,rel (\$nF)** — the machine's only mid-instruction fork: the test
 latches the hidden TEST flop (never Z), and TESTSEL steers it into the
 microcode address from T4 on. BBS is the same shape with the fork sense
 inverted in ROM contents
@@ -407,7 +471,7 @@ T6: bus ← PCH ±sign +HC (CSEL=HC)
     PC ← bus:B                    END  ; 7 cycles
 ```
 
-**Bxx rel (e.g. BNE $D0)** — flags in the ROM address fork the paths at T1
+**Bxx rel (e.g. BNE \$D0)** — flags in the ROM address fork the paths at T1
 ```
 taken:                                 not taken:
 T1: B ← M(PC) ↑  latch SGN             T1: B ← M(PC) ↑   END
@@ -416,7 +480,7 @@ T3: bus ← PCH ±sign +HC (CSEL=HC)
     PC ← bus:B                    END  ; 4 cycles
 ```
 
-**JSR abs ($20)** — pushing before the second operand fetch makes the stack
+**JSR abs (\$20)** — pushing before the second operand fetch makes the stack
 image byte-identical to a real 6502 (return address = opcode+2)
 ```
 T1: B ← M(PC) ↑                        ; ADL parked in B
@@ -427,7 +491,7 @@ T5: M(STK:MARL) ← PCL                SP--
 T6: bus ← M(PC); PC ← bus:B            END
 ```
 
-**RTS ($60)** — pop-then-increment; PCINC needs its own cycle (load dominates
+**RTS (\$60)** — pop-then-increment; PCINC needs its own cycle (load dominates
 count on the '161)
 ```
 T1: SP++
@@ -438,7 +502,7 @@ T5: bus ← M(STK:MARL); PC ← bus:B
 T6: ↑                             END
 ```
 
-**PHA ($48) / PLA ($68)**
+**PHA (\$48) / PLA (\$68)**
 ```
 PHA:                                   PLA:
 T1: MARL ← SP                          T1: SP++
@@ -446,7 +510,7 @@ T2: M(STK:MARL) ← A   SP--   END       T2: MARL ← SP
                                        T3: A ← M(STK:MARL)  flgNZ  END
 ```
 
-**DEC zp ($C6)** — B−1 synthesized as /(−B), since the '181 has no B−1
+**DEC zp (\$C6)** — B−1 synthesized as /(−B), since the '181 has no B−1
 ```
 T1: MARL ← M(PC) ↑
 T2: B ← M(ZP:MARL)
@@ -454,14 +518,14 @@ T3: B ← −B       ($00−B, CSEL=1)
 T4: M(ZP:MARL) ← /B  (M=1 S=0101)  flgNZ  END
 ```
 
-**CLC ($18) / SEC ($38)** — carry-only latch, nothing else moves
+**CLC (\$18) / SEC (\$38)** — carry-only latch, nothing else moves
 ```
 T1: F = $00−1+c  (S=1111, CSEL=0 for CLC / 1 for SEC)   flgC   END
 ```
 
-**RESET ($00)** — the vector addresses are *computed*, since the only
-conjurable constants are $00, $01, $FF and their ALU derivatives. A stashes
-$FD; B carries the counting and ends holding the vector low byte
+**RESET (\$00)** — the vector addresses are *computed*, since the only
+conjurable constants are \$00, \$01, \$FF and their ALU derivatives. A stashes
+\$FD; B carries the counting and ends holding the vector low byte
 ```
 T0: no fetch                           ; the one exception to generic T0
 T1: MARH ← $FF        (M=1 S=1100)
@@ -478,18 +542,18 @@ T10: END                               ; next T0 fetches from the vector
 
 ---
 
-## 5. Deliberate omissions vs the 65C02
+## 6. Deliberate omissions vs the 65C02
 
 | Missing | Why / workaround |
 |---|---|
 | Y register, all ,Y modes | one index register; X covers loops and tables |
 | (zp), (zp,X), (zp),Y indirect | pointer walks need a scratch byte; A/X are architecturally off-limits mid-instruction. **+1 '377 hidden temp** unlocks (zp) — see growth path |
-| JMP (abs) $6C | same scratch-byte problem, same fix |
-| LSR / ROR | the '181 cannot shift right. **+1 IC** (a '541 with crossed bits on the F→bus path) would add both |
+| JMP (abs) \$6C | same scratch-byte problem, same fix |
+| LSR / ROR | the '181 cannot shift right (it is an adder — `A+A` shifts left only). **+1 IC** (a '541 with crossed bits on the F→bus path) would add both |
 | BIT, TRB, TSB | no V flag, and the write combinations aren't worth the slots (TRB/TSB partially covered by RMB/SMB) |
 | PHP / PLP | flag register can't drive or load the bus; fixable with a '574 flag register if ever needed |
-| BRK / RTI / interrupts | no interrupt hardware — the clock module's halt/breakpoint machinery covers the debugging role. The $00 (BRK) slot is repurposed as the RESET pseudo-opcode |
-| SEI / CLI / CLV / SED / CLD | no I, V, or D flags (no decimal mode) |
+| BRK / RTI / interrupts | no interrupt hardware — the clock module's halt/breakpoint machinery covers the debugging role. The \$00 (BRK) slot is repurposed as the RESET pseudo-opcode. A true IRQ path is priced in the growth path |
+| SEI / CLI / CLV / SED / CLD | no I, V, or D flags (no decimal mode — the '181 gives nothing there and it is pure microcode bloat) |
 | WAI | no interrupts to wait for |
 
 Practical consequence: straight-line 65C02 code that sticks to A, X, immediate,
@@ -500,7 +564,7 @@ remaining rewrites are Y-register usage and pointer indirection.
 
 ---
 
-## 6. IC bill of materials
+## 7. IC bill of materials
 
 ### CPU board — 33 logic ICs + 3 ROMs
 
@@ -511,8 +575,8 @@ remaining rewrites are Y-register usage and pointer indirection.
 | 4 | 74HC377 | B · IR · flag C · flags N,Z (independent latch enables) |
 | 4 | 74HC161 | PC — self-counting, split /LOAD low/high pairs |
 | 2 | 74HC193 | SP — self-counting up/down |
-| 9 | 74HC541 | ALU F→bus · PC→addr ×2 · PAGE constant ($00/$01) → addr high · PCL→A-side · PCH→A-side · $00 constant (A-side) · **MASK → A-side** · SP→bus |
-| 1 | 74HC238 | bit-mask decode: IR6:4 → one-hot $01<<n |
+| 9 | 74HC541 | ALU F→bus · PC→addr ×2 · PAGE constant (\$00/\$01) → addr high · PCL→A-side · PCH→A-side · \$00 constant (A-side) · **MASK → A-side** · SP→bus |
+| 1 | 74HC238 | bit-mask decode: IR6:4 → one-hot \$01<<n |
 | 1 | 74HC688 | Z detect on the data bus |
 | 2 | 74HC74 | SGN + HCARRY · **TEST** hidden flops |
 | 1 | 74HC86 | SGN steering of the S field (sign extension) |
@@ -526,8 +590,8 @@ HCT (or HCT buffers) at the LS181 boundary as usual for input thresholds.
 
 | Qty | Part | Role |
 |---|---|---|
-| 1 | 28C256 | program ROM, $8000–$FFFF · reset vector at $FFFC/$FFFD |
-| 1 | 62256 | RAM, $0000–$7FFF (zero page and stack page $0100 live here) |
+| 1 | 28C256 | program ROM, \$8000–\$FFFF · reset vector at \$FFFC/\$FFFD |
+| 1 | 62256 | RAM, \$0000–\$7FFF (zero page and stack page \$0100 live here) |
 
 A15 is the entire address decoder: A15 → ROM /CS, inverted (spare '04 gate) →
 RAM /CS.
@@ -550,14 +614,14 @@ at roughly 1–2 MHz. Average ~3.5 cycles per instruction on zp-heavy code →
 
 ---
 
-## 7. Build sequence — one working machine per stage
+## 8. Build sequence — one working machine per stage
 
 Following the clock module's own methodology: **every stage is a complete,
 testable machine**, verified in simulation and on the bench before the next
 layer goes on. Each stage lists the new ICs, the running logic-IC count, the
 new instructions, and the milestone that proves it. Microcode is re-burned at
 every stage; unimplemented opcodes microcode to STP so a wild jump halts
-loudly instead of executing garbage ($00 is the exception from stage 5
+loudly instead of executing garbage (\$00 is the exception from stage 5
 onward — it runs the RESET sequence, so wild jumps into zeroed memory
 reboot cleanly).
 
@@ -567,7 +631,7 @@ reboot cleanly).
 | 2 | B + PC load | 1 | 10 | 1 | 3 |
 | 3 | ALU + A | 4 | 14 | 11 | 14 |
 | 4 | MAR + RAM | 2 | 16 | 7 | 21 |
-| 5 | $00 driver | 1 | 17 | 5 | 26 |
+| 5 | \$00 driver | 1 | 17 | 5 | 26 |
 | 6 | Flags | 4 | 21 | 9 | 35 |
 | 7 | X | 1 | 22 | 9 | 44 |
 | 8 | PAGE driver | 1 | 23 | 29 | 73 |
@@ -579,18 +643,18 @@ reboot cleanly).
 **Add:** PC (4× '161) · PC→addr ('541 ×2) · IR ('377) · glue ('04, '00) ·
 3× 28C256 microcode · program ROM.
 **New instructions (2):** NOP, STP.
-**Milestone:** ROM full of $EA ending in $DB. On the 555 leg the address LEDs
-count; at the $DB the machine freezes and the module's HALT LED lights.
+**Milestone:** ROM full of \$EA ending in \$DB. On the 555 leg the address LEDs
+count; at the \$DB the machine freezes and the module's HALT LED lights.
 NEXT INSTR advances exactly one address. The entire fetch/END/T-counter
 handshake with the module is proven before any datapath exists.
 **Interim boot (stages 1–4):** PC /CLR is strapped to /RST and the memory
-map is temporarily *inverted* (ROM low, RAM high) so clear-to-$0000 lands in
+map is temporarily *inverted* (ROM low, RAM high) so clear-to-\$0000 lands in
 ROM. The vectored reset arrives at stage 5.
 
 ### Stage 2 — B and the PC load path (+1 → 10)
 **Add:** B ('377); wire the dual PC load (PCL←B hardwire, PCH←bus).
 **New (3 total):** JMP abs.
-**Milestone:** replace the STP with JMP $8000 — the machine loops forever.
+**Milestone:** replace the STP with JMP \$8000 — the machine loops forever.
 Single-cycle through the 3-cycle jump and watch PCL/PCH land on one edge.
 
 ### Stage 3 — the ALU (+4 → 14)
@@ -609,15 +673,15 @@ yet — results only.
 **Milestone:** software walking-bit RAM test — the first program that can be
 wrong in interesting ways. Breakpoint-comparator card gets useful here.
 
-### Stage 5 — the $00 driver (+1 → 17)
-**Add:** $00 constant '541 (second A-side driver).
+### Stage 5 — the \$00 driver (+1 → 17)
+**Add:** \$00 constant '541 (second A-side driver).
 **New (26):** CLA, NEG A, STZ abs, INC abs, DEC abs.
-**Also — the reset vector goes live.** The RESET microcode needs $00, $01
-and $FF, all of which now exist. Flip the memory map to final (ROM high,
+**Also — the reset vector goes live.** The RESET microcode needs \$00, \$01
+and \$FF, all of which now exist. Flip the memory map to final (ROM high,
 RAM low), lift the PC /CLR strap, wire RST to the microcode ROMs' /OE pins,
-fit the pull networks that define the reset control word (IR ← $00), and
-burn the $00 RESET sequence. From here the machine boots through
-$FFFC/$FFFD like a real 6502.
+fit the pull networks that define the reset control word (IR ← \$00), and
+burn the \$00 RESET sequence. From here the machine boots through
+\$FFFC/\$FFFD like a real 6502.
 
 ### Stage 6 — flags (+4 → 21)
 **Add:** '688 (bus Z-detect) · C ('377) · N,Z ('377) · '153 (CSEL proper —
@@ -635,7 +699,7 @@ interim jumps.
 **New (44):** LDX #/abs, STX abs, TAX, TXA, INX, DEX, CPX #/abs.
 
 ### Stage 8 — the PAGE driver (+1 → 23)
-**Add:** PAGE constant '541 on the address-bus high half ($00/$01 from the
+**Add:** PAGE constant '541 on the address-bus high half (\$00/\$01 from the
 ADDR decode).
 **New (73):** the entire zero-page world in one stage — LDA/STA zp & zp,X,
 LDX/STX zp, STZ zp/zp,X, ADC/SBC/AND/ORA/EOR/CMP zp & zp,X, ADD/SUB zp &
@@ -654,7 +718,7 @@ running unmodified.
 
 ### Stage 10 — the stack (+3 → 30)
 **Add:** SP ('193 ×2) · SP→bus ('541). (The PCH/PCL pushes reuse the stage-9
-A-side drivers; the $01 stack page reuses the stage-8 PAGE driver — this
+A-side drivers; the \$01 stack page reuses the stage-8 PAGE driver — this
 stage is cheap *because* of the two before it.)
 **New (101):** PHA, PLA, PHX, PLX, TXS, TSX, JSR, RTS.
 **Milestone:** subroutines — the machine becomes something you structure
@@ -676,3 +740,10 @@ idioms, complete. The machine as documented above.
 3. **'574 flag register** (net 0–1): PHP/PLP, and frees a '377.
 4. **Y register '574** (+1): second index on the existing A-side mini-bus
    (ASIDE has two codes spare); re-opens the ,Y modes and (zp),Y.
+5. **Interrupt path**: an I flag (a spare '74 half), an /IRQ sample point at
+   the T0 fetch decision, a BRK/IRQ microcode sequence pushing PC and flags
+   (which itself wants item 3's flag register first), RTI, and the \$FFFE/\$FFFF
+   vector — computed the same way RESET computes \$FFFC/\$FFFD. The most
+   expensive item on the list, and the clock module's halt/breakpoint
+   machinery covers the debugging role in the meantime, which is why it sits
+   last.

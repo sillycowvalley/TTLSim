@@ -442,9 +442,11 @@ public sealed class ChipFactory : IChipFactory
             "245" => TryCreateHc245(device, pinToNet),
             "273" => TryCreateHc273(device, pinToNet),
             "283" => TryCreateHc283(device, pinToNet),
+            "299" => TryCreateHc299(device, pinToNet),
             "374" => TryCreateHc374(device, pinToNet),
             "377" => TryCreateHc377(device, pinToNet),
             "541" => TryCreateHc541(device, pinToNet),
+            "574" => TryCreateHc574(device, pinToNet),
             "670" => TryCreateHc670(device, pinToNet),
             "688" => TryCreateHc688(device, pinToNet),
             "DS1813" => TryCreateDs1813(pinToNet),
@@ -477,6 +479,70 @@ public sealed class ChipFactory : IChipFactory
             q0: Opt(15, "q0-nc"), q1: Opt(14, "q1-nc"),
             q2: Opt(13, "q2-nc"), q3: Opt(12, "q3-nc"),
             label: "194", logger: logger,
+            delayPs: TtlTiming.ResolvePs(device));
+    }
+
+    private IChip? TryCreateHc299(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        // Required pins are the pure inputs: 1 S0, 2 /OE1, 3 /OE2, 9 /CLR,
+        // 11 DSR, 12 CP, 18 DSL, 19 S1. The eight I/O pins are bus pins
+        // (outputs in hold/shift, inputs in load) and the Q0/Q7 serial
+        // taps are outputs -- ALL optional via Opt() stand-ins, since an
+        // open output must never block instantiation and an unwired I/O
+        // bit simply loads 0 and drives nothing. TTL011 still flags
+        // genuinely unwired control INPUTS at design time.
+        int[] needed = { 1, 2, 3, 9, 11, 12, 18, 19 };
+        foreach (int p in needed)
+            if (!pinToNet.TryGetValue(p, out Net? n) || n is null) return null;
+
+        Net Get(int pin) => pinToNet[pin];
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);   // local stand-in, drives nothing
+
+        return new Hc299(
+            s0: Get(1), oe1N: Get(2), oe2N: Get(3), clrN: Get(9),
+            dsr: Get(11), clkN: Get(12), dsl: Get(18), s1: Get(19),
+            io0: Opt(7, "io0-nc"), io1: Opt(13, "io1-nc"),
+            io2: Opt(6, "io2-nc"), io3: Opt(14, "io3-nc"),
+            io4: Opt(5, "io4-nc"), io5: Opt(15, "io5-nc"),
+            io6: Opt(4, "io6-nc"), io7: Opt(16, "io7-nc"),
+            q0Tap: Opt(8, "q0tap-nc"), q7Tap: Opt(17, "q7tap-nc"),
+            label: "299", logger: logger,
+            delayPs: TtlTiming.ResolvePs(device));
+    }
+
+    private IChip? TryCreateHc574(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        // The '574 IS the '374 behaviourally -- octal rising-edge D
+        // register, async /OE tri-state, register clocking underneath a
+        // disabled bus -- with a flow-through pinout instead of the
+        // interleave: /OE=1, D0..D7 = pins 2..9 straight down the left,
+        // CLK=11, and each Q directly OPPOSITE its D: Q(k) = pin 21-k's
+        // partner, so Q0=19 down to Q7=12 (verified against TI SCLS148
+        // and SG Micro; the part definition's Q labels were bit-reversed
+        // until the 2026-07 fix -- the '374-anchored transcription trap).
+        // One Hc374 core instance with remapped pins; the label keeps
+        // logs honest. Same required-pin policy as the '374: a floating
+        // /OE or CLK on a register is a real fault, everything else Opt().
+        if (!pinToNet.TryGetValue(1, out Net? oeN) || oeN is null) return null;
+        if (!pinToNet.TryGetValue(11, out Net? clkN) || clkN is null) return null;
+
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);
+
+        return new Hc374(
+            oeN: oeN, clkN: clkN,
+            d0: Opt(2, "d0-nc"), d1: Opt(3, "d1-nc"),
+            d2: Opt(4, "d2-nc"), d3: Opt(5, "d3-nc"),
+            d4: Opt(6, "d4-nc"), d5: Opt(7, "d5-nc"),
+            d6: Opt(8, "d6-nc"), d7: Opt(9, "d7-nc"),
+            q0: Opt(19, "q0-nc"), q1: Opt(18, "q1-nc"),
+            q2: Opt(17, "q2-nc"), q3: Opt(16, "q3-nc"),
+            q4: Opt(15, "q4-nc"), q5: Opt(14, "q5-nc"),
+            q6: Opt(13, "q6-nc"), q7: Opt(12, "q7-nc"),
+            label: "574", logger: logger,
             delayPs: TtlTiming.ResolvePs(device));
     }
 
@@ -1136,7 +1202,7 @@ public sealed class ChipFactory : IChipFactory
     {
         // Box-chip ICs (per-unit dispatch in CreateForUnit).
         "47" or "74" or "138" or "139" or "151" or "153" or "154" or "157" or "161" or "163" or "173" or "181" or "182" or "191" or "194"
-            or "244" or "245" or "257" or "273" or "283" or "374" or "377" or "541" or "670" or "688" or "7seg-ca"
+            or "244" or "245" or "257" or "273" or "283" or "299" or "374" or "377" or "541" or "574" or "670" or "688" or "7seg-ca"
             => true,
         // Reset supervisor (per-unit dispatch in CreateForUnit).
         "DS1813"

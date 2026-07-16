@@ -133,12 +133,17 @@ public static class TtlTiming
         ["LS:374"] = new(28_000),
         ["HC:374"] = new(44_000),  // octal D flip-flop, 3-state
         ["HCT:374"] = new(44_000),                            // the physical part (HC374 unobtainable)
+        ["LS:574"] = new(28_000),
+        ["HC:574"] = new(44_000),  // '374 silicon core, flow-through pinout; rows anchored to the '374 (legacy TI-class HC; newer processes spec 35)
+        ["HCT:574"] = new(44_000),
         ["LS:377"] = new(30_000),
         ["HC:377"] = new(44_000),  // octal D flip-flop, clock enable
         ["LS:191"] = new(27_000),
         ["HC:191"] = new(44_000),  // sync up/down counter
         ["LS:194"] = new(35_000),
         ["HC:194"] = new(44_000),  // universal shift register (LS: Fairchild CLK->Q tPHL max; HC: Nexperia CP->Q max, full temp range)
+        ["LS:299"] = new(40_000),
+        ["HC:299"] = new(60_000),  // 8-bit universal shift reg, 3-state I/O (LS: Motorola clear->Q max; HC: Nexperia CP->Q max -40..125C, covers the faster OE paths)
         ["LS:390"] = new(35_000),
         ["HC:390"] = new(44_000),  // dual decade counter
         ["LS:393"] = new(35_000),
