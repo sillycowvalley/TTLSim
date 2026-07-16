@@ -754,21 +754,25 @@ public sealed record ChipPartDefinition(
 
     /// <summary>74HC574 octal D flip-flop with 3-state outputs, 20-pin DIP.
     /// Positive-edge clock; /OE high puts Q0..Q7 in high-Z. Common as a bus
-    /// driver / output register in CPU designs.</summary>
+    /// driver / output register in CPU designs. Flow-through pinout: each Q
+    /// sits directly opposite its D (D0 pin 2 -> Q0 pin 19 ... D7 pin 9 ->
+    /// Q7 pin 12, per TI SN74HC574) -- NOT the '374's Q7-at-19 order, which
+    /// is what an earlier revision of this definition wrongly carried over.
+    /// The '573 is the transparent-latch sibling on the same layout.</summary>
     public static readonly ChipPartDefinition Ic74574 = new(
         PartNumber: "574", PinCount: 20, PowerPin: 20, GroundPin: 10,
         BodyWidth: 8,
         Pins: new ChipPin[]
         {
             new("/OE", 1),              new("VCC", 20),
-            new("D0",  2),              new("Q7",  19, Out),
-            new("D1",  3),              new("Q6",  18, Out),
-            new("D2",  4),              new("Q5",  17, Out),
-            new("D3",  5),              new("Q4",  16, Out),
-            new("D4",  6),              new("Q3",  15, Out),
-            new("D5",  7),              new("Q2",  14, Out),
-            new("D6",  8),              new("Q1",  13, Out),
-            new("D7",  9),              new("Q0",  12, Out),
+            new("D0",  2),              new("Q0",  19, Out),
+            new("D1",  3),              new("Q1",  18, Out),
+            new("D2",  4),              new("Q2",  17, Out),
+            new("D3",  5),              new("Q3",  16, Out),
+            new("D4",  6),              new("Q4",  15, Out),
+            new("D5",  7),              new("Q5",  14, Out),
+            new("D6",  8),              new("Q6",  13, Out),
+            new("D7",  9),              new("Q7",  12, Out),
             new("GND", 10),             new("CLK", 11),
         },
         IsSeries74: true
