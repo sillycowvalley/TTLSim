@@ -217,6 +217,15 @@ public sealed class ChipFactory : IChipFactory
         if (powerNets.TryGetValue(net2.Id, out Signal v2))
             return new PullDriver(net1, v2);
 
+        // Both ends on the SAME net (e.g. a series resistor bridged by a
+        // header link that loops the signal back): the resistor is
+        // electrically a no-op, and a ResistorContact would be a zero-delay
+        // oscillator -- its exclude-own-driver resolve assumes two distinct
+        // nets, so with both mirror drivers on one net the fixed point never
+        // forms and Apply re-triggers itself forever at the same tick.
+        if (ReferenceEquals(net1, net2))
+            return null;
+
         // Neither end on a rail -> series resistor, unmodelled for now.
         return new ResistorContact(net1, net2);
     }

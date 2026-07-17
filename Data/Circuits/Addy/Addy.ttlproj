@@ -42588,18 +42588,6 @@
     ],
     "links": [
       {
-        "id": "f4a857b4b7344e2c8dea41c5cbce797c",
-        "aId": "4a5dfd910cbe4ff3acf831abdbfe1b95",
-        "bId": "b5de8602303a4226ae06927f59a76924",
-        "reversed": false
-      },
-      {
-        "id": "de44abe7e8474f168ef78c574d17f315",
-        "aId": "4ae42f88e4c64509bd2d236eb371b036",
-        "bId": "b9854bba281a411fba2d2a53e42a297d",
-        "reversed": false
-      },
-      {
         "id": "0fe5aabbe38943a5b50ba6ba59db34b1",
         "aId": "8f5469bb769f4d1ba5d300bd816273c5",
         "bId": "dc565b07f39445f8b0b68b6df2204041",
@@ -42652,6 +42640,18 @@
         "aId": "6bbec6f54f08457b846a7142882f167e",
         "bId": "489205626dd54c4ca26accee42d3e833",
         "reversed": false
+      },
+      {
+        "id": "f4a857b4b7344e2c8dea41c5cbce797c",
+        "aId": "4a5dfd910cbe4ff3acf831abdbfe1b95",
+        "bId": "b5de8602303a4226ae06927f59a76924",
+        "reversed": false
+      },
+      {
+        "id": "de44abe7e8474f168ef78c574d17f315",
+        "aId": "4ae42f88e4c64509bd2d236eb371b036",
+        "bId": "b9854bba281a411fba2d2a53e42a297d",
+        "reversed": false
       }
     ],
     "layers": [
@@ -42661,11 +42661,11 @@
       },
       {
         "name": "Registers",
-        "visible": false
+        "visible": true
       },
       {
         "name": "Clock",
-        "visible": false
+        "visible": true
       },
       {
         "name": "Interfaces",
@@ -42695,10 +42695,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 0.31577614,
+    "zoom": 0.5522954,
     "pan": {
-      "x": 1424,
-      "y": 1152
+      "x": 1663,
+      "y": 1671
     }
   }
 }

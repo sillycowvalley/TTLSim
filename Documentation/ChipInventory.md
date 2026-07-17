@@ -17,7 +17,7 @@ clear the In Transit cells.
 | 7408   | 4× 2i AND                                 | 11  |     |     |       |        |
 | 7410   | 3× 3i NAND                                | 8   |     |     |       |        |
 | 7411   | 3× 3i AND                                 | 20  |     |     |       |        |
-| 7414   | 6× Schmitt Inverter                       | 10  |     |     |       | 8      |
+| 7414   | 6× Schmitt Inverter                       | 10  | 8   |     |       | 8      |
 | 7420   | 2× 4i NAND                                | 8   |     |     |       |        |
 | 7432   | 4× 2i OR                                  | 12  |     |     |       |        |
 | 7473   | 2× JK Flip-Flop                           |     | 8   |     |       |        |
@@ -45,7 +45,7 @@ clear the In Transit cells.
 | 74191  | 4-Bit Up/Down Counter                     | 23  |     |     |       |        |
 | 74193  | 4-Bit Up/Down Counter (dual clock)        | 27  |     |     |       |        |
 | 74194  | 4-Bit Bidirectional Shift Register        | 10  |     |     |       |        |
-| 74244  | Octal Tri-State Buffer                    | 16  | 4   |     |       | 4      |
+| 74244  | Octal Tri-State Buffer                    | 16  | 4   |     |       |        |
 | 74245  | Octal Bus Transceiver                     | 16  | 20  |     |       | 4      |
 | 74273  | Octal D Flip-Flop with Clear              | 6   |     |     |       |        |
 | 74283  | 4-Bit Binary Adder                        | 8   |     |     |       |        |
@@ -54,7 +54,7 @@ clear the In Transit cells.
 | 74377  | Octal D Flip-Flop with Enable             | 8   |     |     |       |        |
 | 74393  | Dual 4-Bit Binary Counter                 | 8   | 2   |     |       |        |
 | 74541  | Octal Buffer                              | 8   |     |     |       |        |
-| 74573  | Octal Transparent Latch (flow-through)    | 8   |     |     |       | 4      |
+| 74573  | Octal Transparent Latch (flow-through)    | 8   | 4   |     |       |        |
 | 74574  | Octal D Flip-Flop (flow-through)          | 7   |     |     |       |        |
 | 74590  | 8-Bit Counter with Output Register (3-st) |     |     |     | 8     |        |
 | 74595  | 8-Bit Shift Register with Output Latch    | 12  |     |     |       |        |
