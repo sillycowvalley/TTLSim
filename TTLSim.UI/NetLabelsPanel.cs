@@ -31,10 +31,15 @@ namespace TTLSim.UI.View;
 /// different nets). A label row is itself red when any bit IT carries is a lone
 /// tap, so inside a red group the broken instance is the red child.</para>
 ///
-/// <para>The list is schematic-wide and ignores layer visibility, matching
-/// <see cref="NetLabelIndex"/> and the label's own naming probes: hiding a layer
-/// must not silently change what a name means. Labels on a hidden layer are
-/// greyed and cannot be selected, matching the canvas's activity rule.</para>
+/// <para>Counts and ERROR ANALYSIS are schematic-wide and ignore layer
+/// visibility, matching <see cref="NetLabelIndex"/> and the label's own naming
+/// probes: hiding a layer must not silently change what a name means or what
+/// counts as an error. What is LISTED follows the header's "Show hidden"
+/// toggle (default off): hidden label rows are omitted, a name whose every
+/// instance is hidden is omitted entirely, and a partially hidden name shows
+/// "(N hidden)" after its count. With the toggle on, hidden labels are listed
+/// greyed; either way they cannot be selected on the canvas, matching the
+/// activity rule.</para>
 ///
 /// <para>The header carries a Copy button that puts the whole listing on the
 /// clipboard as plain text -- the summary line, then one line per name and one
@@ -47,6 +52,7 @@ public sealed class NetLabelsPanel : UserControl
     private readonly SchematicCanvas canvas;
     private readonly TreeView tree;
     private readonly Label header;
+    private readonly CheckBox showHiddenCheck;
     private readonly Font regularFont;
     private readonly Font boldFont;
     private readonly ToolTip toolTip = new();
@@ -126,6 +132,26 @@ public sealed class NetLabelsPanel : UserControl
         toolTip.SetToolTip(copyButton, "Copy the net-label listing (with errors) to the clipboard as text");
         header.Controls.Add(copyButton);
 
+        // Added after the Copy button, so it docks to its left. Toggling
+        // forces a rebuild directly -- the toggle is view state, and waiting
+        // for the next selection change would leave the tree stale.
+        showHiddenCheck = new CheckBox
+        {
+            Text = "Show hidden",
+            Dock = DockStyle.Right,
+            AutoSize = false,
+            Width = 96,
+            TextAlign = ContentAlignment.MiddleLeft,
+            Font = new Font("Segoe UI", 8f),
+            TabStop = false,
+            BackColor = SystemColors.ControlLight,
+            Checked = false
+        };
+        showHiddenCheck.CheckedChanged += (_, _) => RefreshLabels();
+        toolTip.SetToolTip(showHiddenCheck,
+            "Also list net labels on hidden layers (counts and errors always cover the whole schematic)");
+        header.Controls.Add(showHiddenCheck);
+
         Controls.Add(tree);
         Controls.Add(header);
 
@@ -173,10 +199,27 @@ public sealed class NetLabelsPanel : UserControl
         {
             tree.Nodes.Clear();
 
+            bool showHidden = showHiddenCheck.Checked;
+            int listedCount = 0;
             int errorCount = 0;
             foreach (var group in groups)
             {
-                var groupNode = tree.Nodes.Add($"{group.DisplayName}  \u00d7{group.Count}");
+                int hiddenCount = 0;
+                foreach (var label in group.Labels)
+                    if (!canvas.Schematic.IsItemActive(label))
+                        hiddenCount++;
+
+                // Toggle off: a name whose every instance is hidden is not
+                // listed at all. Its schematic-wide error state is unchanged
+                // -- turning the toggle on brings it back, red and all.
+                if (!showHidden && hiddenCount == group.Count)
+                    continue;
+                listedCount++;
+
+                string countText = !showHidden && hiddenCount > 0
+                    ? $"{group.DisplayName}  \u00d7{group.Count} ({hiddenCount} hidden)"
+                    : $"{group.DisplayName}  \u00d7{group.Count}";
+                var groupNode = tree.Nodes.Add(countText);
                 groupNode.Tag = group;
 
                 if (group.HasError)
@@ -187,10 +230,14 @@ public sealed class NetLabelsPanel : UserControl
 
                 foreach (var label in group.Labels)
                 {
+                    bool hidden = !canvas.Schematic.IsItemActive(label);
+                    if (!showHidden && hidden)
+                        continue;
+
                     var labelNode = groupNode.Nodes.Add(LabelText(group, label));
                     labelNode.Tag = label;
 
-                    if (!canvas.Schematic.IsItemActive(label))
+                    if (hidden)
                         labelNode.ForeColor = HiddenColor;
                     else if (LabelHasLoneBit(group, label))
                         labelNode.ForeColor = ErrorColor;
@@ -202,11 +249,11 @@ public sealed class NetLabelsPanel : UserControl
                     groupNode.Expand();
             }
 
-            header.Text = groups.Count == 0
+            header.Text = listedCount == 0
                 ? "Net Labels"
                 : errorCount == 0
-                    ? $"Net Labels  ({groups.Count} name{(groups.Count == 1 ? "" : "s")})"
-                    : $"Net Labels  ({groups.Count} name{(groups.Count == 1 ? "" : "s")}, {errorCount} with errors)";
+                    ? $"Net Labels  ({listedCount} name{(listedCount == 1 ? "" : "s")})"
+                    : $"Net Labels  ({listedCount} name{(listedCount == 1 ? "" : "s")}, {errorCount} with errors)";
             header.ForeColor = errorCount == 0 ? SystemColors.ControlText : ErrorColor;
         }
         finally
@@ -261,9 +308,14 @@ public sealed class NetLabelsPanel : UserControl
     /// <summary>
     /// Structural fingerprint of the labels: rebuild only when one of these
     /// changes. Position is included so a moved label's row keeps its
-    /// coordinates honest.
+    /// coordinates honest. Per-layer VISIBILITY and the "Show hidden" toggle
+    /// are appended because they change which rows are listed: a layer
+    /// checkbox flipped in the Layers panel then triggers a rebuild the next
+    /// time OnSelectionChanged runs, instead of leaving stale rows. (The
+    /// toggle's own CheckedChanged refreshes immediately as well; its
+    /// presence here is belt-and-braces.)
     /// </summary>
-    private static string Signature(List<NetLabelGroup> groups)
+    private string Signature(List<NetLabelGroup> groups)
     {
         var sb = new StringBuilder();
         foreach (var group in groups)
@@ -280,6 +332,12 @@ public sealed class NetLabelsPanel : UserControl
             }
             sb.Append('\n');
         }
+
+        sb.Append('#');
+        foreach (var layer in canvas.Schematic.Layers)
+            sb.Append(layer.Visible ? '1' : '0');
+        sb.Append(showHiddenCheck.Checked ? 'H' : 'h');
+
         return sb.ToString();
     }
 
@@ -333,7 +391,21 @@ public sealed class NetLabelsPanel : UserControl
 
     private void AppendGroup(StringBuilder sb, NetLabelGroup group)
     {
+        bool showHidden = showHiddenCheck.Checked;
+
+        int hiddenCount = 0;
+        foreach (var label in group.Labels)
+            if (!canvas.Schematic.IsItemActive(label))
+                hiddenCount++;
+
+        // Mirror the tree: with the toggle off, a fully hidden name is not
+        // exported and a partially hidden one carries its "(N hidden)" note.
+        if (!showHidden && hiddenCount == group.Count)
+            return;
+
         sb.Append(group.DisplayName).Append("  \u00d7").Append(group.Count);
+        if (!showHidden && hiddenCount > 0)
+            sb.Append(" (").Append(hiddenCount).Append(" hidden)");
         if (group.Diagnostic is { } diag)
             sb.Append('\t').Append("ERROR \u2014 ").Append(diag);
         else if (group.HasError)
@@ -341,7 +413,11 @@ public sealed class NetLabelsPanel : UserControl
         sb.AppendLine();
 
         foreach (var label in group.Labels)
+        {
+            if (!showHidden && !canvas.Schematic.IsItemActive(label))
+                continue;
             AppendLabel(sb, group, label);
+        }
     }
 
     private void AppendLabel(StringBuilder sb, NetLabelGroup group, NetLabelItem label)
