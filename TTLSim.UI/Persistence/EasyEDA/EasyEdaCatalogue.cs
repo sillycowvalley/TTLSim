@@ -1097,6 +1097,27 @@ public static class EasyEDACatalogue
 
             ChipPartDefinition cp when cp.PinCount == 20 => BuildDip20Part(device, cp),
 
+            // DIP-24: the shipped footprint is the 0.3" SKINNY package
+            // (PDIP-24 LS7.9, the GAL22V10 / ATF22V10 body). 24-pin parts in
+            // the classic 0.6" package (74181, 28C16, 6116) must NOT bind to
+            // it -- they get a specific error until a 600-mil reference
+            // footprint is added, rather than a PCB with the wrong lead span.
+            ChipPartDefinition cp when cp.PinCount == 24 && NarrowDip24Parts.Contains(cp.PartNumber)
+                => BuildDip24Part(device, cp),
+            ChipPartDefinition cp when cp.PinCount == 24
+                => throw new NotImplementedException(
+                    $"EasyEDA export: {device.Designator} ({cp.PartNumber}) is a 24-pin part "
+                    + "in the 0.6\" (600 mil) DIP package, but only the 0.3\" skinny DIP-24 "
+                    + "footprint is catalogued. Add a 600-mil DIP-24 reference footprint "
+                    + "before exporting this part."),
+
+            // DIP-28: the shipped footprint is the 0.3" SKINNY package
+            // (PDIP-28 LS7.8, per the CY7C199 reference). NOTE: 600-mil
+            // DIP-28 parts (classic 28C256 / 62256 / W24512 packages) will
+            // bind to this narrow footprint -- verify the physical package
+            // before fabricating, or add a 600-mil reference.
+            ChipPartDefinition cp when cp.PinCount == 28 => BuildDip28Part(device, cp),
+
             _ => throw new NotImplementedException(
                 $"EasyEDA export: no catalogue entry for device {device.Designator} " +
                 $"({device.Definition.Identifier}). Add a CataloguePart entry and " +
@@ -2160,6 +2181,335 @@ public static class EasyEDACatalogue
             ["custom_tags"] = "[\"Logic\"]",
             ["title"] = chipName,
             ["version"] = "1681885513",
+            ["type"] = 2,
+        };
+        return fragment.ToJsonString();
+    }
+
+    // ---------------------------------------------------- DIP-24 synthesis
+    //
+    // Identical scheme to DIP-20, stretched by two pin pairs: 12 pins per
+    // edge at 20px pitch, body half-height 122, pin rows +110..-110.
+    // dip-24.esym generated from the dip-20 template geometry; dip-24.efoo
+    // lifted VERBATIM from the ATF22V10C-15PU reference .epro
+    // (DIP-24_and_DIP-28.epro) -- the 0.3" SKINNY PDIP-24 (LS7.9). The
+    // footprint uuid is the reference file's own embedded uuid.
+    //
+    // ONLY the parts in NarrowDip24Parts may bind to this footprint: the
+    // classic 0.6" DIP-24 parts (74181, 28C16, 6116) have twice the lead
+    // span and would produce an unbuildable PCB. They throw a specific
+    // error in LookupForDevice until a 600-mil reference is catalogued.
+    internal const string Dip24FootprintUuid = "4730543e86a3e840";
+
+    /// <summary>24-pin parts in the 0.3" skinny DIP package. PARALLEL-LIST
+    /// WARNING: adding a narrow 24-pin part means adding its PartNumber here
+    /// as well as the usual chip registration sites.</summary>
+    private static readonly HashSet<string> NarrowDip24Parts =
+        new(StringComparer.OrdinalIgnoreCase) { "GAL22V10", "ATF22V10" };
+
+    // ATF22V10C-15PU reference device attributes (decorative per doc §2).
+    private const string Dip24ReferenceSupplierPart = "C1519062";
+    private const string Dip24ReferenceManufacturer = "MICROCHIP(\u7f8e\u56fd\u5fae\u82af)";
+    private const string Dip24Reference3dModelUuid =
+        "d0164e313bc9425ca3805a83d6deba93|0819f05c4eef4c71ace90d822a990e87";
+    private const string Dip24Reference3dModelTitle =
+        "PDIP-24_L31.9-W6.6-P2.54-LS7.9-BL";
+    private const string Dip24Reference3dModelTransform =
+        "1255.903,322.44,0,0,0,0,0,0,-118.11";
+
+    private static readonly Dictionary<int, Point> Dip24PinLocals = new()
+    {
+        [1] = new Point(-50, 110),
+        [2] = new Point(-50, 90),
+        [3] = new Point(-50, 70),
+        [4] = new Point(-50, 50),
+        [5] = new Point(-50, 30),
+        [6] = new Point(-50, 10),
+        [7] = new Point(-50, -10),
+        [8] = new Point(-50, -30),
+        [9] = new Point(-50, -50),
+        [10] = new Point(-50, -70),
+        [11] = new Point(-50, -90),
+        [12] = new Point(-50, -110),
+        [13] = new Point(50, -110),
+        [14] = new Point(50, -90),
+        [15] = new Point(50, -70),
+        [16] = new Point(50, -50),
+        [17] = new Point(50, -30),
+        [18] = new Point(50, -10),
+        [19] = new Point(50, 10),
+        [20] = new Point(50, 30),
+        [21] = new Point(50, 50),
+        [22] = new Point(50, 70),
+        [23] = new Point(50, 90),
+        [24] = new Point(50, 110),
+    };
+
+    private static CataloguePart BuildDip24Part(Device device, ChipPartDefinition cp)
+    {
+        string chipName = device.FullPartNumber;
+
+        string symbolUuid = DeterministicUuid("dip24-symbol:" + chipName);
+        string deviceUuid = DeterministicUuid("dip24-device:" + chipName);
+
+        var tokens = new Dictionary<string, string>
+        {
+            ["@@PART_TITLE@@"] = chipName + ".1",
+            ["@@SYMBOL_NAME@@"] = chipName,
+        };
+        foreach (var pin in cp.Pins)
+            tokens[$"@@PIN_{pin.Number}_NAME@@"] = ToEasyEdaPinName(pin.Name);
+
+        for (int n = 1; n <= 24; n++)
+            if (!tokens.ContainsKey($"@@PIN_{n}_NAME@@"))
+                throw new NotImplementedException(
+                    $"EasyEDA export: DIP-24 chip '{chipName}' is missing a " +
+                    $"definition for pin {n}. All 24 pins must be enumerated in " +
+                    "its ChipPartDefinition before it can be exported.");
+
+        return new CataloguePart(
+            DeviceUuid: deviceUuid,
+            SymbolUuid: symbolUuid,
+            SymbolResourceName: "dip-24.esym",
+            FootprintUuid: Dip24FootprintUuid,
+            FootprintResourceName: "dip-24.efoo",
+            PartTitle: chipName + ".1",
+            PinLocalPositions: Dip24PinLocals,
+            SymbolTemplateTokens: tokens,
+            InlineDeviceJson: BuildDip24DeviceFragment(chipName, symbolUuid),
+            InlineSymbolJson: BuildDip24SymbolFragment(chipName),
+            EmitTemplatedName: true,
+            // DIP-20 label rule at half-height 122: designator at half + 8,
+            // Rot90/270 x at -(half + 10).
+            LabelOffsets: new LabelOffsetsByRotation(
+                Rot0: new LabelOffsetSet(new(-40, +130), new(-20, +130), default),
+                Rot90: new LabelOffsetSet(new(-132, -20), new(-132, -2), default, TextRotationDeg: 90),
+                Rot180: new LabelOffsetSet(new(-40, +130), new(-20, +130), default),
+                Rot270: new LabelOffsetSet(new(-132, -20), new(-132, -2), default, TextRotationDeg: 90)));
+    }
+
+    /// <summary>
+    /// Synthesise a DIP-24 device fragment for project.json, using the
+    /// ATF22V10C-15PU reference's decorative attributes. Source id pairs the
+    /// reference device with the shared owner id, matching the DIP-20 rule.
+    /// </summary>
+    private static string BuildDip24DeviceFragment(string chipName, string symbolUuid)
+    {
+        var attrs = new System.Text.Json.Nodes.JsonObject
+        {
+            ["Supplier Part"] = Dip24ReferenceSupplierPart,
+            ["Manufacturer"] = Dip24ReferenceManufacturer,
+            ["Manufacturer Part"] = chipName,
+            ["Supplier Footprint"] = "PDIP-24",
+            ["JLCPCB Part Class"] = "Extended Part",
+            ["Supplier"] = "LCSC",
+            ["Add into BOM"] = "yes",
+            ["Convert to PCB"] = "yes",
+            ["Symbol"] = symbolUuid,
+            ["Designator"] = "U?",
+            ["Footprint"] = Dip24FootprintUuid,
+            ["3D Model"] = Dip24Reference3dModelUuid,
+            ["3D Model Title"] = Dip24Reference3dModelTitle,
+            ["3D Model Transform"] = Dip24Reference3dModelTransform,
+            ["Name"] = "={Manufacturer Part}",
+            ["Description"] = "DIP-24 (0.3\" skinny) programmable logic IC",
+        };
+
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["title"] = chipName,
+            ["attributes"] = attrs,
+            ["description"] = "DIP-24 (0.3\" skinny) programmable logic IC",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["images"] = new System.Text.Json.Nodes.JsonArray(""),
+            ["source"] = "65f1ba5100391e62|0819f05c4eef4c71ace90d822a990e87",
+            ["version"] = "1660144307",
+            ["custom_tags"] = "[\"Logic\"]",
+        };
+
+        return fragment.ToJsonString();
+    }
+
+    /// <summary>Synthesise a DIP-24 symbol fragment for project.json (type:2).</summary>
+    private static string BuildDip24SymbolFragment(string chipName)
+    {
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["source"] = "2f8ac9b05302578d|0819f05c4eef4c71ace90d822a990e87",
+            ["desc"] = "",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["custom_tags"] = "[\"Logic\"]",
+            ["title"] = chipName,
+            ["version"] = "1708513713",
+            ["type"] = 2,
+        };
+        return fragment.ToJsonString();
+    }
+
+    // ---------------------------------------------------- DIP-28 synthesis
+    //
+    // Same scheme again: 14 pins per edge at 20px pitch, body half-height
+    // 142, pin rows +130..-130. dip-28.efoo lifted VERBATIM from the
+    // CY7C199N-35PXC reference .epro -- NOTE this is the 0.3" SKINNY
+    // PDIP-28 (LS7.8, "SPDIP-28-300mil"). Classic 600-mil DIP-28 parts
+    // (28C256 / 62256 / W24512 in the wide package) will bind to it and
+    // NOT FIT on copper; verify the physical package before fabricating,
+    // or catalogue a 600-mil reference and split the arm as DIP-24 does.
+    internal const string Dip28FootprintUuid = "93a342daec43eadf";
+
+    // CY7C199N-35PXC reference device attributes (decorative per doc §2).
+    private const string Dip28ReferenceSupplierPart = "C2954933";
+    private const string Dip28ReferenceManufacturer = "Infineon/CYPRESS(\u8d5b\u666e\u62c9\u65af)";
+    private const string Dip28Reference3dModelUuid =
+        "4c09a78da2884be69ddde171c736663a|0819f05c4eef4c71ace90d822a990e87";
+    private const string Dip28Reference3dModelTitle =
+        "PDIP-28_L35.0-W7.3-P2.54-LS7.8-BL";
+    private const string Dip28Reference3dModelTransform =
+        "1377.95,316.9285,0,0,0,0,0,0,-137.795";
+
+    private static readonly Dictionary<int, Point> Dip28PinLocals = new()
+    {
+        [1] = new Point(-50, 130),
+        [2] = new Point(-50, 110),
+        [3] = new Point(-50, 90),
+        [4] = new Point(-50, 70),
+        [5] = new Point(-50, 50),
+        [6] = new Point(-50, 30),
+        [7] = new Point(-50, 10),
+        [8] = new Point(-50, -10),
+        [9] = new Point(-50, -30),
+        [10] = new Point(-50, -50),
+        [11] = new Point(-50, -70),
+        [12] = new Point(-50, -90),
+        [13] = new Point(-50, -110),
+        [14] = new Point(-50, -130),
+        [15] = new Point(50, -130),
+        [16] = new Point(50, -110),
+        [17] = new Point(50, -90),
+        [18] = new Point(50, -70),
+        [19] = new Point(50, -50),
+        [20] = new Point(50, -30),
+        [21] = new Point(50, -10),
+        [22] = new Point(50, 10),
+        [23] = new Point(50, 30),
+        [24] = new Point(50, 50),
+        [25] = new Point(50, 70),
+        [26] = new Point(50, 90),
+        [27] = new Point(50, 110),
+        [28] = new Point(50, 130),
+    };
+
+    private static CataloguePart BuildDip28Part(Device device, ChipPartDefinition cp)
+    {
+        string chipName = device.FullPartNumber;
+
+        string symbolUuid = DeterministicUuid("dip28-symbol:" + chipName);
+        string deviceUuid = DeterministicUuid("dip28-device:" + chipName);
+
+        var tokens = new Dictionary<string, string>
+        {
+            ["@@PART_TITLE@@"] = chipName + ".1",
+            ["@@SYMBOL_NAME@@"] = chipName,
+        };
+        foreach (var pin in cp.Pins)
+            tokens[$"@@PIN_{pin.Number}_NAME@@"] = ToEasyEdaPinName(pin.Name);
+
+        for (int n = 1; n <= 28; n++)
+            if (!tokens.ContainsKey($"@@PIN_{n}_NAME@@"))
+                throw new NotImplementedException(
+                    $"EasyEDA export: DIP-28 chip '{chipName}' is missing a " +
+                    $"definition for pin {n}. All 28 pins must be enumerated in " +
+                    "its ChipPartDefinition before it can be exported.");
+
+        return new CataloguePart(
+            DeviceUuid: deviceUuid,
+            SymbolUuid: symbolUuid,
+            SymbolResourceName: "dip-28.esym",
+            FootprintUuid: Dip28FootprintUuid,
+            FootprintResourceName: "dip-28.efoo",
+            PartTitle: chipName + ".1",
+            PinLocalPositions: Dip28PinLocals,
+            SymbolTemplateTokens: tokens,
+            InlineDeviceJson: BuildDip28DeviceFragment(chipName, symbolUuid),
+            InlineSymbolJson: BuildDip28SymbolFragment(chipName),
+            EmitTemplatedName: true,
+            // DIP-20 label rule at half-height 142: designator at half + 8,
+            // Rot90/270 x at -(half + 10).
+            LabelOffsets: new LabelOffsetsByRotation(
+                Rot0: new LabelOffsetSet(new(-40, +150), new(-20, +150), default),
+                Rot90: new LabelOffsetSet(new(-152, -20), new(-152, -2), default, TextRotationDeg: 90),
+                Rot180: new LabelOffsetSet(new(-40, +150), new(-20, +150), default),
+                Rot270: new LabelOffsetSet(new(-152, -20), new(-152, -2), default, TextRotationDeg: 90)));
+    }
+
+    /// <summary>
+    /// Synthesise a DIP-28 device fragment for project.json, using the
+    /// CY7C199N-35PXC reference's decorative attributes.
+    /// </summary>
+    private static string BuildDip28DeviceFragment(string chipName, string symbolUuid)
+    {
+        var attrs = new System.Text.Json.Nodes.JsonObject
+        {
+            ["Supplier Part"] = Dip28ReferenceSupplierPart,
+            ["Manufacturer"] = Dip28ReferenceManufacturer,
+            ["Manufacturer Part"] = chipName,
+            ["Supplier Footprint"] = "DIP-28",
+            ["JLCPCB Part Class"] = "Extended Part",
+            ["Supplier"] = "LCSC",
+            ["Add into BOM"] = "yes",
+            ["Convert to PCB"] = "yes",
+            ["Symbol"] = symbolUuid,
+            ["Designator"] = "U?",
+            ["Footprint"] = Dip28FootprintUuid,
+            ["3D Model"] = Dip28Reference3dModelUuid,
+            ["3D Model Title"] = Dip28Reference3dModelTitle,
+            ["3D Model Transform"] = Dip28Reference3dModelTransform,
+            ["Name"] = "={Manufacturer Part}",
+            ["Description"] = "DIP-28 (0.3\" skinny) memory IC",
+        };
+
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["title"] = chipName,
+            ["attributes"] = attrs,
+            ["description"] = "DIP-28 (0.3\" skinny) memory IC",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["images"] = new System.Text.Json.Nodes.JsonArray(""),
+            ["source"] = "3663695d71abc3fc|0819f05c4eef4c71ace90d822a990e87",
+            ["version"] = "1673482804",
+            ["custom_tags"] = "[\"Memory\"]",
+        };
+
+        return fragment.ToJsonString();
+    }
+
+    /// <summary>Synthesise a DIP-28 symbol fragment for project.json (type:2).</summary>
+    private static string BuildDip28SymbolFragment(string chipName)
+    {
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["source"] = "42ee5277d412c794|0819f05c4eef4c71ace90d822a990e87",
+            ["desc"] = "",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["custom_tags"] = "[\"Memory\"]",
+            ["title"] = chipName,
+            ["version"] = "1736578983",
             ["type"] = 2,
         };
         return fragment.ToJsonString();
