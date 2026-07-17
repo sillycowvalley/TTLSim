@@ -108,6 +108,14 @@ public sealed partial class SchematicCanvas
                 if (pin != null && pin != wireStartPin)
                 {
                     var connection = new Connection(wireStartPin, pin);
+
+                    // Default colour from the endpoints and the nets they
+                    // already belong to (VCC=Red, GND=Navy, clock=Orange,
+                    // labels/nets propagate their colour; any conflict falls
+                    // back to Black). Set BEFORE the command executes, so the
+                    // colour rides inside the add for undo/redo.
+                    connection.Color = WireColorDefault.For(Schematic, wireStartPin, pin);
+
                     UndoStack.Do(new AddConnectionCommand(connection));
 
                     wireStartPin = null;

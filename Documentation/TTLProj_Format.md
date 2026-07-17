@@ -396,8 +396,8 @@ Wire each chip's power pin (the part's VCC/GND package pins) to a `vcc` / `gnd`
 item, whose pin is number `0`:
 
 ```json
-{ "id": "cvcc", "a": { "itemId": "u1", "pinNumber": 14 }, "b": { "itemId": "vcc1", "pinNumber": 0 }, "color": "Red"   },
-{ "id": "cgnd", "a": { "itemId": "u1", "pinNumber": 7  }, "b": { "itemId": "gnd1", "pinNumber": 0 }, "color": "Black" }
+{ "id": "cvcc", "a": { "itemId": "u1", "pinNumber": 14 }, "b": { "itemId": "vcc1", "pinNumber": 0 }, "color": "Red"  },
+{ "id": "cgnd", "a": { "itemId": "u1", "pinNumber": 7  }, "b": { "itemId": "gnd1", "pinNumber": 0 }, "color": "Navy" }
 ```
 
 Multiple chips may share one VCC symbol and one GND symbol — several
@@ -411,7 +411,7 @@ have no power pins and are not checked. Power never travels over netlabels.
 Set colours at generation time rather than leaving them null:
 
 - **VCC connections → `"Red"`** (any connection touching a `vcc` symbol).
-- **GND connections → `"Black"`** (any connection touching a `gnd` symbol).
+- **GND connections → `"Navy"`** (any connection touching a `gnd` symbol).
 - **Bus connections → the bus's colour**: every connection touching a netlabel
   tap uses that bus's single chosen colour.
 - Other signal wires: a colour if it aids reading, otherwise omit (loads as
@@ -476,7 +476,7 @@ the gate output published on a named net.
     ],
     "connections": [
       { "id": "cvcc", "a": { "itemId": "u1", "pinNumber": 14 }, "b": { "itemId": "vcc1", "pinNumber": 0 }, "color": "Red"    },
-      { "id": "cgnd", "a": { "itemId": "u1", "pinNumber": 7  }, "b": { "itemId": "gnd1", "pinNumber": 0 }, "color": "Black"  },
+      { "id": "cgnd", "a": { "itemId": "u1", "pinNumber": 7  }, "b": { "itemId": "gnd1", "pinNumber": 0 }, "color": "Navy"   },
       { "id": "cin",  "a": { "itemId": "u1", "pinNumber": 1  }, "b": { "itemId": "vcc1", "pinNumber": 0 }, "color": "Red"    },
       { "id": "cout", "a": { "itemId": "u1", "pinNumber": 3  }, "b": { "itemId": "nl1",  "pinNumber": 1 }, "color": "Yellow" }
     ],
