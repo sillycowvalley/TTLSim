@@ -1904,6 +1904,76 @@
         "function2": null,
         "frequencyHz1": null,
         "frequencyHz2": null
+      },
+      {
+        "id": "2a8c0dd742de4b71bcec93d755a2fc82",
+        "designator": "H14",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-2",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "f4eea84decf148da8d9561ea9dfff8cf",
+        "designator": "D2",
+        "partKind": "passive",
+        "partIdentifier": "led",
+        "family": null,
+        "value": "green",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "5a7dbbadf15849c7a8383791604b8c75",
+        "designator": "R2",
+        "partKind": "passive",
+        "partIdentifier": "resistor",
+        "family": null,
+        "value": "330R",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "9170c1e706f3424aa1799c3393d63287",
+        "designator": "C2",
+        "partKind": "passive",
+        "partIdentifier": "polarized-capacitor",
+        "family": null,
+        "value": "47uF",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "526afac7019643b29a8efcc2c9191533",
+        "designator": "H15",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-2",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
       }
     ],
     "units": [
@@ -3662,7 +3732,7 @@
         "deviceId": "c201960222ed46e5a35c0fb2d76101a3",
         "unitLetter": "",
         "position": {
-          "x": -173,
+          "x": -179,
           "y": -276
         },
         "label": "",
@@ -3676,7 +3746,7 @@
         "deviceId": "f31f9487d96247ddaa8dcb01e685f6f2",
         "unitLetter": "",
         "position": {
-          "x": -173,
+          "x": -179,
           "y": -240
         },
         "label": "",
@@ -3810,6 +3880,76 @@
         "layer": 5,
         "switchClosed": null,
         "mirrored": false
+      },
+      {
+        "id": "8bcca671982b4e04a1ada5d23ecefb4d",
+        "deviceId": "2a8c0dd742de4b71bcec93d755a2fc82",
+        "unitLetter": "",
+        "position": {
+          "x": -158,
+          "y": -163
+        },
+        "label": "Power",
+        "rotation": 180,
+        "layer": 2,
+        "switchClosed": null,
+        "mirrored": false
+      },
+      {
+        "id": "872d38ab52c040a9a7be6e6ac67f01a9",
+        "deviceId": "f4eea84decf148da8d9561ea9dfff8cf",
+        "unitLetter": "",
+        "position": {
+          "x": -144,
+          "y": -170
+        },
+        "label": "PWR",
+        "rotation": 90,
+        "layer": 2,
+        "switchClosed": null,
+        "mirrored": null
+      },
+      {
+        "id": "69278104d01046cd98a95e320841f57c",
+        "deviceId": "5a7dbbadf15849c7a8383791604b8c75",
+        "unitLetter": "",
+        "position": {
+          "x": -145,
+          "y": -163
+        },
+        "label": "",
+        "rotation": 90,
+        "layer": 2,
+        "switchClosed": null,
+        "mirrored": null
+      },
+      {
+        "id": "df0195ea5b314cb681c88b5a2f23f134",
+        "deviceId": "9170c1e706f3424aa1799c3393d63287",
+        "unitLetter": "",
+        "position": {
+          "x": -149,
+          "y": -162
+        },
+        "label": "",
+        "rotation": 90,
+        "layer": 2,
+        "switchClosed": null,
+        "mirrored": null
+      },
+      {
+        "id": "5daf5b42d28b48d6a5227228b8376cd2",
+        "deviceId": "526afac7019643b29a8efcc2c9191533",
+        "unitLetter": "",
+        "position": {
+          "x": -196,
+          "y": -196
+        },
+        "label": "Power",
+        "rotation": 180,
+        "layer": 5,
+        "switchClosed": null,
+        "mirrored": true
       }
     ],
     "items": [
@@ -10793,11 +10933,11 @@
         "id": "2173e46e69434cebafceb9633f840fd3",
         "label": "CLK",
         "position": {
-          "x": -198,
+          "x": -204,
           "y": -264
         },
         "rotation": 180,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -10818,11 +10958,11 @@
         "id": "0dcd9a2c99604dfe9795dfe53b5798d0",
         "label": "RST",
         "position": {
-          "x": -198,
+          "x": -204,
           "y": -268
         },
         "rotation": 180,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -10843,11 +10983,11 @@
         "id": "96614c4903b643d7a5b94515375b22aa",
         "label": "/RST",
         "position": {
-          "x": -198,
+          "x": -204,
           "y": -272
         },
         "rotation": 180,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -10868,11 +11008,11 @@
         "id": "dee7ac06e5d04492b907a26db96875ea",
         "label": "HALT",
         "position": {
-          "x": -198,
+          "x": -204,
           "y": -276
         },
         "rotation": 180,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -10893,11 +11033,11 @@
         "id": "b0bd22f3b7b64935863464e243573ef7",
         "label": "/HALTREQ",
         "position": {
-          "x": -198,
+          "x": -204,
           "y": -280
         },
         "rotation": 180,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -10918,11 +11058,11 @@
         "id": "1e17e75d507b486b96432043c39d5c73",
         "label": "",
         "position": {
-          "x": -178,
+          "x": -184,
           "y": -261
         },
         "rotation": 0,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -10943,11 +11083,11 @@
         "id": "82781761578c4d9b92084b3e8ac068e9",
         "label": "T",
         "position": {
-          "x": -202,
+          "x": -208,
           "y": -223
         },
         "rotation": 180,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -10968,11 +11108,11 @@
         "id": "5db053d308c143fba01ddc0eae1350fe",
         "label": "T",
         "position": {
-          "x": -202,
+          "x": -208,
           "y": -227
         },
         "rotation": 180,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -10993,11 +11133,11 @@
         "id": "276b6f076ab945aaad5873498af8d73c",
         "label": "T",
         "position": {
-          "x": -202,
+          "x": -208,
           "y": -231
         },
         "rotation": 180,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -11018,11 +11158,11 @@
         "id": "15f3f0360a044b1192644f2d5c251429",
         "label": "T",
         "position": {
-          "x": -202,
+          "x": -208,
           "y": -235
         },
         "rotation": 180,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -11043,11 +11183,11 @@
         "id": "a25cf2d9c1d34af9b2be53422913b9c5",
         "label": "FETCH",
         "position": {
-          "x": -202,
+          "x": -208,
           "y": -239
         },
         "rotation": 180,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -11068,11 +11208,11 @@
         "id": "ac9b80f46b884e9a82446f2bc37e7cb6",
         "label": "/TRST",
         "position": {
-          "x": -202,
+          "x": -208,
           "y": -243
         },
         "rotation": 180,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -11093,7 +11233,7 @@
         "id": "10c426588d56486d9678f333372df41b",
         "label": "",
         "position": {
-          "x": -183,
+          "x": -189,
           "y": -222
         },
         "rotation": 0,
@@ -11122,7 +11262,7 @@
           "y": -428
         },
         "rotation": 0,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -11147,7 +11287,7 @@
           "y": -423
         },
         "rotation": 180,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -11172,7 +11312,7 @@
           "y": -417
         },
         "rotation": 0,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -11185,31 +11325,6 @@
         "startBit": 0,
         "mirrored": true,
         "color": "Green",
-        "fontSize": null,
-        "textColor": null
-      },
-      {
-        "type": "netlabel",
-        "id": "ab387b21908b4fa99de440e799c58667",
-        "label": "/OEA",
-        "position": {
-          "x": -188,
-          "y": -412
-        },
-        "rotation": 180,
-        "layer": 3,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": 1,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "startBit": 0,
-        "mirrored": false,
-        "color": "Yellow",
         "fontSize": null,
         "textColor": null
       },
@@ -11222,7 +11337,7 @@
           "y": -409
         },
         "rotation": 0,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -11240,31 +11355,6 @@
       },
       {
         "type": "netlabel",
-        "id": "1ec6f64bc0f943a3a51720e6e18d2cec",
-        "label": "/OEB",
-        "position": {
-          "x": -187,
-          "y": -404
-        },
-        "rotation": 180,
-        "layer": 3,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": 1,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "startBit": 0,
-        "mirrored": false,
-        "color": "Yellow",
-        "fontSize": null,
-        "textColor": null
-      },
-      {
-        "type": "netlabel",
         "id": "cd2bc35bb66147e690f596f9d9a6f583",
         "label": "QA",
         "position": {
@@ -11272,7 +11362,7 @@
           "y": -519
         },
         "rotation": 0,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -11297,7 +11387,7 @@
           "y": -476
         },
         "rotation": 0,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -11322,7 +11412,7 @@
           "y": -553
         },
         "rotation": 0,
-        "layer": 3,
+        "layer": 5,
         "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
@@ -11335,6 +11425,131 @@
         "startBit": 0,
         "mirrored": true,
         "color": "Blue",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "vcc",
+        "id": "6ab560848e394e928911ef5e7581883f",
+        "label": "",
+        "position": {
+          "x": -149,
+          "y": -179
+        },
+        "rotation": 0,
+        "layer": 2,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "gnd",
+        "id": "bc5099382fce43498f99f4163e30b2b9",
+        "label": "",
+        "position": {
+          "x": -144,
+          "y": -156
+        },
+        "rotation": 0,
+        "layer": 2,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "vcc",
+        "id": "b9a656a696a445799e6fee1337197b12",
+        "label": "",
+        "position": {
+          "x": -205,
+          "y": -212
+        },
+        "rotation": 0,
+        "layer": 5,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "gnd",
+        "id": "fde23d3ad5e44daa88673deef1480b52",
+        "label": "",
+        "position": {
+          "x": -205,
+          "y": -188
+        },
+        "rotation": 0,
+        "layer": 5,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "gnd",
+        "id": "6fc24ea25be94db9b30f4438452d738c",
+        "label": "",
+        "position": {
+          "x": -180,
+          "y": -396
+        },
+        "rotation": 0,
+        "layer": 5,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
         "fontSize": null,
         "textColor": null
       }
@@ -21253,20 +21468,6 @@
         "color": "Green"
       },
       {
-        "id": "1365d2fdf49e4cfe8a564bf4905cd0d0",
-        "a": {
-          "itemId": "ab387b21908b4fa99de440e799c58667",
-          "pinNumber": 1,
-          "external": false
-        },
-        "b": {
-          "itemId": "930c2597322749a49cc99fcbd0aeb8f3",
-          "pinNumber": 4,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
         "id": "f433976603d74d46bb7a21ea5ee45470",
         "a": {
           "itemId": "af9fc142af184da28027ccfc92dcfbdd",
@@ -21307,20 +21508,6 @@
           "external": false
         },
         "color": "Green"
-      },
-      {
-        "id": "df8303699cdc496eb1318e92ec67bb3e",
-        "a": {
-          "itemId": "1ec6f64bc0f943a3a51720e6e18d2cec",
-          "pinNumber": 1,
-          "external": false
-        },
-        "b": {
-          "itemId": "93b7b2a6117840e3bdf5251379f40104",
-          "pinNumber": 4,
-          "external": false
-        },
-        "color": "Yellow"
       },
       {
         "id": "79da9308aac544f092e877dce0b85bae",
@@ -21993,6 +22180,160 @@
           "external": false
         },
         "color": "Blue"
+      },
+      {
+        "id": "1b35e09453b04da0920d7c959c911025",
+        "a": {
+          "itemId": "8bcca671982b4e04a1ada5d23ecefb4d",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "bc5099382fce43498f99f4163e30b2b9",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "fc9371464a5b4c749f39873e7e1b5ad3",
+        "a": {
+          "itemId": "8bcca671982b4e04a1ada5d23ecefb4d",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "6ab560848e394e928911ef5e7581883f",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "30446bbaf8364ec491ac5895e3a0b029",
+        "a": {
+          "itemId": "872d38ab52c040a9a7be6e6ac67f01a9",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "69278104d01046cd98a95e320841f57c",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "d641f58a3ed64ab6841997d37bf7dab5",
+        "a": {
+          "itemId": "872d38ab52c040a9a7be6e6ac67f01a9",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "6ab560848e394e928911ef5e7581883f",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "e0fdafd520a04fac95cf9a01805c81c6",
+        "a": {
+          "itemId": "69278104d01046cd98a95e320841f57c",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "bc5099382fce43498f99f4163e30b2b9",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "570870b79b8d467999bda8db58b24ef9",
+        "a": {
+          "itemId": "bc5099382fce43498f99f4163e30b2b9",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "df0195ea5b314cb681c88b5a2f23f134",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "10970d7af48c4734bf3d0b81d17f92dd",
+        "a": {
+          "itemId": "df0195ea5b314cb681c88b5a2f23f134",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "6ab560848e394e928911ef5e7581883f",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "1b0468e0a64d4974af95f19499d62bd8",
+        "a": {
+          "itemId": "5daf5b42d28b48d6a5227228b8376cd2",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "fde23d3ad5e44daa88673deef1480b52",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "3b51fd9b47d54407b06931b2690d41fc",
+        "a": {
+          "itemId": "5daf5b42d28b48d6a5227228b8376cd2",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "b9a656a696a445799e6fee1337197b12",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "0f39e6b00acb4941a343c65cc2bdb308",
+        "a": {
+          "itemId": "6fc24ea25be94db9b30f4438452d738c",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "93b7b2a6117840e3bdf5251379f40104",
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "1f24eb1c5bfe4fbe883218fa05be459f",
+        "a": {
+          "itemId": "6fc24ea25be94db9b30f4438452d738c",
+          "pinNumber": 0,
+          "external": false
+        },
+        "b": {
+          "itemId": "930c2597322749a49cc99fcbd0aeb8f3",
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": "Navy"
       }
     ],
     "links": [
@@ -22025,6 +22366,42 @@
         "aId": "93b7b2a6117840e3bdf5251379f40104",
         "bId": "5bad7ddfce974c41a24e00f607edcedc",
         "reversed": false
+      },
+      {
+        "id": "186fdd7b152c4a558dade37c41c3d312",
+        "aId": "d4ec07d29254409c938aa30eb8995f48",
+        "bId": "e23e0dc8f1234d3b87a6ac8afd17e7db",
+        "reversed": false
+      },
+      {
+        "id": "a5d84f9d5ed041c9a8d9bd2897a3973a",
+        "aId": "cd2dcdb9e2634786b803b6dddda07f15",
+        "bId": "5ecf4125f7b54d1d966a25b4026b5662",
+        "reversed": false
+      },
+      {
+        "id": "20c1de6242b94266ad34267d1bf603c2",
+        "aId": "3e3ce54e32ab49d6a93d481530e2615a",
+        "bId": "0d952dfda56e4a32a8c354eed06ff3e7",
+        "reversed": false
+      },
+      {
+        "id": "dfc41d7d15bf4f19a777b863d5621feb",
+        "aId": "d415b7901dbe4756a560d5e75f7e6821",
+        "bId": "a87e45b20763495dbb27fd4a09f37261",
+        "reversed": false
+      },
+      {
+        "id": "50388e38b4d64f0fa34e2c2c77c746a1",
+        "aId": "538afd88b0eb447a93d7dad0ab2144df",
+        "bId": "c95c7e9191a143e18ebe51f2f5a6dc1d",
+        "reversed": false
+      },
+      {
+        "id": "5dc5ea7630404bda80becf2072e8f378",
+        "aId": "6bbec6f54f08457b846a7142882f167e",
+        "bId": "489205626dd54c4ca26accee42d3e833",
+        "reversed": false
       }
     ],
     "layers": [
@@ -22042,7 +22419,7 @@
       },
       {
         "name": "Interfaces",
-        "visible": true
+        "visible": false
       },
       {
         "name": "Sequencer",
@@ -22060,10 +22437,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 0.6501128,
+    "zoom": 0.480256,
     "pan": {
-      "x": 1062,
-      "y": 2112
+      "x": 1540,
+      "y": 1361
     }
   }
 }

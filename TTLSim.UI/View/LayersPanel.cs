@@ -153,8 +153,27 @@ public sealed class LayersPanel : UserControl
     /// Refresh row decoration (current-layer marker / bold) and button enable
     /// state. Also called by the host when the canvas selection changes, so the
     /// "Move Sel" button tracks whether anything is selected.
+    ///
+    /// <para>This is also where paste-created layers become visible: a paste
+    /// can append layers to <see cref="Schematic.Layers"/> directly (FromDto's
+    /// Fresh-mode by-name match creates any missing layer in the destination)
+    /// without going through this panel, so nothing calls
+    /// <see cref="RefreshLayers"/>. Every paste ends in a canvas
+    /// SelectionChanged, which lands here -- so a row list whose count no
+    /// longer matches the table is rebuilt. Appending is the only layer-table
+    /// change that bypasses the panel, so a count mismatch is a sufficient
+    /// trigger; renames and deletes go through the toolbar actions, which
+    /// refresh themselves.</para>
     /// </summary>
-    public void OnSelectionChanged() => UpdateCurrentMarkersAndButtons();
+    public void OnSelectionChanged()
+    {
+        if (listView.Items.Count != canvas.Schematic.Layers.Count)
+        {
+            RefreshLayers();
+            return;
+        }
+        UpdateCurrentMarkersAndButtons();
+    }
 
     private void UpdateCurrentMarkersAndButtons()
     {
