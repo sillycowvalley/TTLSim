@@ -110,7 +110,7 @@ class-11 spares.
 | IR[15:11] | Mnemonic | Action |
 |---|---|---|
 | 11000 | OUT rs | LED register ← rs |
-| 11001 | IN rd | rd ← input switches (8 bits, zero-extended) |
+| 11001 | IN rd | rd ← input switches (8 bits, zero-extended; closed = 1) |
 | 11111 | HLT | assert /HALTREQ; clock module freezes the machine |
 | others | — | spare |
 
@@ -209,7 +209,10 @@ increment get their "+ 0" operand without any multiplexers.
   - imm-high '541 — IR[7:0] onto bits **15:8** (bits 7:0 zero) — the ADDIH
     source; the low byte of the addend is zero, so nothing carries into or
     corrupts bits 7:0 of rd
-  - input '541 — 8 switches onto bits 7:0, zero-extended (IN)
+  - input '541 — 8 switches onto bits 7:0, zero-extended (IN). **Polarity
+    contract: active-high** — switches pull to VCC when closed, 10 k SIP
+    pulldowns define open bits low, so closed = 1, open = 0. The ISA
+    self-test's stage 12 expects the bank set to 0xA5 (bits 0/2/5/7 closed).
 
 ### ALU: adder only
 

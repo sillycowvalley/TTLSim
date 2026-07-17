@@ -1,6 +1,6 @@
 # Addy — Designator Map
 
-Renumbered 2026-07-17: unique across the project, ordered by layer then schematic position (top-to-bottom, left-to-right). SIM001 and other diagnostics that print designators now identify parts unambiguously.
+Regenerated 2026-07-17 after IN switch bank added. Unique across the project, ordered by layer then position.
 
 ## Registers
 
@@ -31,79 +31,79 @@ Renumbered 2026-07-17: unique across the project, ordered by layer then schemati
 
 | Designator | Part | Label |
 |---|---|---|
-| D1 | led | T0 |
-| R1 | resistor |  |
-| R2 | resistor |  |
-| R3 | resistor |  |
-| D2 | led | T1 |
-| R4 | resistor |  |
-| SW1 | button-4 | NEXT INSTR |
-| R5 | resistor |  |
-| D3 | led | HALT |
-| D4 | led | T2 |
-| R6 | resistor |  |
-| SW2 | button-4 | HALT REQ |
-| R7 | resistor |  |
-| D5 | led | CLK |
 | U20 | 00 | MUX |
-| D6 | led | T3 |
-| R8 | resistor |  |
 | U21 | 00 | HGLUE |
 | U22 | 08 | GLUE |
-| SW3 | button-4 | Reset |
-| D7 | led | PWR |
-| D8 | led | RESET |
-| R9 | resistor |  |
-| U23 | DS1813 | POR |
+| D1 | led | PWR |
 | H2 | hdr-out-2 | Power |
-| R10 | resistor |  |
+| R1 | resistor |  |
 | C1 | polarized-capacitor |  |
-| U24 | 74 | MUXEN |
-| U25 | 08 | HGATE |
-| C2 | capacitor | PWR-ON STEP |
-| R11 | resistor |  |
-| SW4 | button-4 | STEP |
-| R12 | resistor |  |
-| D9 | led | STEP |
-| U26 | 00 | LATCH |
-| U27 | 08 | PANEL |
-| R13 | resistor |  |
-| SW5 | button-4 | RUN 555 |
-| R14 | resistor |  |
-| D10 | led | 555 |
-| U28 | 00 | GATE |
-| R15 | resistor |  |
-| SW6 | button-4 | RUN CAN |
-| R16 | resistor |  |
-| D11 | led | CAN |
-| SW7 | button-4 | Step |
-| C3 | capacitor |  |
-| U29 | 00 |  |
-| U30 | 273 | SYNC |
-| R17 | resistor |  |
-| U31 | NE556 | TIMER |
+| U23 | 74 | MUXEN |
+| U24 | 08 | HGATE |
+| U25 | 00 | GATE |
+| D2 | led | T0 |
+| R2 | resistor |  |
+| R3 | resistor |  |
+| R4 | resistor |  |
+| U26 | 00 |  |
+| D3 | led | T1 |
+| R5 | resistor |  |
+| SW1 | button-4 | NEXT INSTR |
+| R6 | resistor |  |
+| D4 | led | HALT |
+| U27 | 273 | SYNC |
+| R7 | resistor |  |
+| U28 | NE556 | TIMER |
+| D5 | led | T2 |
+| R8 | resistor |  |
 | H3 | hdr-out-2 | RV1 EXT |
-| R18 | resistor | trim |
-| R19 | resistor |  |
-| R20 | resistor |  |
-| U32 | 74 |  |
-| C4 | capacitor |  |
-| D12 | led | STEPRAW |
-| R21 | resistor |  |
-| U33 | 14 | INV |
-| U34 | 02 |  |
-| U35 | 161 | TCNT |
-| R22 | resistor |  |
+| SW2 | button-4 | HALT REQ |
+| R9 | resistor | trim |
+| R10 | resistor |  |
+| D6 | led | CLK |
+| R11 | resistor |  |
+| D7 | led | T3 |
+| R12 | resistor |  |
+| R13 | resistor |  |
+| U29 | 74 |  |
+| C2 | capacitor |  |
+| D8 | led | STEPRAW |
+| R14 | resistor |  |
+| U30 | 14 | INV |
+| U31 | 02 |  |
+| U32 | 161 | TCNT |
+| R15 | resistor |  |
+| SW3 | button-4 | Reset |
+| D9 | led | RESET |
+| R16 | resistor |  |
+| U33 | DS1813 | POR |
 | H4 | hdr-out-2 | CANIN |
+| C3 | capacitor | PWR-ON STEP |
+| R17 | resistor |  |
+| SW4 | button-4 | STEP |
+| R18 | resistor |  |
+| D10 | led | STEP |
+| U34 | 00 | LATCH |
+| U35 | 08 | PANEL |
 | J1 | jumper-3pin | CAN SEL |
+| R19 | resistor |  |
+| SW5 | button-4 | RUN 555 |
+| R20 | resistor |  |
+| D11 | led | 555 |
 | U36 | 161 | DIV |
-| R23 | resistor |  |
+| R21 | resistor |  |
 | S1 | switch |  |
-| R24 | resistor |  |
+| R22 | resistor |  |
 | S2 | switch |  |
+| R23 | resistor |  |
+| SW6 | button-4 | RUN CAN |
+| R24 | resistor |  |
+| D12 | led | CAN |
 | R25 | resistor |  |
 | S3 | switch |  |
 | U37 | 151 | TAP |
+| SW7 | button-4 | Step |
+| C4 | capacitor |  |
 
 ## Interfaces
 
@@ -183,20 +183,47 @@ Renumbered 2026-07-17: unique across the project, ordered by layer then schemati
 
 | Designator | Part | Label |
 |---|---|---|
+| H29 | hdr-out-8 |  |
+| H30 | hdr-out-8 |  |
+| S4 | switch | IN0 |
+| S5 | switch | IN1 |
+| RN1 | resnet-sip9 | PDIN |
+| S6 | switch | IN2 |
+| S7 | switch | IN3 |
+| S8 | switch | IN4 |
+| S9 | switch | IN5 |
 | U59 | 541 | IN |
+| S10 | switch | IN6 |
+| S11 | switch | IN7 |
 | U60 | 377 | OUT |
+| D13 | led | OUT7 |
+| R35 | resistor |  |
+| D14 | led | OUT6 |
+| R36 | resistor |  |
+| D15 | led | OUT5 |
+| R37 | resistor |  |
+| D16 | led | OUT4 |
+| R38 | resistor |  |
+| D17 | led | OUT3 |
+| R39 | resistor |  |
+| D18 | led | OUT2 |
+| R40 | resistor |  |
+| D19 | led | OUT1 |
+| R41 | resistor |  |
+| D20 | led | OUT0 |
+| R42 | resistor |  |
 
 ## Operands
 
 | Designator | Part | Label |
 |---|---|---|
 | U61 | 574 | AH |
-| RN1 | resnet-sip9 | PDA-HI |
+| RN2 | resnet-sip9 | PDA-HI |
 | U62 | 541 | IMH |
 | U63 | 541 | IML |
 | U64 | 574 | AL |
-| RN2 | resnet-sip9 | PDA-LO |
+| RN3 | resnet-sip9 | PDA-LO |
 | U65 | 574 | BH |
-| RN3 | resnet-sip9 | PDB-HI |
+| RN4 | resnet-sip9 | PDB-HI |
 | U66 | 574 | BL |
-| RN4 | resnet-sip9 | PDB-LO |
+| RN5 | resnet-sip9 | PDB-LO |
