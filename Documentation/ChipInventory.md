@@ -14,26 +14,26 @@ clear the In Transit cells.
 | 7400   | 4× 2i NAND                                | 11  |     |     |       |        |
 | 7402   | 4× 2i NOR                                 | 11  |     |     |       |        |
 | 7404   | 6× Inverter                               | 16  | 16  |     |       |        |
-| 7408   | 4× 2i AND                                 | 3   |     |     | 8     |        |
+| 7408   | 4× 2i AND                                 | 11  |     |     |       |        |
 | 7410   | 3× 3i NAND                                | 8   |     |     |       |        |
 | 7411   | 3× 3i AND                                 | 20  |     |     |       |        |
 | 7414   | 6× Schmitt Inverter                       | 10  |     |     |       | 8      |
 | 7420   | 2× 4i NAND                                | 8   |     |     |       |        |
-| 7432   | 4× 2i OR                                  | 8   |     |     | 4     |        |
+| 7432   | 4× 2i OR                                  | 12  |     |     |       |        |
 | 7473   | 2× JK Flip-Flop                           |     | 8   |     |       |        |
-| 7474   | 2× D-Type Flip-Flop                       | 6   |     |     | 4     |        |
+| 7474   | 2× D-Type Flip-Flop                       | 10  |     |     |       |        |
 | 7485   | 4-Bit Magnitude Comparator                |     |     |     | 4     |        |
 | 7486   | 4× 2i XOR                                 | 8   |     |     |       |        |
 | 74125  | 4× Tri-State Buffer (active-low enable)   | 20  |     |     |       |        |
 | 74126  | 4× Tri-State Buffer (active-high enable)  | 8   |     |     |       |        |
 | 74132  | 4× 2i Schmitt NAND                        | 4   |     |     |       |        |
-| 74138  | 3-to-8 Decoder                            | 16  |     |     | 8     | 4      |
+| 74138  | 3-to-8 Decoder                            | 24  | 4   |     |       |        |
 | 74139  | Dual 2-to-4 Decoder                       | 8   |     |     |       |        |
 | 74148  | 8-to-3 Priority Encoder                   |     |     |     | 4     |        |
 | 74151  | 8-to-1 Multiplexer                        | 16  |     |     |       |        |
 | 74153  | Dual 4-to-1 Multiplexer                   | 29  |     |     |       |        |
 | 74157  | Quad 2-to-1 Multiplexer                   | 28  |     |     |       |        |
-| 74161  | 4-Bit Synchronous Counter (async clear)   | 5   |     |     | 8     |        |
+| 74161  | 4-Bit Synchronous Counter (async clear)   | 13  |     |     |       |        |
 | 74163  | 4-Bit Synchronous Counter (sync clear)    |     |     |     | 8     |        |
 | 74164  | 8-Bit SIPO Shift Register                 | 4   |     |     |       |        |
 | 74165  | 8-Bit PISO Shift Register                 | 12  |     |     |       |        |
@@ -45,8 +45,8 @@ clear the In Transit cells.
 | 74191  | 4-Bit Up/Down Counter                     | 23  |     |     |       |        |
 | 74193  | 4-Bit Up/Down Counter (dual clock)        | 27  |     |     |       |        |
 | 74194  | 4-Bit Bidirectional Shift Register        | 10  |     |     |       |        |
-| 74244  | Octal Tri-State Buffer                    | 16  |     |     |       | 4      |
-| 74245  | Octal Bus Transceiver                     | 16  | 16  |     |       | 4      |
+| 74244  | Octal Tri-State Buffer                    | 16  | 4   |     |       | 4      |
+| 74245  | Octal Bus Transceiver                     | 16  | 20  |     |       | 4      |
 | 74273  | Octal D Flip-Flop with Clear              | 6   |     |     |       |        |
 | 74283  | 4-Bit Binary Adder                        | 8   |     |     |       |        |
 | 74373  | Octal Transparent Latch                   | 8   |     |     |       |        |

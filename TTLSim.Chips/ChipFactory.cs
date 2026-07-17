@@ -1445,46 +1445,56 @@ public sealed class ChipFactory : IChipFactory
 
     private static IChip? TryCreateHc157(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
     {
-        // Required pins: 1 S, 15 /E,
-        // 2 1I0, 3 1I1, 4 1Y,
-        // 5 2I0, 6 2I1, 7 2Y,
-        // 11 3I0, 10 3I1, 9 3Y,
-        // 14 4I0, 13 4I1, 12 4Y.
+        // Required pins are the INPUTS only: 1 S, 15 /E,
+        // 2 1I0, 3 1I1, 5 2I0, 6 2I1, 11 3I0, 10 3I1, 14 4I0, 13 4I1.
+        // The four Y outputs (4 1Y, 7 2Y, 9 3Y, 12 4Y) are OPTIONAL -- an
+        // open output drives nothing and must never block instantiation
+        // (the '181 lesson). A partially-used '157 ties off its spare
+        // sections' inputs and leaves the Y open; requiring Y silently
+        // dropped the whole part from the simulation (TTL021). TTL011
+        // still flags genuinely unwired INPUTS at design time.
         // Pin 8 GND and pin 16 VCC are consumed by the build pipeline and
         // aren't wired through the chip model.
-        int[] needed = { 1, 15, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14 };
+        int[] needed = { 1, 15, 2, 3, 5, 6, 10, 11, 13, 14 };
         foreach (int p in needed)
             if (!pinToNet.TryGetValue(p, out Net? n) || n is null) return null;
 
         Net Get(int pin) => pinToNet[pin];
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);   // local stand-in, drives nothing
 
         return new Hc157(
             s: Get(1), enN: Get(15),
-            i1_0: Get(2), i1_1: Get(3), y1: Get(4),
-            i2_0: Get(5), i2_1: Get(6), y2: Get(7),
-            i3_0: Get(11), i3_1: Get(10), y3: Get(9),
-            i4_0: Get(14), i4_1: Get(13), y4: Get(12),
+            i1_0: Get(2), i1_1: Get(3), y1: Opt(4, "y1-nc"),
+            i2_0: Get(5), i2_1: Get(6), y2: Opt(7, "y2-nc"),
+            i3_0: Get(11), i3_1: Get(10), y3: Opt(9, "y3-nc"),
+            i4_0: Get(14), i4_1: Get(13), y4: Opt(12, "y4-nc"),
             delayPs: TtlTiming.ResolvePs(device));
     }
 
     private IChip? TryCreateHc257(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
     {
         // Same pinout as the '157 except pin 15 is /OE (tri-state) not /E.
-        // 1 S, 15 /OE, 2 1I0, 3 1I1, 4 1Y, 5 2I0, 6 2I1, 7 2Y,
-        // 11 3I0, 10 3I1, 9 3Y, 14 4I0, 13 4I1, 12 4Y.
+        // Required pins are the INPUTS only: 1 S, 15 /OE, 2 1I0, 3 1I1,
+        // 5 2I0, 6 2I1, 11 3I0, 10 3I1, 14 4I0, 13 4I1. The four Y outputs
+        // (4 1Y, 7 2Y, 9 3Y, 12 4Y) are OPTIONAL, exactly as on the '157.
         // Pin 8 GND and pin 16 VCC are consumed by the build pipeline.
-        int[] needed = { 1, 15, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14 };
+        int[] needed = { 1, 15, 2, 3, 5, 6, 10, 11, 13, 14 };
         foreach (int p in needed)
             if (!pinToNet.TryGetValue(p, out Net? n) || n is null) return null;
 
         Net Get(int pin) => pinToNet[pin];
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);   // local stand-in, drives nothing
 
         return new Hc257(
             s: Get(1), oeN: Get(15),
-            i1_0: Get(2), i1_1: Get(3), y1: Get(4),
-            i2_0: Get(5), i2_1: Get(6), y2: Get(7),
-            i3_0: Get(11), i3_1: Get(10), y3: Get(9),
-            i4_0: Get(14), i4_1: Get(13), y4: Get(12),
+            i1_0: Get(2), i1_1: Get(3), y1: Opt(4, "y1-nc"),
+            i2_0: Get(5), i2_1: Get(6), y2: Opt(7, "y2-nc"),
+            i3_0: Get(11), i3_1: Get(10), y3: Opt(9, "y3-nc"),
+            i4_0: Get(14), i4_1: Get(13), y4: Opt(12, "y4-nc"),
             delayPs: TtlTiming.ResolvePs(device));
     }
 
