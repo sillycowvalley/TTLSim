@@ -1017,7 +1017,10 @@ public sealed class MainForm : Form
 
         var result = simController.Build();
         outputPanel.Show(result);
-        outputPanel.Visible = result.ErrorCount > 0 || result.WarningCount > 0;
+        // Any diagnostic warrants the pane -- including Info-only builds
+        // (e.g. TTL022 hidden-layer exclusions), which would otherwise be
+        // buried in the log. Matches the export path's test.
+        outputPanel.Visible = result.Diagnostics.Count > 0;
     }
 
     private void OnSimStateChanged(object? sender, EventArgs e)
