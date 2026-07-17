@@ -71,12 +71,24 @@ public sealed class SimulationController
     public event EventHandler? Ticked;
 
     /// <summary>
-    /// Halt the run the moment a net goes into contention, at the exact tick it
-    /// happens -- debugger-breakpoint ergonomics for an electrical fault. Turn
-    /// it off to let the sim run on through the short (the net just sits at
-    /// Unknown, as real silicon sits in the forbidden band).
+    /// Halt the run when a net's contention outlives the handover tolerance,
+    /// with CurrentTick at the escalation point (onset + tolerance) -- 
+    /// debugger-breakpoint ergonomics for an electrical fault. Turn it off to
+    /// let the sim run on through the short (the net just sits at Unknown, as
+    /// real silicon sits in the forbidden band).
     /// </summary>
     public bool BreakOnElectricalFault { get; set; } = true;
+
+    /// <summary>
+    /// How long (ps) a net may sit in contention before SIM001 escalates.
+    /// Tri-state bus handover routinely overlaps the outgoing driver's
+    /// disable time (HC tPHZ/tPLZ up to ~45 ns) with the incoming driver's
+    /// turn-on -- a self-clearing "blink" that is a non-event on copper.
+    /// Duration is the discriminator: real faults are steady-state. The
+    /// default 100 ns covers any HC disable/enable skew; 0 restores
+    /// escalate-at-onset. Applied to the simulator at each Build.
+    /// </summary>
+    public long ContentionTolerancePs { get; set; } = 100_000;
 
     /// <summary>
     /// Raised the first time each net goes into contention during a run. The
@@ -119,6 +131,7 @@ public sealed class SimulationController
 
         if (simulator is not null)
         {
+            simulator.ContentionTolerancePs = ContentionTolerancePs;
             simulator.ElectricalFault += OnElectricalFault;
             simulator.Start();
             // Drain only what's at tick 0 -- the Initialize events for VCC, GND

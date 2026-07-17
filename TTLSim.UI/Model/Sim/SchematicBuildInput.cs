@@ -26,6 +26,42 @@ public sealed class SchematicBuildInput : IBuildInput
         this.schematic = schematic;
     }
 
+    /// <summary>
+    /// One TTL022 Info per hidden, non-empty layer, naming the layer and how
+    /// many items it excludes from this build. Hidden means fully inactive --
+    /// the rest of this adapter silently filters those items, their wires and
+    /// their header links out, and the builder never knows they exist; this
+    /// note is the only place the exclusion becomes visible. A forgotten
+    /// hidden layer (the classic: the whole clock module) then announces
+    /// itself on the first lines of the build output instead of failing as
+    /// unexplained silence. Layer 0 (Default) is pinned visible, so the scan
+    /// starts at 1. Empty hidden layers exclude nothing and stay quiet.
+    /// </summary>
+    public IReadOnlyList<Diagnostic> InputNotes
+    {
+        get
+        {
+            List<Diagnostic> notes = new();
+            for (int layerId = 1; layerId < schematic.Layers.Count; layerId++)
+            {
+                if (schematic.Layers[layerId].Visible) continue;
+
+                int count = 0;
+                foreach (SchematicItem item in schematic.Items)
+                    if (item.LayerId == layerId)
+                        count++;
+                if (count == 0) continue;
+
+                notes.Add(new Diagnostic(
+                    DiagnosticSeverity.Info,
+                    Code: "TTL022",
+                    Message: $"Layer \u201c{schematic.Layers[layerId].Name}\u201d is hidden: "
+                           + $"{count} item(s) excluded from this build."));
+            }
+            return notes;
+        }
+    }
+
     public IEnumerable<BuildDevice> Devices
     {
         get

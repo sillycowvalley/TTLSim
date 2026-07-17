@@ -87,6 +87,14 @@ When an unused chip input needs a fixed level, tie it to the **GND or VCC symbol
 
 **This is generator policy, not just hand-layout advice** (2026-07-17 incident: a wiring generator minted a fresh rail symbol for every tie-off and strap — 51 of them — which then had to be merged back into the per-chip originals in a second pass). A generator must look up the rail symbol already wired to the chip's power pin and re-point tie connections there. The only time a generator creates a rail symbol is when the sub-unit has none — e.g. a passive network's common pin. Validator rule: at most one VCC and one GND symbol associated with any chip.
 
+## Net labels are GLOBAL — series elements force a rename at the boundary
+
+Net labels merge **by name across every layer of a project**, including across module boundaries. Any signal that passes through a series component (inline resistor, jumper, future filter) at a module edge therefore **must change name on the far side**, or the label merge loops the signal around the component and shorts it. The tell is diagnostic **TTL014** ("both terminals on net N — no electrical effect, absent from the simulation").
+
+Incident (2026-07-17): the clock module drives CLK, RST, /RST, HALT, T[0..3], and FETCH through 100R series resistors at its interface headers. The CPU-side taps reused the same label names, shorting all nine resistors out of the simulation. Fix: downstream-side labels take a board suffix — `CLK_A`, `T_A`, `FETCH_A`, etc. — so the only path between the name domains is the component itself. This is also the more truthful model: on copper, the net downstream of a series element *is* a distinct net.
+
+Rules of thumb: signals with **no** series element (wired-AND lines like /TRST and /HALTREQ, plain buses) keep one shared name across the boundary; signals **with** one change name; and when wiring a consumer board, check the module's interface schematic for inline components *before* choosing tap names. Validator idea: flag any resistor/jumper whose two terminals resolve to the same merged net.
+
 Do tie them off — a part left with genuinely floating inputs is flagged by the simulator (TTL010 "unused", TTL011 "floating input"), and a part with a required pin unconnected can be dropped from the run entirely (TTL021 "absent from the simulation"). A constant that feeds a shared bus is a separate case — it must be *driven*, not just tied; see **Tristate bus discipline**.
 
 ## Wire colours

@@ -143,13 +143,16 @@ public sealed class OutputPanel : Panel
                 list.Items.Add(row);
             }
 
-            int errors = 0, warnings = 0;
+            int errors = 0, warnings = 0, infos = 0;
             foreach (var d in diagnostics)
             {
                 if (d.Severity == DiagnosticSeverity.Error) errors++;
                 else if (d.Severity == DiagnosticSeverity.Warning) warnings++;
+                else infos++;
             }
-            header.Text = $"{headerLabel}  —  {errors} error(s), {warnings} warning(s)";
+            header.Text = infos > 0
+                ? $"{headerLabel}  —  {errors} error(s), {warnings} warning(s), {infos} info(s)"
+                : $"{headerLabel}  —  {errors} error(s), {warnings} warning(s)";
         }
         finally
         {

@@ -28,6 +28,13 @@ public sealed class SchematicBuilder
     {
         List<Diagnostic> diagnostics = new();
 
+        // Phase 0: notes from the input adapter (e.g. TTL022 hidden-layer
+        // exclusions). The builder only ever sees the ACTIVE subset of the
+        // schematic, so anything the adapter filtered out can only be
+        // reported by the adapter itself; it hands those notes over here so
+        // they lead the build output.
+        diagnostics.AddRange(input.InputNotes);
+
         // Phase 1: net extraction.
         NetTable netTable = NetTable.Build(input.Connections);
 
@@ -164,6 +171,15 @@ public sealed class SchematicBuilder
                 }
             }
         }
+
+        // Phase 1b (cont.): passive with both terminals on one net (TTL014).
+        // A resistor, switch, button or diode whose two ends resolve to the
+        // same electrical net -- typically a series part bridged by a header
+        // link that loops the signal back -- has no electrical effect, and
+        // the chip factory deliberately builds nothing for it (the mirror-
+        // driver contact models zero-delay oscillate on a single net). Warn
+        // so the part's absence from the simulation is visible.
+        diagnostics.AddRange(ScanPassivesForBridgedTerminals(input, netTable));
 
         // Phase 1c: VCC/GND short detection.
         HashSet<int> vccNets = NetsFromItems(input, netTable, BuildItemKind.Vcc);
@@ -393,6 +409,86 @@ public sealed class SchematicBuilder
     /// <summary>One output pin, tagged with enough context to name it in a message.</summary>
     private readonly record struct OutputPinRef(
         string Label, string UnitId, int Pin, string PartIdentifier);
+
+    /// <summary>
+    /// Phase 1b (cont.). TTL014 -- a two-terminal passive whose terminals both
+    /// resolve to the same net. Electrically the part then does nothing (a
+    /// resistor, switch, button or diode between a net and itself is a no-op),
+    /// and the chip factory builds no model for it: the contact models mirror
+    /// each terminal onto the other with an exclude-own-driver resolve that
+    /// assumes two DISTINCT nets, so a single-net instance would re-trigger
+    /// itself in a zero-delay loop. The classic cause is a series part whose
+    /// far end returns to the source net through a header link.
+    ///
+    /// <para>Terminal pairs come from <see cref="TerminalPairsOf"/>; parts with
+    /// no entry there (caps, LEDs, headers) are never checked. A pair with
+    /// either pin off-net is skipped -- that's ordinary partial wiring, covered
+    /// (or deliberately ignored, for passives) by the Phase 1b checks.</para>
+    /// </summary>
+    private static List<Diagnostic> ScanPassivesForBridgedTerminals(
+        IBuildInput input, NetTable netTable)
+    {
+        List<Diagnostic> result = new();
+
+        foreach (BuildDevice dev in input.Devices)
+        {
+            foreach (BuildUnit unit in dev.Units)
+            {
+                foreach ((int pinA, int pinB) in TerminalPairsOf(dev.PartIdentifier))
+                {
+                    Net? a = netTable.FindNet(new PinRef(unit.UnitId, pinA));
+                    Net? b = netTable.FindNet(new PinRef(unit.UnitId, pinB));
+                    if (a is null || b is null) continue;
+                    if (!ReferenceEquals(a, b)) continue;
+
+                    result.Add(new Diagnostic(
+                        DiagnosticSeverity.Warning,
+                        Code: "TTL014",
+                        Message: $"{dev.Designator} ({dev.PartIdentifier}) has both "
+                               + $"terminals on net {a.Id} -- it has no electrical "
+                               + "effect and is absent from the simulation. Check for "
+                               + "a header link looping the signal back.",
+                        NetId: a.Id,
+                        ItemId: unit.UnitId));
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// The terminal pin pairs a bridged-terminal check applies to, per part.
+    /// Mirrors the chip factory's same-net guards -- every part listed here
+    /// is one the factory silently drops when the pair lands on one net, so
+    /// the list and the guards must stay in step (parallel-list warning).
+    /// The 4-pin button's 1=2 / 3=4 legs are unioned as device-internal nets
+    /// by the build input, so FindNet on pins 1 and 3 sees either leg's
+    /// wiring and the single (1, 3) pair covers all four pins. The SIP-9
+    /// network is one pair per element, common (pin 1) against each end.
+    /// </summary>
+    private static IEnumerable<(int A, int B)> TerminalPairsOf(string partIdentifier)
+    {
+        switch (partIdentifier)
+        {
+            case "resistor":
+            case "switch":
+            case "jumper-2pin":
+            case "button":
+            case "diode":
+                yield return (1, 2);
+                break;
+
+            case "button-4":
+                yield return (1, 3);
+                break;
+
+            case "resnet-sip9":
+                for (int elementPin = 2; elementPin <= 9; elementPin++)
+                    yield return (1, elementPin);
+                break;
+        }
+    }
 
     /// <summary>
     /// Phase 1g. Walks every net once and emits two diagnostics.

@@ -131,7 +131,11 @@ public sealed class ChipFactory : IChipFactory
                 pinMap.TryGetValue(4, out Net? b2);
                 Net? termA = a1 ?? a2;
                 Net? termB = b1 ?? b2;
-                if (termA is not null && termB is not null)
+                // Distinct-net check as in TryCreateButton: terminals bridged
+                // onto one net make the contact a no-op and the mirror-driver
+                // model a zero-delay oscillator when pressed.
+                if (termA is not null && termB is not null
+                    && !ReferenceEquals(termA, termB))
                     yield return new ButtonInput(termA, termB);
                 continue;
             }
@@ -166,6 +170,10 @@ public sealed class ChipFactory : IChipFactory
         pinToNet.TryGetValue(1, out Net? p1);
         pinToNet.TryGetValue(2, out Net? p2);
         if (p1 is null || p2 is null) return null;
+        // Both terminals on one net: a no-op contact, and the mirror-driver
+        // model would zero-delay oscillate (see TryCreatePullResistor).
+        // TTL014 reports the part as absent.
+        if (ReferenceEquals(p1, p2)) return null;
         return new SwitchInput(p1, p2, unit.SwitchClosed);
     }
 
@@ -184,6 +192,9 @@ public sealed class ChipFactory : IChipFactory
         pinToNet.TryGetValue(1, out Net? p1);
         pinToNet.TryGetValue(2, out Net? p2);
         if (p1 is null || p2 is null) return null;
+        // Both terminals on one net: no-op, and the mirror-driver model
+        // would zero-delay oscillate when pressed (see TryCreatePullResistor).
+        if (ReferenceEquals(p1, p2)) return null;
         return new ButtonInput(p1, p2);
     }
 
@@ -193,6 +204,9 @@ public sealed class ChipFactory : IChipFactory
         pinToNet.TryGetValue(1, out Net? anode);
         pinToNet.TryGetValue(2, out Net? cathode);
         if (anode is null || cathode is null) return null;
+        // Anode and cathode on one net: the diode does nothing, and the
+        // resolve-and-redrive model can feed itself (see TryCreatePullResistor).
+        if (ReferenceEquals(anode, cathode)) return null;
         return new DiodeContact(anode, cathode);
     }
 

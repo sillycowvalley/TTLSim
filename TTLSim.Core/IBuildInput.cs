@@ -14,6 +14,17 @@ public interface IBuildInput
 
     /// <summary>Pin-to-pin connections. Each pair declares the two pins share a net.</summary>
     IEnumerable<(PinRef A, PinRef B)> Connections { get; }
+
+    /// <summary>
+    /// Diagnostics the input adapter wants surfaced with the build result --
+    /// notes about what the adapter itself decided before the builder ever
+    /// ran, e.g. TTL022 "layer hidden, N items excluded". The builder only
+    /// sees the ACTIVE subset of the schematic, so exclusions the adapter
+    /// made can only be reported by the adapter. Prepended verbatim to the
+    /// builder's own diagnostics. Default empty, so implementers that have
+    /// nothing to note (tests, simple adapters) need no change.
+    /// </summary>
+    IReadOnlyList<Diagnostic> InputNotes => Array.Empty<Diagnostic>();
 }
 
 /// <summary>What the builder needs to know about a device.</summary>
