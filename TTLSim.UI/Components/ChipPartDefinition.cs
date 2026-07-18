@@ -133,7 +133,7 @@ public sealed record ChipPartDefinition(
     /// read), so the floating-input diagnostic does not apply to them.</summary>
     public static readonly ChipPartDefinition Ic7C199 = new(
         PartNumber: "CY7C199", PinCount: 28, PowerPin: 28, GroundPin: 14,
-        BodyWidth: 12, Pins: Build28PinMemoryPinout(addressLines: 15));
+        BodyWidth: 8, Pins: Build28PinMemoryPinout(addressLines: 15));
 
     /// <summary>2114 1K x 4 Static RAM, 18-pin DIP. Classic late-1970s NMOS SRAM
     /// (Intel, AMD, Mostek, NEC, etc.); pair two for a byte-wide 1Kx8. Single
@@ -225,7 +225,7 @@ public sealed record ChipPartDefinition(
     /// apply to them.</summary>
     public static readonly ChipPartDefinition IcW24512 = new(
         PartNumber: "W24512", PinCount: 32, PowerPin: 32, GroundPin: 16,
-        BodyWidth: 12,
+        BodyWidth: 8,
         Pins: new ChipPin[]
         {
             new("NC",   1),              new("VCC",  32),
