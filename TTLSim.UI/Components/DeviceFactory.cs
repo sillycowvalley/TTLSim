@@ -40,6 +40,10 @@ public static class DeviceFactory
                 BuildHeaderUnit(device, header, dropPoint);
                 break;
 
+            case DipSwitchPartDefinition dipSwitch:
+                BuildDipSwitchUnit(device, dipSwitch, dropPoint);
+                break;
+
             case PassivePartDefinition passive:
                 BuildPassiveUnit(device, passive, dropPoint);
                 break;
@@ -134,6 +138,18 @@ public static class DeviceFactory
         device.Units.Add(unit);
     }
 
+    private static void BuildDipSwitchUnit(Device device, DipSwitchPartDefinition dipSwitch, Point dropPoint)
+    {
+        var spec = new UnitSpec(UnitKind.DipSwitch, '\0',
+            InputPins: Array.Empty<int>(),
+            OutputPin: 0);
+        var unit = new DipSwitchUnit(device, spec, dipSwitch);
+        unit.Position = new Point(
+            dropPoint.X - unit.Size.Width / 2,
+            dropPoint.Y - unit.Size.Height / 2);
+        device.Units.Add(unit);
+    }
+
     private static void BuildDisplayUnit(Device device, DisplayPartDefinition display, Point dropPoint)
     {
         var spec = new UnitSpec(display.UnitKind, '\0',
@@ -171,6 +187,8 @@ public static class DeviceFactory
             "Power units are created on demand via the 'show power' action, not by DeviceFactory."),
         UnitKind.Chip => throw new InvalidOperationException(
             "Chip units require a ChipPartDefinition and are built via BuildChipUnit, not by Kind alone."),
+        UnitKind.DipSwitch => throw new InvalidOperationException(
+            "DIP switch units require a DipSwitchPartDefinition and are built via BuildDipSwitchUnit, not by Kind alone."),
         _ => throw new ArgumentOutOfRangeException()
     };
 

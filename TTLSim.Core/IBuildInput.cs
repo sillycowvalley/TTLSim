@@ -57,7 +57,8 @@ public sealed record BuildUnit(
     IReadOnlyList<int> InputPinNumbers,
     int? OutputPinNumber,
     IReadOnlyList<int>? OutputPinNumbers = null,
-    bool SwitchClosed = false);
+    bool SwitchClosed = false,
+    IReadOnlyList<bool>? SwitchPositions = null);   // DIP switch per-position closed states; null otherwise
 
 /// <summary>A stand-alone non-device item (VCC, GND, clock).</summary>
 public sealed record BuildItem(

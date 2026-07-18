@@ -112,6 +112,10 @@ public sealed class SimulationController
     public IReadOnlyDictionary<SchematicItem, SpdtSwitchInput> SpdtBindings { get; private set; } =
     new Dictionary<SchematicItem, SpdtSwitchInput>();
 
+    /// <summary>DIP switch contacts, keyed by (unit, 0-based position).</summary>
+    public IReadOnlyDictionary<(SchematicItem Unit, int Position), SwitchInput> DipSwitchBindings { get; private set; } =
+    new Dictionary<(SchematicItem, int), SwitchInput>();
+
     // ------------------------------------------------------------ commands
 
     public BuildResult Build()
@@ -128,6 +132,7 @@ public sealed class SimulationController
         ButtonBindings = BuildButtonMap();
         SwitchBindings = BuildSwitchMap();
         SpdtBindings = BuildSpdtMap();
+        DipSwitchBindings = BuildDipSwitchMap();
 
         if (simulator is not null)
         {
@@ -185,6 +190,46 @@ public sealed class SimulationController
                         && ReferenceEquals(sp.Nets[1], com)
                         && ReferenceEquals(sp.Nets[2], b))
                     { map[unit] = sp; break; }
+            }
+        }
+        return map;
+    }
+
+    private IReadOnlyDictionary<(SchematicItem, int), SwitchInput> BuildDipSwitchMap()
+    {
+        Dictionary<(SchematicItem, int), SwitchInput> map = new();
+        if (simulator is null || buildResult?.NetTable is not NetTable table) return map;
+
+        // A DIP switch is N independent SwitchInput contacts (pin n paired
+        // with pin 2N+1-n). Contacts are matched by BOTH pin nets, same rule
+        // as BuildSwitchMap; a SwitchInput already claimed by one position is
+        // not reused for another, so two positions bridging identical net
+        // pairs each bind their own contact.
+        var claimed = new HashSet<IChip>();
+        foreach (Device dev in schematic.Devices)
+        {
+            if (dev.Definition is not DipSwitchPartDefinition ds) continue;   // BuildDipSwitchMap
+            foreach (Unit unit in dev.Units)
+            {
+                for (int n = 1; n <= ds.Positions; n++)
+                {
+                    Net? pa = table.FindNet(new PinRef(unit.Id, n));
+                    Net? pb = table.FindNet(new PinRef(unit.Id, 2 * ds.Positions + 1 - n));
+                    if (pa is null || pb is null) continue;
+
+                    foreach (IChip chip in simulator.Chips)
+                    {
+                        if (chip is SwitchInput sw
+                            && !claimed.Contains(chip)
+                            && ReferenceEquals(sw.Nets[0], pa)
+                            && ReferenceEquals(sw.Nets[1], pb))
+                        {
+                            map[(unit, n - 1)] = sw;
+                            claimed.Add(chip);
+                            break;
+                        }
+                    }
+                }
             }
         }
         return map;

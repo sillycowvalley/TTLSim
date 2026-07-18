@@ -606,6 +606,78 @@
       "source": "d7575bd5d4944433868d8a5c28a252e8|0819f05c4eef4c71ace90d822a990e87",
       "version": "1660160097",
       "custom_tags": "[]"
+    },
+    "7fdbe312c197b73a": {
+      "title": "CFS-0401MC",
+      "attributes": {
+        "Symbol": "2ca0a16fd304c436",
+        "Footprint": "b8345be2a076c613",
+        "LCSC Part Name": "CFS-0401MC",
+        "Supplier Part": "C5573380",
+        "Manufacturer": "NIDEC(\u5c3c\u5f97\u79d1)",
+        "Manufacturer Part": "CFS-0401MC",
+        "JLCPCB Part Class": "Extended Part",
+        "Datasheet": "https://item.szlcsc.com/datasheet/CFS-0401MC/6491765.html",
+        "Supplier": "LCSC",
+        "Add into BOM": "yes",
+        "Convert to PCB": "yes",
+        "Designator": "SW?",
+        "Circuit": "SPST",
+        "Number of Positions": "4",
+        "Lead Pitch": "2.54mm",
+        "Name": "={Manufacturer Part}",
+        "Description": "4-position SPST DIP switch, 2.54mm through-hole",
+        "3D Model": "d877195e5bc04b06a95d69ce10bec217|0819f05c4eef4c71ace90d822a990e87",
+        "3D Model Title": "SW-TH_8P-P2.54_SMQS-04R-TP",
+        "3D Model Transform": "455.9046,389.763,0,0,0,0,0,0,-137.795"
+      },
+      "description": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "f44ed70fa9666641|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1783675273",
+      "custom_tags": "[\"Switches\",\"DIP Switches\"]"
+    },
+    "5052e69b406c3b75": {
+      "title": "DS-8P-RD",
+      "attributes": {
+        "Symbol": "a7a06b57595e4ad7",
+        "Footprint": "47907b97cd7a88e9",
+        "LCSC Part Name": "DS-8P-RD",
+        "Supplier Part": "C46595741",
+        "Manufacturer": "DORABO(\u5730\u535a\u7535\u6c14)",
+        "Manufacturer Part": "DS-8P-RD",
+        "JLCPCB Part Class": "Extended Part",
+        "Datasheet": "https://item.szlcsc.com/datasheet/DS-8P-RD/48735337.html",
+        "Supplier": "LCSC",
+        "Add into BOM": "yes",
+        "Convert to PCB": "yes",
+        "Designator": "SW?",
+        "Circuit": "SPST",
+        "Number of Positions": "8",
+        "Lead Pitch": "2.54mm",
+        "Name": "={Manufacturer Part}",
+        "Description": "8-position SPST DIP switch, 2.54mm through-hole, DIP-16 body",
+        "3D Model": "ddd1032408e9472d87f42dd2afc79c68|0819f05c4eef4c71ace90d822a990e87",
+        "3D Model Title": "SW-TH_L21.9-W9.9-H5.4-P2.54-R",
+        "3D Model Transform": "861.41568,389.763,0,0,0,0,0,0,-125.984"
+      },
+      "description": "",
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "images": [
+        ""
+      ],
+      "source": "8969672fcffabd4b|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1782618175",
+      "custom_tags": "[\"Switches\",\"DIP Switches\"]"
     }
   },
   "symbols": {
@@ -848,6 +920,30 @@
       "title": "NE555N",
       "version": "1740987924",
       "type": 2
+    },
+    "2ca0a16fd304c436": {
+      "title": "CFS-0401MC",
+      "source": "2ca0a16fd304c436|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1783674021",
+      "desc": "",
+      "type": 2,
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Switches\"]"
+    },
+    "a7a06b57595e4ad7": {
+      "title": "DS-8P-RD",
+      "source": "a7a06b57595e4ad7|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1782674807",
+      "desc": "",
+      "type": 2,
+      "tags": {
+        "parent_tag": [],
+        "child_tag": []
+      },
+      "custom_tags": "[\"Switches\"]"
     }
   },
   "footprints": {
@@ -1157,6 +1253,28 @@
       "desc": "",
       "source": "0978461d74cb4045b4b9eafdea269f14|0819f05c4eef4c71ace90d822a990e87",
       "version": "1748502458"
+    },
+    "b8345be2a076c613": {
+      "uuid": "b8345be2a076c613",
+      "title": "SW-TH_8P-P2.54_SMQS-04R-TP",
+      "display_title": "SW-TH_8P-P2.54_SMQS-04R-TP",
+      "docType": 4,
+      "type": 4,
+      "description": "",
+      "desc": "",
+      "source": "f16f1a78bb0747e091333fd59224979f|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1720673826"
+    },
+    "47907b97cd7a88e9": {
+      "uuid": "47907b97cd7a88e9",
+      "title": "SW-TH_16P-L21.9-W9.9-P2.54-LS7.6",
+      "display_title": "SW-TH_16P-L21.9-W9.9-P2.54-LS7.6",
+      "docType": 4,
+      "type": 4,
+      "description": ";\u63d2\u4ef6;DIP;-",
+      "desc": ";\u63d2\u4ef6;DIP;-",
+      "source": "76f372b441c447a1ad8ecac6f8c1474f|0819f05c4eef4c71ace90d822a990e87",
+      "version": "1651647287"
     }
   }
 }

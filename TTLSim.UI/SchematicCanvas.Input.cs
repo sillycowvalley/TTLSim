@@ -65,6 +65,19 @@ public sealed partial class SchematicCanvas
             }
         }
 
+        // Sim mode: clicking one row of a DIP switch toggles that position.
+        if (DipSwitchToggleHandler is not null && e.Button == MouseButtons.Left)
+        {
+            var (hitDip, position) = HitTestDipSwitch(e.Location);
+            if (hitDip is not null && position is int pos)
+            {
+                hitDip.PositionsClosed[pos] = !hitDip.PositionsClosed[pos];
+                DipSwitchToggleHandler(hitDip, pos, hitDip.PositionsClosed[pos]);
+                Invalidate();
+                return;   // don't fall through to edit-mode handling
+            }
+        }
+
         if (e.Button == MouseButtons.Right && IsPlacingWire)
         {
             CancelWirePlacement();
@@ -663,5 +676,28 @@ public sealed partial class SchematicCanvas
         });
 
         Invalidate();
+    }
+
+    /// <summary>
+    /// Hit-test DIP switches in sim mode. Returns the unit and the 0-based
+    /// position under the cursor, or (null, null). The coarse test is the
+    /// rotation-aware InteractiveBounds (matching HitTestSwitch in the
+    /// HitTest partial); the per-position resolution is delegated to the
+    /// unit, which works from its pins' rotated world positions.
+    /// </summary>
+    private (DipSwitchUnit? Unit, int? Position) HitTestDipSwitch(Point screenPoint)
+    {
+        float gx = (screenPoint.X - PanOffset.X) / (Zoom * GridPitch);
+        float gy = (screenPoint.Y - PanOffset.Y) / (Zoom * GridPitch);
+
+        foreach (var item in Schematic.ActiveItems)
+        {
+            if (item is not DipSwitchUnit dip) continue;
+            var b = dip.InteractiveBounds;   // in HitTestDipSwitch
+            if (gx < b.Left || gx > b.Right || gy < b.Top || gy > b.Bottom) continue;
+            int? pos = dip.PositionAt(new PointF(gx, gy));
+            if (pos is not null) return (dip, pos);
+        }
+        return (null, null);
     }
 }

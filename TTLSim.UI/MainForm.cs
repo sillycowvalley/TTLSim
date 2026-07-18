@@ -1042,6 +1042,7 @@ public sealed class MainForm : Form
             canvas.ButtonPressHandler = null;
             canvas.SwitchToggleHandler = null;
             canvas.SpdtToggleHandler = null;
+            canvas.DipSwitchToggleHandler = null;
             canvas.ProbeProvider = null;
             canvas.PinSignalProvider = null;
         }
@@ -1066,6 +1067,12 @@ public sealed class MainForm : Form
             {
                 if (simController.SpdtBindings.TryGetValue(sw, out var chip))
                     simController.SetSpdtPosition(chip, throwB);
+                canvas.Invalidate();
+            };
+            canvas.DipSwitchToggleHandler = (sw, position, closed) =>
+            {
+                if (simController.DipSwitchBindings.TryGetValue((sw, position), out var chip))
+                    simController.SetSwitchClosed(chip, closed);
                 canvas.Invalidate();
             };
             canvas.ProbeProvider = c => simController.GetProbeText(c);

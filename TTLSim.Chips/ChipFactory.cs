@@ -145,6 +145,27 @@ public sealed class ChipFactory : IChipFactory
                 if (sw is not null) yield return sw;
                 continue;
             }
+            if (device.PartIdentifier is "dipsw-4" or "dipsw-8")
+            {
+                // One independent SPST contact per position: pin n pairs with
+                // pin 2N+1-n (DIP convention, matching DipSwitchUnit). Each
+                // contact is a plain SwitchInput; positions with a missing or
+                // self-bridged net pair are skipped, same rule as the SPST
+                // switch (a no-op contact would zero-delay oscillate).
+                int positions = device.PartIdentifier == "dipsw-4" ? 4 : 8;
+                for (int n = 1; n <= positions; n++)
+                {
+                    pinMap.TryGetValue(n, out Net? pa);
+                    pinMap.TryGetValue(2 * positions + 1 - n, out Net? pb);
+                    if (pa is null || pb is null) continue;
+                    if (ReferenceEquals(pa, pb)) continue;
+                    bool closed = unit.SwitchPositions is not null
+                        && n - 1 < unit.SwitchPositions.Count
+                        && unit.SwitchPositions[n - 1];
+                    yield return new SwitchInput(pa, pb, closed);
+                }
+                continue;
+            }
             if (device.PartIdentifier is "spdt-switch" or "jumper-3pin")
             {
                 IChip? sp = TryCreateSpdtSwitch(device, unit, pinMap);
@@ -1281,6 +1302,7 @@ public sealed class ChipFactory : IChipFactory
             => true,
         // Electrically modelled passives.
         "resistor" or "resnet-sip9" or "button" or "button-4" or "switch" or "spdt-switch" or "jumper-2pin" or "jumper-3pin" or "diode"
+            or "dipsw-4" or "dipsw-8"
             => true,
         // Visual-only parts: no electrical model, but not "unsupported".
         "led" or "capacitor" or "polarized-capacitor" or "crystal"

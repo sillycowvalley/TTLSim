@@ -64,6 +64,10 @@ public sealed partial class SchematicCanvas : Control
     /// <summary>Sim-mode: invoked with the new ThrowB state when an SPDT switch is clicked.</summary>
     public Action<SpdtSwitchUnit, bool>? SpdtToggleHandler { get; set; }
 
+    /// <summary>Sim-mode: invoked with the 0-based position index and its new
+    /// closed state when one position of a DIP switch is clicked.</summary>
+    public Action<DipSwitchUnit, int, bool>? DipSwitchToggleHandler { get; set; }
+
     private ButtonUnit? heldButton;
 
     private readonly ToolTip probeTooltip = new() { ShowAlways = true, InitialDelay = 200, ReshowDelay = 100 };

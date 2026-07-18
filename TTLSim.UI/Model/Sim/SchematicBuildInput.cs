@@ -185,7 +185,8 @@ public sealed class SchematicBuildInput : IBuildInput
 
                     units.Add(new BuildUnit(u.Id, u.UnitLetter, inputs, output,
                         OutputPinNumbers: outputPins,
-                        SwitchClosed: (u is SwitchUnit sw && sw.IsClosed) || (u is SpdtSwitchUnit spdt && spdt.ThrowB)));
+                        SwitchClosed: (u is SwitchUnit sw && sw.IsClosed) || (u is SpdtSwitchUnit spdt && spdt.ThrowB),
+                        SwitchPositions: u is DipSwitchUnit dip ? (bool[])dip.PositionsClosed.Clone() : null));
                 }
 
                 // Whole device on an invisible layer (no active units): drop it
@@ -207,7 +208,7 @@ public sealed class SchematicBuildInput : IBuildInput
                     Function2: dev.Function2,
                     FrequencyHz1: dev.FrequencyHz,
                     FrequencyHz2: dev.FrequencyHz2,
-                    IsPassive: dev.Definition is PassivePartDefinition);
+                    IsPassive: dev.Definition is PassivePartDefinition or DipSwitchPartDefinition);
             }
         }
     }

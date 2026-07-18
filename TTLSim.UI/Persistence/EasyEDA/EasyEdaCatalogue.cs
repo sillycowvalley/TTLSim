@@ -270,6 +270,22 @@ public static class EasyEDACatalogue
     // Header 2" component already uses for output headers).
     private const string Hdr2MaleFootprintUuid = "2fa9edd918204c849d260ba835fd4d43";
 
+    // DIP switches: devices and footprints lifted VERBATIM from the
+    // DIP_Switches.epro reference (CFS-0401MC 4-position DIP-8 body,
+    // DS-8P-RD 8-position DIP-16 body, LS7.6). The SYMBOLS are our own
+    // dip-sw-4.esym / dip-sw-8.esym, authored at 20px pin pitch in the DIP
+    // chip template style so canvas wires land exactly on the symbol pins
+    // (the vendor symbols use 10px pitch, which would put an extender
+    // segment on every non-anchor pin). The device fragments in
+    // device_fragments.json therefore carry the reference device attributes
+    // with the Symbol attribute repointed at our symbol uuids.
+    private const string DipSw4DeviceUuid = "7fdbe312c197b73a";
+    private const string DipSw4SymbolUuid = "2ca0a16fd304c436";
+    private const string DipSw4FootprintUuid = "b8345be2a076c613";
+    private const string DipSw8DeviceUuid = "5052e69b406c3b75";
+    private const string DipSw8SymbolUuid = "a7a06b57595e4ad7";
+    private const string DipSw8FootprintUuid = "47907b97cd7a88e9";
+
     // SPDT switch and 2-/3-pin jumpers -- same Frankenstein pattern as the
     // SPST switch/button above: each keeps its own simple schematic symbol
     // (authored to match the part's canvas pin geometry exactly, since the
@@ -905,6 +921,75 @@ public static class EasyEDACatalogue
             Rot180: new LabelOffsetSet(new(-10, +20), new(-10, +10), default),
             Rot270: new LabelOffsetSet(new(-30, -5), new(-30, -15), default)));
 
+    // ---------------------------------------------------- DIP switches
+    //
+    // Pin local positions follow our own dip-sw esyms: DIP numbering, left
+    // column x=-50 top-down, right column x=+50 bottom-up, 20px pitch --
+    // the same relative geometry as DipSwitchUnit's canvas layout (2-cell
+    // pitch, 10-cell span), so every pin world position matches and no
+    // extender segments are emitted.
+
+    private static readonly CataloguePart DipSwitch4Part = new(
+        DeviceUuid: DipSw4DeviceUuid,
+        SymbolUuid: DipSw4SymbolUuid,
+        SymbolResourceName: "dip-sw-4.esym",
+        FootprintUuid: DipSw4FootprintUuid,
+        FootprintResourceName: "dip-sw-4.efoo",
+        PartTitle: "CFS-0401MC.1",
+        PinLocalPositions: new()
+        {
+            [1] = new Point(-50, 30),
+            [2] = new Point(-50, 10),
+            [3] = new Point(-50, -10),
+            [4] = new Point(-50, -30),
+            [5] = new Point(50, -30),
+            [6] = new Point(50, -10),
+            [7] = new Point(50, 10),
+            [8] = new Point(50, 30),
+        },
+        EmitNameOverride: true,
+        // DIP label rule at half-height 42: designator at half + 8,
+        // Rot90/270 x at -(half + 10).
+        LabelOffsets: new LabelOffsetsByRotation(
+            Rot0: new LabelOffsetSet(new(-40, +50), new(-20, +50), default),
+            Rot90: new LabelOffsetSet(new(-52, -20), new(-52, -2), default, TextRotationDeg: 90),
+            Rot180: new LabelOffsetSet(new(-40, +50), new(-20, +50), default),
+            Rot270: new LabelOffsetSet(new(-52, -20), new(-52, -2), default, TextRotationDeg: 90)));
+
+    private static readonly CataloguePart DipSwitch8Part = new(
+        DeviceUuid: DipSw8DeviceUuid,
+        SymbolUuid: DipSw8SymbolUuid,
+        SymbolResourceName: "dip-sw-8.esym",
+        FootprintUuid: DipSw8FootprintUuid,
+        FootprintResourceName: "dip-sw-8.efoo",
+        PartTitle: "DS-8P-RD.1",
+        PinLocalPositions: new()
+        {
+            [1] = new Point(-50, 70),
+            [2] = new Point(-50, 50),
+            [3] = new Point(-50, 30),
+            [4] = new Point(-50, 10),
+            [5] = new Point(-50, -10),
+            [6] = new Point(-50, -30),
+            [7] = new Point(-50, -50),
+            [8] = new Point(-50, -70),
+            [9] = new Point(50, -70),
+            [10] = new Point(50, -50),
+            [11] = new Point(50, -30),
+            [12] = new Point(50, -10),
+            [13] = new Point(50, 10),
+            [14] = new Point(50, 30),
+            [15] = new Point(50, 50),
+            [16] = new Point(50, 70),
+        },
+        EmitNameOverride: true,
+        // DIP label rule at half-height 82.
+        LabelOffsets: new LabelOffsetsByRotation(
+            Rot0: new LabelOffsetSet(new(-40, +90), new(-20, +90), default),
+            Rot90: new LabelOffsetSet(new(-92, -20), new(-92, -2), default, TextRotationDeg: 90),
+            Rot180: new LabelOffsetSet(new(-40, +90), new(-20, +90), default),
+            Rot270: new LabelOffsetSet(new(-92, -20), new(-92, -2), default, TextRotationDeg: 90)));
+
     private static readonly CataloguePart Button4Part = new(
         DeviceUuid: Button4DeviceUuid,
         SymbolUuid: Button4SymbolUuid,
@@ -1065,6 +1150,15 @@ public static class EasyEDACatalogue
             PassivePartDefinition p when p == PassivePartDefinition.Led => LedPart,
             PassivePartDefinition p when p == PassivePartDefinition.Switch => SwitchPart,
             PassivePartDefinition p when p == PassivePartDefinition.Button => ButtonPart,
+
+            DipSwitchPartDefinition dsw => dsw.Positions switch
+            {
+                4 => DipSwitch4Part,
+                8 => DipSwitch8Part,
+                _ => throw new NotImplementedException(
+                    $"EasyEDA export: no catalogue entry for a {dsw.Positions}-position "
+                    + "DIP switch. Supported position counts are 4 and 8."),
+            },
             PassivePartDefinition p when p == PassivePartDefinition.Button4 => Button4Part,
             PassivePartDefinition p when p == PassivePartDefinition.SpdtSwitch => SpdtSwitchPart,
             PassivePartDefinition p when p == PassivePartDefinition.Jumper2 => Jumper2Part,

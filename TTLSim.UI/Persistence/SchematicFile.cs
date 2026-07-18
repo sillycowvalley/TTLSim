@@ -99,6 +99,14 @@ public sealed class UnitDto
     public bool? SwitchClosed { get; set; }           // SPST switch units only; null otherwise
 
     /// <summary>
+    /// DIP switch units only: per-position state as one '0' (open) or '1'
+    /// (closed) character per position, position 1 first (e.g. "0110").
+    /// Null on every other unit kind and on files written before the
+    /// feature; null loads as all-open.
+    /// </summary>
+    public string? SwitchPositions { get; set; }
+
+    /// <summary>
     /// Header units only: flipped across the long axis so pins exit from the
     /// opposite edge (pin order and numbering unchanged). Null on every other
     /// unit kind and on files written before the feature; null loads as false,

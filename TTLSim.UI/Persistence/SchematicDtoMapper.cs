@@ -172,6 +172,13 @@ public static class SchematicDtoMapper
                 DisplayPartDefinition.SevenSegmentCommonCathode,
         };
 
+    private static readonly Dictionary<string, DipSwitchPartDefinition> DipSwitchLookup =
+        new()
+        {
+            [DipSwitchPartDefinition.DipSwitch4.Identifier] = DipSwitchPartDefinition.DipSwitch4,
+            [DipSwitchPartDefinition.DipSwitch8.Identifier] = DipSwitchPartDefinition.DipSwitch8,
+        };
+
     private static readonly Dictionary<string, HeaderPartDefinition> HeaderLookup =
         new()
         {
@@ -357,6 +364,14 @@ public static class SchematicDtoMapper
             PartIdentifier = h.Identifier,
             Family = null
         },
+        DipSwitchPartDefinition ds => new DeviceDto
+        {
+            Id = device.Id,
+            Designator = device.Designator,
+            PartKind = "dipswitch",
+            PartIdentifier = ds.Identifier,
+            Family = null
+        },
         DisplayPartDefinition d => new DeviceDto
         {
             Id = device.Id,
@@ -384,7 +399,8 @@ public static class SchematicDtoMapper
             SpdtSwitchUnit spdt => spdt.ThrowB,
             _ => (bool?)null
         },
-        Mirrored = unit is HeaderOutputUnit hdr ? hdr.Mirrored : (bool?)null
+        Mirrored = unit is HeaderOutputUnit hdr ? hdr.Mirrored : (bool?)null,
+        SwitchPositions = unit is DipSwitchUnit dip ? dip.ClosedPattern : null
     };
 
     private static ItemDto StandaloneItemToDto(SchematicItem item)
@@ -740,8 +756,12 @@ public static class SchematicDtoMapper
                 ? h
                 : throw new System.IO.InvalidDataException(
                     $"Unknown header '{dto.PartIdentifier}'. Known: {string.Join(", ", HeaderLookup.Keys)}."),
+            "dipswitch" => DipSwitchLookup.TryGetValue(dto.PartIdentifier, out var dsw)
+                ? dsw
+                : throw new System.IO.InvalidDataException(
+                    $"Unknown DIP switch '{dto.PartIdentifier}'. Known: {string.Join(", ", DipSwitchLookup.Keys)}."),
             _ => throw new System.IO.InvalidDataException(
-                $"Unknown part kind '{dto.PartKind}'. Expected 'ic', 'chip', 'passive', 'header', or 'display'.")
+                $"Unknown part kind '{dto.PartKind}'. Expected 'ic', 'chip', 'passive', 'header', 'display', or 'dipswitch'.")
         };
 
         var device = new Device(definition)
@@ -820,6 +840,8 @@ public static class SchematicDtoMapper
                 InputPins: Array.Empty<int>(), OutputPin: 0),
             HeaderPartDefinition => new UnitSpec(UnitKind.HeaderOutput, '\0',
                 InputPins: Array.Empty<int>(), OutputPin: 0),
+            DipSwitchPartDefinition => new UnitSpec(UnitKind.DipSwitch, '\0',
+                InputPins: Array.Empty<int>(), OutputPin: 0),
             DisplayPartDefinition d => new UnitSpec(d.UnitKind, '\0',
                 InputPins: Array.Empty<int>(), OutputPin: 0),
             _ => null
@@ -855,6 +877,9 @@ public static class SchematicDtoMapper
             case UnitKind.HeaderOutput:
                 unit = new HeaderOutputUnit(device, spec, (HeaderPartDefinition)device.Definition);
                 break;
+            case UnitKind.DipSwitch:
+                unit = new DipSwitchUnit(device, spec, (DipSwitchPartDefinition)device.Definition);
+                break;
 
             case UnitKind.DFlipFlop:
             case UnitKind.Power:
@@ -876,6 +901,8 @@ public static class SchematicDtoMapper
         unit.Position = new Point(dto.Position.X, dto.Position.Y);
         unit.Rotation = ParseRotation(dto.Rotation);
 
+        if (unit is DipSwitchUnit dipUnit && dto.SwitchPositions is string pattern)
+            dipUnit.ClosedPattern = pattern;
         if (unit is SwitchUnit swUnit && dto.SwitchClosed is bool closed)
             swUnit.IsClosed = closed;
         if (unit is SpdtSwitchUnit spdt && dto.SwitchClosed is bool pos)

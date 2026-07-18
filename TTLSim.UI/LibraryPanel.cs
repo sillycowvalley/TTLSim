@@ -124,6 +124,8 @@ public sealed class LibraryPanel : UserControl
         AddPart(switches, "SPDT Switch", PassivePartDefinition.SpdtSwitch);
         AddPart(switches, "Jumper, 2-pin", PassivePartDefinition.Jumper2);
         AddPart(switches, "Jumper, 3-pin", PassivePartDefinition.Jumper3);
+        AddPart(switches, "DIP Switch, 4-position", DipSwitchPartDefinition.DipSwitch4);
+        AddPart(switches, "DIP Switch, 8-position", DipSwitchPartDefinition.DipSwitch8);
         switches.Expand();
 
         var io = tree.Nodes.Add("I/O");
@@ -327,6 +329,7 @@ public sealed class LibraryPanel : UserControl
     {
         PassivePartDefinition => true,
         HeaderPartDefinition => true,
+        DipSwitchPartDefinition => true,
         IcPartDefinition ic => SimulatedChipIdentifiers.Contains(ic.PartNumber),
         ChipPartDefinition chip => SimulatedChipIdentifiers.Contains(chip.PartNumber),
         DisplayPartDefinition display => SimulatedChipIdentifiers.Contains(display.Identifier),

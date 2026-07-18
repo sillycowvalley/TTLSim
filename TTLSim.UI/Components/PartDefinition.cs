@@ -17,6 +17,8 @@ public enum UnitKind
     DFlipFlop,
     // Passives
     Resistor, ResistorNetwork, Capacitor, PolarizedCapacitor, Led, Button, Switch, SpdtSwitch, Crystal, Diode,
+    // Multi-position DIP switch (own PartDefinition type; N SPST contacts in a DIP body)
+    DipSwitch,
     // Display
     SevenSegment,
     // I/O
@@ -208,4 +210,21 @@ public sealed record HeaderPartDefinition(
     public static readonly HeaderPartDefinition HeaderOut4 = new("hdr-out-4", 4, true);
     public static readonly HeaderPartDefinition HeaderOut6 = new("hdr-out-6", 6, true);
     public static readonly HeaderPartDefinition HeaderOut8 = new("hdr-out-8", 8, true);
+}
+
+/// <summary>
+/// Multi-position DIP switch: N independent SPST contacts in one DIP package.
+/// Pin numbering follows the physical package (DIP convention), so contact k
+/// ties pin k to pin 2N+1-k. Per-position closed state lives on the unit
+/// (DipSwitchUnit.PositionsClosed) and serializes with the schematic. Not a
+/// PassivePartDefinition: the multi-pin DIP body, per-position state, and
+/// physical pin numbering have nothing in common with the 2-pin passives.
+/// </summary>
+public sealed record DipSwitchPartDefinition(
+    string Identifier,            // "dipsw-4", "dipsw-8"
+    int Positions)                // SPST contacts; pin count is 2x this
+    : PartDefinition(Identifier, "SW")
+{
+    public static readonly DipSwitchPartDefinition DipSwitch4 = new("dipsw-4", 4);
+    public static readonly DipSwitchPartDefinition DipSwitch8 = new("dipsw-8", 8);
 }
