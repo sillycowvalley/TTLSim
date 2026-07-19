@@ -281,8 +281,12 @@ public sealed record ChipPartDefinition(
     /// 8-bit words P and Q; the single active-LOW output /P=Q (pin 19)
     /// asserts when all eight bit pairs match AND the active-LOW enable /G
     /// (pin 1) is LOW. Identity only -- no magnitude outputs (that's the
-    /// '682/'685 family). P and Q pins interleave down the package
-    /// (P0/Q0 = 2/3, P1/Q1 = 4/5, ...). Classic address-decode and
+    /// '682/'685 family). P and Q pins interleave P-first all the way
+    /// around the package: pairs 2/3, 4/5, 6/7, 8/9, then -- skipping
+    /// GND(10)/VCC(20) -- 11/12, 13/14, 15/16, 17/18, so pin 11 is P4,
+    /// NOT Q4 (verified against Nexperia Table 2, Rev. 5 2024; the
+    /// original definition had the high-nibble labels transposed).
+    /// Classic address-decode and
     /// front-panel-breakpoint part: P from a counter/bus, Q from DIP
     /// switches, output into the run/halt logic.</summary>
     public static readonly ChipPartDefinition Ic74688 = new(
@@ -292,14 +296,14 @@ public sealed record ChipPartDefinition(
         {
             new("/G",   1),              new("VCC",  20),
             new("P0",   2),              new("/P=Q", 19, Out),
-            new("Q0",   3),              new("P7",   18),
-            new("P1",   4),              new("Q7",   17),
-            new("Q1",   5),              new("P6",   16),
-            new("P2",   6),              new("Q6",   15),
-            new("Q2",   7),              new("P5",   14),
-            new("P3",   8),              new("Q5",   13),
-            new("Q3",   9),              new("P4",   12),
-            new("GND", 10),              new("Q4",   11),
+            new("Q0",   3),              new("Q7",   18),
+            new("P1",   4),              new("P7",   17),
+            new("Q1",   5),              new("Q6",   16),
+            new("P2",   6),              new("P6",   15),
+            new("Q2",   7),              new("Q5",   14),
+            new("P3",   8),              new("P5",   13),
+            new("Q3",   9),              new("Q4",   12),
+            new("GND", 10),              new("P4",   11),
         },
         IsSeries74: true
         );

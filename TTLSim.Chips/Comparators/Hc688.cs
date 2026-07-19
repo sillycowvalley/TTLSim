@@ -14,11 +14,19 @@ namespace TTLSim.Chips.Comparators;
 /// Pin map (from ChipPartDefinition.Ic74688):
 ///   /G=1                                    enable (LOW = compare)
 ///   P0=2  P1=4  P2=6  P3=8                  word P, low nibble
-///   P4=12 P5=14 P6=16 P7=18                 word P, high nibble
+///   P4=11 P5=13 P6=15 P7=17                 word P, high nibble
 ///   Q0=3  Q1=5  Q2=7  Q3=9                  word Q, low nibble
-///   Q4=11 Q5=13 Q6=15 Q7=17                 word Q, high nibble
+///   Q4=12 Q5=14 Q6=16 Q7=18                 word Q, high nibble
 ///   /P=Q=19                                 output, LOW on match
 ///   VCC=20  GND=10                          power (consumed by the build pipeline)
+///
+/// PIN-MAP NOTE (2026-07): the P/Q interleave is P-first on BOTH sides of
+/// the package -- pin 11 is P4, not Q4. The original model (and part
+/// definition, and ChipFactory map) had the high-nibble pairs transposed;
+/// verified against Nexperia 74HC688 Table 2 (Rev. 5, Aug 2024) and fixed
+/// in the same change, cf. the identical Hc299 DSR/CP precedent. Identity
+/// compare is symmetric within a pin pair, so behaviour never differed --
+/// this is a labelling/consistency fix.
 ///
 /// Inputs map Unknown/HighZ to Low, matching the catalogue convention
 /// ("treat weird inputs as Low and let TTL011 surface the floating pin at
@@ -71,8 +79,8 @@ public sealed class Hc688 : IChip
     public IReadOnlyList<int> PinNumbers { get; } = new[]
     {
         1,
-        2, 4, 6, 8, 12, 14, 16, 18,
-        3, 5, 7, 9, 11, 13, 15, 17,
+        2, 4, 6, 8, 11, 13, 15, 17,
+        3, 5, 7, 9, 12, 14, 16, 18,
         19
     };
 
