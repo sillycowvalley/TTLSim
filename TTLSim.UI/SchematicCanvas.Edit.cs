@@ -19,38 +19,85 @@ public sealed partial class SchematicCanvas
 {
     // ---------------------------------------------------------------- rotation
 
-    /// <summary>True iff exactly one item is selected and zero connections are.
-    /// Rotation is gated on this so multi-select rotation doesn't surprise
-    /// the user with per-item rotations around per-item centres.</summary>
-    public bool CanRotateSelection
-    {
-        get
-        {
-            int itemCount = Schematic.Selected.Count();
-            int connectionCount = Schematic.SelectedConnections.Count();
-            return itemCount == 1 && connectionCount == 0;
-        }
-    }
+    /// <summary>True iff at least one item is selected. Selected connections
+    /// don't block rotation -- they have no rotation of their own and follow
+    /// their endpoint pins, the same policy NudgeSelection applies to moves.
+    /// (Matters for Select All: Ctrl+A selects wires too.)</summary>
+    public bool CanRotateSelection => Schematic.Selected.Any();
 
     /// <summary>
-    /// Rotate the single selected item 90 degrees clockwise (or counter-
-    /// clockwise if <paramref name="clockwise"/> is false). No-op if more
-    /// than one item / a connection is selected.
+    /// Rotate the selection 90 degrees clockwise (or counter-clockwise if
+    /// <paramref name="clockwise"/> is false).
+    ///
+    /// <para>
+    /// A single item rotates in place about its own pivot, exactly as before.
+    /// Multiple items rotate as a rigid group: each item steps its own
+    /// rotation AND its pivot orbits the centre of the selection's total
+    /// bounds, so the arrangement turns as one. Wires follow their pins.
+    /// The whole group rotation is one composite undo step.
+    /// </para>
     /// </summary>
     public void RotateSelection(bool clockwise)
     {
-        if (!CanRotateSelection) return;
-        var item = Schematic.Selected.First();
-        var from = item.Rotation;
-        var to = clockwise
-            ? RotateCw(from)
-            : RotateCcw(from);
-        if (from == to) return;
+        var items = Schematic.Selected.ToList();
+        if (items.Count == 0) return;
 
-        UndoStack.DoComposite($"Rotate {item.GetType().Name}", () =>
+        if (items.Count == 1)
         {
-            UndoStack.Do(new RotateItemCommand(item, from, to));
+            var item = items[0];
+            var from = item.Rotation;
+            var to = clockwise
+                ? RotateCw(from)
+                : RotateCcw(from);
+            if (from == to) return;
+
+            UndoStack.DoComposite($"Rotate {item.GetType().Name}", () =>
+            {
+                UndoStack.Do(new RotateItemCommand(item, from, to));
+            });
+            return;
+        }
+
+        // Group rotation. The turn's centre is the centre of the union of the
+        // selected items' visual bounds. All coordinates are integer grid
+        // units, so a 90-degree turn of integer offsets about an integer
+        // centre stays exactly on-grid.
+        var unionBounds = items[0].Bounds;
+        foreach (var item in items.Skip(1))
+            unionBounds = Rectangle.Union(unionBounds, item.Bounds);
+        int cx = unionBounds.X + unionBounds.Width / 2;
+        int cy = unionBounds.Y + unionBounds.Height / 2;
+
+        UndoStack.DoComposite($"Rotate {items.Count} items", () =>
+        {
+            foreach (var item in items)
+            {
+                var fromRot = item.Rotation;
+                var toRot = clockwise ? RotateCw(fromRot) : RotateCcw(fromRot);
+                if (fromRot != toRot)
+                    UndoStack.Do(new RotateItemCommand(item, fromRot, toRot));
+
+                // Orbit the item's pivot (its rotation-invariant visual
+                // centre) about the group centre. Grid Y grows downward, so
+                // clockwise is (dx, dy) -> (-dy, dx).
+                var pivot = item.Pivot;
+                int dx = pivot.X - cx;
+                int dy = pivot.Y - cy;
+                var newPivot = clockwise
+                    ? new Point(cx - dy, cy + dx)
+                    : new Point(cx + dy, cy - dx);
+
+                // Pivot == Position + (Width/2, Height/2) with truncating
+                // division, so this inversion is exact and round-trips.
+                var fromPos = item.Position;
+                var toPos = new Point(newPivot.X - item.Size.Width / 2,
+                                      newPivot.Y - item.Size.Height / 2);
+                if (fromPos != toPos)
+                    UndoStack.Do(new MoveItemCommand(item, fromPos, toPos));
+            }
         });
+
+        Invalidate();
     }
 
     private static Rotation RotateCw(Rotation r) => r switch

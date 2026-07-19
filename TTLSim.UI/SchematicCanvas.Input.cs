@@ -553,6 +553,26 @@ public sealed partial class SchematicCanvas
         }
     }
 
+    /// <summary>
+    /// Select every active item, connection, and header link -- everything on
+    /// a visible layer, the same population the marquee can reach. Items on
+    /// hidden layers are left untouched, consistent with every other
+    /// selection gesture. Reachable via Ctrl+A (canvas OnKeyDown) and the
+    /// Edit | Select All menu item.
+    /// </summary>
+    public void SelectAll()
+    {
+        foreach (var item in Schematic.ActiveItems)
+            item.Selected = true;
+        foreach (var c in Schematic.ActiveConnections)
+            c.Selected = true;
+        foreach (var l in Schematic.ActiveLinks)
+            l.Selected = true;
+
+        Invalidate();
+        OnSelectionChanged();
+    }
+
     // ---------------------------------------------------------------- keyboard
 
     protected override bool IsInputKey(Keys keyData) => true;
@@ -581,6 +601,13 @@ public sealed partial class SchematicCanvas
         if (e.Control && e.KeyCode == Keys.V)
         {
             Paste();
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            return;
+        }
+        if (e.Control && e.KeyCode == Keys.A)
+        {
+            SelectAll();
             e.Handled = true;
             e.SuppressKeyPress = true;
             return;

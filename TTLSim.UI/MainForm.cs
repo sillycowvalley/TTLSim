@@ -166,6 +166,16 @@ public sealed class MainForm : Form
         editMenu.DropDownItems.Add(cutItem);
         editMenu.DropDownItems.Add(copyItem);
         editMenu.DropDownItems.Add(pasteItem);
+
+        // Select All. Same pattern as Cut/Copy/Paste: Ctrl+A is handled by
+        // the canvas's OnKeyDown, so the shortcut only fires when the canvas
+        // has focus (a text box or the property grid keeps its own Ctrl+A);
+        // the menu item just shows the accelerator text and routes to the
+        // same public method.
+        var selectAllItem = new ToolStripMenuItem("Select &All", null,
+            (_, _) => canvas!.SelectAll())
+        { ShortcutKeyDisplayString = "Ctrl+A" };
+        editMenu.DropDownItems.Add(selectAllItem);
         editMenu.DropDownItems.Add(new ToolStripSeparator());
 
         editMenu.DropDownItems.Add(new ToolStripMenuItem("Place &Wire", null,

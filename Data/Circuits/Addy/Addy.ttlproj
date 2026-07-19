@@ -4971,7 +4971,7 @@
         },
         "label": "",
         "rotation": 0,
-        "layer": 0,
+        "layer": 4,
         "switchClosed": null,
         "switchPositions": "10100101",
         "mirrored": null
@@ -4986,7 +4986,7 @@
         },
         "label": "330",
         "rotation": 0,
-        "layer": 0,
+        "layer": 4,
         "switchClosed": null,
         "switchPositions": null,
         "mirrored": null
@@ -43841,23 +43841,23 @@
       },
       {
         "name": "Registers",
-        "visible": true
+        "visible": false
       },
       {
         "name": "Clock",
-        "visible": true
+        "visible": false
       },
       {
         "name": "Interfaces",
-        "visible": true
+        "visible": false
       },
       {
         "name": "IO Panel",
-        "visible": true
+        "visible": false
       },
       {
         "name": "Fetch and Control",
-        "visible": true
+        "visible": false
       },
       {
         "name": "Datapath (operands and ALU)",
@@ -43865,16 +43865,16 @@
       },
       {
         "name": "Code and IR",
-        "visible": true
+        "visible": false
       }
     ],
     "wires": []
   },
   "view": {
-    "zoom": 0.36734536,
+    "zoom": 0.64248973,
     "pan": {
-      "x": 1222,
-      "y": 573
+      "x": 2502,
+      "y": 787
     }
   }
 }
