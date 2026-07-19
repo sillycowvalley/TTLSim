@@ -43853,11 +43853,11 @@
       },
       {
         "name": "IO Panel",
-        "visible": false
+        "visible": true
       },
       {
         "name": "Fetch and Control",
-        "visible": false
+        "visible": true
       },
       {
         "name": "Datapath (operands and ALU)",
@@ -43865,16 +43865,16 @@
       },
       {
         "name": "Code and IR",
-        "visible": false
+        "visible": true
       }
     ],
     "wires": []
   },
   "view": {
-    "zoom": 0.64248973,
+    "zoom": 0.464867,
     "pan": {
-      "x": 2502,
-      "y": 787
+      "x": 1750,
+      "y": 888
     }
   }
 }
