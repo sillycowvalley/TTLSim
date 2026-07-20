@@ -2170,31 +2170,6 @@
       },
       {
         "type": "netlabel",
-        "id": "nl-dirA-t",
-        "label": "DIR",
-        "position": {
-          "x": 36,
-          "y": 39
-        },
-        "rotation": 0,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": 2,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "startBit": 0,
-        "mirrored": false,
-        "color": "Grey",
-        "fontSize": null,
-        "textColor": null
-      },
-      {
-        "type": "netlabel",
         "id": "nl-dirA-u2",
         "label": "OEA",
         "position": {
@@ -3973,7 +3948,7 @@
         "id": "321f7127d7fa4f94b6e8565272b52bfd",
         "label": "SW",
         "position": {
-          "x": 17,
+          "x": 18,
           "y": 26
         },
         "rotation": 180,
@@ -4048,7 +4023,7 @@
         "id": "6aa934114aa144e19226d722625b186c",
         "label": "PE",
         "position": {
-          "x": 25,
+          "x": 26,
           "y": 26
         },
         "rotation": 180,
@@ -4420,106 +4395,6 @@
       },
       {
         "type": "netlabel",
-        "id": "ef516f9c6dee440590e0f7c1665cd2ab",
-        "label": "OEC",
-        "position": {
-          "x": -134,
-          "y": 23
-        },
-        "rotation": 0,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": 1,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "startBit": 0,
-        "mirrored": false,
-        "color": "Yellow",
-        "fontSize": null,
-        "textColor": null
-      },
-      {
-        "type": "netlabel",
-        "id": "8ed70ff2f2844d1cb870de36e21c8acd",
-        "label": "DIR",
-        "position": {
-          "x": -149,
-          "y": 23
-        },
-        "rotation": 0,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": 1,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "startBit": 0,
-        "mirrored": true,
-        "color": "Grey",
-        "fontSize": null,
-        "textColor": null
-      },
-      {
-        "type": "netlabel",
-        "id": "a513b53dddc340adbf13b92c4daaf69f",
-        "label": "OED",
-        "position": {
-          "x": -134,
-          "y": 27
-        },
-        "rotation": 0,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": 1,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "startBit": 0,
-        "mirrored": false,
-        "color": "Olive",
-        "fontSize": null,
-        "textColor": null
-      },
-      {
-        "type": "netlabel",
-        "id": "7f8638cb49164632b91cb5ac64f921dd",
-        "label": "DIR",
-        "position": {
-          "x": -149,
-          "y": 27
-        },
-        "rotation": 0,
-        "layer": 0,
-        "frequencyHz": null,
-        "dutyCycle": null,
-        "startHigh": null,
-        "designator": null,
-        "width": 1,
-        "height": null,
-        "filled": null,
-        "fillColor": null,
-        "borderColor": null,
-        "startBit": 1,
-        "mirrored": true,
-        "color": "Grey",
-        "fontSize": null,
-        "textColor": null
-      },
-      {
-        "type": "netlabel",
         "id": "81f9d0580ac9478e9c006f95ac520636",
         "label": "OEE",
         "position": {
@@ -4565,6 +4440,56 @@
         "startBit": null,
         "mirrored": null,
         "color": null,
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "2c0ef2927c2b4f3f8d7a10437e840edb",
+        "label": "OEC",
+        "position": {
+          "x": 36,
+          "y": 38
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "636dde00e7b948cb866d28014e18b0c6",
+        "label": "OED",
+        "position": {
+          "x": 36,
+          "y": 40
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Olive",
         "fontSize": null,
         "textColor": null
       }
@@ -5087,20 +5012,6 @@
           "external": false
         },
         "color": "Orange"
-      },
-      {
-        "id": "c-dirA-t",
-        "a": {
-          "itemId": "335753891996404ab783b6bba5f56d8d",
-          "pinNumber": 26,
-          "external": false
-        },
-        "b": {
-          "itemId": "nl-dirA-t",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Grey"
       },
       {
         "id": "c-j6-r",
@@ -10437,20 +10348,6 @@
         "color": "Orange"
       },
       {
-        "id": "232e9257e7004046bef75a14ec8d65a6",
-        "a": {
-          "itemId": "335753891996404ab783b6bba5f56d8d",
-          "pinNumber": 25,
-          "external": false
-        },
-        "b": {
-          "itemId": "nl-dirA-t",
-          "pinNumber": 2,
-          "external": false
-        },
-        "color": "Grey"
-      },
-      {
         "id": "ffe0cb8a7e05466db65d2b4d427d3514",
         "a": {
           "itemId": "e0398b83e4e241da92bd876b3f33b648",
@@ -10535,29 +10432,29 @@
         "color": "Red"
       },
       {
-        "id": "904863856aef45e78cf5f6fc5c705748",
+        "id": "9736d156d156407688de13071be4061f",
         "a": {
-          "itemId": "8ed70ff2f2844d1cb870de36e21c8acd",
+          "itemId": "2c0ef2927c2b4f3f8d7a10437e840edb",
           "pinNumber": 1,
           "external": false
         },
         "b": {
-          "itemId": "ef516f9c6dee440590e0f7c1665cd2ab",
-          "pinNumber": 1,
+          "itemId": "335753891996404ab783b6bba5f56d8d",
+          "pinNumber": 26,
           "external": false
         },
         "color": "Yellow"
       },
       {
-        "id": "cc852c11a6e84c15bcaaea530833f506",
+        "id": "3e554f0647504a1993e2b970a4510bd8",
         "a": {
-          "itemId": "a513b53dddc340adbf13b92c4daaf69f",
+          "itemId": "636dde00e7b948cb866d28014e18b0c6",
           "pinNumber": 1,
           "external": false
         },
         "b": {
-          "itemId": "7f8638cb49164632b91cb5ac64f921dd",
-          "pinNumber": 1,
+          "itemId": "335753891996404ab783b6bba5f56d8d",
+          "pinNumber": 25,
           "external": false
         },
         "color": "Olive"
@@ -10573,10 +10470,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 1.0263374,
+    "zoom": 3.1395888,
     "pan": {
-      "x": 1189,
-      "y": 310
+      "x": 427,
+      "y": 251
     }
   }
 }
