@@ -1,45 +1,121 @@
 // ============================================================================
-//  AdapterPorts.h  -  virtual 8-bit ports A..D, dual platform
+//  AdapterPorts.h  -  virtual 8-bit ports, THREE platforms
 //
-//  Targets (auto-selected by the compiler, no #define needed):
-//    Teensy 4.1  (__IMXRT1062__)     - on the level-shifter adapter board.
-//                                      Original chaser-verified mapping,
-//                                      preserved unchanged.
-//    Mega 2560   (__AVR_ATmega2560__) - wired DIRECTLY into the same header
-//                                      positions (RetroShield form factor:
-//                                      adapter J1 = Mega header 22..53), 5 V
-//                                      native, no level shifters. Zero
-//                                      rewiring when swapping boards.
+//  Targets:
+//    Mega 2560       (__AVR_ATmega2560__, automatic)  - direct wiring into
+//                     the adapter's header positions. Verification platform
+//                     of record. See MegaDirect_Reference.md.
+//    Teensy 4.1      (__IMXRT1062__, automatic) - which BOARD is selected by
+//                     the define below:
+//        (default)          the original TXS level-shifter adapter.
+//                           Chaser-verified mapping - never alter it.
+//        LVC_HARNESS_BOARD  the purpose-built HCT245/LVC245 board: 40 data
+//                           lines (ports A-E), per-port DIR control, four
+//                           buttons. See LVCBoard_Reference.md.
 //
-//  Physical layout (adapter J1 / Mega header, board photographed orientation):
-//     top row      : 2x GND
-//     bottom row   : 2x +5V
-//     edge column  : Port D (upper 8) over Port C (lower 8)
-//     inner column : Port B (upper 8) over Port A (lower 8)
-//  Within each port: bit 0 = white ribbon wire (bottom of group),
-//                    bit 7 = red ribbon wire   (top of group).
-//
-//  Header-position map (identical for both boards; verified against the
-//  RetroShield adapter mapping doc 2020-08-06 / BlinkyMFrontPanel tables):
-//     Port A bits 0..7 = header evens 22,24,26,28,30,32,34,36
-//     Port B bits 0..7 = header evens 38,40,42,44,46,48,50,52
-//     Port C bits 0..7 = header odds  23,25,27,29,31,33,35,37
-//     Port D bits 0..7 = header odds  39,41,43,45,47,49,51,53
-//
-//  Keep pins as compile-time constants and the accessors unrolled: on the
-//  Teensy, digitalReadFast/digitalWriteFast then compile to single GPIO
-//  register operations. On the Mega they map to plain digitalRead /
-//  digitalWrite (~4-5 us per pin) - slower, and inherently bit-serial.
+//  Common to all platforms: ports A-D as PIN_PA0..PIN_PD7, port tables,
+//  setPortMode, unrolled fast accessors, samplePorts(), SW1/SW2 helpers,
+//  SW_PIN_MODE, PLATFORM_NAME. Ribbon colours: bit 0 = white .. bit 7 = red.
+//  The LVC board adds Port E (strobes, PE0 = CLK), SW3/SW4, and the
+//  portDrive/portRelease direction API.
 // ============================================================================
 
 #pragma once
 #include <Arduino.h>
 
-// Naming: PIN_PA0..PIN_PD7 ("P" for port). PIN_A0..PIN_A9 cannot be used -
+// ---- Teensy board select: uncomment when building for the LVC board. ----
+// (The Mega ignores this; both Teensy boards compile as __IMXRT1062__ so the
+//  compiler cannot tell them apart on its own.)
+//#define LVC_HARNESS_BOARD
+
+// Naming: PIN_PA0..PIN_PE7 ("P" for port). PIN_A0..PIN_A9 cannot be used -
 // the cores define those as macros for the analog pins, which breaks any
 // declaration reusing the names.
 
-#if defined(__IMXRT1062__)
+#if defined(__IMXRT1062__) && defined(LVC_HARNESS_BOARD)
+// ==================================================== Teensy 4.1 + LVC ===
+// Purpose-built board: 74HCT245 (drive, 5V) + 74LVC245 (read, 3.3V) per
+// data port, /OE-steered; directed, continuously driven. Port E: HCT only.
+// Near-contiguous assignment (every through-hole pin 0..41 is plain GPIO);
+// pins 13 and 32 are swapped between ports B and E so the onboard LED
+// (pin 13) sits on output-only PE0/CLK instead of bidirectional PB5.
+
+#define PLATFORM_NAME "Teensy 4.1 + LVC board"
+
+// ---------------------------------------------------------------- Port A pins
+constexpr uint8_t PIN_PA0 = 0;   // white
+constexpr uint8_t PIN_PA1 = 1;   // grey
+constexpr uint8_t PIN_PA2 = 2;   // violet
+constexpr uint8_t PIN_PA3 = 3;   // blue
+constexpr uint8_t PIN_PA4 = 4;   // green
+constexpr uint8_t PIN_PA5 = 5;   // yellow
+constexpr uint8_t PIN_PA6 = 6;   // orange
+constexpr uint8_t PIN_PA7 = 7;   // red
+
+// ---------------------------------------------------------------- Port B pins
+constexpr uint8_t PIN_PB0 = 8;   // white
+constexpr uint8_t PIN_PB1 = 9;   // grey
+constexpr uint8_t PIN_PB2 = 10;  // violet
+constexpr uint8_t PIN_PB3 = 11;  // blue
+constexpr uint8_t PIN_PB4 = 12;  // green
+constexpr uint8_t PIN_PB5 = 32;  // yellow
+constexpr uint8_t PIN_PB6 = 14;  // orange
+constexpr uint8_t PIN_PB7 = 15;  // red
+
+// ---------------------------------------------------------------- Port C pins
+constexpr uint8_t PIN_PC0 = 16;  // white
+constexpr uint8_t PIN_PC1 = 17;  // grey
+constexpr uint8_t PIN_PC2 = 18;  // violet
+constexpr uint8_t PIN_PC3 = 19;  // blue
+constexpr uint8_t PIN_PC4 = 20;  // green
+constexpr uint8_t PIN_PC5 = 21;  // yellow
+constexpr uint8_t PIN_PC6 = 22;  // orange
+constexpr uint8_t PIN_PC7 = 23;  // red
+
+// ---------------------------------------------------------------- Port D pins
+constexpr uint8_t PIN_PD0 = 24;  // white
+constexpr uint8_t PIN_PD1 = 25;  // grey
+constexpr uint8_t PIN_PD2 = 26;  // violet
+constexpr uint8_t PIN_PD3 = 27;  // blue
+constexpr uint8_t PIN_PD4 = 28;  // green
+constexpr uint8_t PIN_PD5 = 29;  // yellow
+constexpr uint8_t PIN_PD6 = 30;  // orange
+constexpr uint8_t PIN_PD7 = 31;  // red
+
+// ---------------------------------------------------------------- Port E pins
+// Dedicated strobe port (H5-H12: signal+GND pair headers). PE0 = CLK by
+// convention. Direction is fixed: the shifter is strapped to drive the DUT.
+constexpr uint8_t PIN_PE0 = 13;  // white  (CLK - onboard LED = clock activity light)
+constexpr uint8_t PIN_PE1 = 33;  // grey
+constexpr uint8_t PIN_PE2 = 34;  // violet
+constexpr uint8_t PIN_PE3 = 35;  // blue
+constexpr uint8_t PIN_PE4 = 36;  // green
+constexpr uint8_t PIN_PE5 = 37;  // yellow
+constexpr uint8_t PIN_PE6 = 38;  // orange
+constexpr uint8_t PIN_PE7 = 39;  // red
+
+// ------------------------------------------------------- direction control
+// One DIR line per data port (bottom pads), 10 k pulldowns on the board.
+// DIR steers the pair's /OE lines (via the shared 'HCT04 inverter):
+// HIGH = HCT enabled = Teensy drives the DUT; LOW = LVC enabled = board
+// reads. The pulldowns mean every data port powers up READING - the board
+// cannot fight a DUT before software runs.
+constexpr uint8_t PIN_DIR_A = 42;
+constexpr uint8_t PIN_DIR_B = 43;
+constexpr uint8_t PIN_DIR_C = 44;
+constexpr uint8_t PIN_DIR_D = 45;
+
+// ------------------------------------------------------------------- Buttons
+// Four momentary buttons to GND, no board pull-ups - internal pull-ups do
+// the work. SW1/SW2 keep the harness-wide roles (start/advance, abort/exit);
+// SW3/SW4 are spare for per-project functions.
+constexpr uint8_t PIN_SW1 = 40;
+constexpr uint8_t PIN_SW2 = 41;
+constexpr uint8_t PIN_SW3 = 46;
+constexpr uint8_t PIN_SW4 = 47;
+constexpr uint8_t SW_PIN_MODE = INPUT_PULLUP;
+
+#elif defined(__IMXRT1062__)
 // ============================================================ Teensy 4.1 ===
 // Adapter mapping, verified end-to-end by LED chaser. Do not alter.
 
@@ -304,3 +380,95 @@ inline uint32_t samplePorts() {
 // Buttons are active-low: true = pressed.
 inline bool sw1Pressed() { return digitalReadFast(PIN_SW1) == LOW; }
 inline bool sw2Pressed() { return digitalReadFast(PIN_SW2) == LOW; }
+
+#if defined(__IMXRT1062__) && defined(LVC_HARNESS_BOARD)
+// ================================================ LVC-board additions ===
+// Port E, the extra buttons, and the per-port direction API. Only compiled
+// for the LVC board, so accidental use on the other platforms is a
+// compile-time error rather than a silent misbehaviour.
+
+constexpr uint8_t PORT_E_PINS[8] = { PIN_PE0, PIN_PE1, PIN_PE2, PIN_PE3, PIN_PE4, PIN_PE5, PIN_PE6, PIN_PE7 };
+
+inline uint8_t readPortE() {
+  uint8_t v = 0;
+  if (digitalReadFast(PIN_PE0)) v |= 0x01;
+  if (digitalReadFast(PIN_PE1)) v |= 0x02;
+  if (digitalReadFast(PIN_PE2)) v |= 0x04;
+  if (digitalReadFast(PIN_PE3)) v |= 0x08;
+  if (digitalReadFast(PIN_PE4)) v |= 0x10;
+  if (digitalReadFast(PIN_PE5)) v |= 0x20;
+  if (digitalReadFast(PIN_PE6)) v |= 0x40;
+  if (digitalReadFast(PIN_PE7)) v |= 0x80;
+  return v;
+}
+
+inline void writePortE(uint8_t v) {
+  digitalWriteFast(PIN_PE0, v & 0x01);
+  digitalWriteFast(PIN_PE1, v & 0x02);
+  digitalWriteFast(PIN_PE2, v & 0x04);
+  digitalWriteFast(PIN_PE3, v & 0x08);
+  digitalWriteFast(PIN_PE4, v & 0x10);
+  digitalWriteFast(PIN_PE5, v & 0x20);
+  digitalWriteFast(PIN_PE6, v & 0x40);
+  digitalWriteFast(PIN_PE7, v & 0x80);
+}
+
+inline bool sw3Pressed() { return digitalReadFast(PIN_SW3) == LOW; }
+inline bool sw4Pressed() { return digitalReadFast(PIN_SW4) == LOW; }
+
+// ------------------------------------------------------- direction control
+// Call initPortDirections() first thing in setup(): claims the DIR pins
+// (all low = every data port reading, matching the board's pulldown
+// power-up state) and sets Port E driving (its shifter is strapped that
+// way; the Teensy pins just need to be outputs).
+//
+// portDrive('A'..'D')   - take the bus: DIR high, then Teensy pins OUTPUT.
+// portRelease('A'..'D') - give it back: Teensy pins INPUT, then DIR low.
+//
+// During portDrive the DUT-side bus is briefly undefined (~us) between the
+// DIR flip and the pins driving - the same window any real bus turnaround
+// has. Fit the B-side SIP pulls on ports that talk to tri-state DUT buses
+// so the level is defined during it.
+
+inline uint8_t dirPinFor(char port) {
+  switch (port) {
+    case 'A': return PIN_DIR_A;
+    case 'B': return PIN_DIR_B;
+    case 'C': return PIN_DIR_C;
+    default:  return PIN_DIR_D;
+  }
+}
+
+inline void initPortDirections() {
+  pinMode(PIN_DIR_A, OUTPUT); digitalWriteFast(PIN_DIR_A, LOW);
+  pinMode(PIN_DIR_B, OUTPUT); digitalWriteFast(PIN_DIR_B, LOW);
+  pinMode(PIN_DIR_C, OUTPUT); digitalWriteFast(PIN_DIR_C, LOW);
+  pinMode(PIN_DIR_D, OUTPUT); digitalWriteFast(PIN_DIR_D, LOW);
+  setPortMode(PORT_A_PINS, INPUT);
+  setPortMode(PORT_B_PINS, INPUT);
+  setPortMode(PORT_C_PINS, INPUT);
+  setPortMode(PORT_D_PINS, INPUT);
+  setPortMode(PORT_E_PINS, OUTPUT);   // strobes: always harness-driven
+  writePortE(0x00);
+}
+
+inline void portDrive(char port) {
+  digitalWriteFast(dirPinFor(port), HIGH);
+  switch (port) {
+    case 'A': setPortMode(PORT_A_PINS, OUTPUT); break;
+    case 'B': setPortMode(PORT_B_PINS, OUTPUT); break;
+    case 'C': setPortMode(PORT_C_PINS, OUTPUT); break;
+    default:  setPortMode(PORT_D_PINS, OUTPUT); break;
+  }
+}
+
+inline void portRelease(char port) {
+  switch (port) {
+    case 'A': setPortMode(PORT_A_PINS, INPUT); break;
+    case 'B': setPortMode(PORT_B_PINS, INPUT); break;
+    case 'C': setPortMode(PORT_C_PINS, INPUT); break;
+    default:  setPortMode(PORT_D_PINS, INPUT); break;
+  }
+  digitalWriteFast(dirPinFor(port), LOW);
+}
+#endif  // LVC_HARNESS_BOARD
