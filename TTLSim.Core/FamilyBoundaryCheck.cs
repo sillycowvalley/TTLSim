@@ -2,7 +2,7 @@
 
 /// <summary>
 /// Logic-family output/input voltage-level compatibility check for the build
-/// pipeline (diagnostic TTL030).
+/// pipeline (diagnostics TTL030 and TTL031).
 ///
 /// A bipolar-TTL output (74 / 74L / 74H / 74S / 74LS / 74AS / 74ALS / 74F)
 /// guarantees only a TTL-level V_OH -- roughly 2.4-2.7 V minimum at a 5 V rail.
@@ -25,6 +25,13 @@
 /// thresholds are not a 74-series question -- e.g. an ATF16V8B has TTL-level
 /// inputs and takes an LS output directly -- so they never raise a false
 /// HC-receiver flag.
+///
+/// LVC is different in kind, not just in level: it is a 3.3 V family the
+/// simulator does not model at all (the whole electrical model assumes one
+/// 5 V rail). Any LVC part present therefore raises TTL031 as a hard Error --
+/// LVC parts (the Teensy level-shifter harness) belong on export-only
+/// schematics or on a hidden layer. Because their presence blocks the build
+/// outright, the TTL030 net walk never needs LVC-specific level rules.
 /// </summary>
 public static class FamilyBoundaryCheck
 {
@@ -41,13 +48,42 @@ public static class FamilyBoundaryCheck
 
     private const string Code = "TTL030";
 
+    /// <summary>Diagnostic code for "an LVC part is present". Always an Error:
+    /// the 3.3 V family is outside the simulator's electrical model entirely,
+    /// so there is no fence that makes it right.</summary>
+    private const string LvcCode = "TTL031";
+
     /// <summary>
     /// Scan every net for a bipolar-TTL output driving a plain-CMOS input and
     /// emit one <see cref="Diagnostic"/> per offending net. The result is empty
     /// when every boundary is either same-level or correctly fenced with HCT/ACT.
+    /// Additionally emits one TTL031 Error per LVC-family device present.
     /// </summary>
     public static IEnumerable<Diagnostic> Check(IBuildInput input, NetTable netTable)
     {
+        // TTL031 -- LVC presence. One Error per device, before any net-level
+        // analysis: a 3.3 V part in a 5 V simulation is wrong regardless of
+        // what it is wired to. The locator points at the device's first unit
+        // for the same OutputPanel-resolution reason as TTL020. The escape
+        // hatch is the layer system: a device whose units all sit on a hidden
+        // layer never reaches the build input (TTL022 reports the exclusion),
+        // so parking the LVC harness on its own layer and hiding it lets the
+        // 5 V side of the schematic simulate.
+        foreach (BuildDevice dev in input.Devices)
+        {
+            if (Normalize(dev.Family) != "LVC") continue;
+            string? locatorId = dev.Units.Count > 0 ? dev.Units[0].UnitId : null;
+            yield return new Diagnostic(
+                DiagnosticSeverity.Error,
+                LvcCode,
+                $"{dev.Designator} (74LVC{dev.PartIdentifier}) is an LVC part. LVC "
+                + "is a 3.3 V family the simulator does not model -- LVC parts are "
+                + "for export/documentation schematics only. Remove it, or move it "
+                + "to a layer and hide the layer, to simulate the rest of the "
+                + "circuit.",
+                ItemId: locatorId);
+        }
+
         // Reverse map: each logic pin -> what family drives/receives it, keyed
         // by PinRef exactly as the net table keys its pins, so a pin found on a
         // net classifies in O(1). Only the two families that can form the bad

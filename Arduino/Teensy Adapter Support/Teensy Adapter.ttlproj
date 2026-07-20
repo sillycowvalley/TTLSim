@@ -1,0 +1,141 @@
+{
+  "schematic": {
+    "devices": [
+      {
+        "id": "11ed0029152743d881e6c08bdc7d0fea",
+        "designator": "U1",
+        "partKind": "chip",
+        "partIdentifier": "TEENSY41",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "78566f04eaad4760a8f626530f051d93",
+        "designator": "U4",
+        "partKind": "chip",
+        "partIdentifier": "245",
+        "family": "HCT",
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "df9d1217dd0b4771a8b4f004cb617299",
+        "designator": "U2",
+        "partKind": "chip",
+        "partIdentifier": "04",
+        "family": "HCT",
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "8d6df9a4e8fd45d792724ea547388450",
+        "designator": "RN1",
+        "partKind": "passive",
+        "partIdentifier": "resnet-sip9",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      }
+    ],
+    "units": [
+      {
+        "id": "335753891996404ab783b6bba5f56d8d",
+        "deviceId": "11ed0029152743d881e6c08bdc7d0fea",
+        "unitLetter": "",
+        "position": {
+          "x": 22,
+          "y": -3
+        },
+        "label": "",
+        "rotation": 0,
+        "layer": 0,
+        "switchClosed": null,
+        "switchPositions": null,
+        "mirrored": null
+      },
+      {
+        "id": "4261b1448169487ca1a534082e160219",
+        "deviceId": "78566f04eaad4760a8f626530f051d93",
+        "unitLetter": "",
+        "position": {
+          "x": -63,
+          "y": 63
+        },
+        "label": "",
+        "rotation": 0,
+        "layer": 0,
+        "switchClosed": null,
+        "switchPositions": null,
+        "mirrored": null
+      },
+      {
+        "id": "a90aaf081d08456cafc97c1438d125ab",
+        "deviceId": "df9d1217dd0b4771a8b4f004cb617299",
+        "unitLetter": "",
+        "position": {
+          "x": -62,
+          "y": 107
+        },
+        "label": "",
+        "rotation": 0,
+        "layer": 0,
+        "switchClosed": null,
+        "switchPositions": null,
+        "mirrored": null
+      },
+      {
+        "id": "43d445a04b124ce4a186682d634fb611",
+        "deviceId": "8d6df9a4e8fd45d792724ea547388450",
+        "unitLetter": "",
+        "position": {
+          "x": -57,
+          "y": 138
+        },
+        "label": "",
+        "rotation": 0,
+        "layer": 0,
+        "switchClosed": null,
+        "switchPositions": null,
+        "mirrored": null
+      }
+    ],
+    "items": [],
+    "connections": [],
+    "links": [],
+    "layers": [
+      {
+        "name": "Default",
+        "visible": true
+      }
+    ],
+    "wires": []
+  },
+  "view": {
+    "zoom": 0.74762887,
+    "pan": {
+      "x": 476,
+      "y": 118
+    }
+  }
+}

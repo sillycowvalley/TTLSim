@@ -1216,6 +1216,13 @@ public static class EasyEDACatalogue
             // DIP-24 / DIP-28 are split.
             ChipPartDefinition cp when cp.PinCount == 32 => BuildDip32Part(device, cp),
 
+            // DIP-48: ONLY the 0.6" (600 mil) package is catalogued
+            // (PDIP-48 LS15.2, Teensy_4_1.epro reference) -- the sole
+            // 48-pin part is the Teensy 4.1 module, whose two edge-pin rows
+            // sit on 600-mil socket-strip spacing. If a 0.3" 48-pin part
+            // is ever modelled, split this arm the way DIP-24 / DIP-28 are.
+            ChipPartDefinition cp when cp.PinCount == 48 => BuildDip48Part(device, cp),
+
             _ => throw new NotImplementedException(
                 $"EasyEDA export: no catalogue entry for device {device.Designator} " +
                 $"({device.Definition.Identifier}). Add a CataloguePart entry and " +
@@ -2837,6 +2844,194 @@ public static class EasyEDACatalogue
             ["custom_tags"] = "[\"Memory\"]",
             ["title"] = chipName,
             ["version"] = "1729691735",
+            ["type"] = 2,
+        };
+        return fragment.ToJsonString();
+    }
+
+    // ---------------------------------------------------- DIP-48 synthesis
+    //
+    // Same scheme again: 24 pins per edge at 20px pitch, body half-height
+    // 242, pin rows +230..-230. dip-48.esym generated from the dip-32
+    // template geometry; dip-48.efoo lifted VERBATIM from the
+    // Teensy_4_1.epro reference -- the 0.6" PDIP-48 (LS15.2, L61.9mm),
+    // which matches the Teensy 4.1's two 24-pin edge rows on 600-mil
+    // socket-strip spacing. ONLY the wide package is catalogued: the
+    // Teensy 4.1 is the sole 48-pin part. The footprint uuid is the
+    // reference file's own embedded uuid, and has a matching "footprints"
+    // entry in device_fragments.json (footprints are always static there).
+    internal const string Dip48FootprintUuid = "18580fd9fe6f070c";
+
+    // ADSP-1008AKN reference device attributes (decorative per doc §2),
+    // lifted from Teensy_4_1.epro -- a PDIP-48 placement used purely for
+    // its package. The 3D Model is the shared PDIP-48 body, so EasyEDA's
+    // 3D viewer shows a DIP-48 chip where the Teensy board sits -- wrong
+    // cosmetically but right dimensionally (pin pattern and row spacing
+    // match); it beats showing nothing.
+    private const string Dip48ReferenceSupplierPart = "C3743173";
+    private const string Dip48ReferenceManufacturer = "ADI(\u4e9a\u5fb7\u8bfa)";
+    private const string Dip48Reference3dModelUuid =
+        "aff9d8544aa44a35b415310f0f96f0b7|0819f05c4eef4c71ace90d822a990e87";
+    private const string Dip48Reference3dModelTitle =
+        "PDIP-48_L61.9-W13.9-P2.54-LS15.2-BL";
+    private const string Dip48Reference3dModelTransform =
+        "2437.00308,609.999,0,0,0,0,0,0,-137.795";
+
+    private static readonly Dictionary<int, Point> Dip48PinLocals = new()
+    {
+        [1] = new Point(-50, 230),
+        [2] = new Point(-50, 210),
+        [3] = new Point(-50, 190),
+        [4] = new Point(-50, 170),
+        [5] = new Point(-50, 150),
+        [6] = new Point(-50, 130),
+        [7] = new Point(-50, 110),
+        [8] = new Point(-50, 90),
+        [9] = new Point(-50, 70),
+        [10] = new Point(-50, 50),
+        [11] = new Point(-50, 30),
+        [12] = new Point(-50, 10),
+        [13] = new Point(-50, -10),
+        [14] = new Point(-50, -30),
+        [15] = new Point(-50, -50),
+        [16] = new Point(-50, -70),
+        [17] = new Point(-50, -90),
+        [18] = new Point(-50, -110),
+        [19] = new Point(-50, -130),
+        [20] = new Point(-50, -150),
+        [21] = new Point(-50, -170),
+        [22] = new Point(-50, -190),
+        [23] = new Point(-50, -210),
+        [24] = new Point(-50, -230),
+        [25] = new Point(50, -230),
+        [26] = new Point(50, -210),
+        [27] = new Point(50, -190),
+        [28] = new Point(50, -170),
+        [29] = new Point(50, -150),
+        [30] = new Point(50, -130),
+        [31] = new Point(50, -110),
+        [32] = new Point(50, -90),
+        [33] = new Point(50, -70),
+        [34] = new Point(50, -50),
+        [35] = new Point(50, -30),
+        [36] = new Point(50, -10),
+        [37] = new Point(50, 10),
+        [38] = new Point(50, 30),
+        [39] = new Point(50, 50),
+        [40] = new Point(50, 70),
+        [41] = new Point(50, 90),
+        [42] = new Point(50, 110),
+        [43] = new Point(50, 130),
+        [44] = new Point(50, 150),
+        [45] = new Point(50, 170),
+        [46] = new Point(50, 190),
+        [47] = new Point(50, 210),
+        [48] = new Point(50, 230),
+    };
+
+    private static CataloguePart BuildDip48Part(Device device, ChipPartDefinition cp)
+    {
+        string chipName = device.FullPartNumber;
+
+        string symbolUuid = DeterministicUuid("dip48-symbol:" + chipName);
+        string deviceUuid = DeterministicUuid("dip48-device:" + chipName);
+
+        var tokens = new Dictionary<string, string>
+        {
+            ["@@PART_TITLE@@"] = chipName + ".1",
+            ["@@SYMBOL_NAME@@"] = chipName,
+        };
+        foreach (var pin in cp.Pins)
+            tokens[$"@@PIN_{pin.Number}_NAME@@"] = ToEasyEdaPinName(pin.Name);
+
+        for (int n = 1; n <= 48; n++)
+            if (!tokens.ContainsKey($"@@PIN_{n}_NAME@@"))
+                throw new NotImplementedException(
+                    $"EasyEDA export: DIP-48 chip '{chipName}' is missing a " +
+                    $"definition for pin {n}. All 48 pins must be enumerated in " +
+                    "its ChipPartDefinition before it can be exported.");
+
+        return new CataloguePart(
+            DeviceUuid: deviceUuid,
+            SymbolUuid: symbolUuid,
+            SymbolResourceName: "dip-48.esym",
+            FootprintUuid: Dip48FootprintUuid,
+            FootprintResourceName: "dip-48.efoo",
+            PartTitle: chipName + ".1",
+            PinLocalPositions: Dip48PinLocals,
+            SymbolTemplateTokens: tokens,
+            InlineDeviceJson: BuildDip48DeviceFragment(chipName, symbolUuid),
+            InlineSymbolJson: BuildDip48SymbolFragment(chipName),
+            EmitTemplatedName: true,
+            // DIP-32 label rule at half-height 242: designator at half + 8,
+            // Rot90/270 x at -(half + 10).
+            LabelOffsets: new LabelOffsetsByRotation(
+                Rot0: new LabelOffsetSet(new(-40, +250), new(-20, +250), default),
+                Rot90: new LabelOffsetSet(new(-252, -20), new(-252, -2), default, TextRotationDeg: 90),
+                Rot180: new LabelOffsetSet(new(-40, +250), new(-20, +250), default),
+                Rot270: new LabelOffsetSet(new(-252, -20), new(-252, -2), default, TextRotationDeg: 90)));
+    }
+
+    /// <summary>
+    /// Synthesise a DIP-48 device fragment for project.json, using the
+    /// ADSP-1008AKN reference's decorative attributes (Teensy_4_1.epro).
+    /// </summary>
+    private static string BuildDip48DeviceFragment(string chipName, string symbolUuid)
+    {
+        var attrs = new System.Text.Json.Nodes.JsonObject
+        {
+            ["Supplier Part"] = Dip48ReferenceSupplierPart,
+            ["Manufacturer"] = Dip48ReferenceManufacturer,
+            ["Manufacturer Part"] = chipName,
+            ["Supplier Footprint"] = "DIP-48",
+            ["JLCPCB Part Class"] = "Extended Part",
+            ["Supplier"] = "LCSC",
+            ["Add into BOM"] = "yes",
+            ["Convert to PCB"] = "yes",
+            ["Symbol"] = symbolUuid,
+            ["Designator"] = "U?",
+            ["Footprint"] = Dip48FootprintUuid,
+            ["3D Model"] = Dip48Reference3dModelUuid,
+            ["3D Model Title"] = Dip48Reference3dModelTitle,
+            ["3D Model Transform"] = Dip48Reference3dModelTransform,
+            ["Name"] = "={Manufacturer Part}",
+            ["Description"] = "DIP-48 (0.6\" wide) MCU module",
+        };
+
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["title"] = chipName,
+            ["attributes"] = attrs,
+            ["description"] = "DIP-48 (0.6\" wide) MCU module",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["images"] = new System.Text.Json.Nodes.JsonArray(""),
+            ["source"] = "e92728343ae4d877",
+            ["version"] = "1663570822",
+            ["custom_tags"] = "[\"MCU\"]",
+        };
+
+        return fragment.ToJsonString();
+    }
+
+    /// <summary>Synthesise a DIP-48 symbol fragment for project.json (type:2).</summary>
+    private static string BuildDip48SymbolFragment(string chipName)
+    {
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["source"] = "63e73e3e953f40a4a4350e89ed3474c6|0819f05c4eef4c71ace90d822a990e87",
+            ["desc"] = "",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["custom_tags"] = "[\"MCU\"]",
+            ["title"] = chipName,
+            ["version"] = "1722327041",
             ["type"] = 2,
         };
         return fragment.ToJsonString();

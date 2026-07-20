@@ -70,6 +70,9 @@ public static class SchematicDtoMapper
             [ChipPartDefinition.IcGal22V10.PartNumber] = ChipPartDefinition.IcGal22V10,
             [ChipPartDefinition.Ds1813.PartNumber] = ChipPartDefinition.Ds1813,
 
+            // Modules (export-only, no simulation model)
+            [ChipPartDefinition.Teensy41.PartNumber] = ChipPartDefinition.Teensy41,
+
             // Flip-flops & counters
             [ChipPartDefinition.Ic7474.PartNumber] = ChipPartDefinition.Ic7474,
             [ChipPartDefinition.Ic74107.PartNumber] = ChipPartDefinition.Ic74107,

@@ -63,133 +63,427 @@
         "id": "u1",
         "deviceId": "dev-u1",
         "unitLetter": "",
-        "position": { "x": 46, "y": 20 },
+        "position": {
+          "x": 46,
+          "y": 20
+        },
         "label": "CLK COND",
-        "rotation": 0,
+        "rotation": 90,
         "layer": 0,
-        "switchClosed": null
+        "switchClosed": null,
+        "switchPositions": null,
+        "mirrored": null
       },
       {
         "id": "r1",
         "deviceId": "dev-r1",
         "unitLetter": "",
-        "position": { "x": 22, "y": 26 },
+        "position": {
+          "x": 22,
+          "y": 20
+        },
         "label": "",
         "rotation": 0,
         "layer": 0,
-        "switchClosed": null
+        "switchClosed": null,
+        "switchPositions": null,
+        "mirrored": null
       },
       {
         "id": "r2",
         "deviceId": "dev-r2",
         "unitLetter": "",
-        "position": { "x": 34, "y": 14 },
+        "position": {
+          "x": 34,
+          "y": 14
+        },
         "label": "pull-up",
         "rotation": 90,
         "layer": 0,
-        "switchClosed": null
+        "switchClosed": null,
+        "switchPositions": null,
+        "mirrored": null
       },
       {
         "id": "c1",
         "deviceId": "dev-c1",
         "unitLetter": "",
-        "position": { "x": 34, "y": 36 },
+        "position": {
+          "x": 30,
+          "y": 28
+        },
         "label": "",
         "rotation": 90,
         "layer": 0,
-        "switchClosed": null
+        "switchClosed": null,
+        "switchPositions": null,
+        "mirrored": null
       }
     ],
     "items": [
       {
-        "type": "clock",
-        "id": "clk-sim",
-        "label": "sim source - remove when merging",
-        "position": { "x": 6, "y": 26 },
-        "rotation": 0,
-        "layer": 0,
-        "frequencyHz": 1000000,
-        "dutyCycle": 0.5,
-        "startHigh": false
-      },
-      {
         "type": "netlabel",
         "id": "nl-clkraw",
         "label": "CLK_RAW",
-        "position": { "x": 14, "y": 20 },
-        "rotation": 0,
+        "position": {
+          "x": 12,
+          "y": 20
+        },
+        "rotation": 180,
         "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
         "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
         "startBit": 0,
         "mirrored": false,
-        "color": "Yellow"
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
       },
       {
         "type": "netlabel",
         "id": "nl-clka",
         "label": "CLK_A",
-        "position": { "x": 66, "y": 24 },
-        "rotation": 0,
+        "position": {
+          "x": 53,
+          "y": 13
+        },
+        "rotation": 270,
         "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
         "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
         "startBit": 0,
         "mirrored": false,
-        "color": "Orange"
+        "color": "Orange",
+        "fontSize": null,
+        "textColor": null
       },
       {
         "type": "vcc",
         "id": "vcc1",
         "label": "VCC",
-        "position": { "x": 34, "y": 6 },
+        "position": {
+          "x": 35,
+          "y": -1
+        },
         "rotation": 0,
-        "layer": 0
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
       },
       {
         "type": "vcc",
         "id": "vcc2",
         "label": "VCC",
-        "position": { "x": 58, "y": 10 },
-        "rotation": 0,
-        "layer": 0
+        "position": {
+          "x": 55,
+          "y": 35
+        },
+        "rotation": 180,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
       },
       {
         "type": "gnd",
         "id": "gnd1",
         "label": "",
-        "position": { "x": 34, "y": 46 },
+        "position": {
+          "x": 30,
+          "y": 37
+        },
         "rotation": 0,
-        "layer": 0
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
       },
       {
         "type": "gnd",
         "id": "gnd2",
         "label": "",
-        "position": { "x": 50, "y": 46 },
+        "position": {
+          "x": 40,
+          "y": 46
+        },
         "rotation": 0,
-        "layer": 0
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
       }
     ],
     "connections": [
-      { "id": "c-src",    "a": { "itemId": "clk-sim", "pinNumber": 1 },  "b": { "itemId": "r1",   "pinNumber": 1 },  "color": "Yellow" },
-      { "id": "c-raw",    "a": { "itemId": "nl-clkraw", "pinNumber": 1 }, "b": { "itemId": "r1",  "pinNumber": 1 },  "color": "Yellow" },
-      { "id": "c-node1",  "a": { "itemId": "r1", "pinNumber": 2 },       "b": { "itemId": "u1",   "pinNumber": 1 },  "color": null },
-      { "id": "c-node2",  "a": { "itemId": "r1", "pinNumber": 2 },       "b": { "itemId": "c1",   "pinNumber": 1 },  "color": null },
-      { "id": "c-node3",  "a": { "itemId": "r1", "pinNumber": 2 },       "b": { "itemId": "r2",   "pinNumber": 2 },  "color": null },
-      { "id": "c-c1gnd",  "a": { "itemId": "c1", "pinNumber": 2 },       "b": { "itemId": "gnd1", "pinNumber": 0 },  "color": "Navy" },
-      { "id": "c-r2vcc",  "a": { "itemId": "r2", "pinNumber": 1 },       "b": { "itemId": "vcc1", "pinNumber": 0 },  "color": "Red" },
-      { "id": "c-out",    "a": { "itemId": "u1", "pinNumber": 2 },       "b": { "itemId": "nl-clka", "pinNumber": 1 }, "color": "Orange" },
-      { "id": "c-u1vcc",  "a": { "itemId": "u1", "pinNumber": 14 },      "b": { "itemId": "vcc2", "pinNumber": 0 },  "color": "Red" },
-      { "id": "c-u1gnd",  "a": { "itemId": "u1", "pinNumber": 7 },       "b": { "itemId": "gnd2", "pinNumber": 0 },  "color": "Navy" },
-      { "id": "c-nc3",    "a": { "itemId": "u1", "pinNumber": 3 },       "b": { "itemId": "gnd2", "pinNumber": 0 },  "color": "Navy" },
-      { "id": "c-nc5",    "a": { "itemId": "u1", "pinNumber": 5 },       "b": { "itemId": "gnd2", "pinNumber": 0 },  "color": "Navy" },
-      { "id": "c-nc9",    "a": { "itemId": "u1", "pinNumber": 9 },       "b": { "itemId": "gnd2", "pinNumber": 0 },  "color": "Navy" },
-      { "id": "c-nc11",   "a": { "itemId": "u1", "pinNumber": 11 },      "b": { "itemId": "gnd2", "pinNumber": 0 },  "color": "Navy" },
-      { "id": "c-nc13",   "a": { "itemId": "u1", "pinNumber": 13 },      "b": { "itemId": "gnd2", "pinNumber": 0 },  "color": "Navy" }
+      {
+        "id": "c-raw",
+        "a": {
+          "itemId": "nl-clkraw",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "r1",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "c-node1",
+        "a": {
+          "itemId": "r1",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "u1",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "c-node2",
+        "a": {
+          "itemId": "r1",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "c1",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "c-node3",
+        "a": {
+          "itemId": "r1",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "r2",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": null
+      },
+      {
+        "id": "c-c1gnd",
+        "a": {
+          "itemId": "c1",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd1",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "c-r2vcc",
+        "a": {
+          "itemId": "r2",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "vcc1",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "c-out",
+        "a": {
+          "itemId": "u1",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "nl-clka",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Orange"
+      },
+      {
+        "id": "c-u1vcc",
+        "a": {
+          "itemId": "u1",
+          "pinNumber": 14,
+          "external": false
+        },
+        "b": {
+          "itemId": "vcc2",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "c-u1gnd",
+        "a": {
+          "itemId": "u1",
+          "pinNumber": 7,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd2",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "c-nc3",
+        "a": {
+          "itemId": "u1",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd2",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "c-nc5",
+        "a": {
+          "itemId": "u1",
+          "pinNumber": 5,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd2",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "c-nc9",
+        "a": {
+          "itemId": "u1",
+          "pinNumber": 9,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd2",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "c-nc11",
+        "a": {
+          "itemId": "u1",
+          "pinNumber": 11,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd2",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "c-nc13",
+        "a": {
+          "itemId": "u1",
+          "pinNumber": 13,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd2",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Navy"
+      }
     ],
     "links": [],
     "layers": [
-      { "name": "Default", "visible": true }
+      {
+        "name": "Default",
+        "visible": true
+      }
     ],
     "wires": []
+  },
+  "view": {
+    "zoom": 3.3814926,
+    "pan": {
+      "x": -81,
+      "y": -23
+    }
   }
 }
