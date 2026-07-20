@@ -4,14 +4,15 @@
 //  Physical layout (J1, 2x18 header, board photographed orientation):
 //     top row      : 2x GND
 //     bottom row   : 2x +5V
-//     edge column  : Port B (upper 8) over Port A (lower 8)
-//     inner column : Port D (upper 8) over Port C (lower 8)
+//     edge column  : Port D (upper 8) over Port C (lower 8)
+//     inner column : Port B (upper 8) over Port A (lower 8)
 //  Within each port: bit 0 = white ribbon wire (bottom of group),
 //                    bit 7 = red ribbon wire   (top of group).
 //  All J1 pins are 5 V logic via the on-board level shifters.
 //
-//  Pin numbers are Teensy 4.1 Arduino pins, verified against
-//  BlinkyMFrontPanel.ino and the RetroShield TEENSY.SCH adapter schematic.
+//  Pin numbers are Teensy 4.1 Arduino pins. Pin-to-port/bit assignment
+//  verified end-to-end by LED chaser. The diagram
+//  (TeensyAdapter_Ports.svg) matches this file.
 //  Keep pins as compile-time constants: digitalReadFast/digitalWriteFast
 //  then compile to single GPIO register operations on the 4.1.
 // ============================================================================
@@ -24,7 +25,7 @@
 // pins, which breaks any declaration reusing the names.
 
 // ---------------------------------------------------------------- Port A pins
-// Edge column, lower group (ribbon colour in comment)
+// Inner column, lower group (ribbon colour in comment)
 constexpr uint8_t PIN_PA0 = 15;  // white
 constexpr uint8_t PIN_PA1 = 23;  // grey
 constexpr uint8_t PIN_PA2 = 10;  // violet
@@ -35,7 +36,7 @@ constexpr uint8_t PIN_PA6 = 38;  // orange
 constexpr uint8_t PIN_PA7 = 36;  // red
 
 // ---------------------------------------------------------------- Port B pins
-// Edge column, upper group
+// Inner column, upper group
 constexpr uint8_t PIN_PB0 = 24;  // white
 constexpr uint8_t PIN_PB1 = 16;  // grey
 constexpr uint8_t PIN_PB2 =  5;  // violet
@@ -46,7 +47,7 @@ constexpr uint8_t PIN_PB6 = 30;  // orange
 constexpr uint8_t PIN_PB7 = 39;  // red
 
 // ---------------------------------------------------------------- Port C pins
-// Inner column, lower group
+// Edge column, lower group
 constexpr uint8_t PIN_PC0 = 22;  // white
 constexpr uint8_t PIN_PC1 =  9;  // grey
 constexpr uint8_t PIN_PC2 = 25;  // violet
@@ -57,7 +58,7 @@ constexpr uint8_t PIN_PC6 = 37;  // orange
 constexpr uint8_t PIN_PC7 = 35;  // red
 
 // ---------------------------------------------------------------- Port D pins
-// Inner column, upper group
+// Edge column, upper group
 constexpr uint8_t PIN_PD0 = 17;  // white
 constexpr uint8_t PIN_PD1 = 13;  // grey   (Teensy onboard LED - fine as input)
 constexpr uint8_t PIN_PD2 = 21;  // violet
