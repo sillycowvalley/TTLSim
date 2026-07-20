@@ -487,6 +487,13 @@ public sealed class SchematicBuilder
                 for (int elementPin = 2; elementPin <= 9; elementPin++)
                     yield return (1, elementPin);
                 break;
+
+            // Isolated DIP-16 network: element n between pin n and pin 17-n
+            // (the physical DIP mirror), one pair per element.
+            case "resnet-dip16":
+                for (int element = 1; element <= 8; element++)
+                    yield return (element, 17 - element);
+                break;
         }
     }
 

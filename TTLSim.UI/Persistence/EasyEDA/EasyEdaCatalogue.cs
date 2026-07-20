@@ -245,6 +245,21 @@ public static class EasyEDACatalogue
     private const string ResistorNetworkDeviceUuid = "ad9b8177d7792bfe";
     private const string ResistorNetworkSymbolUuid = "bc10366d41f207d3";
 
+    // Isolated DIP-16 resistor network (Bourns 4116R-2 family): eight
+    // independent resistors, element n between pin n and pin 17-n (the
+    // physical DIP mirror). One shared library device -- the resistance
+    // comes from the per-instance Value ATTR override, exactly like the
+    // SIP-9 network. The symbol (resnet-dip16.esym) is authored in the
+    // dip-16 geometry (pins at +/-50, 20px pitch) with a resistor bar per
+    // element; the FOOTPRINT is the standard DIP-16 IC body
+    // (Dip16FootprintUuid / dip-16.efoo, already registered in
+    // device_fragments.json) because the sourced parts are DIP IC packages
+    // -- the 3D viewer shows the molded DIP-16 body, which is what sits on
+    // the board. Device + symbol UUIDs are deterministic (SHA-1 of the
+    // seeds "resnet-dip16-device" / "resnet-dip16-symbol"), minted once.
+    private const string ResnetDip16DeviceUuid = "9eb1c3befc98f440";
+    private const string ResnetDip16SymbolUuid = "cad8f7b1ea5e8265";
+
     // Switch / Pushbutton -- "Frankenstein" parts that combine a real
     // schematic symbol (SS11-RBDWQ-R20-R rocker / SKPMAPE010 tactile) with
     // a 2-pin 2.54mm male through-hole header footprint so the physical
@@ -1143,6 +1158,8 @@ public static class EasyEDACatalogue
                 => BuildResistorPart(device),
             PassivePartDefinition p when p == PassivePartDefinition.ResistorNetwork
                 => BuildResistorNetworkPart(device),
+            PassivePartDefinition p when p == PassivePartDefinition.ResistorNetworkDip16
+                => BuildResistorNetworkDip16Part(device),
             PassivePartDefinition p when p == PassivePartDefinition.Capacitor
                 => BuildCapacitorPart(device),
             PassivePartDefinition p when p == PassivePartDefinition.PolarizedCapacitor
@@ -1538,6 +1555,133 @@ public static class EasyEDACatalogue
             ["custom_tags"] = "[\"Resistor Networks, Arrays\"]",
         };
 
+        return fragment.ToJsonString();
+    }
+
+    // The isolated DIP-16 network follows the SIP-9 pattern exactly: one
+    // shared library device, value per instance via the Value ATTR override.
+    // Footprint and 3D model are the standard DIP-16 IC body (the sourced
+    // parts are DIP packages); Supplier/LCSC stock fields are deliberately
+    // omitted rather than invented -- the symbol and footprint ship in the
+    // export, so no library auto-association is needed.
+
+    private static CataloguePart BuildResistorNetworkDip16Part(Device device)
+    {
+        string label = ReadPassiveValue(device);
+
+        string displayValue;
+        try
+        {
+            displayValue = ResistorValueParser.FormatForDisplay(label);
+        }
+        catch (FormatException ex)
+        {
+            throw ValueError(device, "resistor network", label, ex,
+                "Supported value forms: 100, 100R, 220Ω, 2k2, 2K2, 1.5K, 1M, 1M5.");
+        }
+
+        return new CataloguePart(
+            DeviceUuid: ResnetDip16DeviceUuid,
+            SymbolUuid: ResnetDip16SymbolUuid,
+            SymbolResourceName: "resnet-dip16.esym",
+            FootprintUuid: Dip16FootprintUuid,
+            FootprintResourceName: "dip-16.efoo",
+            PartTitle: "ResistorNetworkDip16.1",
+            PinLocalPositions: new()
+            {
+                // resnet-dip16.esym pin tips: the dip-16 geometry (x = +/-50,
+                // 20px pitch, DIP mirror). That matches
+                // ResistorNetworkDip16Unit's 2-cell pitch and 10-cell pin
+                // span (x 100px), so TTLSim pin N lands on EasyEDA pin N
+                // with no rescale and no diagonal wires.
+                [1] = new Point(-50, 70),
+                [2] = new Point(-50, 50),
+                [3] = new Point(-50, 30),
+                [4] = new Point(-50, 10),
+                [5] = new Point(-50, -10),
+                [6] = new Point(-50, -30),
+                [7] = new Point(-50, -50),
+                [8] = new Point(-50, -70),
+                [9] = new Point(50, -70),
+                [10] = new Point(50, -50),
+                [11] = new Point(50, -30),
+                [12] = new Point(50, -10),
+                [13] = new Point(50, 10),
+                [14] = new Point(50, 30),
+                [15] = new Point(50, 50),
+                [16] = new Point(50, 70),
+            },
+            EmitValueLabel: true,
+            ValueOverride: displayValue,
+            InlineDeviceJson: BuildResistorNetworkDip16DeviceFragment(),
+            InlineSymbolJson: BuildResistorNetworkDip16SymbolFragment(),
+            // Initial guesses per the DIP label rule at half-height 82
+            // (designator/value above the body). Hand-tune per
+            // EasyEDA_Export.md §0 after a first export if they sit
+            // awkwardly.
+            LabelOffsets: new LabelOffsetsByRotation(
+                Rot0: new LabelOffsetSet(new(-40, +90), new(-20, -90), new(-20, +90)),
+                Rot90: new LabelOffsetSet(new(-92, -20), new(+92, -20), new(-92, -2), TextRotationDeg: 90),
+                Rot180: new LabelOffsetSet(new(-40, +90), new(-20, -90), new(-20, +90)),
+                Rot270: new LabelOffsetSet(new(-92, -20), new(+92, -20), new(-92, -2), TextRotationDeg: 90)));
+    }
+
+    private static string BuildResistorNetworkDip16DeviceFragment()
+    {
+        var attrs = new System.Text.Json.Nodes.JsonObject
+        {
+            ["Manufacturer"] = "BOURNS",
+            ["Manufacturer Part"] = "4116R-2-472LF",
+            ["Supplier Footprint"] = "DIP-16",
+            ["Add into BOM"] = "yes",
+            ["Convert to PCB"] = "yes",
+            ["Symbol"] = ResnetDip16SymbolUuid,
+            ["Designator"] = "RN?",
+            ["Footprint"] = Dip16FootprintUuid,
+            ["3D Model"] = Dip16Reference3dModelUuid,
+            ["3D Model Title"] = Dip16Reference3dModelTitle,
+            ["3D Model Transform"] = Dip16Reference3dModelTransform,
+            ["Name"] = "={Value}",
+            ["Type"] = "Resistor Network",
+            ["Value"] = "4.7kΩ",
+            ["Description"] = "Isolated DIP-16 resistor network (8 elements, pin n to pin 17-n) -- value supplied per instance via Value ATTR override",
+        };
+
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["title"] = "4116R-2-472LF",
+            ["attributes"] = attrs,
+            ["description"] = "Isolated DIP-16 resistor network (8 elements, pin n to pin 17-n) -- value supplied per instance via Value ATTR override",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["images"] = new System.Text.Json.Nodes.JsonArray(""),
+            ["source"] = ResnetDip16DeviceUuid + "|0819f05c4eef4c71ace90d822a990e87",
+            ["version"] = "1758104404",
+            ["custom_tags"] = "[\"Resistor Networks, Arrays\"]",
+        };
+
+        return fragment.ToJsonString();
+    }
+
+    private static string BuildResistorNetworkDip16SymbolFragment()
+    {
+        var fragment = new System.Text.Json.Nodes.JsonObject
+        {
+            ["source"] = ResnetDip16SymbolUuid + "|0819f05c4eef4c71ace90d822a990e87",
+            ["desc"] = "",
+            ["tags"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["parent_tag"] = new System.Text.Json.Nodes.JsonArray(),
+                ["child_tag"] = new System.Text.Json.Nodes.JsonArray(),
+            },
+            ["custom_tags"] = "[\"Resistor Networks, Arrays\"]",
+            ["title"] = "ResistorNetworkDip16",
+            ["version"] = "1758103522",
+            ["type"] = 2,
+        };
         return fragment.ToJsonString();
     }
 

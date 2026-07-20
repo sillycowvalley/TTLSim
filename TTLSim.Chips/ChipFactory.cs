@@ -115,6 +115,13 @@ public sealed class ChipFactory : IChipFactory
                 continue;
             }
 
+            if (device.PartIdentifier == "resnet-dip16")
+            {
+                foreach (IChip resnet in CreateIsolatedResistorNetwork(pinMap, powerNets))
+                    yield return resnet;
+                continue;
+            }
+
             if (device.PartIdentifier == "button")
             {
                 IChip? btn = TryCreateButton(pinMap);
@@ -287,6 +294,32 @@ public sealed class ChipFactory : IChipFactory
             // Present each element to the single-resistor model as pins {1, 2}
             // = {common, element}, so behaviour is identical by construction.
             var pair = new Dictionary<int, Net> { [1] = common, [2] = element };
+            IChip? chip = TryCreatePullResistor(pair, powerNets);
+            if (chip is not null) yield return chip;
+        }
+    }
+
+    /// <summary>
+    /// Isolated DIP-16 resistor network: eight independent resistors, element
+    /// n between pin n and pin 17-n (1-16, 2-15, ... 8-9, the physical DIP
+    /// mirror). Each element is presented to the single-resistor model as
+    /// pins {1, 2}, so pull-up/pull-down versus transparent-series behaviour
+    /// is identical to a discrete resistor by construction; the same-net
+    /// guard inside TryCreatePullResistor silently drops a bridged element,
+    /// mirrored at design time by TTL014's terminal-pair list.
+    /// </summary>
+    private static IEnumerable<IChip> CreateIsolatedResistorNetwork(
+        IReadOnlyDictionary<int, Net> pinToNet,
+        IReadOnlyDictionary<int, Signal> powerNets)
+    {
+        for (int element = 1; element <= 8; element++)
+        {
+            if (!pinToNet.TryGetValue(element, out Net? a) || a is null)
+                continue;
+            if (!pinToNet.TryGetValue(17 - element, out Net? b) || b is null)
+                continue;
+
+            var pair = new Dictionary<int, Net> { [1] = a, [2] = b };
             IChip? chip = TryCreatePullResistor(pair, powerNets);
             if (chip is not null) yield return chip;
         }
@@ -1301,7 +1334,7 @@ public sealed class ChipFactory : IChipFactory
             or "32" or "86" or "125" or "126" or "390" or "393"
             => true,
         // Electrically modelled passives.
-        "resistor" or "resnet-sip9" or "button" or "button-4" or "switch" or "spdt-switch" or "jumper-2pin" or "jumper-3pin" or "diode"
+        "resistor" or "resnet-sip9" or "resnet-dip16" or "button" or "button-4" or "switch" or "spdt-switch" or "jumper-2pin" or "jumper-3pin" or "diode"
             or "dipsw-4" or "dipsw-8"
             => true,
         // Visual-only parts: no electrical model, but not "unsupported".
