@@ -9,14 +9,14 @@
 //                     the define below:
 //        (default)          the original TXS level-shifter adapter.
 //                           Chaser-verified mapping - never alter it.
-//        LVC_HARNESS_BOARD  the purpose-built HCT245/LVC245 board: 40 data
-//                           lines (ports A-E), per-port DIR control, four
-//                           buttons. See LVCBoard_Reference.md.
+//        LVC_HARNESS_BOARD  the purpose-built HCT245/LVC245 board: 36 I/O
+//                           lines: 32 data (A-D, per-port DIR control) +
+//                           4 strobes (E). See LVCBoard_Reference.md.
 //
 //  Common to all platforms: ports A-D as PIN_PA0..PIN_PD7, port tables,
 //  setPortMode, unrolled fast accessors, samplePorts(), SW1/SW2 helpers,
 //  SW_PIN_MODE, PLATFORM_NAME. Ribbon colours: bit 0 = white .. bit 7 = red.
-//  The LVC board adds Port E (strobes, PE0 = CLK), SW3/SW4, and the
+//  The LVC board adds Port E (4 strobes + 2 jumper-shared, PE0 = CLK) and the
 //  portDrive/portRelease direction API.
 // ============================================================================
 
@@ -28,17 +28,18 @@
 //  compiler cannot tell them apart on its own.)
 //#define LVC_HARNESS_BOARD
 
-// Naming: PIN_PA0..PIN_PE7 ("P" for port). PIN_A0..PIN_A9 cannot be used -
+// Naming: PIN_PA0..PIN_PE3 ("P" for port). PIN_A0..PIN_A9 cannot be used -
 // the cores define those as macros for the analog pins, which breaks any
 // declaration reusing the names.
 
 #if defined(__IMXRT1062__) && defined(LVC_HARNESS_BOARD)
 // ==================================================== Teensy 4.1 + LVC ===
 // Purpose-built board: 74HCT245 (drive, 5V) + 74LVC245 (read, 3.3V) per
-// data port, /OE-steered; directed, continuously driven. Port E: HCT only.
-// Near-contiguous assignment (every through-hole pin 0..41 is plain GPIO);
-// pins 13 and 32 are swapped between ports B and E so the onboard LED
-// (pin 13) sits on output-only PE0/CLK instead of bidirectional PB5.
+// data port, /OE-steered; directed, continuously driven. Port E: HCT only,
+// 4 fixed strobes + 2 jumper-shared (J6/J7 trade the buttons for strobe
+// channels 5/6). All 42 signals on through-hole pins 0..41 - no belly pads.
+// Pins 13 and 32 are swapped between ports E and B so the onboard LED
+// (pin 13) sits on output-only PE0/CLK as a clock activity light.
 
 #define PLATFORM_NAME "Teensy 4.1 + LVC board"
 
@@ -83,39 +84,42 @@ constexpr uint8_t PIN_PD6 = 30;  // orange
 constexpr uint8_t PIN_PD7 = 31;  // red
 
 // ---------------------------------------------------------------- Port E pins
-// Dedicated strobe port (H5-H12: signal+GND pair headers). PE0 = CLK by
-// convention. Direction is fixed: the shifter is strapped to drive the DUT.
+// Dedicated strobe port, 4 lines (H5-H8: signal+GND pair headers). PE0 =
+// CLK by convention; direction fixed (shifter strapped to drive the DUT).
 constexpr uint8_t PIN_PE0 = 13;  // white  (CLK - onboard LED = clock activity light)
 constexpr uint8_t PIN_PE1 = 33;  // grey
 constexpr uint8_t PIN_PE2 = 34;  // violet
 constexpr uint8_t PIN_PE3 = 35;  // blue
-constexpr uint8_t PIN_PE4 = 36;  // green
-constexpr uint8_t PIN_PE5 = 37;  // yellow
-constexpr uint8_t PIN_PE6 = 38;  // orange
-constexpr uint8_t PIN_PE7 = 39;  // red
 
 // ------------------------------------------------------- direction control
-// One DIR line per data port (bottom pads), 10 k pulldowns on the board.
-// DIR steers the pair's /OE lines (via the shared 'HCT04 inverter):
-// HIGH = HCT enabled = Teensy drives the DUT; LOW = LVC enabled = board
-// reads. The pulldowns mean every data port powers up READING - the board
-// cannot fight a DUT before software runs.
-constexpr uint8_t PIN_DIR_A = 42;
-constexpr uint8_t PIN_DIR_B = 43;
-constexpr uint8_t PIN_DIR_C = 44;
-constexpr uint8_t PIN_DIR_D = 45;
+// One DIR line per data port, 10 k pulldowns on the board. DIR steers the
+// pair's /OE lines (via the shared 'HCT04 inverter): HIGH = HCT enabled =
+// Teensy drives the DUT; LOW = LVC enabled = board reads. The pulldowns
+// mean every data port powers up READING - the board cannot fight a DUT
+// before software runs.
+constexpr uint8_t PIN_DIR_A = 36;
+constexpr uint8_t PIN_DIR_B = 37;
+constexpr uint8_t PIN_DIR_C = 38;
+constexpr uint8_t PIN_DIR_D = 39;
 
-// ------------------------------------------------------------------- Buttons
-// Four momentary buttons to GND, no board pull-ups - internal pull-ups do
-// the work. SW1/SW2 keep the harness-wide roles (start/advance, abort/exit);
-// SW3/SW4 are spare for per-project functions.
+// -------------------------------------------- Buttons / shared strobes
+// Teensy pins 40/41 are dual-role, selected by board jumpers J6/J7
+// (3-pin, centre = Teensy pin):
+//   position 1 (default): momentary button to GND via 1 k (R6/R7);
+//                         internal pull-ups. SW1 = start/advance,
+//                         SW2 = abort/exit (harness convention).
+//   position 3:           strobe channel 5/6 of the Port E shifter
+//                         (U7 A5/A6, 100 k pulldowns R8/R9) -> pair
+//                         headers H9/H10. Use the PE4/PE5 aliases as
+//                         plain OUTPUT pins in this configuration.
+// The sketch must match the jumpers - print the assumed configuration
+// in the boot banner (settings-reset lesson, hardware edition). The 1 k
+// makes a mismatched build + pressed button harmless (~3 mA).
 constexpr uint8_t PIN_SW1 = 40;
 constexpr uint8_t PIN_SW2 = 41;
-constexpr uint8_t PIN_SW3 = 46;
-constexpr uint8_t PIN_SW4 = 47;
+constexpr uint8_t PIN_PE4 = 40;  // alias: valid only with J6 in strobe position
+constexpr uint8_t PIN_PE5 = 41;  // alias: valid only with J7 in strobe position
 constexpr uint8_t SW_PIN_MODE = INPUT_PULLUP;
-
-#elif defined(__IMXRT1062__)
 // ============================================================ Teensy 4.1 ===
 // Adapter mapping, verified end-to-end by LED chaser. Do not alter.
 
@@ -381,13 +385,14 @@ inline uint32_t samplePorts() {
 inline bool sw1Pressed() { return digitalReadFast(PIN_SW1) == LOW; }
 inline bool sw2Pressed() { return digitalReadFast(PIN_SW2) == LOW; }
 
+
 #if defined(__IMXRT1062__) && defined(LVC_HARNESS_BOARD)
 // ================================================ LVC-board additions ===
-// Port E, the extra buttons, and the per-port direction API. Only compiled
-// for the LVC board, so accidental use on the other platforms is a
-// compile-time error rather than a silent misbehaviour.
+// Port E and the per-port direction API. Only compiled for the LVC board,
+// so accidental use on the other platforms is a compile-time error rather
+// than a silent misbehaviour.
 
-constexpr uint8_t PORT_E_PINS[8] = { PIN_PE0, PIN_PE1, PIN_PE2, PIN_PE3, PIN_PE4, PIN_PE5, PIN_PE6, PIN_PE7 };
+constexpr uint8_t PORT_E_PINS[4] = { PIN_PE0, PIN_PE1, PIN_PE2, PIN_PE3 };
 
 inline uint8_t readPortE() {
   uint8_t v = 0;
@@ -395,10 +400,6 @@ inline uint8_t readPortE() {
   if (digitalReadFast(PIN_PE1)) v |= 0x02;
   if (digitalReadFast(PIN_PE2)) v |= 0x04;
   if (digitalReadFast(PIN_PE3)) v |= 0x08;
-  if (digitalReadFast(PIN_PE4)) v |= 0x10;
-  if (digitalReadFast(PIN_PE5)) v |= 0x20;
-  if (digitalReadFast(PIN_PE6)) v |= 0x40;
-  if (digitalReadFast(PIN_PE7)) v |= 0x80;
   return v;
 }
 
@@ -407,14 +408,7 @@ inline void writePortE(uint8_t v) {
   digitalWriteFast(PIN_PE1, v & 0x02);
   digitalWriteFast(PIN_PE2, v & 0x04);
   digitalWriteFast(PIN_PE3, v & 0x08);
-  digitalWriteFast(PIN_PE4, v & 0x10);
-  digitalWriteFast(PIN_PE5, v & 0x20);
-  digitalWriteFast(PIN_PE6, v & 0x40);
-  digitalWriteFast(PIN_PE7, v & 0x80);
 }
-
-inline bool sw3Pressed() { return digitalReadFast(PIN_SW3) == LOW; }
-inline bool sw4Pressed() { return digitalReadFast(PIN_SW4) == LOW; }
 
 // ------------------------------------------------------- direction control
 // Call initPortDirections() first thing in setup(): claims the DIR pins
@@ -448,7 +442,9 @@ inline void initPortDirections() {
   setPortMode(PORT_B_PINS, INPUT);
   setPortMode(PORT_C_PINS, INPUT);
   setPortMode(PORT_D_PINS, INPUT);
-  setPortMode(PORT_E_PINS, OUTPUT);   // strobes: always harness-driven
+  for (uint8_t i = 0; i < 4; i++) {
+    pinMode(PORT_E_PINS[i], OUTPUT);
+  }
   writePortE(0x00);
 }
 

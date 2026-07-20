@@ -1795,13 +1795,13 @@ public sealed record ChipPartDefinition(
         To92: true);
 
     /// <summary>
-    /// PJRC Teensy 4.1 development board, modelled as its 48 edge pins:
-    /// 24 per side at 2.54 mm pitch, 0.6 in row spacing -- a DIP-48
-    /// outline (socket-strip compatible). Pin names follow the LVC
-    /// harness-board roles (Teensy41_TTLSim_PinTable.md); the bottom SMT
-    /// pads (Teensy 42..47) are deliberately not modelled. Export-only:
-    /// there is no simulation model. 3.3 V logic, NOT 5 V tolerant; Vin
-    /// accepts 3.6-5.5 V; the 3.3 V rail sources 250 mA max.
+    /// PJRC Teensy 4.1 development board as a logical 48-pin connector:
+    /// pins are labelled sequentially by port (PA0..PA7, PB, PC, PD,
+    /// PE0..PE7, DIR_A, DIR_B) rather than mirroring the board's physical
+    /// pad order -- the symbol-pin-to-GPIO mapping lives in AdapterPorts.h.
+    /// Power pins sit at 1/34/47 (GND), 15/46 (3.3V), 48 (Vin).
+    /// Export-only: there is no simulation model. 3.3 V logic, NOT 5 V
+    /// tolerant; Vin accepts 3.6-5.5 V; the 3.3 V rail sources 250 mA max.
     /// </summary>
     public static readonly ChipPartDefinition Teensy41 = new(
         PartNumber: "TEENSY41", PinCount: 48, PowerPin: 48, GroundPin: 1,
@@ -1811,27 +1811,27 @@ public sealed record ChipPartDefinition(
             new("GND",   1),       new("Vin",  48),
             new("PA0",   2, Out),  new("GND",  47),
             new("PA1",   3, Out),  new("3.3V", 46, Out),
-            new("PA2",   4, Out),  new("PC7",  45, Out),
-            new("PA3",   5, Out),  new("PC6",  44, Out),
-            new("PA4",   6, Out),  new("PC5",  43, Out),
-            new("PA5",   7, Out),  new("PC4",  42, Out),
-            new("PA6",   8, Out),  new("PC3",  41, Out),
-            new("PA7",   9, Out),  new("PC2",  40, Out),
-            new("PB0",  10, Out),  new("PC1",  39, Out),
-            new("PB1",  11, Out),  new("PC0",  38, Out),
-            new("PB2",  12, Out),  new("PB7",  37, Out),
-            new("PB3",  13, Out),  new("PB6",  36, Out),
-            new("PB4",  14, Out),  new("PB5",  35, Out),
+            new("PA2",   4, Out),  new("DIR_B", 45, Out),
+            new("PA3",   5, Out),  new("DIR_A", 44, Out),
+            new("PA4",   6, Out),  new("PE7",  43, Out),
+            new("PA5",   7, Out),  new("PE6",  42, Out),
+            new("PA6",   8, Out),  new("PE5",  41, Out),
+            new("PA7",   9, Out),  new("PE4",  40, Out),
+            new("PB0",  10, Out),  new("PE3",  39, Out),
+            new("PB1",  11, Out),  new("PE2",  38, Out),
+            new("PB2",  12, Out),  new("PE1",  37, Out),
+            new("PB3",  13, Out),  new("PE0",  36, Out),
+            new("PB4",  14, Out),  new("PD7",  35, Out),
             new("3.3V", 15, Out),  new("GND",  34),
-            new("PD0",  16, Out),  new("SW2",  33),
-            new("PD1",  17, Out),  new("SW1",  32),
-            new("PD2",  18, Out),  new("PE7",  31, Out),
-            new("PD3",  19, Out),  new("PE6",  30, Out),
-            new("PD4",  20, Out),  new("PE5",  29, Out),
-            new("PD5",  21, Out),  new("PE4",  28, Out),
-            new("PD6",  22, Out),  new("PE3",  27, Out),
-            new("PD7",  23, Out),  new("PE2",  26, Out),
-            new("PE0",  24, Out),  new("PE1",  25, Out),
+            new("PB5",  16, Out),  new("PD6",  33, Out),
+            new("PB6",  17, Out),  new("PD5",  32, Out),
+            new("PB7",  18, Out),  new("PD4",  31, Out),
+            new("PC0",  19, Out),  new("PD3",  30, Out),
+            new("PC1",  20, Out),  new("PD2",  29, Out),
+            new("PC2",  21, Out),  new("PD1",  28, Out),
+            new("PC3",  22, Out),  new("PD0",  27, Out),
+            new("PC4",  23, Out),  new("PC7",  26, Out),
+            new("PC5",  24, Out),  new("PC6",  25, Out),
         });
 
     // ---- shorthand for readability ------------------------------------

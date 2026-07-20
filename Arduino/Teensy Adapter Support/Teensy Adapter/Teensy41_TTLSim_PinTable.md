@@ -53,12 +53,12 @@ Side 2 (continuing DIP-style — pin 25 sits opposite pin 24):
 | 25 | 33 | PE1 | grey |
 | 26 | 34 | PE2 | violet |
 | 27 | 35 | PE3 | blue |
-| 28 | 36 | PE4 | green |
-| 29 | 37 | PE5 | yellow |
-| 30 | 38 | PE6 | orange |
-| 31 | 39 | PE7 | red |
-| 32 | 40 | SW1 (to GND, internal pull-up) | — |
-| 33 | 41 | SW2 (to GND, internal pull-up) | — |
+| 28 | 36 | DIR_A (10 k pulldown; high = drive) | — |
+| 29 | 37 | DIR_B | — |
+| 30 | 38 | PE4 | green |
+| 31 | 39 | PE5 | yellow |
+| 32 | 40 | PE6 | orange |
+| 33 | 41 | PE7 | red |
 | 34 | GND | GND | — |
 | 35 | 13 | PE0 (CLK — onboard LED doubles as clock activity light) | white |
 | 36 | 14 | PB6 | orange |
@@ -75,19 +75,10 @@ Side 2 (continuing DIP-style — pin 25 sits opposite pin 24):
 | 47 | GND | GND | — |
 | 48 | Vin | Vin (3.6–5.5 V in) | — |
 
-## Bottom SMT pads (symbol pins 49–54)
+## Bottom SMT pads
 
-| Symbol pin | Teensy label | LVC-board role |
-|---|---|---|
-| 49 | 42 | DIR_A (10 k pulldown; high = drive) |
-| 50 | 43 | DIR_B |
-| 51 | 44 | DIR_C |
-| 52 | 45 | DIR_D |
-| 53 | 46 | SW3 (to GND, internal pull-up) |
-| 54 | 47 | SW4 (to GND, internal pull-up) |
-
-Pads 48–54 (QSPI group) are deliberately excluded — kept free for possible
-PSRAM, and unused by the harness.
+Not used by the harness board. Pads 42–54 (including the QSPI group)
+carry no signals — every board function lives on the through-hole pins.
 
 ---
 
