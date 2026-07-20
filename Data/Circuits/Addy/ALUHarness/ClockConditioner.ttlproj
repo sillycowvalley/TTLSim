@@ -1,0 +1,195 @@
+{
+  "schematic": {
+    "devices": [
+      {
+        "id": "dev-u1",
+        "designator": "U1",
+        "partKind": "chip",
+        "partIdentifier": "14",
+        "family": "HC",
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-r1",
+        "designator": "R1",
+        "partKind": "passive",
+        "partIdentifier": "resistor",
+        "family": null,
+        "value": "1k",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-r2",
+        "designator": "R2",
+        "partKind": "passive",
+        "partIdentifier": "resistor",
+        "family": null,
+        "value": "10k",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-c1",
+        "designator": "C1",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": "100p",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      }
+    ],
+    "units": [
+      {
+        "id": "u1",
+        "deviceId": "dev-u1",
+        "unitLetter": "",
+        "position": { "x": 46, "y": 20 },
+        "label": "CLK COND",
+        "rotation": 0,
+        "layer": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "r1",
+        "deviceId": "dev-r1",
+        "unitLetter": "",
+        "position": { "x": 22, "y": 26 },
+        "label": "",
+        "rotation": 0,
+        "layer": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "r2",
+        "deviceId": "dev-r2",
+        "unitLetter": "",
+        "position": { "x": 34, "y": 14 },
+        "label": "pull-up",
+        "rotation": 90,
+        "layer": 0,
+        "switchClosed": null
+      },
+      {
+        "id": "c1",
+        "deviceId": "dev-c1",
+        "unitLetter": "",
+        "position": { "x": 34, "y": 36 },
+        "label": "",
+        "rotation": 90,
+        "layer": 0,
+        "switchClosed": null
+      }
+    ],
+    "items": [
+      {
+        "type": "clock",
+        "id": "clk-sim",
+        "label": "sim source - remove when merging",
+        "position": { "x": 6, "y": 26 },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": 1000000,
+        "dutyCycle": 0.5,
+        "startHigh": false
+      },
+      {
+        "type": "netlabel",
+        "id": "nl-clkraw",
+        "label": "CLK_RAW",
+        "position": { "x": 14, "y": 20 },
+        "rotation": 0,
+        "layer": 0,
+        "width": 1,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow"
+      },
+      {
+        "type": "netlabel",
+        "id": "nl-clka",
+        "label": "CLK_A",
+        "position": { "x": 66, "y": 24 },
+        "rotation": 0,
+        "layer": 0,
+        "width": 1,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Orange"
+      },
+      {
+        "type": "vcc",
+        "id": "vcc1",
+        "label": "VCC",
+        "position": { "x": 34, "y": 6 },
+        "rotation": 0,
+        "layer": 0
+      },
+      {
+        "type": "vcc",
+        "id": "vcc2",
+        "label": "VCC",
+        "position": { "x": 58, "y": 10 },
+        "rotation": 0,
+        "layer": 0
+      },
+      {
+        "type": "gnd",
+        "id": "gnd1",
+        "label": "",
+        "position": { "x": 34, "y": 46 },
+        "rotation": 0,
+        "layer": 0
+      },
+      {
+        "type": "gnd",
+        "id": "gnd2",
+        "label": "",
+        "position": { "x": 50, "y": 46 },
+        "rotation": 0,
+        "layer": 0
+      }
+    ],
+    "connections": [
+      { "id": "c-src",    "a": { "itemId": "clk-sim", "pinNumber": 1 },  "b": { "itemId": "r1",   "pinNumber": 1 },  "color": "Yellow" },
+      { "id": "c-raw",    "a": { "itemId": "nl-clkraw", "pinNumber": 1 }, "b": { "itemId": "r1",  "pinNumber": 1 },  "color": "Yellow" },
+      { "id": "c-node1",  "a": { "itemId": "r1", "pinNumber": 2 },       "b": { "itemId": "u1",   "pinNumber": 1 },  "color": null },
+      { "id": "c-node2",  "a": { "itemId": "r1", "pinNumber": 2 },       "b": { "itemId": "c1",   "pinNumber": 1 },  "color": null },
+      { "id": "c-node3",  "a": { "itemId": "r1", "pinNumber": 2 },       "b": { "itemId": "r2",   "pinNumber": 2 },  "color": null },
+      { "id": "c-c1gnd",  "a": { "itemId": "c1", "pinNumber": 2 },       "b": { "itemId": "gnd1", "pinNumber": 0 },  "color": "Navy" },
+      { "id": "c-r2vcc",  "a": { "itemId": "r2", "pinNumber": 1 },       "b": { "itemId": "vcc1", "pinNumber": 0 },  "color": "Red" },
+      { "id": "c-out",    "a": { "itemId": "u1", "pinNumber": 2 },       "b": { "itemId": "nl-clka", "pinNumber": 1 }, "color": "Orange" },
+      { "id": "c-u1vcc",  "a": { "itemId": "u1", "pinNumber": 14 },      "b": { "itemId": "vcc2", "pinNumber": 0 },  "color": "Red" },
+      { "id": "c-u1gnd",  "a": { "itemId": "u1", "pinNumber": 7 },       "b": { "itemId": "gnd2", "pinNumber": 0 },  "color": "Navy" },
+      { "id": "c-nc3",    "a": { "itemId": "u1", "pinNumber": 3 },       "b": { "itemId": "gnd2", "pinNumber": 0 },  "color": "Navy" },
+      { "id": "c-nc5",    "a": { "itemId": "u1", "pinNumber": 5 },       "b": { "itemId": "gnd2", "pinNumber": 0 },  "color": "Navy" },
+      { "id": "c-nc9",    "a": { "itemId": "u1", "pinNumber": 9 },       "b": { "itemId": "gnd2", "pinNumber": 0 },  "color": "Navy" },
+      { "id": "c-nc11",   "a": { "itemId": "u1", "pinNumber": 11 },      "b": { "itemId": "gnd2", "pinNumber": 0 },  "color": "Navy" },
+      { "id": "c-nc13",   "a": { "itemId": "u1", "pinNumber": 13 },      "b": { "itemId": "gnd2", "pinNumber": 0 },  "color": "Navy" }
+    ],
+    "links": [],
+    "layers": [
+      { "name": "Default", "visible": true }
+    ],
+    "wires": []
+  }
+}
