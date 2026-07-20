@@ -1797,7 +1797,7 @@ public sealed record ChipPartDefinition(
     /// <summary>
     /// PJRC Teensy 4.1 development board as a logical 48-pin connector:
     /// pins are labelled sequentially by port (PA0..PA7, PB, PC, PD,
-    /// PE0..PE7, DIR_A, DIR_B) rather than mirroring the board's physical
+    /// PE0..PE7, DIR0, DIR1) rather than mirroring the board's physical
     /// pad order -- the symbol-pin-to-GPIO mapping lives in AdapterPorts.h.
     /// Power pins sit at 1/34/47 (GND), 15/46 (3.3V), 48 (Vin).
     /// Export-only: there is no simulation model. 3.3 V logic, NOT 5 V
@@ -1811,8 +1811,8 @@ public sealed record ChipPartDefinition(
             new("GND",   1),       new("Vin",  48),
             new("PA0",   2, Out),  new("GND",  47),
             new("PA1",   3, Out),  new("3.3V", 46, Out),
-            new("PA2",   4, Out),  new("DIR_B", 45, Out),
-            new("PA3",   5, Out),  new("DIR_A", 44, Out),
+            new("PA2",   4, Out),  new("DIR1", 45, Out),
+            new("PA3",   5, Out),  new("DIR0", 44, Out),
             new("PA4",   6, Out),  new("PE7",  43, Out),
             new("PA5",   7, Out),  new("PE6",  42, Out),
             new("PA6",   8, Out),  new("PE5",  41, Out),
