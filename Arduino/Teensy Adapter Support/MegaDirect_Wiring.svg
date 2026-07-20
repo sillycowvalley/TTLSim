@@ -1,0 +1,186 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="1120" viewBox="0 0 860 1120" font-family="Segoe UI, Arial, sans-serif">
+<rect x="0" y="0" width="860" height="1120" fill="#ffffff"/>
+<text x="430" y="38" text-anchor="middle" font-size="22" font-weight="bold" fill="#111">Arduino Mega 2560 — direct DUT wiring (virtual ports A–D)</text>
+<text x="430" y="62" text-anchor="middle" font-size="13" fill="#444">Dual-row header pins 22–53 + power. Same positions as the Teensy adapter J1 — boards swap with no rewiring.</text>
+<text x="430" y="80" text-anchor="middle" font-size="13" fill="#444">Within each port: bit 0 = white ribbon wire, bit 7 = red. Swatch shows the ribbon colour.</text>
+<text x="295" y="102" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">even pins</text>
+<text x="565" y="102" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">odd pins</text>
+<rect x="170" y="110" width="250" height="46" fill="#f3f4f6" stroke="#888"/>
+<rect x="440" y="110" width="250" height="46" fill="#f3f4f6" stroke="#888"/>
+<text x="295" y="139" text-anchor="middle" font-size="16" font-weight="bold" fill="#b91c1c">+5V</text>
+<text x="565" y="139" text-anchor="middle" font-size="16" font-weight="bold" fill="#b91c1c">+5V</text>
+<rect x="170" y="156" width="250" height="46" fill="#dbeafe" stroke="#888"/>
+<text x="184" y="185" font-size="16" font-weight="bold" fill="#111">22</text>
+<text x="234" y="185" font-size="15" fill="#111">PA bit 0</text>
+<rect x="328" y="170" width="24" height="16" fill="#ffffff" stroke="#555"/>
+<text x="360" y="183" font-size="12" fill="#333">white</text>
+<rect x="440" y="156" width="250" height="46" fill="#fef9c3" stroke="#888"/>
+<text x="454" y="185" font-size="16" font-weight="bold" fill="#111">23</text>
+<text x="504" y="185" font-size="15" fill="#111">PC bit 0</text>
+<rect x="598" y="170" width="24" height="16" fill="#ffffff" stroke="#555"/>
+<text x="630" y="183" font-size="12" fill="#333">white</text>
+<rect x="170" y="202" width="250" height="46" fill="#dbeafe" stroke="#888"/>
+<text x="184" y="231" font-size="16" font-weight="bold" fill="#111">24</text>
+<text x="234" y="231" font-size="15" fill="#111">PA bit 1</text>
+<rect x="328" y="216" width="24" height="16" fill="#9e9e9e" stroke="#555"/>
+<text x="360" y="229" font-size="12" fill="#333">grey</text>
+<rect x="440" y="202" width="250" height="46" fill="#fef9c3" stroke="#888"/>
+<text x="454" y="231" font-size="16" font-weight="bold" fill="#111">25</text>
+<text x="504" y="231" font-size="15" fill="#111">PC bit 1</text>
+<rect x="598" y="216" width="24" height="16" fill="#9e9e9e" stroke="#555"/>
+<text x="630" y="229" font-size="12" fill="#333">grey</text>
+<rect x="170" y="248" width="250" height="46" fill="#dbeafe" stroke="#888"/>
+<text x="184" y="277" font-size="16" font-weight="bold" fill="#111">26</text>
+<text x="234" y="277" font-size="15" fill="#111">PA bit 2</text>
+<rect x="328" y="262" width="24" height="16" fill="#8e44ad" stroke="#555"/>
+<text x="360" y="275" font-size="12" fill="#333">violet</text>
+<rect x="440" y="248" width="250" height="46" fill="#fef9c3" stroke="#888"/>
+<text x="454" y="277" font-size="16" font-weight="bold" fill="#111">27</text>
+<text x="504" y="277" font-size="15" fill="#111">PC bit 2</text>
+<rect x="598" y="262" width="24" height="16" fill="#8e44ad" stroke="#555"/>
+<text x="630" y="275" font-size="12" fill="#333">violet</text>
+<rect x="170" y="294" width="250" height="46" fill="#dbeafe" stroke="#888"/>
+<text x="184" y="323" font-size="16" font-weight="bold" fill="#111">28</text>
+<text x="234" y="323" font-size="15" fill="#111">PA bit 3</text>
+<rect x="328" y="308" width="24" height="16" fill="#2196f3" stroke="#555"/>
+<text x="360" y="321" font-size="12" fill="#333">blue</text>
+<rect x="440" y="294" width="250" height="46" fill="#fef9c3" stroke="#888"/>
+<text x="454" y="323" font-size="16" font-weight="bold" fill="#111">29</text>
+<text x="504" y="323" font-size="15" fill="#111">PC bit 3</text>
+<rect x="598" y="308" width="24" height="16" fill="#2196f3" stroke="#555"/>
+<text x="630" y="321" font-size="12" fill="#333">blue</text>
+<rect x="170" y="340" width="250" height="46" fill="#dbeafe" stroke="#888"/>
+<text x="184" y="369" font-size="16" font-weight="bold" fill="#111">30</text>
+<text x="234" y="369" font-size="15" fill="#111">PA bit 4</text>
+<rect x="328" y="354" width="24" height="16" fill="#4caf50" stroke="#555"/>
+<text x="360" y="367" font-size="12" fill="#333">green</text>
+<rect x="440" y="340" width="250" height="46" fill="#fef9c3" stroke="#888"/>
+<text x="454" y="369" font-size="16" font-weight="bold" fill="#111">31</text>
+<text x="504" y="369" font-size="15" fill="#111">PC bit 4</text>
+<rect x="598" y="354" width="24" height="16" fill="#4caf50" stroke="#555"/>
+<text x="630" y="367" font-size="12" fill="#333">green</text>
+<rect x="170" y="386" width="250" height="46" fill="#dbeafe" stroke="#888"/>
+<text x="184" y="415" font-size="16" font-weight="bold" fill="#111">32</text>
+<text x="234" y="415" font-size="15" fill="#111">PA bit 5</text>
+<rect x="328" y="400" width="24" height="16" fill="#ffd600" stroke="#555"/>
+<text x="360" y="413" font-size="12" fill="#333">yellow</text>
+<rect x="440" y="386" width="250" height="46" fill="#fef9c3" stroke="#888"/>
+<text x="454" y="415" font-size="16" font-weight="bold" fill="#111">33</text>
+<text x="504" y="415" font-size="15" fill="#111">PC bit 5</text>
+<rect x="598" y="400" width="24" height="16" fill="#ffd600" stroke="#555"/>
+<text x="630" y="413" font-size="12" fill="#333">yellow</text>
+<rect x="170" y="432" width="250" height="46" fill="#dbeafe" stroke="#888"/>
+<text x="184" y="461" font-size="16" font-weight="bold" fill="#111">34</text>
+<text x="234" y="461" font-size="15" fill="#111">PA bit 6</text>
+<rect x="328" y="446" width="24" height="16" fill="#ff9800" stroke="#555"/>
+<text x="360" y="459" font-size="12" fill="#333">orange</text>
+<rect x="440" y="432" width="250" height="46" fill="#fef9c3" stroke="#888"/>
+<text x="454" y="461" font-size="16" font-weight="bold" fill="#111">35</text>
+<text x="504" y="461" font-size="15" fill="#111">PC bit 6</text>
+<rect x="598" y="446" width="24" height="16" fill="#ff9800" stroke="#555"/>
+<text x="630" y="459" font-size="12" fill="#333">orange</text>
+<rect x="170" y="478" width="250" height="46" fill="#dbeafe" stroke="#888"/>
+<text x="184" y="507" font-size="16" font-weight="bold" fill="#111">36</text>
+<text x="234" y="507" font-size="15" fill="#111">PA bit 7</text>
+<rect x="328" y="492" width="24" height="16" fill="#f44336" stroke="#555"/>
+<text x="360" y="505" font-size="12" fill="#333">red</text>
+<rect x="440" y="478" width="250" height="46" fill="#fef9c3" stroke="#888"/>
+<text x="454" y="507" font-size="16" font-weight="bold" fill="#111">37</text>
+<text x="504" y="507" font-size="15" fill="#111">PC bit 7</text>
+<rect x="598" y="492" width="24" height="16" fill="#f44336" stroke="#555"/>
+<text x="630" y="505" font-size="12" fill="#333">red</text>
+<rect x="170" y="524" width="250" height="46" fill="#dcfce7" stroke="#888"/>
+<text x="184" y="553" font-size="16" font-weight="bold" fill="#111">38</text>
+<text x="234" y="553" font-size="15" fill="#111">PB bit 0</text>
+<rect x="328" y="538" width="24" height="16" fill="#ffffff" stroke="#555"/>
+<text x="360" y="551" font-size="12" fill="#333">white</text>
+<rect x="440" y="524" width="250" height="46" fill="#fee2e2" stroke="#888"/>
+<text x="454" y="553" font-size="16" font-weight="bold" fill="#111">39</text>
+<text x="504" y="553" font-size="15" fill="#111">PD bit 0</text>
+<rect x="598" y="538" width="24" height="16" fill="#ffffff" stroke="#555"/>
+<text x="630" y="551" font-size="12" fill="#333">white</text>
+<rect x="170" y="570" width="250" height="46" fill="#dcfce7" stroke="#888"/>
+<text x="184" y="599" font-size="16" font-weight="bold" fill="#111">40</text>
+<text x="234" y="599" font-size="15" fill="#111">PB bit 1</text>
+<rect x="328" y="584" width="24" height="16" fill="#9e9e9e" stroke="#555"/>
+<text x="360" y="597" font-size="12" fill="#333">grey</text>
+<rect x="440" y="570" width="250" height="46" fill="#fee2e2" stroke="#888"/>
+<text x="454" y="599" font-size="16" font-weight="bold" fill="#111">41</text>
+<text x="504" y="599" font-size="15" fill="#111">PD bit 1</text>
+<rect x="598" y="584" width="24" height="16" fill="#9e9e9e" stroke="#555"/>
+<text x="630" y="597" font-size="12" fill="#333">grey</text>
+<rect x="170" y="616" width="250" height="46" fill="#dcfce7" stroke="#888"/>
+<text x="184" y="645" font-size="16" font-weight="bold" fill="#111">42</text>
+<text x="234" y="645" font-size="15" fill="#111">PB bit 2</text>
+<rect x="328" y="630" width="24" height="16" fill="#8e44ad" stroke="#555"/>
+<text x="360" y="643" font-size="12" fill="#333">violet</text>
+<rect x="440" y="616" width="250" height="46" fill="#fee2e2" stroke="#888"/>
+<text x="454" y="645" font-size="16" font-weight="bold" fill="#111">43</text>
+<text x="504" y="645" font-size="15" fill="#111">PD bit 2</text>
+<rect x="598" y="630" width="24" height="16" fill="#8e44ad" stroke="#555"/>
+<text x="630" y="643" font-size="12" fill="#333">violet</text>
+<rect x="170" y="662" width="250" height="46" fill="#dcfce7" stroke="#888"/>
+<text x="184" y="691" font-size="16" font-weight="bold" fill="#111">44</text>
+<text x="234" y="691" font-size="15" fill="#111">PB bit 3</text>
+<rect x="328" y="676" width="24" height="16" fill="#2196f3" stroke="#555"/>
+<text x="360" y="689" font-size="12" fill="#333">blue</text>
+<rect x="440" y="662" width="250" height="46" fill="#fee2e2" stroke="#888"/>
+<text x="454" y="691" font-size="16" font-weight="bold" fill="#111">45</text>
+<text x="504" y="691" font-size="15" fill="#111">PD bit 3</text>
+<rect x="598" y="676" width="24" height="16" fill="#2196f3" stroke="#555"/>
+<text x="630" y="689" font-size="12" fill="#333">blue</text>
+<rect x="170" y="708" width="250" height="46" fill="#dcfce7" stroke="#888"/>
+<text x="184" y="737" font-size="16" font-weight="bold" fill="#111">46</text>
+<text x="234" y="737" font-size="15" fill="#111">PB bit 4</text>
+<rect x="328" y="722" width="24" height="16" fill="#4caf50" stroke="#555"/>
+<text x="360" y="735" font-size="12" fill="#333">green</text>
+<rect x="440" y="708" width="250" height="46" fill="#fee2e2" stroke="#888"/>
+<text x="454" y="737" font-size="16" font-weight="bold" fill="#111">47</text>
+<text x="504" y="737" font-size="15" fill="#111">PD bit 4</text>
+<rect x="598" y="722" width="24" height="16" fill="#4caf50" stroke="#555"/>
+<text x="630" y="735" font-size="12" fill="#333">green</text>
+<rect x="170" y="754" width="250" height="46" fill="#dcfce7" stroke="#888"/>
+<text x="184" y="783" font-size="16" font-weight="bold" fill="#111">48</text>
+<text x="234" y="783" font-size="15" fill="#111">PB bit 5</text>
+<rect x="328" y="768" width="24" height="16" fill="#ffd600" stroke="#555"/>
+<text x="360" y="781" font-size="12" fill="#333">yellow</text>
+<rect x="440" y="754" width="250" height="46" fill="#fee2e2" stroke="#888"/>
+<text x="454" y="783" font-size="16" font-weight="bold" fill="#111">49</text>
+<text x="504" y="783" font-size="15" fill="#111">PD bit 5</text>
+<rect x="598" y="768" width="24" height="16" fill="#ffd600" stroke="#555"/>
+<text x="630" y="781" font-size="12" fill="#333">yellow</text>
+<rect x="170" y="800" width="250" height="46" fill="#dcfce7" stroke="#888"/>
+<text x="184" y="829" font-size="16" font-weight="bold" fill="#111">50</text>
+<text x="234" y="829" font-size="15" fill="#111">PB bit 6</text>
+<rect x="328" y="814" width="24" height="16" fill="#ff9800" stroke="#555"/>
+<text x="360" y="827" font-size="12" fill="#333">orange</text>
+<rect x="440" y="800" width="250" height="46" fill="#fee2e2" stroke="#888"/>
+<text x="454" y="829" font-size="16" font-weight="bold" fill="#111">51</text>
+<text x="504" y="829" font-size="15" fill="#111">PD bit 6</text>
+<rect x="598" y="814" width="24" height="16" fill="#ff9800" stroke="#555"/>
+<text x="630" y="827" font-size="12" fill="#333">orange</text>
+<rect x="170" y="846" width="250" height="46" fill="#dcfce7" stroke="#888"/>
+<text x="184" y="875" font-size="16" font-weight="bold" fill="#111">52</text>
+<text x="234" y="875" font-size="15" fill="#111">PB bit 7</text>
+<rect x="328" y="860" width="24" height="16" fill="#f44336" stroke="#555"/>
+<text x="360" y="873" font-size="12" fill="#333">red</text>
+<rect x="440" y="846" width="250" height="46" fill="#fee2e2" stroke="#888"/>
+<text x="454" y="875" font-size="16" font-weight="bold" fill="#111">53</text>
+<text x="504" y="875" font-size="15" fill="#111">PD bit 7</text>
+<rect x="598" y="860" width="24" height="16" fill="#f44336" stroke="#555"/>
+<text x="630" y="873" font-size="12" fill="#333">red</text>
+<rect x="170" y="892" width="250" height="46" fill="#f3f4f6" stroke="#888"/>
+<rect x="440" y="892" width="250" height="46" fill="#f3f4f6" stroke="#888"/>
+<text x="295" y="921" text-anchor="middle" font-size="16" font-weight="bold" fill="#111">GND</text>
+<text x="565" y="921" text-anchor="middle" font-size="16" font-weight="bold" fill="#111">GND</text>
+<text x="140" y="340" text-anchor="middle" font-size="15" font-weight="bold" fill="#1d4ed8" transform="rotate(-90 140 340)">Port A (out/in)</text>
+<text x="140" y="708" text-anchor="middle" font-size="15" font-weight="bold" fill="#15803d" transform="rotate(-90 140 708)">Port B (out/in)</text>
+<text x="722" y="340" text-anchor="middle" font-size="15" font-weight="bold" fill="#a16207" transform="rotate(90 722 340)">Port C (out/in)</text>
+<text x="722" y="708" text-anchor="middle" font-size="15" font-weight="bold" fill="#b91c1c" transform="rotate(90 722 708)">Port D (out/in)</text>
+<rect x="60" y="962" width="740" height="120" fill="#f8fafc" stroke="#94a3b8" rx="8"/>
+<text x="80" y="990" font-size="14" font-weight="bold" fill="#111">Notes</text>
+<text x="80" y="1012" font-size="13" fill="#333">Buttons (optional): SW1 = pin 2, SW2 = pin 3, momentary switch to GND. Internal pull-ups (INPUT_PULLUP);</text>
+<text x="80" y="1030" font-size="13" fill="#333">unwired = not pressed. Every button function has a serial command.</text>
+<text x="80" y="1052" font-size="13" fill="#333">Direct 5 V drive: no level shifters, no series terminations. Tie Mega GND to DUT GND; the +5V pair may</text>
+<text x="80" y="1070" font-size="13" fill="#333">feed the DUT for small loads, otherwise power the DUT externally and share ground only.</text>
+</svg>

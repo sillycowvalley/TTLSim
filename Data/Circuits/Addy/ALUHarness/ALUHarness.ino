@@ -1,5 +1,8 @@
 // ============================================================================
-//  ALUHarness.ino  -  Teensy 4.1 adapter test harness for the 8-bit TTL ALU
+//  ALUHarness.ino  -  test harness for the 8-bit TTL ALU
+//  Dual platform: Teensy 4.1 on the level-shifter adapter, OR Arduino Mega
+//  2560 wired directly into the same header positions (RetroShield form
+//  factor - no rewiring; AdapterPorts.h selects the mapping automatically).
 //
 //  DUT (TTLSim "8_Bit_ALU", datapath layer), AS CURRENTLY BUILT:
 //    U64 AL / U66 BL   '574  A and B registers, shared CLK_A rising edge
@@ -85,7 +88,8 @@ constexpr uint8_t PIN_ZFLAG   = PIN_PA7;  // in : Z flag (latched /EQL)
 constexpr uint8_t immConstant = 0xA5;
 
 // ------------------------------------------------------------------- timing
-constexpr uint32_t clockHighMicros = 1;
+static uint32_t clockPulseMicros = 1;   // 'Y' command: active clock pulse width
+constexpr uint32_t clockPulseMicrosMax = 100UL;
 constexpr uint32_t settleMicros    = 5;
 constexpr uint32_t gapMicrosMax    = 1000000UL;
 constexpr uint32_t setupMicrosMax  = 10000UL;
@@ -142,12 +146,12 @@ void setBSource(BSource src) {
   }
 }
 
-// 'K' command: clock polarity. The DUT now has a permanent inverting 'HC14
-// Schmitt conditioner on CLK, so the DEFAULT is inverted: the harness idles
-// CLK high and pulses low, and the DUT sees a clean rising edge after the
-// inverter. K 0 only if the conditioner is ever removed. NOTE: this and all
-// other settings (G/U/V) reset to defaults on every boot/re-flash.
-static bool clkInverted = true;
+// 'K' command: clock polarity. The 'HC14 conditioner has been REMOVED from
+// the DUT, so the DEFAULT is normal drive: idle low, rising-edge pulse,
+// straight to the register clock pins. K 1 (idle high, pulse low) only if
+// an inverting conditioner is ever refitted. NOTE: this and all other
+// settings (G/U/V/Y) reset to defaults on every boot/re-flash.
+static bool clkInverted = false;
 
 void clkIdleLevel() {
   digitalWriteFast(PIN_CLK, clkInverted ? HIGH : LOW);
@@ -155,7 +159,7 @@ void clkIdleLevel() {
 
 void pulseClock() {
   digitalWriteFast(PIN_CLK, clkInverted ? LOW : HIGH);
-  delayMicroseconds(clockHighMicros);
+  delayMicroseconds(clockPulseMicros);
   digitalWriteFast(PIN_CLK, clkInverted ? HIGH : LOW);
 }
 
@@ -302,10 +306,10 @@ void printHex2(uint8_t v) {
 }
 
 void printSample(const AluSample &s) {
-  Serial.print("D=");     printHex2(s.d);
-  Serial.print(" COUT="); Serial.print(s.cout ? 1 : 0);
-  Serial.print(" /EQL="); Serial.print(s.eqlN ? 1 : 0);
-  Serial.print(" Z=");    Serial.print(s.zflag ? 1 : 0);
+  Serial.print(F("D="));     printHex2(s.d);
+  Serial.print(F(" COUT=")); Serial.print(s.cout ? 1 : 0);
+  Serial.print(F(" /EQL=")); Serial.print(s.eqlN ? 1 : 0);
+  Serial.print(F(" Z="));    Serial.print(s.zflag ? 1 : 0);
 }
 
 void reportFail(const char *tag, uint8_t a, uint8_t bEff, bool sub, bool cin,
@@ -313,27 +317,27 @@ void reportFail(const char *tag, uint8_t a, uint8_t bEff, bool sub, bool cin,
   failCount++;
   if (failCount > maxFailPrints) {
     if (failCount == maxFailPrints + 1) {
-      Serial.println("(further failures suppressed)");
+      Serial.println(F("(further failures suppressed)"));
     }
     return;
   }
-  Serial.print("FAIL ");
+  Serial.print(F("FAIL "));
   Serial.print(tag);
-  Serial.print(" A=");    printHex2(a);
-  Serial.print(" Beff="); printHex2(bEff);
-  Serial.print(" SUB=");  Serial.print(sub ? 1 : 0);
-  Serial.print(" CIN=");  Serial.print(cin ? 1 : 0);
-  Serial.print(" -> ");
+  Serial.print(F(" A="));    printHex2(a);
+  Serial.print(F(" Beff=")); printHex2(bEff);
+  Serial.print(F(" SUB="));  Serial.print(sub ? 1 : 0);
+  Serial.print(F(" CIN="));  Serial.print(cin ? 1 : 0);
+  Serial.print(F(" -> "));
   if (haveZ) {
     printSample(s);
   } else {
-    Serial.print("D=");     printHex2(s.d);
-    Serial.print(" COUT="); Serial.print(s.cout ? 1 : 0);
-    Serial.print(" /EQL="); Serial.print(s.eqlN ? 1 : 0);
+    Serial.print(F("D="));     printHex2(s.d);
+    Serial.print(F(" COUT=")); Serial.print(s.cout ? 1 : 0);
+    Serial.print(F(" /EQL=")); Serial.print(s.eqlN ? 1 : 0);
   }
-  Serial.print("  expected D="); printHex2(dExp);
-  Serial.print(" COUT=");        Serial.print(coutExp ? 1 : 0);
-  Serial.print(" /EQL=");        Serial.println(dExp != 0 ? 1 : 0);
+  Serial.print(F("  expected D=")); printHex2(dExp);
+  Serial.print(F(" COUT="));        Serial.print(coutExp ? 1 : 0);
+  Serial.print(F(" /EQL="));        Serial.println(dExp != 0 ? 1 : 0);
 }
 
 bool checkSample(const char *tag, uint8_t a, uint8_t bEff, bool sub, bool cin,
@@ -381,39 +385,39 @@ int8_t singleBitIndex(uint8_t v) {           // -1 if not exactly one bit
 }
 
 void printPortCWire(uint8_t n) {
-  Serial.print("PC");
+  Serial.print(F("PC"));
   Serial.print(n);
-  Serial.print(" (");
+  Serial.print(F(" ("));
   Serial.print(ribbonColour[n]);
-  Serial.print(") -> U66 pin ");
+  Serial.print(F(") -> U66 pin "));
   Serial.print(2 + n);
 }
 
 void printPortDWire(uint8_t n) {
-  Serial.print("PD");
+  Serial.print(F("PD"));
   Serial.print(n);
-  Serial.print(" (");
+  Serial.print(F(" ("));
   Serial.print(ribbonColour[n]);
-  Serial.print(") -> U64 pin ");
+  Serial.print(F(") -> U64 pin "));
   Serial.print(2 + n);
 }
 
 void printDBusWire(uint8_t n) {
-  Serial.print("PB");
+  Serial.print(F("PB"));
   Serial.print(n);
-  Serial.print(" (");
+  Serial.print(F(" ("));
   Serial.print(ribbonColour[n]);
-  Serial.print(") <- ");
+  Serial.print(F(") <- "));
   Serial.print(n < 4 ? "U54" : "U53");
-  Serial.print(" pin ");
+  Serial.print(F(" pin "));
   Serial.print(sumPins[n & 3]);
 }
 
 void connResult(bool pass) {
   if (pass) {
-    Serial.println("  PASS");
+    Serial.println(F("  PASS"));
   } else {
-    Serial.println("  *** FAIL ***");
+    Serial.println(F("  *** FAIL ***"));
     connFails++;
   }
 }
@@ -423,16 +427,16 @@ void connResult(bool pass) {
 // logic cone feeding that sum bit.
 void analyseBitFault(uint8_t got, uint8_t expected) {
   uint8_t diff = got ^ expected;
-  Serial.print("    got ");
+  Serial.print(F("    got "));
   printHex2(got);
-  Serial.print(", expected ");
+  Serial.print(F(", expected "));
   printHex2(expected);
-  Serial.print(", differing D-bus bits:");
+  Serial.print(F(", differing D-bus bits:"));
   for (uint8_t n = 0; n < 8; n++) {
     if (diff & (1u << n)) {
-      Serial.print("  [");
+      Serial.print(F("  ["));
       printDBusWire(n);
-      Serial.print("]");
+      Serial.print(F("]"));
     }
   }
   Serial.println();
@@ -441,7 +445,7 @@ void analyseBitFault(uint8_t got, uint8_t expected) {
 void connectivityCheck() {
   connFails = 0;
   Serial.println();
-  Serial.println("=== CONNECTIVITY CHECK (isolated gentle steps) ===");
+  Serial.println(F("=== CONNECTIVITY CHECK (isolated gentle steps) ==="));
 
   // Known starting state: registers loaded with zero, source floating.
   setMode(false, false);
@@ -452,34 +456,34 @@ void connectivityCheck() {
 
   // ---- Phase 0: baseline sanity in float mode: D must read 00 ----
   Serial.println();
-  Serial.println("Phase 0: baseline (A=00, Beff=00) - expects D=00, /EQL=0");
+  Serial.println(F("Phase 0: baseline (A=00, Beff=00) - expects D=00, /EQL=0"));
   connQuiet();
   {
     uint8_t d0 = readPortB();
     bool eql0  = digitalReadFast(PIN_EQL_N) == HIGH;
-    Serial.print("  D=");
+    Serial.print(F("  D="));
     printHex2(d0);
-    Serial.print(" /EQL=");
+    Serial.print(F(" /EQL="));
     Serial.print(eql0 ? 1 : 0);
     bool pass = (d0 == 0x00) && !eql0;
     connResult(pass);
     if (d0 != 0x00) {
-      Serial.println("    non-zero baseline: stuck D-bus read bit(s), stuck register");
-      Serial.println("    bit(s), or CLK never loaded the registers (see Phase 2):");
+      Serial.println(F("    non-zero baseline: stuck D-bus read bit(s), stuck register"));
+      Serial.println(F("    bit(s), or CLK never loaded the registers (see Phase 2):"));
       analyseBitFault(d0, 0x00);
     }
   }
 
   // ---- Phase 1: Port C -> B register -> BBUS -> XOR -> adders -> D ----
   Serial.println();
-  Serial.println("Phase 1: Port C (QB) walk via B register - one gentle clock each");
-  Serial.println("  D should equal A(=00) + pattern exactly");
+  Serial.println(F("Phase 1: Port C (QB) walk via B register - one gentle clock each"));
+  Serial.println(F("  D should equal A(=00) + pattern exactly"));
   setBSource(BSRC_REG);
   opWriteC(0x00);
   gentleClock();
   connQuiet();
   uint8_t base = readPortB();
-  Serial.print("  baseline (pattern 00): D=");
+  Serial.print(F("  baseline (pattern 00): D="));
   printHex2(base);
   connResult(base == 0x00);
 
@@ -494,20 +498,20 @@ void connectivityCheck() {
     uint8_t d = readPortB();
     uint8_t delta = (uint8_t)(d - base);
     int8_t  bitN  = singleBitIndex(x);
-    Serial.print("  pattern ");
+    Serial.print(F("  pattern "));
     printHex2(x);
     if (bitN >= 0) {
-      Serial.print("  [");
+      Serial.print(F("  ["));
       printPortCWire((uint8_t)bitN);
-      Serial.print("]");
+      Serial.print(F("]"));
     }
-    Serial.print("  D=");
+    Serial.print(F("  D="));
     printHex2(d);
     bool pass = (delta == x) && (d == x);   // base should be 0, so both hold
     connResult(pass);
     if (!pass) {
       if (delta == 0x00 && bitN >= 0) {
-        Serial.println("    no effect at all - this Port C wire is likely open");
+        Serial.println(F("    no effect at all - this Port C wire is likely open"));
       }
       analyseBitFault(d, x);
     }
@@ -517,7 +521,7 @@ void connectivityCheck() {
   }
   {
     uint8_t back = readPortB();
-    Serial.print("  baseline restored: D=");
+    Serial.print(F("  baseline restored: D="));
     printHex2(back);
     connResult(back == base);
   }
@@ -525,8 +529,8 @@ void connectivityCheck() {
   // ---- Phase 2: Port D -> QA -> '574 -> ABUS -> adders -> D. One gentle ----
   // clock per pattern, done twice; float mode so D = register A directly.
   Serial.println();
-  Serial.println("Phase 2: Port D (QA) walk via register A - one gentle clock each,");
-  Serial.println("  loaded twice per pattern; float mode so D = A exactly");
+  Serial.println(F("Phase 2: Port D (QA) walk via register A - one gentle clock each,"));
+  Serial.println(F("  loaded twice per pattern; float mode so D = A exactly"));
   setBSource(BSRC_FLOAT);
   opWriteC(0x00);
   connQuiet();
@@ -546,39 +550,39 @@ void connectivityCheck() {
     phase2Reads[i] = d1;
     if (i > 0 && d1 != phase2Reads[0]) allSame = false;
     int8_t bitN = singleBitIndex(x);
-    Serial.print("  pattern ");
+    Serial.print(F("  pattern "));
     printHex2(x);
     if (bitN >= 0) {
-      Serial.print("  [");
+      Serial.print(F("  ["));
       printPortDWire((uint8_t)bitN);
-      Serial.print("]");
+      Serial.print(F("]"));
     }
-    Serial.print("  D=");
+    Serial.print(F("  D="));
     printHex2(d1);
     if (d1 != d2) {
-      Serial.print(" then ");
+      Serial.print(F(" then "));
       printHex2(d2);
-      Serial.print(" (UNSTABLE reload!)");
+      Serial.print(F(" (UNSTABLE reload!)"));
     }
     bool pass = (d1 == x) && (d2 == x);
     connResult(pass);
     if (!pass && d1 == d2) {
       uint8_t delta = d1 ^ x;
       if (bitN >= 0 && (d1 & (1u << bitN)) == 0 && singleBitIndex(delta) == bitN) {
-        Serial.println("    bit never arrived - this Port D wire is likely open");
+        Serial.println(F("    bit never arrived - this Port D wire is likely open"));
       }
       analyseBitFault(d1, x);
     }
   }
   if (allSame) {
-    Serial.println("  *** D never changed across all patterns: CLK_A is not");
-    Serial.println("      reaching the registers. Check PA0 (white) -> U64 pin 11. ***");
+    Serial.println(F("  *** D never changed across all patterns: CLK_A is not"));
+    Serial.println(F("      reaching the registers. Check PA0 (white) -> U64 pin 11. ***"));
     connFails++;
   }
 
   // ---- Phase 3: control and status lines, one at a time ----
   Serial.println();
-  Serial.println("Phase 3: control/status lines");
+  Serial.println(F("Phase 3: control/status lines"));
 
   // Float mode; load A = 0x10 for arithmetic probes.
   opWriteD(0x10);
@@ -590,18 +594,18 @@ void connectivityCheck() {
   connQuiet();
   {
     uint8_t d = readPortB();
-    Serial.print("  CIN=1  [PA2 (violet) -> U54 pin 7]           D=");
+    Serial.print(F("  CIN=1  [PA2 (violet) -> U54 pin 7]           D="));
     printHex2(d);
-    Serial.print(" (want 11)");
+    Serial.print(F(" (want 11)"));
     connResult(d == 0x11);
   }
   digitalWriteFast(PIN_CIN, LOW);
   connQuiet();
   {
     uint8_t d = readPortB();
-    Serial.print("  CIN=0                                        D=");
+    Serial.print(F("  CIN=0                                        D="));
     printHex2(d);
-    Serial.print(" (want 10)");
+    Serial.print(F(" (want 10)"));
     connResult(d == 0x10);
   }
 
@@ -611,21 +615,21 @@ void connectivityCheck() {
   {
     uint8_t d = readPortB();
     bool c   = digitalReadFast(PIN_COUT) == HIGH;
-    Serial.print("  SUB=1  [PA1 (grey) -> U50 pin 2]             D=");
+    Serial.print(F("  SUB=1  [PA1 (grey) -> U50 pin 2]             D="));
     printHex2(d);
-    Serial.print(" COUT=");
+    Serial.print(F(" COUT="));
     Serial.print(c ? 1 : 0);
-    Serial.print(" (want 0F,1)");
+    Serial.print(F(" (want 0F,1)"));
     connResult(d == 0x0F && c);
     if (!c) {
-      Serial.println("    COUT stuck low? [PA5 (yellow) <- U53 pin 9]");
+      Serial.println(F("    COUT stuck low? [PA5 (yellow) <- U53 pin 9]"));
     }
   }
   digitalWriteFast(PIN_SUB, LOW);
   connQuiet();
   {
     bool c = digitalReadFast(PIN_COUT) == HIGH;
-    Serial.print("  SUB=0: COUT back to 0                        COUT=");
+    Serial.print(F("  SUB=0: COUT back to 0                        COUT="));
     Serial.print(c ? 1 : 0);
     connResult(!c);
   }
@@ -636,18 +640,18 @@ void connectivityCheck() {
   connQuiet();
   {
     bool e = digitalReadFast(PIN_EQL_N) == HIGH;
-    Serial.print("  D=00: /EQL  [PA6 (orange) <- U44 pin 19]     /EQL=");
+    Serial.print(F("  D=00: /EQL  [PA6 (orange) <- U44 pin 19]     /EQL="));
     Serial.print(e ? 1 : 0);
-    Serial.print(" (want 0)");
+    Serial.print(F(" (want 0)"));
     connResult(!e);
   }
   digitalWriteFast(PIN_CIN, HIGH);
   connQuiet();
   {
     bool e = digitalReadFast(PIN_EQL_N) == HIGH;
-    Serial.print("  D=01: /EQL                                   /EQL=");
+    Serial.print(F("  D=01: /EQL                                   /EQL="));
     Serial.print(e ? 1 : 0);
-    Serial.print(" (want 1)");
+    Serial.print(F(" (want 1)"));
     connResult(e);
   }
   digitalWriteFast(PIN_CIN, LOW);
@@ -657,9 +661,9 @@ void connectivityCheck() {
   gentleClock();
   {
     bool z = digitalReadFast(PIN_ZFLAG) == HIGH;
-    Serial.print("  Z after clock at D=00  [PA7 (red) <- U45 p5] Z=");
+    Serial.print(F("  Z after clock at D=00  [PA7 (red) <- U45 p5] Z="));
     Serial.print(z ? 1 : 0);
-    Serial.print(" (want 0)");
+    Serial.print(F(" (want 0)"));
     connResult(!z);
   }
   opWriteD(0x01);
@@ -668,13 +672,13 @@ void connectivityCheck() {
   gentleClock();                       // capture /EQL=1 into Z
   {
     bool z = digitalReadFast(PIN_ZFLAG) == HIGH;
-    Serial.print("  Z after clock at D=01                        Z=");
+    Serial.print(F("  Z after clock at D=01                        Z="));
     Serial.print(z ? 1 : 0);
-    Serial.print(" (want 1)");
+    Serial.print(F(" (want 1)"));
     connResult(z);
     if (!z) {
-      Serial.println("    Z stuck: check PA7 (red) <- U45 pin 5, and the");
-      Serial.println("    ZNEW strap U46 pin 3 -> U44 pin 19, FLAGEN -> VCC");
+      Serial.println(F("    Z stuck: check PA7 (red) <- U45 pin 5, and the"));
+      Serial.println(F("    ZNEW strap U46 pin 3 -> U44 pin 19, FLAGEN -> VCC"));
     }
   }
 
@@ -687,13 +691,13 @@ void connectivityCheck() {
   connQuiet();
   {
     uint8_t d = readPortB();
-    Serial.print("  /BOE=0, B reg=55  [PA3 (blue) -> U66 pin 1]  D=");
+    Serial.print(F("  /BOE=0, B reg=55  [PA3 (blue) -> U66 pin 1]  D="));
     printHex2(d);
-    Serial.print(" (want 55)");
+    Serial.print(F(" (want 55)"));
     connResult(d == 0x55);
     if (d == 0x00) {
-      Serial.println("    still reads the pulldown value - /BOE wire not reaching");
-      Serial.println("    U66 pin 1, or the '574 outputs never enable");
+      Serial.println(F("    still reads the pulldown value - /BOE wire not reaching"));
+      Serial.println(F("    U66 pin 1, or the '574 outputs never enable"));
     }
   }
 
@@ -702,48 +706,48 @@ void connectivityCheck() {
   connQuiet();
   {
     uint8_t d = readPortB();
-    Serial.print("  /IMMOE=0, const   [PA4 (green) -> U63 pin 1] D=");
+    Serial.print(F("  /IMMOE=0, const   [PA4 (green) -> U63 pin 1] D="));
     printHex2(d);
-    Serial.print(" (want A5)");
+    Serial.print(F(" (want A5)"));
     connResult(d == immConstant);
     if (d != immConstant) {
-      Serial.println("    wrong constant: check the A5 straps on U63 pins 2..9,");
-      Serial.println("    U63 pin 19 to GND, and U63 power (pins 10/20)");
+      Serial.println(F("    wrong constant: check the A5 straps on U63 pins 2..9,"));
+      Serial.println(F("    U63 pin 19 to GND, and U63 power (pins 10/20)"));
     }
   }
   setBSource(BSRC_REG);
   connQuiet();
   {
     uint8_t d = readPortB();
-    Serial.print("  back to /BOE: register held                  D=");
+    Serial.print(F("  back to /BOE: register held                  D="));
     printHex2(d);
-    Serial.print(" (want 55)");
+    Serial.print(F(" (want 55)"));
     connResult(d == 0x55);
     if (d == immConstant) {
-      Serial.println("    bus still shows the constant - U63 did not release:");
-      Serial.println("    check /IMMOE at U63 pin 1 and U63 pin 19 to GND");
+      Serial.println(F("    bus still shows the constant - U63 did not release:"));
+      Serial.println(F("    check /IMMOE at U63 pin 1 and U63 pin 19 to GND"));
     }
   }
   setBSource(BSRC_FLOAT);
   connQuiet();
   {
     uint8_t d = readPortB();
-    Serial.print("  both released: pulldowns                     D=");
+    Serial.print(F("  both released: pulldowns                     D="));
     printHex2(d);
-    Serial.print(" (want 00)");
+    Serial.print(F(" (want 00)"));
     connResult(d == 0x00);
   }
 
   // ---- Summary ----
   Serial.println();
-  Serial.print("=== CONNECTIVITY CHECK: ");
+  Serial.print(F("=== CONNECTIVITY CHECK: "));
   if (connFails == 0) {
-    Serial.println("all checks PASSED ===");
-    Serial.println("Every wire verified. Remaining failures in T are dynamic");
-    Serial.println("(timing / signal integrity), not connectivity.");
+    Serial.println(F("all checks PASSED ==="));
+    Serial.println(F("Every wire verified. Remaining failures in T are dynamic"));
+    Serial.println(F("(timing / signal integrity), not connectivity."));
   } else {
     Serial.print(connFails);
-    Serial.println(" FAILURES - see wire names above ===");
+    Serial.println(F(" FAILURES - see wire names above ==="));
   }
   idleBus();
 }
@@ -776,32 +780,32 @@ uint16_t runOperandSweep(uint8_t aVal) {
         if (diff & (1u << n)) bitErr[n]++;
       }
       if (sweepFails <= 40) {
-        Serial.print("  ");
+        Serial.print(F("  "));
         printHex2((uint8_t)v);
-        Serial.print(" -> ");
+        Serial.print(F(" -> "));
         printHex2(d);
-        Serial.print(" want ");
+        Serial.print(F(" want "));
         printHex2(dExp);
-        Serial.print("  (D-bus bits wrong:");
+        Serial.print(F("  (D-bus bits wrong:"));
         for (uint8_t n = 0; n < 8; n++) {
           if (diff & (1u << n)) {
             Serial.print(' ');
             Serial.print(n);
           }
         }
-        Serial.println(")");
+        Serial.println(F(")"));
       } else if (sweepFails == 41) {
-        Serial.println("  (further failures suppressed)");
+        Serial.println(F("  (further failures suppressed)"));
       }
     }
   }
-  Serial.print("Sweep (A=");
+  Serial.print(F("Sweep (A="));
   printHex2(aVal);
-  Serial.print(") done: ");
+  Serial.print(F(") done: "));
   Serial.print(sweepFails);
-  Serial.println(" of 256 wrong");
+  Serial.println(F(" of 256 wrong"));
   if (sweepFails > 0) {
-    Serial.print("D-bus error counts, bits 0..7: ");
+    Serial.print(F("D-bus error counts, bits 0..7: "));
     for (uint8_t n = 0; n < 8; n++) {
       Serial.print(bitErr[n]);
       Serial.print(n < 7 ? " " : "\n");
@@ -811,30 +815,30 @@ uint16_t runOperandSweep(uint8_t aVal) {
 }
 
 void patternSweep() {
-  Serial.println("Operand-path static sweeps via B register (one gentle clock per value)");
-  Serial.println("--- Sweep 1: A=00, expect D = value ---");
+  Serial.println(F("Operand-path static sweeps via B register (one gentle clock per value)"));
+  Serial.println(F("--- Sweep 1: A=00, expect D = value ---"));
   uint16_t f0 = runOperandSweep(0x00);
-  Serial.println("--- Sweep 2: A=FF, expect D = value-1 (mod 256), full ripple ---");
+  Serial.println(F("--- Sweep 2: A=FF, expect D = value-1 (mod 256), full ripple ---"));
   uint16_t f1 = runOperandSweep(0xFF);
   Serial.println();
-  Serial.print("Verdict: A=00 sweep ");
+  Serial.print(F("Verdict: A=00 sweep "));
   Serial.print(f0);
-  Serial.print(" wrong, A=FF sweep ");
+  Serial.print(F(" wrong, A=FF sweep "));
   Serial.print(f1);
-  Serial.println(" wrong.");
+  Serial.println(F(" wrong."));
   if (f0 == 0 && f1 == 0) {
-    Serial.println("Both sweeps clean.");
+    Serial.println(F("Both sweeps clean."));
   } else if (f0 == 0 && f1 > 0) {
-    Serial.println("Errors only under full carry ripple (A=FF): dynamic margin,");
-    Serial.println("not connectivity. Re-run P - wandering failure values mean a");
-    Serial.println("residual intermittent; fixed values mean a specific weak node");
-    Serial.println("in the carry chain.");
+    Serial.println(F("Errors only under full carry ripple (A=FF): dynamic margin,"));
+    Serial.println(F("not connectivity. Re-run P - wandering failure values mean a"));
+    Serial.println(F("residual intermittent; fixed values mean a specific weak node"));
+    Serial.println(F("in the carry chain."));
   } else if (f1 * 4 < f0) {
-    Serial.println("FF sweep much cleaner -> ABUS side floating: check the /AOE");
-    Serial.println("strap (U64 pin 1 leg = 0V), RN3 pin 1 to GND, U64 power legs.");
+    Serial.println(F("FF sweep much cleaner -> ABUS side floating: check the /AOE"));
+    Serial.println(F("strap (U64 pin 1 leg = 0V), RN3 pin 1 to GND, U64 power legs."));
   } else {
-    Serial.println("Both sweeps comparably bad -> B side: check U66 power/enable");
-    Serial.println("legs, RN5 pin 1 to GND, XOR power, and U63's outputs on BBUS.");
+    Serial.println(F("Both sweeps comparably bad -> B side: check U66 power/enable"));
+    Serial.println(F("legs, RN5 pin 1 to GND, XOR power, and U63's outputs on BBUS."));
   }
   idleBus();
 }
@@ -872,14 +876,14 @@ void hammerLoad(uint8_t v, uint32_t chaseNs, uint8_t chaseMask, uint8_t exp,
     if (isChase) chaseHits++;
     if (shown < 12) {
       shown++;
-      Serial.print("  load ");
+      Serial.print(F("  load "));
       printHex2(v);
-      Serial.print(" -> D=");
+      Serial.print(F(" -> D="));
       printHex2(d);
-      Serial.print(" want ");
+      Serial.print(F(" want "));
       printHex2(exp);
       if (isChase) {
-        Serial.print("  == A+(B^mask): RE-CAPTURED THE CHASE VALUE");
+        Serial.print(F("  == A+(B^mask): RE-CAPTURED THE CHASE VALUE"));
       }
       Serial.println();
     }
@@ -887,15 +891,15 @@ void hammerLoad(uint8_t v, uint32_t chaseNs, uint8_t chaseMask, uint8_t exp,
 }
 
 void boundaryHammer(uint8_t v1, uint8_t v2, uint32_t chaseNs, uint8_t chaseMask) {
-  Serial.print("Boundary hammer: B alternating ");
+  Serial.print(F("Boundary hammer: B alternating "));
   printHex2(v1);
-  Serial.print(" <-> ");
+  Serial.print(F(" <-> "));
   printHex2(v2);
-  Serial.print(", A=FF, 500 loads each");
+  Serial.print(F(", A=FF, 500 loads each"));
   if (chaseNs > 0) {
-    Serial.print(", chase ~");
+    Serial.print(F(", chase ~"));
     Serial.print(chaseNs);
-    Serial.print(" ns, mask ");
+    Serial.print(F(" ns, mask "));
     printHex2(chaseMask);
   }
   Serial.println();
@@ -919,17 +923,17 @@ void boundaryHammer(uint8_t v1, uint8_t v2, uint32_t chaseNs, uint8_t chaseMask)
     hammerLoad(v2, chaseNs, chaseMask, exp2, err2, chaseHits, shown);
     hammerLoad(v1, chaseNs, chaseMask, exp1, err1, chaseHits, shown);
   }
-  Serial.print("Result: ");
+  Serial.print(F("Result: "));
   printHex2(v1);
-  Serial.print(" wrong ");
+  Serial.print(F(" wrong "));
   Serial.print(err1);
-  Serial.print("/500, ");
+  Serial.print(F("/500, "));
   printHex2(v2);
-  Serial.print(" wrong ");
+  Serial.print(F(" wrong "));
   Serial.print(err2);
-  Serial.println("/500");
+  Serial.println(F("/500"));
   if (chaseNs > 0) {
-    Serial.print("Exact chase-value captures: ");
+    Serial.print(F("Exact chase-value captures: "));
     Serial.print(chaseHits);
     Serial.println(chaseHits > 0
       ? "  -> capture events AFTER the official edge: phantom clock proven"
@@ -963,30 +967,30 @@ void computeWalkStep(uint8_t i, uint8_t &a, uint8_t &b, BSource &src) {
 }
 
 void describeWalkStep(uint8_t i) {
-  if (i == 0)                 Serial.print("all dark");
-  else if (i >= 1 && i <= 8)  { Serial.print("A bit "); Serial.print(i - 1);
-                                Serial.print(" - watch AL bar"); }
-  else if (i >= 9 && i <= 16) { Serial.print("B bit "); Serial.print(i - 9);
-                                Serial.print(" - watch BL bar"); }
-  else if (i == 17)           Serial.print("checkerboard A=55 B=AA");
-  else if (i == 18)           Serial.print("all on A=FF B=FF");
-  else if (i == 19)           Serial.print("B register 55 via /BOE");
-  else if (i == 20)           Serial.print("constant A5 via /IMMOE - BL bar must show A5");
-  else if (i == 21)           Serial.print("back to /BOE - BL bar must return to 55");
-  else if (i == 22)           Serial.print("both released - BL bar must go dark");
-  else if (((i - 23) & 1) == 0) Serial.print("boundary: load E0 (5 outputs fall)");
-  else                        Serial.print("boundary: load DF - watch BL for collapsed bits");
+  if (i == 0)                 Serial.print(F("all dark"));
+  else if (i >= 1 && i <= 8)  { Serial.print(F("A bit ")); Serial.print(i - 1);
+                                Serial.print(F(" - watch AL bar")); }
+  else if (i >= 9 && i <= 16) { Serial.print(F("B bit ")); Serial.print(i - 9);
+                                Serial.print(F(" - watch BL bar")); }
+  else if (i == 17)           Serial.print(F("checkerboard A=55 B=AA"));
+  else if (i == 18)           Serial.print(F("all on A=FF B=FF"));
+  else if (i == 19)           Serial.print(F("B register 55 via /BOE"));
+  else if (i == 20)           Serial.print(F("constant A5 via /IMMOE - BL bar must show A5"));
+  else if (i == 21)           Serial.print(F("back to /BOE - BL bar must return to 55"));
+  else if (i == 22)           Serial.print(F("both released - BL bar must go dark"));
+  else if (((i - 23) & 1) == 0) Serial.print(F("boundary: load E0 (5 outputs fall)"));
+  else                        Serial.print(F("boundary: load DF - watch BL for collapsed bits"));
 }
 
 void printBar(const char *name, uint8_t v) {
-  Serial.print("  ");
+  Serial.print(F("  "));
   Serial.print(name);
-  Serial.print(" bar (bit7..0): ");
+  Serial.print(F(" bar (bit7..0): "));
   for (int8_t n = 7; n >= 0; n--) {
     Serial.print(((v >> n) & 1) ? '#' : '.');
     Serial.print(' ');
   }
-  Serial.print("  = ");
+  Serial.print(F("  = "));
   printHex2(v);
   Serial.println();
 }
@@ -1014,28 +1018,28 @@ void showWalkStep() {
   uint8_t d     = readPortB();
 
   Serial.println();
-  Serial.print("Step ");
+  Serial.print(F("Step "));
   Serial.print(walkStep + 1);
-  Serial.print("/");
+  Serial.print(F("/"));
   Serial.print(walkStepCount);
-  Serial.print(": ");
+  Serial.print(F(": "));
   describeWalkStep(walkStep);
   Serial.println();
   printBar("AL", a);
   printBar("BL", blExp);
-  Serial.print("  D readback: ");
+  Serial.print(F("  D readback: "));
   printHex2(d);
-  Serial.print(" (want ");
+  Serial.print(F(" (want "));
   printHex2(dExp);
-  Serial.print(")  ");
+  Serial.print(F(")  "));
   Serial.println(d == dExp ? "OK" : "*** MISMATCH - compare the bars! ***");
-  Serial.println("  SW1 or Enter = next, SW2 or x = exit");
+  Serial.println(F("  SW1 or Enter = next, SW2 or x = exit"));
 }
 
 void startWalk() {
   walkActive = true;
   walkStep   = 0;
-  Serial.println("LED single-step walk. Compare the printed bars with the real ones.");
+  Serial.println(F("LED single-step walk. Compare the printed bars with the real ones."));
   showWalkStep();
 }
 
@@ -1043,7 +1047,7 @@ void advanceWalk() {
   walkStep++;
   if (walkStep >= walkStepCount) {
     walkStep = 0;
-    Serial.println("(sequence restarting from the top)");
+    Serial.println(F("(sequence restarting from the top)"));
   }
   showWalkStep();
 }
@@ -1051,7 +1055,7 @@ void advanceWalk() {
 void exitWalk() {
   walkActive = false;
   idleBus();
-  Serial.println("Walk ended.");
+  Serial.println(F("Walk ended."));
 }
 
 // ------------------------------------------------------------ test slices
@@ -1080,7 +1084,7 @@ void sliceFullTest() {
   }
   if ((vecIndex & 0xFFFFu) == 0 && vecIndex < vecTotal) {
     Serial.print(vecIndex >> 16);
-    Serial.println("/4 mode blocks done");
+    Serial.println(F("/4 mode blocks done"));
   }
 }
 
@@ -1130,7 +1134,7 @@ void sliceFloatTest() {
 
 void startTest(RunState which, uint32_t total, const char *name) {
   if (runState != RS_IDLE || monitorActive) {
-    Serial.println("Busy - X first.");
+    Serial.println(F("Busy - X first."));
     return;
   }
   runState       = which;
@@ -1139,15 +1143,15 @@ void startTest(RunState which, uint32_t total, const char *name) {
   failCount      = 0;
   checkCount     = 0;
   runStartMillis = millis();
-  Serial.print("Running ");
+  Serial.print(F("Running "));
   Serial.print(name);
-  Serial.print(" (");
+  Serial.print(F(" ("));
   Serial.print(total);
-  Serial.print(" vectors, gap ");
+  Serial.print(F(" vectors, gap "));
   Serial.print(gapMicros);
-  Serial.print(" us, setup ");
+  Serial.print(F(" us, setup "));
   Serial.print(setupMicros);
-  Serial.println(" us)...");
+  Serial.println(F(" us)..."));
 }
 
 void finishTest(bool aborted) {
@@ -1156,11 +1160,11 @@ void finishTest(bool aborted) {
   idleBus();
   Serial.print(aborted ? "ABORTED after " : "Done: ");
   Serial.print(checkCount);
-  Serial.print(" checks, ");
+  Serial.print(F(" checks, "));
   Serial.print(failCount);
-  Serial.print(" failures, ");
+  Serial.print(F(" failures, "));
   Serial.print(elapsed);
-  Serial.println(" ms");
+  Serial.println(F(" ms"));
   Serial.println(failCount == 0 && !aborted ? "*** PASS ***" : "*** FAIL ***");
 }
 
@@ -1222,8 +1226,8 @@ bool parseOpArgs(char *line, uint8_t &a, uint8_t &b, BSource &src,
 }
 
 void printUsage() {
-  Serial.println("Usage: M|R|S <A hex> <B hex> <R|I|F> <SUB 0/1> <CIN 0/1>");
-  Serial.println("(src I: Beff is the hardwired constant A5; B loads the register)");
+  Serial.println(F("Usage: M|R|S <A hex> <B hex> <R|I|F> <SUB 0/1> <CIN 0/1>"));
+  Serial.println(F("(src I: Beff is the hardwired constant A5; B loads the register)"));
 }
 
 void manualOp(uint8_t a, uint8_t b, BSource src, bool sub, bool cin) {
@@ -1234,18 +1238,18 @@ void manualOp(uint8_t a, uint8_t b, BSource src, bool sub, bool cin) {
   uint8_t dExp;
   bool    coutExp;
   expectedAlu(a, bEff, sub, cin, dExp, coutExp);
-  Serial.print("A=");     printHex2(a);
-  Serial.print(" Beff="); printHex2(bEff);
-  Serial.print(" SUB=");  Serial.print(sub ? 1 : 0);
-  Serial.print(" CIN=");  Serial.print(cin ? 1 : 0);
-  Serial.print(" -> ");
+  Serial.print(F("A="));     printHex2(a);
+  Serial.print(F(" Beff=")); printHex2(bEff);
+  Serial.print(F(" SUB="));  Serial.print(sub ? 1 : 0);
+  Serial.print(F(" CIN="));  Serial.print(cin ? 1 : 0);
+  Serial.print(F(" -> "));
   printSample(s);
   bool ok = (s.d == dExp) && (s.cout == coutExp)
          && (s.eqlN == (dExp != 0)) && (s.zflag == (dExp != 0));
   Serial.println(ok ? "  PASS" : "  FAIL");
   if (!ok) {
-    Serial.print("expected D="); printHex2(dExp);
-    Serial.print(" COUT=");      Serial.println(coutExp ? 1 : 0);
+    Serial.print(F("expected D=")); printHex2(dExp);
+    Serial.print(F(" COUT="));      Serial.println(coutExp ? 1 : 0);
   }
 }
 
@@ -1288,15 +1292,15 @@ void repeatProbe(uint8_t a, uint8_t b, BSource src, bool sub, bool cin) {
   uint8_t bEff = (src == BSRC_FLOAT) ? 0x00
                : (src == BSRC_IMM   ? immConstant : b);
   expectedAlu(a, bEff, sub, cin, dExp, coutExp);
-  Serial.print("Repeat probe, ");
+  Serial.print(F("Repeat probe, "));
   Serial.print(repeatCount);
-  Serial.print(" runs, gap ");
+  Serial.print(F(" runs, gap "));
   Serial.print(gapMicros);
-  Serial.print(" us, setup ");
+  Serial.print(F(" us, setup "));
   Serial.print(setupMicros);
-  Serial.print(" us, expected D=");
+  Serial.print(F(" us, expected D="));
   printHex2(dExp);
-  Serial.print(" COUT=");
+  Serial.print(F(" COUT="));
   Serial.println(coutExp ? 1 : 0);
 
   for (uint8_t k = 0; k < nDistinct; k++) {
@@ -1305,14 +1309,14 @@ void repeatProbe(uint8_t a, uint8_t b, BSource src, bool sub, bool cin) {
     s.cout  = (values[k] & 0x100) != 0;
     s.eqlN  = (values[k] & 0x200) != 0;
     s.zflag = (values[k] & 0x400) != 0;
-    Serial.print("  x");
+    Serial.print(F("  x"));
     Serial.print(counts[k]);
-    Serial.print("  ");
+    Serial.print(F("  "));
     printSample(s);
     Serial.println();
   }
   if (overflow) {
-    Serial.println("  (more distinct results than table space - very unstable)");
+    Serial.println(F("  (more distinct results than table space - very unstable)"));
   }
   Serial.print(nDistinct);
   Serial.println(nDistinct == 1
@@ -1326,14 +1330,14 @@ void startStaticProbe(uint8_t a, uint8_t b, BSource src, bool sub, bool cin) {
   captureFlags(s);
   monitorLast   = packSample(s);
   monitorActive = true;
-  Serial.print("Static probe: A=");
+  Serial.print(F("Static probe: A="));
   printHex2(a);
-  Serial.print(" Beff=");
+  Serial.print(F(" Beff="));
   printHex2(bEff);
-  Serial.print(" -> ");
+  Serial.print(F(" -> "));
   printSample(s);
   Serial.println();
-  Serial.println("Monitoring - every change prints. Silence is good. X to stop.");
+  Serial.println(F("Monitoring - every change prints. Silence is good. X to stop."));
 }
 
 void serviceMonitor() {
@@ -1341,9 +1345,9 @@ void serviceMonitor() {
   uint16_t packed = packSample(s);
   if (packed != monitorLast) {
     monitorLast = packed;
-    Serial.print("t=");
+    Serial.print(F("t="));
     Serial.print(millis());
-    Serial.print("  ");
+    Serial.print(F("  "));
     printSample(s);
     Serial.println();
   }
@@ -1352,29 +1356,31 @@ void serviceMonitor() {
 // --------------------------------------------------------- command handling
 
 void printHelp() {
-  Serial.println("ALU harness commands ('541 inputs hardwired to A5):");
-  Serial.println("  C                      connectivity check - per-wire, gentle, verbose");
-  Serial.println("  P                      operand sweeps via B register, A=00 and A=FF");
-  Serial.println("  B <v1> <v2> [ns] [mask]  boundary hammer: alternate B 500x each, A=FF;");
-  Serial.println("                         chase slews (value XOR mask) [ns] after each edge");
-  Serial.println("  W                      LED single-step walk (SW1/Enter=next, SW2/x=exit)");
-  Serial.println("  T                      full register-path test (262,144 vectors)");
-  Serial.println("  I                      immediate-constant test: 256 A x SUB x CIN vs A5,");
-  Serial.println("                         with a /BOE handover check every vector");
-  Serial.println("  F                      bus-release / pulldown test");
-  Serial.println("  M <A> <B> <src> <s> <c>  manual op with pass/fail");
-  Serial.println("  R <A> <B> <src> <s> <c>  repeatability probe (100 identical runs)");
-  Serial.println("  S <A> <B> <src> <s> <c>  static probe, monitors until X");
-  Serial.println("  G <us>                 inter-vector gap (G alone shows current)");
-  Serial.println("  U <us>                 operand-to-clock setup time, default 1");
-  Serial.println("  V <us>                 bit-serial port writes: one line at a time,");
-  Serial.println("                         <us> between bits (0 = normal full-port slew)");
-  Serial.println("  K <0|1>                clock polarity; default 1 = inverted for the");
-  Serial.println("                         'HC14 conditioner. K 0 only without it");
-  Serial.println("  X                      abort test / stop monitor");
-  Serial.println("  H                      this help");
-  Serial.println("  args: A,B hex; src R/I/F (I: Beff=A5); s,c = SUB,CIN 0/1");
-  Serial.println("  SW1 = start full test, SW2 = abort");
+  Serial.println(F("ALU harness commands ('541 inputs hardwired to A5):"));
+  Serial.println(F("  C                      connectivity check - per-wire, gentle, verbose"));
+  Serial.println(F("  P                      operand sweeps via B register, A=00 and A=FF"));
+  Serial.println(F("  B <v1> <v2> [ns] [mask]  boundary hammer: alternate B 500x each, A=FF;"));
+  Serial.println(F("                         chase slews (value XOR mask) [ns] after each edge"));
+  Serial.println(F("  W                      LED single-step walk (SW1/Enter=next, SW2/x=exit)"));
+  Serial.println(F("  T                      full register-path test (262,144 vectors)"));
+  Serial.println(F("  I                      immediate-constant test: 256 A x SUB x CIN vs A5,"));
+  Serial.println(F("                         with a /BOE handover check every vector"));
+  Serial.println(F("  F                      bus-release / pulldown test"));
+  Serial.println(F("  M <A> <B> <src> <s> <c>  manual op with pass/fail"));
+  Serial.println(F("  R <A> <B> <src> <s> <c>  repeatability probe (100 identical runs)"));
+  Serial.println(F("  S <A> <B> <src> <s> <c>  static probe, monitors until X"));
+  Serial.println(F("  G <us>                 inter-vector gap (G alone shows current)"));
+  Serial.println(F("  U <us>                 operand-to-clock setup time, default 1"));
+  Serial.println(F("  V <us>                 bit-serial port writes: one line at a time,"));
+  Serial.println(F("                         <us> between bits (0 = normal full-port slew)"));
+  Serial.println(F("  Y <us>                 clock pulse width, default 1 (widen to give the"));
+  Serial.println(F("                         conditioner's RC time to cross threshold)"));
+  Serial.println(F("  K <0|1>                clock polarity; default 0 = normal (no conditioner)."));
+  Serial.println(F("                         K 1 only with an inverting 'HC14 on CLK"));
+  Serial.println(F("  X                      abort test / stop monitor"));
+  Serial.println(F("  H                      this help"));
+  Serial.println(F("  args: A,B hex; src R/I/F (I: Beff=A5); s,c = SUB,CIN 0/1"));
+  Serial.println(F("  SW1 = start full test, SW2 = abort"));
 }
 
 void handleOpCommand(char cmd, char *line) {
@@ -1388,7 +1394,7 @@ void handleOpCommand(char cmd, char *line) {
     return;
   }
   if (runState != RS_IDLE || monitorActive) {
-    Serial.println("Busy - X first.");
+    Serial.println(F("Busy - X first."));
     return;
   }
   if      (cmd == 'M') manualOp(a, b, src, sub, cin);
@@ -1399,40 +1405,44 @@ void handleOpCommand(char cmd, char *line) {
 void handleTimingCommand(char cmd, char *line) {
   char *p = line + 1;
   while (*p == ' ') p++;
-  const char *name = (cmd == 'G') ? "Gap" : (cmd == 'U') ? "Setup" : "Bit slew";
+  const char *name = (cmd == 'G') ? "Gap" : (cmd == 'U') ? "Setup"
+                   : (cmd == 'V') ? "Bit slew" : "Clock pulse width";
   uint32_t   *var  = (cmd == 'G') ? &gapMicros
-                   : (cmd == 'U') ? &setupMicros : &slewMicros;
+                   : (cmd == 'U') ? &setupMicros
+                   : (cmd == 'V') ? &slewMicros : &clockPulseMicros;
   uint32_t    maxV = (cmd == 'G') ? gapMicrosMax
-                   : (cmd == 'U') ? setupMicrosMax : slewMicrosMax;
+                   : (cmd == 'U') ? setupMicrosMax
+                   : (cmd == 'V') ? slewMicrosMax : clockPulseMicrosMax;
+  if (cmd == 'Y' && *var == 0) { }      // width 0 never allowed; fall through
   if (*p == '\0') {
     Serial.print(name);
-    Serial.print(" is ");
+    Serial.print(F(" is "));
     Serial.print(*var);
-    Serial.println(" us");
+    Serial.println(F(" us"));
     return;
   }
   uint32_t v = 0;
-  if (!parseDecimal(p, v) || v > maxV) {
-    Serial.print("Usage: ");
+  if (!parseDecimal(p, v) || v > maxV || (cmd == 'Y' && v == 0)) {
+    Serial.print(F("Usage: "));
     Serial.print(cmd);
-    Serial.print(" <microseconds 0..");
+    Serial.print(cmd == 'Y' ? " <microseconds 1.." : " <microseconds 0..");
     Serial.print(maxV);
-    Serial.println(">");
+    Serial.println(F(">"));
     return;
   }
   *var = v;
   Serial.print(name);
-  Serial.print(" set to ");
+  Serial.print(F(" set to "));
   Serial.print(v);
-  Serial.println(" us");
+  Serial.println(F(" us"));
   // Rough duration estimate: per vector two port writes (each up to 8
   // bit-steps when slewing serially) plus setup, gap and fixed overhead.
   uint64_t perVector = (uint64_t)gapMicros + 2ULL * setupMicros
                      + 16ULL * slewMicros + 10ULL;
   uint32_t seconds = (uint32_t)((perVector * 262144ULL) / 1000000ULL);
-  Serial.print("(full test will take about ");
+  Serial.print(F("(full test will take about "));
   Serial.print(seconds + 1);
-  Serial.println(" s at these settings)");
+  Serial.println(F(" s at these settings)"));
 }
 
 void handleClockPolarityCommand(char *line) {
@@ -1440,13 +1450,13 @@ void handleClockPolarityCommand(char *line) {
   while (*p == ' ') p++;
   if (*p == '0' || *p == '1') {
     if (runState != RS_IDLE || monitorActive) {
-      Serial.println("Busy - X first.");
+      Serial.println(F("Busy - X first."));
       return;
     }
     clkInverted = (*p == '1');
     clkIdleLevel();
   }
-  Serial.print("Clock polarity: ");
+  Serial.print(F("Clock polarity: "));
   Serial.println(clkInverted
     ? "INVERTED (idle high, pulses low - for one 'HC14 gate on CLK)"
     : "normal (idle low, rising-edge pulse)");
@@ -1477,12 +1487,12 @@ void handleBoundaryCommand(char *line) {
     ok = parseHexByte(tokens[4], chaseMask);
   }
   if (!ok) {
-    Serial.println("Usage: B <v1 hex> <v2 hex> [chase ns 0..100000] [mask hex]");
-    Serial.println("       e.g. B DF E0 1000 0F  (chase slews only bits 0-3)");
+    Serial.println(F("Usage: B <v1 hex> <v2 hex> [chase ns 0..100000] [mask hex]"));
+    Serial.println(F("       e.g. B DF E0 1000 0F  (chase slews only bits 0-3)"));
     return;
   }
   if (runState != RS_IDLE || monitorActive) {
-    Serial.println("Busy - X first.");
+    Serial.println(F("Busy - X first."));
     return;
   }
   boundaryHammer(v1, v2, chaseNs, chaseMask);
@@ -1496,14 +1506,14 @@ void handleLine(char *line) {
   switch (cmd) {
     case 'C':
       if (runState != RS_IDLE || monitorActive) {
-        Serial.println("Busy - X first.");
+        Serial.println(F("Busy - X first."));
       } else {
         connectivityCheck();
       }
       break;
     case 'P':
       if (runState != RS_IDLE || monitorActive) {
-        Serial.println("Busy - X first.");
+        Serial.println(F("Busy - X first."));
       } else {
         patternSweep();
       }
@@ -1514,7 +1524,7 @@ void handleLine(char *line) {
     case 'B': handleBoundaryCommand(line); break;
     case 'W':
       if (runState != RS_IDLE || monitorActive) {
-        Serial.println("Busy - X first.");
+        Serial.println(F("Busy - X first."));
       } else {
         startWalk();
       }
@@ -1524,22 +1534,23 @@ void handleLine(char *line) {
     case 'S': handleOpCommand(cmd, line); break;
     case 'G':
     case 'U':
-    case 'V': handleTimingCommand(cmd, line); break;
+    case 'V':
+    case 'Y': handleTimingCommand(cmd, line); break;
     case 'K': handleClockPolarityCommand(line); break;
     case 'X':
       if (monitorActive) {
         monitorActive = false;
         idleBus();
-        Serial.println("Monitor stopped.");
+        Serial.println(F("Monitor stopped."));
       } else if (runState != RS_IDLE) {
         finishTest(true);
       } else {
-        Serial.println("Nothing running.");
+        Serial.println(F("Nothing running."));
       }
       break;
     case 'H': printHelp(); break;
     default:
-      Serial.println("? (H for help)");
+      Serial.println(F("? (H for help)"));
       break;
   }
 }
@@ -1562,8 +1573,8 @@ void setup() {
   pinMode(PIN_EQL_N,   INPUT);
   pinMode(PIN_ZFLAG,   INPUT);
 
-  pinMode(PIN_SW1, INPUT);           // board has 4.7k pull-ups
-  pinMode(PIN_SW2, INPUT);
+  pinMode(PIN_SW1, SW_PIN_MODE);     // adapter: board pull-ups; Mega: INPUT_PULLUP
+  pinMode(PIN_SW2, SW_PIN_MODE);
 
   clkIdleLevel();
   idleBus();
@@ -1572,9 +1583,11 @@ void setup() {
   lastSw2 = sw2Pressed();
 
   while (!Serial && millis() < 3000) { }
-  Serial.println("8-bit ALU test harness ready ('541 constant = A5).");
-  Serial.print("Clock polarity: ");
-  Serial.println(clkInverted ? "INVERTED (for the 'HC14 conditioner)" : "normal");
+  Serial.print(F("8-bit ALU test harness ready ('541 constant = A5) on "));
+  Serial.println(F(PLATFORM_NAME));
+  Serial.print(F("Clock polarity: "));
+  Serial.println(clkInverted ? F("INVERTED (for an 'HC14 conditioner)")
+                             : F("normal (idle low, rising edge)"));
   printHelp();
 }
 
@@ -1617,7 +1630,7 @@ void loop() {
     } else if (monitorActive) {
       monitorActive = false;
       idleBus();
-      Serial.println("Monitor stopped.");
+      Serial.println(F("Monitor stopped."));
     } else if (runState != RS_IDLE) {
       finishTest(true);
     }

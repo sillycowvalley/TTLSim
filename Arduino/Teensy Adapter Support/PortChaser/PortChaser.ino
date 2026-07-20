@@ -1,5 +1,11 @@
 // ============================================================================
-//  PortChaser.ino  -  LED chaser on a chosen virtual port (Teensy 4.1 adapter)
+//  PortChaser.ino  -  LED chaser on a chosen virtual port (dual platform)
+//
+//  Teensy 4.1 on the adapter, or Arduino Mega 2560 wired directly into the
+//  same header positions - AdapterPorts.h picks the mapping from the board
+//  selected in the IDE. This is the sketch that originally verified the
+//  Teensy mapping end-to-end; run it once on any new board/wiring before
+//  trusting anything else.
 //
 //  Needs AdapterPorts.h in the same sketch folder.
 //
@@ -7,6 +13,10 @@
 //  Enter. A walking-bit chaser runs on that port for chasePasses full passes
 //  (bit 0 white up to bit 7 red), then blanks the LEDs and returns to the
 //  menu. Typing a different letter mid-run switches ports immediately.
+//
+//  LED note: through the adapter's level shifters, LEDs need buffering or
+//  high-value resistors (weak TXS static drive). The Mega's pins drive an
+//  LED + resistor directly (20 mA class).
 // ============================================================================
 
 #include "AdapterPorts.h"
@@ -37,7 +47,7 @@ void allPortsOff() {
 }
 
 void promptUser() {
-  Serial.println("LED chaser - which port? Type A, B, C or D:");
+  Serial.println(F("LED chaser - which port? Type A, B, C or D:"));
 }
 
 void selectPort(char letter) {
@@ -46,22 +56,22 @@ void selectPort(char letter) {
   chaserBit       = 0;
   completedPasses = 0;
   lastStep        = millis();
-  Serial.print("Chasing on port ");
+  Serial.print(F("Chasing on port "));
   Serial.print(activePort);
-  Serial.print(" (");
+  Serial.print(F(" ("));
   Serial.print(chasePasses);
-  Serial.println(" passes)");
+  Serial.println(F(" passes)"));
 }
 
 void backToMenu() {
   allPortsOff();
   activePort = 0;
-  Serial.println("Done.");
+  Serial.println(F("Done."));
   promptUser();
 }
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(115200);              // real on the Mega; ignored on Teensy
 
   // LEDs on all four ports -> everything is an output, everything off.
   setPortMode(PORT_A_PINS, OUTPUT);
@@ -72,6 +82,8 @@ void setup() {
 
   // Wait briefly for the monitor so the prompt isn't missed, then ask.
   while (!Serial && millis() < 3000) { }
+  Serial.print(F("PortChaser on "));
+  Serial.println(F(PLATFORM_NAME));
   promptUser();
 }
 
