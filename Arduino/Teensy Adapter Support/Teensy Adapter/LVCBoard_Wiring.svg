@@ -1,210 +1,222 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="1040" viewBox="0 0 1180 1040" font-family="Segoe UI, Arial, sans-serif">
-<rect x="0" y="0" width="1180" height="1040" fill="#ffffff"/>
-<text x="590" y="36" text-anchor="middle" font-size="22" font-weight="bold" fill="#111">LVC Harness Board — Teensy 4.1 + HCT245/LVC245 pairs, wiring map</text>
-<text x="590" y="60" text-anchor="middle" font-size="13" fill="#444">All 42 signals on through-hole pins 0–41. Strobe pairs: signal on pin 2, GND on pin 1 — twist each pair.</text>
-<text x="590" y="78" text-anchor="middle" font-size="13" fill="#444">Per data port: 74HCT245 (drive, 5 V) + 74LVC245 (read, 3.3 V), /OE-steered by DIR. DIR low at power-up = everything reads.</text>
-<text x="215" y="118" text-anchor="middle" font-size="15" font-weight="bold" fill="#1d4ed8">H1 — Port A (8-pin)</text>
-<rect x="90" y="130" width="250" height="40" fill="#dbeafe" stroke="#888"/>
-<text x="102" y="156" font-size="14" font-weight="bold" fill="#111">PA0</text>
-<text x="152" y="156" font-size="13" fill="#333">Teensy 0</text>
-<rect x="258" y="142" width="22" height="15" fill="#ffffff" stroke="#555"/>
-<text x="288" y="155" font-size="11" fill="#333">white</text>
-<rect x="90" y="170" width="250" height="40" fill="#dbeafe" stroke="#888"/>
-<text x="102" y="196" font-size="14" font-weight="bold" fill="#111">PA1</text>
-<text x="152" y="196" font-size="13" fill="#333">Teensy 1</text>
-<rect x="258" y="182" width="22" height="15" fill="#9e9e9e" stroke="#555"/>
-<text x="288" y="195" font-size="11" fill="#333">grey</text>
-<rect x="90" y="210" width="250" height="40" fill="#dbeafe" stroke="#888"/>
-<text x="102" y="236" font-size="14" font-weight="bold" fill="#111">PA2</text>
-<text x="152" y="236" font-size="13" fill="#333">Teensy 2</text>
-<rect x="258" y="222" width="22" height="15" fill="#8e44ad" stroke="#555"/>
-<text x="288" y="235" font-size="11" fill="#333">violet</text>
-<rect x="90" y="250" width="250" height="40" fill="#dbeafe" stroke="#888"/>
-<text x="102" y="276" font-size="14" font-weight="bold" fill="#111">PA3</text>
-<text x="152" y="276" font-size="13" fill="#333">Teensy 3</text>
-<rect x="258" y="262" width="22" height="15" fill="#2196f3" stroke="#555"/>
-<text x="288" y="275" font-size="11" fill="#333">blue</text>
-<rect x="90" y="290" width="250" height="40" fill="#dbeafe" stroke="#888"/>
-<text x="102" y="316" font-size="14" font-weight="bold" fill="#111">PA4</text>
-<text x="152" y="316" font-size="13" fill="#333">Teensy 4</text>
-<rect x="258" y="302" width="22" height="15" fill="#4caf50" stroke="#555"/>
-<text x="288" y="315" font-size="11" fill="#333">green</text>
-<rect x="90" y="330" width="250" height="40" fill="#dbeafe" stroke="#888"/>
-<text x="102" y="356" font-size="14" font-weight="bold" fill="#111">PA5</text>
-<text x="152" y="356" font-size="13" fill="#333">Teensy 5</text>
-<rect x="258" y="342" width="22" height="15" fill="#ffd600" stroke="#555"/>
-<text x="288" y="355" font-size="11" fill="#333">yellow</text>
-<rect x="90" y="370" width="250" height="40" fill="#dbeafe" stroke="#888"/>
-<text x="102" y="396" font-size="14" font-weight="bold" fill="#111">PA6</text>
-<text x="152" y="396" font-size="13" fill="#333">Teensy 6</text>
-<rect x="258" y="382" width="22" height="15" fill="#ff9800" stroke="#555"/>
-<text x="288" y="395" font-size="11" fill="#333">orange</text>
-<rect x="90" y="410" width="250" height="40" fill="#dbeafe" stroke="#888"/>
-<text x="102" y="436" font-size="14" font-weight="bold" fill="#111">PA7</text>
-<text x="152" y="436" font-size="13" fill="#333">Teensy 7</text>
-<rect x="258" y="422" width="22" height="15" fill="#f44336" stroke="#555"/>
-<text x="288" y="435" font-size="11" fill="#333">red</text>
-<text x="515" y="118" text-anchor="middle" font-size="15" font-weight="bold" fill="#15803d">H2 — Port B (8-pin)</text>
-<rect x="390" y="130" width="250" height="40" fill="#dcfce7" stroke="#888"/>
-<text x="402" y="156" font-size="14" font-weight="bold" fill="#111">PB0</text>
-<text x="452" y="156" font-size="13" fill="#333">Teensy 8</text>
-<rect x="558" y="142" width="22" height="15" fill="#ffffff" stroke="#555"/>
-<text x="588" y="155" font-size="11" fill="#333">white</text>
-<rect x="390" y="170" width="250" height="40" fill="#dcfce7" stroke="#888"/>
-<text x="402" y="196" font-size="14" font-weight="bold" fill="#111">PB1</text>
-<text x="452" y="196" font-size="13" fill="#333">Teensy 9</text>
-<rect x="558" y="182" width="22" height="15" fill="#9e9e9e" stroke="#555"/>
-<text x="588" y="195" font-size="11" fill="#333">grey</text>
-<rect x="390" y="210" width="250" height="40" fill="#dcfce7" stroke="#888"/>
-<text x="402" y="236" font-size="14" font-weight="bold" fill="#111">PB2</text>
-<text x="452" y="236" font-size="13" fill="#333">Teensy 10</text>
-<rect x="558" y="222" width="22" height="15" fill="#8e44ad" stroke="#555"/>
-<text x="588" y="235" font-size="11" fill="#333">violet</text>
-<rect x="390" y="250" width="250" height="40" fill="#dcfce7" stroke="#888"/>
-<text x="402" y="276" font-size="14" font-weight="bold" fill="#111">PB3</text>
-<text x="452" y="276" font-size="13" fill="#333">Teensy 11</text>
-<rect x="558" y="262" width="22" height="15" fill="#2196f3" stroke="#555"/>
-<text x="588" y="275" font-size="11" fill="#333">blue</text>
-<rect x="390" y="290" width="250" height="40" fill="#dcfce7" stroke="#888"/>
-<text x="402" y="316" font-size="14" font-weight="bold" fill="#111">PB4</text>
-<text x="452" y="316" font-size="13" fill="#333">Teensy 12</text>
-<rect x="558" y="302" width="22" height="15" fill="#4caf50" stroke="#555"/>
-<text x="588" y="315" font-size="11" fill="#333">green</text>
-<rect x="390" y="330" width="250" height="40" fill="#dcfce7" stroke="#888"/>
-<text x="402" y="356" font-size="14" font-weight="bold" fill="#111">PB5</text>
-<text x="452" y="356" font-size="13" fill="#333">Teensy 32</text>
-<rect x="558" y="342" width="22" height="15" fill="#ffd600" stroke="#555"/>
-<text x="588" y="355" font-size="11" fill="#333">yellow</text>
-<rect x="390" y="370" width="250" height="40" fill="#dcfce7" stroke="#888"/>
-<text x="402" y="396" font-size="14" font-weight="bold" fill="#111">PB6</text>
-<text x="452" y="396" font-size="13" fill="#333">Teensy 14</text>
-<rect x="558" y="382" width="22" height="15" fill="#ff9800" stroke="#555"/>
-<text x="588" y="395" font-size="11" fill="#333">orange</text>
-<rect x="390" y="410" width="250" height="40" fill="#dcfce7" stroke="#888"/>
-<text x="402" y="436" font-size="14" font-weight="bold" fill="#111">PB7</text>
-<text x="452" y="436" font-size="13" fill="#333">Teensy 15</text>
-<rect x="558" y="422" width="22" height="15" fill="#f44336" stroke="#555"/>
-<text x="588" y="435" font-size="11" fill="#333">red</text>
-<text x="215" y="548" text-anchor="middle" font-size="15" font-weight="bold" fill="#a16207">H3 — Port C (8-pin)</text>
-<rect x="90" y="560" width="250" height="40" fill="#fef9c3" stroke="#888"/>
-<text x="102" y="586" font-size="14" font-weight="bold" fill="#111">PC0</text>
-<text x="152" y="586" font-size="13" fill="#333">Teensy 16</text>
-<rect x="258" y="572" width="22" height="15" fill="#ffffff" stroke="#555"/>
-<text x="288" y="585" font-size="11" fill="#333">white</text>
-<rect x="90" y="600" width="250" height="40" fill="#fef9c3" stroke="#888"/>
-<text x="102" y="626" font-size="14" font-weight="bold" fill="#111">PC1</text>
-<text x="152" y="626" font-size="13" fill="#333">Teensy 17</text>
-<rect x="258" y="612" width="22" height="15" fill="#9e9e9e" stroke="#555"/>
-<text x="288" y="625" font-size="11" fill="#333">grey</text>
-<rect x="90" y="640" width="250" height="40" fill="#fef9c3" stroke="#888"/>
-<text x="102" y="666" font-size="14" font-weight="bold" fill="#111">PC2</text>
-<text x="152" y="666" font-size="13" fill="#333">Teensy 18</text>
-<rect x="258" y="652" width="22" height="15" fill="#8e44ad" stroke="#555"/>
-<text x="288" y="665" font-size="11" fill="#333">violet</text>
-<rect x="90" y="680" width="250" height="40" fill="#fef9c3" stroke="#888"/>
-<text x="102" y="706" font-size="14" font-weight="bold" fill="#111">PC3</text>
-<text x="152" y="706" font-size="13" fill="#333">Teensy 19</text>
-<rect x="258" y="692" width="22" height="15" fill="#2196f3" stroke="#555"/>
-<text x="288" y="705" font-size="11" fill="#333">blue</text>
-<rect x="90" y="720" width="250" height="40" fill="#fef9c3" stroke="#888"/>
-<text x="102" y="746" font-size="14" font-weight="bold" fill="#111">PC4</text>
-<text x="152" y="746" font-size="13" fill="#333">Teensy 20</text>
-<rect x="258" y="732" width="22" height="15" fill="#4caf50" stroke="#555"/>
-<text x="288" y="745" font-size="11" fill="#333">green</text>
-<rect x="90" y="760" width="250" height="40" fill="#fef9c3" stroke="#888"/>
-<text x="102" y="786" font-size="14" font-weight="bold" fill="#111">PC5</text>
-<text x="152" y="786" font-size="13" fill="#333">Teensy 21</text>
-<rect x="258" y="772" width="22" height="15" fill="#ffd600" stroke="#555"/>
-<text x="288" y="785" font-size="11" fill="#333">yellow</text>
-<rect x="90" y="800" width="250" height="40" fill="#fef9c3" stroke="#888"/>
-<text x="102" y="826" font-size="14" font-weight="bold" fill="#111">PC6</text>
-<text x="152" y="826" font-size="13" fill="#333">Teensy 22</text>
-<rect x="258" y="812" width="22" height="15" fill="#ff9800" stroke="#555"/>
-<text x="288" y="825" font-size="11" fill="#333">orange</text>
-<rect x="90" y="840" width="250" height="40" fill="#fef9c3" stroke="#888"/>
-<text x="102" y="866" font-size="14" font-weight="bold" fill="#111">PC7</text>
-<text x="152" y="866" font-size="13" fill="#333">Teensy 23</text>
-<rect x="258" y="852" width="22" height="15" fill="#f44336" stroke="#555"/>
-<text x="288" y="865" font-size="11" fill="#333">red</text>
-<text x="515" y="548" text-anchor="middle" font-size="15" font-weight="bold" fill="#b91c1c">H4 — Port D (8-pin)</text>
-<rect x="390" y="560" width="250" height="40" fill="#fee2e2" stroke="#888"/>
-<text x="402" y="586" font-size="14" font-weight="bold" fill="#111">PD0</text>
-<text x="452" y="586" font-size="13" fill="#333">Teensy 24</text>
-<rect x="558" y="572" width="22" height="15" fill="#ffffff" stroke="#555"/>
-<text x="588" y="585" font-size="11" fill="#333">white</text>
-<rect x="390" y="600" width="250" height="40" fill="#fee2e2" stroke="#888"/>
-<text x="402" y="626" font-size="14" font-weight="bold" fill="#111">PD1</text>
-<text x="452" y="626" font-size="13" fill="#333">Teensy 25</text>
-<rect x="558" y="612" width="22" height="15" fill="#9e9e9e" stroke="#555"/>
-<text x="588" y="625" font-size="11" fill="#333">grey</text>
-<rect x="390" y="640" width="250" height="40" fill="#fee2e2" stroke="#888"/>
-<text x="402" y="666" font-size="14" font-weight="bold" fill="#111">PD2</text>
-<text x="452" y="666" font-size="13" fill="#333">Teensy 26</text>
-<rect x="558" y="652" width="22" height="15" fill="#8e44ad" stroke="#555"/>
-<text x="588" y="665" font-size="11" fill="#333">violet</text>
-<rect x="390" y="680" width="250" height="40" fill="#fee2e2" stroke="#888"/>
-<text x="402" y="706" font-size="14" font-weight="bold" fill="#111">PD3</text>
-<text x="452" y="706" font-size="13" fill="#333">Teensy 27</text>
-<rect x="558" y="692" width="22" height="15" fill="#2196f3" stroke="#555"/>
-<text x="588" y="705" font-size="11" fill="#333">blue</text>
-<rect x="390" y="720" width="250" height="40" fill="#fee2e2" stroke="#888"/>
-<text x="402" y="746" font-size="14" font-weight="bold" fill="#111">PD4</text>
-<text x="452" y="746" font-size="13" fill="#333">Teensy 28</text>
-<rect x="558" y="732" width="22" height="15" fill="#4caf50" stroke="#555"/>
-<text x="588" y="745" font-size="11" fill="#333">green</text>
-<rect x="390" y="760" width="250" height="40" fill="#fee2e2" stroke="#888"/>
-<text x="402" y="786" font-size="14" font-weight="bold" fill="#111">PD5</text>
-<text x="452" y="786" font-size="13" fill="#333">Teensy 29</text>
-<rect x="558" y="772" width="22" height="15" fill="#ffd600" stroke="#555"/>
-<text x="588" y="785" font-size="11" fill="#333">yellow</text>
-<rect x="390" y="800" width="250" height="40" fill="#fee2e2" stroke="#888"/>
-<text x="402" y="826" font-size="14" font-weight="bold" fill="#111">PD6</text>
-<text x="452" y="826" font-size="13" fill="#333">Teensy 30</text>
-<rect x="558" y="812" width="22" height="15" fill="#ff9800" stroke="#555"/>
-<text x="588" y="825" font-size="11" fill="#333">orange</text>
-<rect x="390" y="840" width="250" height="40" fill="#fee2e2" stroke="#888"/>
-<text x="402" y="866" font-size="14" font-weight="bold" fill="#111">PD7</text>
-<text x="452" y="866" font-size="13" fill="#333">Teensy 31</text>
-<rect x="558" y="852" width="22" height="15" fill="#f44336" stroke="#555"/>
-<text x="588" y="865" font-size="11" fill="#333">red</text>
-<text x="915" y="118" text-anchor="middle" font-size="15" font-weight="bold" fill="#6d28d9">H5–H10 — strobe pairs (signal = pin 2)</text>
-<rect x="760" y="130" width="310" height="40" fill="#ede9fe" stroke="#888"/>
-<text x="770" y="156" font-size="13" font-weight="bold" fill="#111">H5  PE0 (CLK, LED)</text>
-<text x="938" y="156" font-size="13" fill="#333">Teensy 13</text>
-<rect x="1008" y="142" width="22" height="15" fill="#ffffff" stroke="#555"/>
-<rect x="760" y="170" width="310" height="40" fill="#ede9fe" stroke="#888"/>
-<text x="770" y="196" font-size="13" font-weight="bold" fill="#111">H6  PE1</text>
-<text x="938" y="196" font-size="13" fill="#333">Teensy 33</text>
-<rect x="1008" y="182" width="22" height="15" fill="#9e9e9e" stroke="#555"/>
-<rect x="760" y="210" width="310" height="40" fill="#ede9fe" stroke="#888"/>
-<text x="770" y="236" font-size="13" font-weight="bold" fill="#111">H7  PE2</text>
-<text x="938" y="236" font-size="13" fill="#333">Teensy 34</text>
-<rect x="1008" y="222" width="22" height="15" fill="#8e44ad" stroke="#555"/>
-<rect x="760" y="250" width="310" height="40" fill="#ede9fe" stroke="#888"/>
-<text x="770" y="276" font-size="13" font-weight="bold" fill="#111">H8  PE3</text>
-<text x="938" y="276" font-size="13" fill="#333">Teensy 35</text>
-<rect x="1008" y="262" width="22" height="15" fill="#2196f3" stroke="#555"/>
-<rect x="760" y="290" width="310" height="40" fill="#f3e8ff" stroke="#888"/>
-<text x="770" y="316" font-size="13" font-weight="bold" fill="#111">H9  PE4 (via J6)</text>
-<text x="938" y="316" font-size="13" fill="#333">Teensy 40</text>
-<rect x="1008" y="302" width="22" height="15" fill="#4caf50" stroke="#555"/>
-<rect x="760" y="330" width="310" height="40" fill="#f3e8ff" stroke="#888"/>
-<text x="770" y="356" font-size="13" font-weight="bold" fill="#111">H10  PE5 (via J7)</text>
-<text x="938" y="356" font-size="13" fill="#333">Teensy 41</text>
-<rect x="1008" y="342" width="22" height="15" fill="#ffd600" stroke="#555"/>
-<rect x="760" y="400" width="310" height="120" fill="#fff7ed" stroke="#fb923c" rx="6"/>
-<text x="772" y="422" font-size="13" font-weight="bold" fill="#9a3412">J6 / J7 role select (centre = Teensy 40/41)</text>
-<text x="772" y="444" font-size="12" fill="#333">pos 1: button — 1 k (R6/R7) to SW1/SW2 to GND</text>
-<text x="772" y="462" font-size="12" fill="#333">pos 3: strobe — U7 A5/A6 (100 k pulldowns R8/R9)</text>
-<text x="772" y="482" font-size="12" fill="#333">Sketch must match jumpers; declare in boot banner.</text>
-<text x="772" y="502" font-size="12" fill="#333">DIR_A-D = Teensy 36-39, 10 k pulldowns (R1-R4).</text>
-<rect x="760" y="540" width="310" height="40" fill="#f3f4f6" stroke="#888"/>
-<text x="915" y="566" text-anchor="middle" font-size="12" fill="#111">H13: 4x +5V via J5</text>
-<rect x="760" y="580" width="310" height="40" fill="#f3f4f6" stroke="#888"/>
-<text x="915" y="606" text-anchor="middle" font-size="12" fill="#111">H14: 4x GND</text>
-<rect x="60" y="920" width="1060" height="104" fill="#f8fafc" stroke="#94a3b8" rx="8"/>
-<text x="80" y="944" font-size="13" font-weight="bold" fill="#111">Termination packs (RN5-RN9, 100 ohm x8 isolated DIP-16): element k = pins k and k+8. Chip side 1-8, header side 9-16, straight order.</text>
-<text x="80" y="966" font-size="13" fill="#333">DIR high = HCT drives DUT, low = LVC reads; shared 'HCT04 inverts DIR for HCT /OE. J5 never closed with an external DUT supply.</text>
-<text x="80" y="986" font-size="13" fill="#333">Jumperable 10 k SIP pulls (RN1-4 + J1-4) on each data port DUT side for tri-state buses.</text>
-<text x="80" y="1006" font-size="13" fill="#333">Chips: U3-U7 HCT245 (drive A-E; U7 A7/A8 grounded), U8-U11 SN74LVC245AN at 3.3 V (read A-D), U2 HCT04. 100 nF per chip.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="1050" viewBox="0 0 1180 1050" font-family="Segoe UI, Arial, sans-serif">
+<rect x="0" y="0" width="1180" height="1050" fill="#ffffff"/>
+<text x="590" y="34" text-anchor="middle" font-size="22" font-weight="bold" fill="#111">LVC Harness Board — Teensy 4.1 + HCT245/LVC245 pairs, wiring map</text>
+<text x="590" y="58" text-anchor="middle" font-size="13" fill="#444">Five 8-bit bidirectional ports. A/B/E direction by jumper (J8/J12/J15, fitted = drive); C/D runtime on DIR0/DIR1.</text>
+<text x="590" y="76" text-anchor="middle" font-size="13" fill="#444">Strobe pairs: signal on pin 2, GND on pin 1 — twist each pair. All 42 signals on through-hole pins 0–41.</text>
+<text x="206" y="112" text-anchor="middle" font-size="15" font-weight="bold" fill="#1d4ed8">H1 — Port A (8-pin)</text>
+<text x="206" y="128" text-anchor="middle" font-size="11" fill="#555">jumper J8</text>
+<rect x="80" y="136" width="252" height="38" fill="#dbeafe" stroke="#888"/>
+<text x="92" y="161" font-size="14" font-weight="bold" fill="#111">PA0</text>
+<text x="142" y="161" font-size="13" fill="#333">Teensy 0</text>
+<rect x="250" y="147" width="22" height="15" fill="#ffffff" stroke="#555"/>
+<text x="280" y="160" font-size="11" fill="#333">white</text>
+<rect x="80" y="174" width="252" height="38" fill="#dbeafe" stroke="#888"/>
+<text x="92" y="199" font-size="14" font-weight="bold" fill="#111">PA1</text>
+<text x="142" y="199" font-size="13" fill="#333">Teensy 1</text>
+<rect x="250" y="185" width="22" height="15" fill="#9e9e9e" stroke="#555"/>
+<text x="280" y="198" font-size="11" fill="#333">grey</text>
+<rect x="80" y="212" width="252" height="38" fill="#dbeafe" stroke="#888"/>
+<text x="92" y="237" font-size="14" font-weight="bold" fill="#111">PA2</text>
+<text x="142" y="237" font-size="13" fill="#333">Teensy 2</text>
+<rect x="250" y="223" width="22" height="15" fill="#8e44ad" stroke="#555"/>
+<text x="280" y="236" font-size="11" fill="#333">violet</text>
+<rect x="80" y="250" width="252" height="38" fill="#dbeafe" stroke="#888"/>
+<text x="92" y="275" font-size="14" font-weight="bold" fill="#111">PA3</text>
+<text x="142" y="275" font-size="13" fill="#333">Teensy 3</text>
+<rect x="250" y="261" width="22" height="15" fill="#2196f3" stroke="#555"/>
+<text x="280" y="274" font-size="11" fill="#333">blue</text>
+<rect x="80" y="288" width="252" height="38" fill="#dbeafe" stroke="#888"/>
+<text x="92" y="313" font-size="14" font-weight="bold" fill="#111">PA4</text>
+<text x="142" y="313" font-size="13" fill="#333">Teensy 4</text>
+<rect x="250" y="299" width="22" height="15" fill="#4caf50" stroke="#555"/>
+<text x="280" y="312" font-size="11" fill="#333">green</text>
+<rect x="80" y="326" width="252" height="38" fill="#dbeafe" stroke="#888"/>
+<text x="92" y="351" font-size="14" font-weight="bold" fill="#111">PA5</text>
+<text x="142" y="351" font-size="13" fill="#333">Teensy 5</text>
+<rect x="250" y="337" width="22" height="15" fill="#ffd600" stroke="#555"/>
+<text x="280" y="350" font-size="11" fill="#333">yellow</text>
+<rect x="80" y="364" width="252" height="38" fill="#dbeafe" stroke="#888"/>
+<text x="92" y="389" font-size="14" font-weight="bold" fill="#111">PA6</text>
+<text x="142" y="389" font-size="13" fill="#333">Teensy 6</text>
+<rect x="250" y="375" width="22" height="15" fill="#ff9800" stroke="#555"/>
+<text x="280" y="388" font-size="11" fill="#333">orange</text>
+<rect x="80" y="402" width="252" height="38" fill="#dbeafe" stroke="#888"/>
+<text x="92" y="427" font-size="14" font-weight="bold" fill="#111">PA7</text>
+<text x="142" y="427" font-size="13" fill="#333">Teensy 7</text>
+<rect x="250" y="413" width="22" height="15" fill="#f44336" stroke="#555"/>
+<text x="280" y="426" font-size="11" fill="#333">red</text>
+<text x="506" y="112" text-anchor="middle" font-size="15" font-weight="bold" fill="#15803d">H2 — Port B (8-pin)</text>
+<text x="506" y="128" text-anchor="middle" font-size="11" fill="#555">jumper J12</text>
+<rect x="380" y="136" width="252" height="38" fill="#dcfce7" stroke="#888"/>
+<text x="392" y="161" font-size="14" font-weight="bold" fill="#111">PB0</text>
+<text x="442" y="161" font-size="13" fill="#333">Teensy 8</text>
+<rect x="550" y="147" width="22" height="15" fill="#ffffff" stroke="#555"/>
+<text x="580" y="160" font-size="11" fill="#333">white</text>
+<rect x="380" y="174" width="252" height="38" fill="#dcfce7" stroke="#888"/>
+<text x="392" y="199" font-size="14" font-weight="bold" fill="#111">PB1</text>
+<text x="442" y="199" font-size="13" fill="#333">Teensy 9</text>
+<rect x="550" y="185" width="22" height="15" fill="#9e9e9e" stroke="#555"/>
+<text x="580" y="198" font-size="11" fill="#333">grey</text>
+<rect x="380" y="212" width="252" height="38" fill="#dcfce7" stroke="#888"/>
+<text x="392" y="237" font-size="14" font-weight="bold" fill="#111">PB2</text>
+<text x="442" y="237" font-size="13" fill="#333">Teensy 10</text>
+<rect x="550" y="223" width="22" height="15" fill="#8e44ad" stroke="#555"/>
+<text x="580" y="236" font-size="11" fill="#333">violet</text>
+<rect x="380" y="250" width="252" height="38" fill="#dcfce7" stroke="#888"/>
+<text x="392" y="275" font-size="14" font-weight="bold" fill="#111">PB3</text>
+<text x="442" y="275" font-size="13" fill="#333">Teensy 11</text>
+<rect x="550" y="261" width="22" height="15" fill="#2196f3" stroke="#555"/>
+<text x="580" y="274" font-size="11" fill="#333">blue</text>
+<rect x="380" y="288" width="252" height="38" fill="#dcfce7" stroke="#888"/>
+<text x="392" y="313" font-size="14" font-weight="bold" fill="#111">PB4</text>
+<text x="442" y="313" font-size="13" fill="#333">Teensy 12</text>
+<rect x="550" y="299" width="22" height="15" fill="#4caf50" stroke="#555"/>
+<text x="580" y="312" font-size="11" fill="#333">green</text>
+<rect x="380" y="326" width="252" height="38" fill="#dcfce7" stroke="#888"/>
+<text x="392" y="351" font-size="14" font-weight="bold" fill="#111">PB5</text>
+<text x="442" y="351" font-size="13" fill="#333">Teensy 32</text>
+<rect x="550" y="337" width="22" height="15" fill="#ffd600" stroke="#555"/>
+<text x="580" y="350" font-size="11" fill="#333">yellow</text>
+<rect x="380" y="364" width="252" height="38" fill="#dcfce7" stroke="#888"/>
+<text x="392" y="389" font-size="14" font-weight="bold" fill="#111">PB6</text>
+<text x="442" y="389" font-size="13" fill="#333">Teensy 14</text>
+<rect x="550" y="375" width="22" height="15" fill="#ff9800" stroke="#555"/>
+<text x="580" y="388" font-size="11" fill="#333">orange</text>
+<rect x="380" y="402" width="252" height="38" fill="#dcfce7" stroke="#888"/>
+<text x="392" y="427" font-size="14" font-weight="bold" fill="#111">PB7</text>
+<text x="442" y="427" font-size="13" fill="#333">Teensy 15</text>
+<rect x="550" y="413" width="22" height="15" fill="#f44336" stroke="#555"/>
+<text x="580" y="426" font-size="11" fill="#333">red</text>
+<text x="206" y="512" text-anchor="middle" font-size="15" font-weight="bold" fill="#a16207">H3 — Port C (8-pin)</text>
+<text x="206" y="528" text-anchor="middle" font-size="11" fill="#555">runtime: DIR0 (pin 13, LED)</text>
+<rect x="80" y="536" width="252" height="38" fill="#fef9c3" stroke="#888"/>
+<text x="92" y="561" font-size="14" font-weight="bold" fill="#111">PC0</text>
+<text x="142" y="561" font-size="13" fill="#333">Teensy 16</text>
+<rect x="250" y="547" width="22" height="15" fill="#ffffff" stroke="#555"/>
+<text x="280" y="560" font-size="11" fill="#333">white</text>
+<rect x="80" y="574" width="252" height="38" fill="#fef9c3" stroke="#888"/>
+<text x="92" y="599" font-size="14" font-weight="bold" fill="#111">PC1</text>
+<text x="142" y="599" font-size="13" fill="#333">Teensy 17</text>
+<rect x="250" y="585" width="22" height="15" fill="#9e9e9e" stroke="#555"/>
+<text x="280" y="598" font-size="11" fill="#333">grey</text>
+<rect x="80" y="612" width="252" height="38" fill="#fef9c3" stroke="#888"/>
+<text x="92" y="637" font-size="14" font-weight="bold" fill="#111">PC2</text>
+<text x="142" y="637" font-size="13" fill="#333">Teensy 18</text>
+<rect x="250" y="623" width="22" height="15" fill="#8e44ad" stroke="#555"/>
+<text x="280" y="636" font-size="11" fill="#333">violet</text>
+<rect x="80" y="650" width="252" height="38" fill="#fef9c3" stroke="#888"/>
+<text x="92" y="675" font-size="14" font-weight="bold" fill="#111">PC3</text>
+<text x="142" y="675" font-size="13" fill="#333">Teensy 19</text>
+<rect x="250" y="661" width="22" height="15" fill="#2196f3" stroke="#555"/>
+<text x="280" y="674" font-size="11" fill="#333">blue</text>
+<rect x="80" y="688" width="252" height="38" fill="#fef9c3" stroke="#888"/>
+<text x="92" y="713" font-size="14" font-weight="bold" fill="#111">PC4</text>
+<text x="142" y="713" font-size="13" fill="#333">Teensy 20</text>
+<rect x="250" y="699" width="22" height="15" fill="#4caf50" stroke="#555"/>
+<text x="280" y="712" font-size="11" fill="#333">green</text>
+<rect x="80" y="726" width="252" height="38" fill="#fef9c3" stroke="#888"/>
+<text x="92" y="751" font-size="14" font-weight="bold" fill="#111">PC5</text>
+<text x="142" y="751" font-size="13" fill="#333">Teensy 21</text>
+<rect x="250" y="737" width="22" height="15" fill="#ffd600" stroke="#555"/>
+<text x="280" y="750" font-size="11" fill="#333">yellow</text>
+<rect x="80" y="764" width="252" height="38" fill="#fef9c3" stroke="#888"/>
+<text x="92" y="789" font-size="14" font-weight="bold" fill="#111">PC6</text>
+<text x="142" y="789" font-size="13" fill="#333">Teensy 22</text>
+<rect x="250" y="775" width="22" height="15" fill="#ff9800" stroke="#555"/>
+<text x="280" y="788" font-size="11" fill="#333">orange</text>
+<rect x="80" y="802" width="252" height="38" fill="#fef9c3" stroke="#888"/>
+<text x="92" y="827" font-size="14" font-weight="bold" fill="#111">PC7</text>
+<text x="142" y="827" font-size="13" fill="#333">Teensy 23</text>
+<rect x="250" y="813" width="22" height="15" fill="#f44336" stroke="#555"/>
+<text x="280" y="826" font-size="11" fill="#333">red</text>
+<text x="506" y="512" text-anchor="middle" font-size="15" font-weight="bold" fill="#b91c1c">H4 — Port D (8-pin)</text>
+<text x="506" y="528" text-anchor="middle" font-size="11" fill="#555">runtime: DIR1 (pin 33)</text>
+<rect x="380" y="536" width="252" height="38" fill="#fee2e2" stroke="#888"/>
+<text x="392" y="561" font-size="14" font-weight="bold" fill="#111">PD0</text>
+<text x="442" y="561" font-size="13" fill="#333">Teensy 24</text>
+<rect x="550" y="547" width="22" height="15" fill="#ffffff" stroke="#555"/>
+<text x="580" y="560" font-size="11" fill="#333">white</text>
+<rect x="380" y="574" width="252" height="38" fill="#fee2e2" stroke="#888"/>
+<text x="392" y="599" font-size="14" font-weight="bold" fill="#111">PD1</text>
+<text x="442" y="599" font-size="13" fill="#333">Teensy 25</text>
+<rect x="550" y="585" width="22" height="15" fill="#9e9e9e" stroke="#555"/>
+<text x="580" y="598" font-size="11" fill="#333">grey</text>
+<rect x="380" y="612" width="252" height="38" fill="#fee2e2" stroke="#888"/>
+<text x="392" y="637" font-size="14" font-weight="bold" fill="#111">PD2</text>
+<text x="442" y="637" font-size="13" fill="#333">Teensy 26</text>
+<rect x="550" y="623" width="22" height="15" fill="#8e44ad" stroke="#555"/>
+<text x="580" y="636" font-size="11" fill="#333">violet</text>
+<rect x="380" y="650" width="252" height="38" fill="#fee2e2" stroke="#888"/>
+<text x="392" y="675" font-size="14" font-weight="bold" fill="#111">PD3</text>
+<text x="442" y="675" font-size="13" fill="#333">Teensy 27</text>
+<rect x="550" y="661" width="22" height="15" fill="#2196f3" stroke="#555"/>
+<text x="580" y="674" font-size="11" fill="#333">blue</text>
+<rect x="380" y="688" width="252" height="38" fill="#fee2e2" stroke="#888"/>
+<text x="392" y="713" font-size="14" font-weight="bold" fill="#111">PD4</text>
+<text x="442" y="713" font-size="13" fill="#333">Teensy 28</text>
+<rect x="550" y="699" width="22" height="15" fill="#4caf50" stroke="#555"/>
+<text x="580" y="712" font-size="11" fill="#333">green</text>
+<rect x="380" y="726" width="252" height="38" fill="#fee2e2" stroke="#888"/>
+<text x="392" y="751" font-size="14" font-weight="bold" fill="#111">PD5</text>
+<text x="442" y="751" font-size="13" fill="#333">Teensy 29</text>
+<rect x="550" y="737" width="22" height="15" fill="#ffd600" stroke="#555"/>
+<text x="580" y="750" font-size="11" fill="#333">yellow</text>
+<rect x="380" y="764" width="252" height="38" fill="#fee2e2" stroke="#888"/>
+<text x="392" y="789" font-size="14" font-weight="bold" fill="#111">PD6</text>
+<text x="442" y="789" font-size="13" fill="#333">Teensy 30</text>
+<rect x="550" y="775" width="22" height="15" fill="#ff9800" stroke="#555"/>
+<text x="580" y="788" font-size="11" fill="#333">orange</text>
+<rect x="380" y="802" width="252" height="38" fill="#fee2e2" stroke="#888"/>
+<text x="392" y="827" font-size="14" font-weight="bold" fill="#111">PD7</text>
+<text x="442" y="827" font-size="13" fill="#333">Teensy 31</text>
+<rect x="550" y="813" width="22" height="15" fill="#f44336" stroke="#555"/>
+<text x="580" y="826" font-size="11" fill="#333">red</text>
+<text x="915" y="112" text-anchor="middle" font-size="15" font-weight="bold" fill="#6d28d9">H5–H12 — Port E strobe pairs (signal = pin 2)</text>
+<text x="915" y="128" text-anchor="middle" font-size="11" fill="#555">direction: jumper J15 (fitted = drive)</text>
+<rect x="750" y="136" width="330" height="38" fill="#ede9fe" stroke="#888"/>
+<text x="760" y="161" font-size="13" font-weight="bold" fill="#111">H5  PE0 (CLK)</text>
+<text x="946" y="161" font-size="13" fill="#333">Teensy 34</text>
+<rect x="1026" y="147" width="22" height="15" fill="#ffffff" stroke="#555"/>
+<rect x="750" y="174" width="330" height="38" fill="#ede9fe" stroke="#888"/>
+<text x="760" y="199" font-size="13" font-weight="bold" fill="#111">H6  PE1</text>
+<text x="946" y="199" font-size="13" fill="#333">Teensy 35</text>
+<rect x="1026" y="185" width="22" height="15" fill="#9e9e9e" stroke="#555"/>
+<rect x="750" y="212" width="330" height="38" fill="#ede9fe" stroke="#888"/>
+<text x="760" y="237" font-size="13" font-weight="bold" fill="#111">H7  PE2</text>
+<text x="946" y="237" font-size="13" fill="#333">Teensy 36</text>
+<rect x="1026" y="223" width="22" height="15" fill="#8e44ad" stroke="#555"/>
+<rect x="750" y="250" width="330" height="38" fill="#ede9fe" stroke="#888"/>
+<text x="760" y="275" font-size="13" font-weight="bold" fill="#111">H8  PE3</text>
+<text x="946" y="275" font-size="13" fill="#333">Teensy 37</text>
+<rect x="1026" y="261" width="22" height="15" fill="#2196f3" stroke="#555"/>
+<rect x="750" y="288" width="330" height="38" fill="#ede9fe" stroke="#888"/>
+<text x="760" y="313" font-size="13" font-weight="bold" fill="#111">H9  PE4</text>
+<text x="946" y="313" font-size="13" fill="#333">Teensy 38</text>
+<rect x="1026" y="299" width="22" height="15" fill="#4caf50" stroke="#555"/>
+<rect x="750" y="326" width="330" height="38" fill="#ede9fe" stroke="#888"/>
+<text x="760" y="351" font-size="13" font-weight="bold" fill="#111">H10  PE5</text>
+<text x="946" y="351" font-size="13" fill="#333">Teensy 39</text>
+<rect x="1026" y="337" width="22" height="15" fill="#ffd600" stroke="#555"/>
+<rect x="750" y="364" width="330" height="38" fill="#ede9fe" stroke="#888"/>
+<text x="760" y="389" font-size="13" font-weight="bold" fill="#111">H11  PE6 (J6: or SW0)</text>
+<text x="946" y="389" font-size="13" fill="#333">Teensy 40</text>
+<rect x="1026" y="375" width="22" height="15" fill="#ff9800" stroke="#555"/>
+<rect x="750" y="402" width="330" height="38" fill="#ede9fe" stroke="#888"/>
+<text x="760" y="427" font-size="13" font-weight="bold" fill="#111">H12  PE7 (J7: or SW1)</text>
+<text x="946" y="427" font-size="13" fill="#333">Teensy 41</text>
+<rect x="1026" y="413" width="22" height="15" fill="#f44336" stroke="#555"/>
+<rect x="750" y="466" width="330" height="120" fill="#fff7ed" stroke="#fb923c" rx="6"/>
+<text x="762" y="488" font-size="13" font-weight="bold" fill="#9a3412">Direction selection</text>
+<text x="762" y="508" font-size="12" fill="#333">A/B/E: one jumper each to VCC (J8/J12/J15).</text>
+<text x="762" y="526" font-size="12" fill="#333">Fitted = drive; parked = read (10 k pulldown).</text>
+<text x="762" y="544" font-size="12" fill="#333">C = DIR0 (Teensy 13, onboard LED = C driving).</text>
+<text x="762" y="562" font-size="12" fill="#333">D = DIR1 (Teensy 33). Low = read at power-up.</text>
+<rect x="750" y="602" width="330" height="38" fill="#f3f4f6" stroke="#888"/>
+<text x="915" y="626" text-anchor="middle" font-size="11" fill="#111">H13/H14: +5 V pairs via J5 (never with ext. DUT supply)</text>
+<rect x="750" y="640" width="330" height="38" fill="#f3f4f6" stroke="#888"/>
+<text x="915" y="664" text-anchor="middle" font-size="11" fill="#111">H15/H16: GND pairs</text>
+<rect x="60" y="940" width="1060" height="92" fill="#f8fafc" stroke="#94a3b8" rx="8"/>
+<text x="80" y="964" font-size="13" font-weight="bold" fill="#111">Buttons: SW0/SW1 share Teensy 40/41 with PE6/PE7 via J6/J7 (button leg through 1 k; internal pull-ups; 100 k holds the port side).</text>
+<text x="80" y="986" font-size="13" fill="#333">Terminations RN5-RN9 (100 ohm x8 DIP-16): element k = pins k and 17-k, chip side 1-8, header side 16-9, bit order straight.</text>
+<text x="80" y="1008" font-size="13" fill="#333">Pulls: SIP-9 10 k per port (RN1-4, RN13) with select jumpers J1-J4, J11 (5 V / open / GND). 100 nF per chip.</text>
 </svg>

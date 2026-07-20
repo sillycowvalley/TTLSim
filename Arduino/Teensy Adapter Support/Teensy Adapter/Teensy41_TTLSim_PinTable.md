@@ -1,27 +1,22 @@
-# Teensy 4.1 — Pin Table for the TTLSim Editor
+# TEENSY41 Schematic Symbol ↔ GPIO Pin Table
 
-Layout for a box-style part with real package pin numbers, matching the
-TTLSim convention. The Teensy 4.1's edge pins form a DIP-48-style outline
-(24 per side, 2.54 mm pitch), numbered here the DIP way: pin 1 at the USB
-end, down one side, back up the other. Bottom SMT pads follow as pins 49–54
-so the LVC-board signals are all connectable.
+The TTLSim `TEENSY41` part models the Teensy 4.1's 48 through-hole pins in
+their **physical positions** — the DIP-48 outline PJRC defines, socket-strip
+compatible. Pin numbers are solder positions; labels are the harness
+functions assigned to each GPIO. This table must agree with
+`ChipPartDefinition.cs` (the symbol) and `AdapterPorts.h` (the functions).
 
-Source: PJRC quick-reference card (front). Roles/colours: the LVC harness
-board assignment (`LVCBoard_Reference.md`).
+Power pins sit where the product puts them: symbol 1/34/47 (GND),
+15/46 (3.3 V), 48 (Vin). The 3.3 V pins are deliberately unconnected in
+the schematic (the rail feeds the LVC245s); Vin is hard-wired to the 5 V
+rail (always USB-powered). **The onboard LED is GPIO 13 = symbol pin 35 =
+PE0/CLK: the LED blinks with the clock.**
 
-**Electrical notes for the part description:** 3.3 V logic, pins are **not**
-5 V tolerant (the shifter board exists for a reason); Vin accepts 3.6–5.5 V;
-the 3.3 V rail can source 250 mA max; pin 13 carries the onboard LED.
+## Side 1 (symbol pins 1–24, top to bottom)
 
----
-
-## Edge pins, DIP-48 numbering
-
-Side 1 (USB end, along the "0–32" edge):
-
-| Symbol pin | Teensy label | LVC-board role | Ribbon colour |
+| Symbol pin | Teensy GPIO | Role | Ribbon colour |
 |---|---|---|---|
-| 1 | GND | GND | — |
+| 1 | — | GND | — |
 | 2 | 0 | PA0 | white |
 | 3 | 1 | PA1 | grey |
 | 4 | 2 | PA2 | violet |
@@ -35,7 +30,7 @@ Side 1 (USB end, along the "0–32" edge):
 | 12 | 10 | PB2 | violet |
 | 13 | 11 | PB3 | blue |
 | 14 | 12 | PB4 | green |
-| 15 | 3.3V | 3.3 V out (250 mA max) | — |
+| 15 | — | 3.3V | — |
 | 16 | 24 | PD0 | white |
 | 17 | 25 | PD1 | grey |
 | 18 | 26 | PD2 | violet |
@@ -46,21 +41,21 @@ Side 1 (USB end, along the "0–32" edge):
 | 23 | 31 | PD7 | red |
 | 24 | 32 | PB5 | yellow |
 
-Side 2 (continuing DIP-style — pin 25 sits opposite pin 24):
+## Side 2 (symbol pins 25–48; pin 25 sits opposite pin 24)
 
-| Symbol pin | Teensy label | LVC-board role | Ribbon colour |
+| Symbol pin | Teensy GPIO | Role | Ribbon colour |
 |---|---|---|---|
-| 25 | 33 | PE1 | grey |
-| 26 | 34 | PE2 | violet |
-| 27 | 35 | PE3 | blue |
-| 28 | 36 | DIR_A (10 k pulldown; high = drive) | — |
-| 29 | 37 | DIR_B | — |
+| 25 | 33 | DIR1 (port D direction) | — |
+| 26 | 34 | DIR0 (port C direction) | — |
+| 27 | 35 | PE1 | grey |
+| 28 | 36 | PE2 | violet |
+| 29 | 37 | PE3 | blue |
 | 30 | 38 | PE4 | green |
 | 31 | 39 | PE5 | yellow |
-| 32 | 40 | PE6 | orange |
-| 33 | 41 | PE7 | red |
-| 34 | GND | GND | — |
-| 35 | 13 | PE0 (CLK — onboard LED doubles as clock activity light) | white |
+| 32 | 40 | PE6 (shared SW0 via J6) | orange |
+| 33 | 41 | PE7 (shared SW1 via J7) | red |
+| 34 | — | GND | — |
+| 35 | 13 | PE0 (CLK — onboard LED = clock activity light) | white |
 | 36 | 14 | PB6 | orange |
 | 37 | 15 | PB7 | red |
 | 38 | 16 | PC0 | white |
@@ -71,26 +66,13 @@ Side 2 (continuing DIP-style — pin 25 sits opposite pin 24):
 | 43 | 21 | PC5 | yellow |
 | 44 | 22 | PC6 | orange |
 | 45 | 23 | PC7 | red |
-| 46 | 3.3V | 3.3 V out | — |
-| 47 | GND | GND | — |
-| 48 | Vin | Vin (3.6–5.5 V in) | — |
+| 46 | — | 3.3V | — |
+| 47 | — | GND | — |
+| 48 | — | Vin (→ 5 V rail) | — |
 
-## Bottom SMT pads
-
-Not used by the harness board. Pads 42–54 (including the QSPI group)
-carry no signals — every board function lives on the through-hole pins.
-
----
-
-## Transcription gotchas
-
-- Teensy pin 13 lands mid-way along side 2 (symbol pin 35), because the
-  card's "23…13" row runs *descending* — the physical order is 23 nearest
-  the 3.3V/GND/Vin end. Easy to get backwards; the tables above are in
-  true physical order.
-- Ports B and C each straddle a power pin or the board end in physical
-  order but are contiguous in Teensy numbering — the symbol-pin column is
-  the physical truth, the Teensy-label column is what software uses.
-- If the editor part is meant for harness schematics generally (not just
-  the LVC board), keep the role column as a comment/label — the Teensy
-  labels are the invariant; roles change per board.
+Notes:
+- PE6/PE7 reach the Teensy through the SW bus and jumpers J6/J7; in
+  button position those GPIOs are SW0/SW1 instead (through 1 k legs).
+- Symbol pin numbers, being physical, also order the loom: PE1–PE7 and
+  DIR0/DIR1 sit consecutively (symbol 25–33), with PE0 apart at symbol 35
+  — the price of the LED riding the clock, paid knowingly.

@@ -1,22 +1,27 @@
 // ============================================================================
-//  PortTemplate.ino  -  starting template for adapter/Mega harness sketches
+//  PortTemplate.ino  -  starting template for harness sketches
 //
-//  Dual platform: Teensy 4.1 on the level-shifter adapter, or Arduino Mega
-//  2560 wired directly into the same header positions. AdapterPorts.h picks
-//  the mapping from the board selected in the IDE - no #define needed.
+//  Dual platform: Teensy 4.1 on the LVC harness board, or Arduino Mega
+//  2560 wired directly to the DUT. AdapterPorts.h picks the mapping from
+//  the board selected in the IDE - no #define needed.
 //
 //  Uses AdapterPorts.h (keep it in the same sketch folder). Demonstrates:
-//    - configuring each virtual port's direction in setup()
-//    - reading all 32 I/O as one word with samplePorts()
-//    - writing an 8-bit value to a port
-//    - the two user buttons
+//    - configuring port directions in setup()
+//    - reading the data ports as one word with samplePorts()
+//    - the two user buttons (SW0/SW1)
 //
-//  As shipped it configures all four ports as inputs, prints the 32-bit
-//  state as 8 hex chars whenever it changes, and prints button events.
-//  Adapt setup() and loop() per project; leave the Teensy mapping in
-//  AdapterPorts.h untouched so every sketch shares the same verified pins.
+//  As shipped it configures all ports as inputs, prints the 32-bit data
+//  port state as 8 hex chars whenever it changes, and prints button
+//  events. Adapt setup() and loop() per project; leave AdapterPorts.h
+//  untouched so every sketch shares the same verified pins.
 //
-//  Dual-target sketch rules (see the reference docs):
+//  LVC-board direction rules (see LVCBoard_Reference.md):
+//    - Ports A/B/E: direction is jumper J8/J12/J15 - declare the assumed
+//      configuration in the boot banner; the sketch cannot change it.
+//    - Ports C/D: runtime direction via portDrive('C'|'D') /
+//      portRelease('C'|'D'). initPortDirections() first in setup().
+//
+//  Dual-target sketch rules:
 //    - wrap string literals in F(...) - the Mega has 8 KB SRAM
 //    - pinMode(PIN_SWx, SW_PIN_MODE), never a hard-coded mode
 //    - print PLATFORM_NAME at boot so logs identify the board
@@ -29,8 +34,8 @@
 static const long serialBaud = 115200L;  // real on the Mega; ignored on Teensy
 
 static uint32_t lastSample = 0xFFFFFFFFUL;
+static bool     lastSw0    = false;
 static bool     lastSw1    = false;
-static bool     lastSw2    = false;
 
 void printHex32(uint32_t word) {
   static const char hexDigits[] = "0123456789ABCDEF";
@@ -46,37 +51,38 @@ void printHex32(uint32_t word) {
 void setup() {
   Serial.begin(serialBaud);
 
-  // Direction per port - change per project:
-  //   INPUT        : line is driven by external hardware
-  //   INPUT_PULLUP : line may float / is a shared tri-state rail
-  //   OUTPUT       : this sketch drives the line
+#if defined(__IMXRT1062__)
+  // LVC board: C/D reading, everything an input, jumpers rule A/B/E.
+  initPortDirections();
+#else
+  // Mega: direction is just pinMode.
   setPortMode(PORT_A_PINS, INPUT);
   setPortMode(PORT_B_PINS, INPUT);
   setPortMode(PORT_C_PINS, INPUT);
   setPortMode(PORT_D_PINS, INPUT);
+  setPortMode(PORT_E_PINS, INPUT);
+#endif
 
-  // Buttons: adapter has 4.7k pull-ups on the board (plain INPUT);
-  // the Mega uses its internal pull-ups. SW_PIN_MODE covers both.
+  pinMode(PIN_SW0, SW_PIN_MODE);
   pinMode(PIN_SW1, SW_PIN_MODE);
-  pinMode(PIN_SW2, SW_PIN_MODE);
 
-  // Example: to drive port D instead, replace its line above with
-  //   setPortMode(PORT_D_PINS, OUTPUT);
-  // and write it with
-  //   writePortD(0xA5);
-  // (On the Teensy, D1 is the onboard LED - a free visual bit-1 indicator.)
+  // Example: to drive port C on the LVC board, call portDrive('C') and
+  // write it with writePortC(0xA5); portRelease('C') hands the bus back.
+  // Ports A/B/E drive only if their jumper is fitted - then
+  // setPortMode(PORT_x_PINS, OUTPUT) and write as usual.
 
   lastSample = samplePorts();
+  lastSw0 = sw0Pressed();
   lastSw1 = sw1Pressed();
-  lastSw2 = sw2Pressed();
 
   while (!Serial && millis() < 3000) { }
   Serial.print(F("PortTemplate ready on "));
   Serial.println(F(PLATFORM_NAME));
+  Serial.println(F("Assumed jumpers: J8/J12/J15 parked (A/B/E read)"));
 }
 
 void loop() {
-  // Report any change on the 32 I/O pins as one hex word:
+  // Report any change on the 32 data-port pins as one hex word:
   // A = bits 0-7, B = 8-15, C = 16-23, D = 24-31.
   uint32_t sample = samplePorts();
   if (sample != lastSample) {
@@ -85,14 +91,14 @@ void loop() {
   }
 
   // Button edges
+  bool sw0 = sw0Pressed();
+  if (sw0 != lastSw0) {
+    Serial.println(sw0 ? F("SW0 down") : F("SW0 up"));
+    lastSw0 = sw0;
+  }
   bool sw1 = sw1Pressed();
   if (sw1 != lastSw1) {
     Serial.println(sw1 ? F("SW1 down") : F("SW1 up"));
     lastSw1 = sw1;
-  }
-  bool sw2 = sw2Pressed();
-  if (sw2 != lastSw2) {
-    Serial.println(sw2 ? F("SW2 down") : F("SW2 up"));
-    lastSw2 = sw2;
   }
 }
