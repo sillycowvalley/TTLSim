@@ -1,15 +1,27 @@
 Name     ALU;
 Partno   ADDY-GAL3;
-Revision 01;
+Revision 04;
 Designer BlinkyJED;
 Device   G22V10;
 
-/* Addy CPU v2 -- GAL3: '181 function decode.  *** NEW DEVICE (U85) ***
+/* Addy CPU v2 -- GAL3: '181 function decode.  (U85)
 
-   The ALU control group does not fit in GAL1/GAL2. Rev 01 of both left two
-   spare OLMCs each -- four in total -- and v2 needs ten more outputs than
-   rev 01 had. Keeping the whole '181 truth table on one device also means
-   the function decode can be read and probed as a single unit.
+   REV 03 -- CARRY MUX FOLDED IN. CIN_SEL is deleted and the C flag comes
+   in on pin 9 instead, so this device now drives the '181's Cn directly
+   for every case including ADDC and SUBC.
+
+   Why: CIN_SEL assumed an external 2:1 mux to choose between a static
+   carry and the latched C flag. No such mux exists and none can be
+   borrowed -- a '157's select line is common to all four channels, so the
+   spare channel on U46 FMUX answers to FLAGEN and the spare on U42 ASEL
+   answers to ASELRS. Providing one meant a whole '157 for a single bit.
+
+   Folding it in here costs one input pin (of four spare), frees OLMC 20,
+   removes an IC, and takes a mux delay out of the carry path. CIN_LOW is
+   also one product term shorter than rev 02, because SUBC moves out of
+   the static subtract term and into the C-gated one.
+
+   REV 02 was a rename only. See the _LOW note below.
 
    ============================ WARNING ============================
    The S3..S0 / M / Cn codes below assume the 74181 ACTIVE-HIGH DATA
@@ -30,15 +42,34 @@ Device   G22V10;
                                          since a disabled bus reads zero)
      M=0 S=1001 Cn=L : A plus B plus 1  (T1 PC increment, B bus = 0)
      M=0 S=0110 Cn=L : A minus B        (subtract)
+     M=0 S=0110 Cn=H : A minus B minus 1
      M=1 S=1011      : A and B
      M=1 S=1110      : A or  B
      M=1 S=0110      : A xor B
 
-   Several outputs are declared active low because the complement is far
-   cheaper in product terms -- the array holds the "is zero" condition and
-   the output buffer inverts it. Outside T2 every expression falls to zero,
-   which lands S = 1001 and M = 0: the add form, which is what the T1 PC
-   increment and the reset vector both need.                              */
+   WHY THREE SYMBOLS END IN _LOW
+   -----------------------------
+   S3, S0 and Cn are each easier to express as the condition under which
+   they go LOW than as the condition under which they go high -- four or
+   five product terms instead of an expensive DeMorgan expansion. So the
+   array holds that low-going condition and the OLMC polarity fuse inverts
+   it on the way out. The pins carry the '181's own active-high select
+   levels; the _LOW suffix describes the array signal, not the net.
+
+   PIN -> SCHEMATIC NET
+   --------------------
+      9  C          <- flag register Q  (NEW in rev 03)
+     14  M                     -> M
+     15  !S0_LOW               -> S0
+     16  S1                    -> S1
+     17  S2                    -> S2
+     18  !S3_LOW               -> S3
+     19  !CIN_LOW              -> /CIN   (genuinely active low: see above)
+     20  --- freed, was CIN_SEL ---
+
+   Outside T2 every expression below falls to zero, which lands S = 1001
+   and M = 0: the add form, which is what the T1 PC increment and the
+   reset vector both need.                                                */
 
 /* ---- inputs ---- */
 PIN 1  = TB0;        /* T counter bit 0                                   */
@@ -49,22 +80,23 @@ PIN 5  = IR14;
 PIN 6  = IR13;
 PIN 7  = IR12;
 PIN 8  = IR11;
+PIN 9  = C;          /* carry flag ('74 Q) -- new in rev 03               */
 
 /* ---- outputs ---- */
 PIN 14 = M;          /*  8 terms: '181 mode, 1 = logic                    */
-PIN 15 = !S0;        /* 10 terms                                          */
+PIN 15 = !S0_LOW;    /* 10 terms: pin drives '181 S0                      */
 PIN 16 = S1;         /* 12 terms                                          */
 PIN 17 = S2;         /* 14 terms                                          */
-PIN 18 = !S3;        /* 16 terms                                          */
-PIN 19 = !CIN;       /* 16 terms: '181 Cn -- LOW means carry              */
-PIN 20 = CIN_SEL;    /* 14 terms: '157 select, 1 = C flag, 0 = CIN        */
+PIN 18 = !S3_LOW;    /* 16 terms: pin drives '181 S3                      */
+PIN 19 = !CIN_LOW;   /* 16 terms: pin drives '181 Cn -- LOW means carry   */
+PIN 20 = DIR;        /* 14 terms: '245 direction -- new in rev 04         */
 
 /* Logic opcodes: AND = 00011, OR = 00111, XOR = 01111.
    AND and OR share "class 00 & IR12 & IR11" -- one term for the pair.    */
 M = ( TB1 & !TB0 & !RST & !IR15 & !IR14 &  IR12 & IR11)
   # ( TB1 & !TB0 & !RST & !IR15 &  IR14 &  IR13 & IR12 & IR11);
 
-/* S3 = 0 for the subtract group and for XOR; 1 otherwise.
+/* S3 goes LOW for the subtract group and for XOR; high otherwise.
 
    The subtract group is:
      class 00  SUB(001) CMP(101)     -- !IR12 & IR11
@@ -73,43 +105,72 @@ M = ( TB1 & !TB0 & !RST & !IR15 & !IR14 &  IR12 & IR11)
      class 01  SUBC(110)             -- IR13 & IR12 & !IR11
      class 10  SUBIZ(110) SUBINZ(111)-- IR13 & IR12
 
+   SUBC stays in the subtract group here -- it needs the A-minus-B function
+   code. Only its CARRY comes from the C flag, which is rev 03's change and
+   affects CIN_LOW alone.
+
    Rev 01 of GAL1 used a bare IR11 for the class-00 half. That would now
    also catch AND (00011) and OR (00111); hence the !IR12.                */
-S3 = ( TB1 & !TB0 & !IR15 & !IR12 &  IR11)
-   # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 & !IR11)
-   # ( TB1 & !TB0 &  IR15 & !IR14 &  IR13 &  IR12)
-   # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 &  IR11);
+S3_LOW = ( TB1 & !TB0 & !IR15 & !IR12 &  IR11)
+       # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 & !IR11)
+       # ( TB1 & !TB0 &  IR15 & !IR14 &  IR13 &  IR12)
+       # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 &  IR11);
 
-/* S2 = 1 for subtract, OR and XOR.                                       */
+/* S2 is HIGH for subtract, OR and XOR -- expressed directly.             */
 S2 = ( TB1 & !TB0 & !IR15 & !IR12 &  IR11)
    # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 & !IR11)
    # ( TB1 & !TB0 &  IR15 & !IR14 &  IR13 &  IR12)
    # ( TB1 & !TB0 & !IR15 & !IR14 &  IR13 &  IR12 &  IR11)
    # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 &  IR11);
 
-/* S1 = 1 for subtract and for all three logic ops.                       */
+/* S1 is HIGH for subtract and for all three logic ops.                   */
 S1 = ( TB1 & !TB0 & !IR15 & !IR12 &  IR11)
    # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 & !IR11)
    # ( TB1 & !TB0 &  IR15 & !IR14 &  IR13 &  IR12)
    # ( TB1 & !TB0 & !IR15 & !IR14 &  IR12 &  IR11)
    # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 &  IR11);
 
-/* S0 = 0 exactly where S2 = 1 -- subtract, OR and XOR. The two are
-   complementary across all five function codes.                          */
-S0 = ( TB1 & !TB0 & !IR15 & !IR12 &  IR11)
-   # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 & !IR11)
-   # ( TB1 & !TB0 &  IR15 & !IR14 &  IR13 &  IR12)
-   # ( TB1 & !TB0 & !IR15 & !IR14 &  IR13 &  IR12 &  IR11)
-   # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 &  IR11);
+/* S0 goes LOW exactly where S2 goes high -- subtract, OR and XOR. The two
+   are complementary across all five function codes, so this is the same
+   expression as S2 above, taken out through an inverting buffer instead.  */
+S0_LOW = ( TB1 & !TB0 & !IR15 & !IR12 &  IR11)
+       # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 & !IR11)
+       # ( TB1 & !TB0 &  IR15 & !IR14 &  IR13 &  IR12)
+       # ( TB1 & !TB0 & !IR15 & !IR14 &  IR13 &  IR12 &  IR11)
+       # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 &  IR11);
 
-/* Carry wanted: the T1 PC increment, and every subtract at T2.
-   The pin is declared active low, so "carry wanted" drives Cn low.       */
-CIN = (!TB1 &  TB0 & !RST)
-    # ( TB1 & !TB0 & !IR15 & !IR12 &  IR11)
-    # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 & !IR11)
-    # ( TB1 & !TB0 &  IR15 & !IR14 &  IR13 &  IR12);
+/* Carry wanted. Cn is active low at the '181, so "carry wanted" is
+   exactly "Cn goes low".
 
-/* Swap the latched C flag onto Cn for ADDC (01100) and SUBC (01110).
-   IR13 & !IR11 selects exactly those two: CMPI (101) and XOR (111) both
-   have IR11 set.                                                         */
-CIN_SEL = TB1 & !TB0 & !RST & !IR15 & IR14 & IR13 & !IR11;
+     1. T1 -- the PC increment, A plus B plus 1 with the B bus at zero.
+     2. T2 -- plain subtract: SUB(00001) CMP(00101) SUBI(01001) CMPI(01101).
+              !IR12 & IR11 excludes ADDC (IR11=0) and SUBC (IR12=1).
+     3. T2 -- conditional subtract: SUBIZ(10110) SUBINZ(10111).
+     4. T2 -- ADDC(01100) and SUBC(01110) take their carry from the C flag.
+              IR13 & !IR11 selects exactly that pair: CMPI(01101) and
+              XOR(01111) both have IR11 set.
+
+   For ADDC the C flag is the incoming carry directly. For SUBC the borrow
+   convention lines up the same way: C=1 gives A-B (Cn low), C=0 gives
+   A-B-1 (Cn high), which is rs - rt - (1-C) as specified.                */
+CIN_LOW = (!TB1 &  TB0 & !RST)
+        # ( TB1 & !TB0 & !IR15 & !IR12 &  IR11)
+        # ( TB1 & !TB0 &  IR15 & !IR14 &  IR13 &  IR12)
+        # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 & !IR11 & C);
+
+/* '245 data-buffer direction. The A side of U82/U83 faces the SRAM and the
+   B side faces the D bus, so:
+
+     LD  SRAM -> D  is A -> B  -> DIR high
+     ST  D -> SRAM  is B -> A  -> DIR low
+
+   DIR therefore just decodes LD (11010). It is not qualified by T-state:
+   outside the memory cycle the buffers are tri-stated by /DBUS_OE (GAL2),
+   so the direction pin is a don't-care and holding it steady avoids a
+   needless transition.
+
+   This landed here rather than on GAL2 because GAL2 has no OLMC left --
+   both of its rev 01 spares went to DBUS_OE and FENCE_OE. GAL3 had four
+   free after CIN_SEL was retired in rev 03, and already has every IR bit
+   it needs.                                                              */
+DIR = IR15 & IR14 & !IR13 & IR12 & !IR11;

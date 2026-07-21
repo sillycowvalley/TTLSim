@@ -20,15 +20,18 @@ namespace TTLSim.Chips.Alu;
 ///
 /// Outputs:
 ///   /F0../F3    main 4-bit result, active LOW
-///   Cn+4        active-HIGH carry out (datasheet labels this pin without
-///               an overbar; the editor's pin label says "/Cn+4" which is
-///               misleading — the polarity is high-asserted)
+///   Cn+4        pin 16, active-HIGH carry out (the datasheet labels this
+///               pin without an overbar, and the polarity is high-asserted)
 ///   A=B         open-collector equality output; HIGH (released) when F=0
 ///               (i.e. all /F outputs are HIGH), LOW (driven) otherwise.
 ///               Wire-AND multiple A=B outputs through a shared pull-up to
 ///               compare wider operands.
-///   X, Y        propagate (/P) and generate (/G) for cascading through a
-///               74182. Both active-LOW. Not affected by Cn. Documented only
+///   X, Y        propagate (/P, pin 15) and generate (/G, pin 17) for
+///               cascading through a 74182. These are the active-HIGH-data
+///               names for the pins the datasheet's active-LOW-data table
+///               calls P and G; pin assignment per the ST M74HC181 pin
+///               description table (15 = P/X, 16 = Cn+4, 17 = G/Y).
+///               Both active-LOW. Not affected by Cn. Documented only
 ///               for ADD and SUBTRACT modes; computed via the standard
 ///               4-bit carry-lookahead equations for all other operations.
 ///
@@ -55,9 +58,9 @@ public sealed class Hc181 : IChip
     private const int IndexF2 = 10;   // /F2     (pin 11)
     private const int IndexF3 = 11;   // /F3     (pin 13) -- pin 12 = GND
     private const int IndexAeqB = 12; // A=B     (pin 14) open-collector
-    private const int IndexY = 13;    // Y = /G  (pin 15) active-low generate
-    private const int IndexX = 14;    // X = /P  (pin 16) active-low propagate
-    private const int IndexCnP4 = 15; // Cn+4    (pin 17) active-HIGH carry-out
+    private const int IndexY = 13;    // Y = /G  (pin 17) active-low generate
+    private const int IndexX = 14;    // X = /P  (pin 15) active-low propagate
+    private const int IndexCnP4 = 15; // Cn+4    (pin 16) active-HIGH carry-out
     private const int IndexB3 = 16;   // /B3     (pin 18)
     private const int IndexA3 = 17;   // /A3     (pin 19)
     private const int IndexB2 = 18;   // /B2     (pin 20)
@@ -119,7 +122,7 @@ public sealed class Hc181 : IChip
     {
         1, 2, 3, 4, 5, 6, 7, 8,
         9, 10, 11, 13,
-        14, 15, 16, 17,
+        14, 17, 15, 16,   // A=B, Y = /G, X = /P, Cn+4 -- see index constants
         18, 19, 20, 21, 22, 23
     };
 

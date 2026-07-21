@@ -1,6 +1,6 @@
 Name     ENABLES;
 Partno   ADDY-GAL2;
-Revision 02;
+Revision 03;
 Designer BlinkyJED;
 Device   G22V10;
 
@@ -66,7 +66,8 @@ AOE = (!TB1 & TB0)
     # ( TB1 & !TB0 & !IR15 &  IR14 & !IR12)
     # ( TB1 & !TB0 & !IR15 &  IR14 &  IR11)
     # ( TB1 & !TB0 &  IR15 & !IR14 & (!IR12 # IR13))
-    # ( TB1 & !TB0 &  IR15 &  IR14 & !IR13 & !IR12 & !IR11);
+    # ( TB1 & !TB0 &  IR15 &  IR14 & !IR13 & !IR12 & !IR11)
+    # ( TB1 & !TB0 &  IR15 &  IR14 & !IR13 &  IR12);
 
 /* B '574: register operand rt.
      class 00 -- everything except MOV (00010) and TST (00110), i.e. the
@@ -104,8 +105,13 @@ ZNEW = EQH & EQL;
    left floating (it has no pulldowns -- those are on the A and B buses).
    Both live on this device so the handover skew is one OLMC delay.       */
 
-/* SRAM drives D during T3 of a LD (11010).                               */
-DBUS_OE = TB1 & TB0 & !RST & IR15 & IR14 & !IR13 & IR12 & !IR11;
+/* The '245 pair is enabled for the T3 of BOTH memory ops -- dropping the
+   !IR11 covers LD (11010) and ST (11011) in one term.
+
+   REV 03 FIX. Rev 02 enabled them for LD only, so on a store the buffers
+   stayed tri-stated and /SRAM_WE fired into a floating bus. Direction is
+   handled separately by DIR, which lives on GAL3.                        */
+DBUS_OE = TB1 & TB0 & !RST & IR15 & IR14 & !IR13 & IR12;
 
 /* The '181 result drives D at all other times -- including T3 of a ST,
    where the store data reaches the SRAM through the ALU.                 */

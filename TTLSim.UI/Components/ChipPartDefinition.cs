@@ -1079,7 +1079,8 @@ public sealed record ChipPartDefinition(
     /// "ALU on a chip" used in countless minicomputers. S0..S3 select one
     /// of 16 functions; M chooses logic (M=H) vs arithmetic (M=L). Active-low
     /// data convention per the datasheet: /A and /B inputs, /F outputs.
-    /// /Cn+4 is carry-out; X and Y are propagate / generate for cascading
+    /// Cn+4 (pin 16) is carry-out; X (pin 15, = P propagate) and Y (pin 17,
+    /// = G generate) are the lookahead pair for cascading
     /// through a 74HC182. A=B is the open-collector zero-detect output.</summary>
     public static readonly ChipPartDefinition Ic74181 = new(
         PartNumber: "181", PinCount: 24, PowerPin: 24, GroundPin: 12,
@@ -1093,9 +1094,9 @@ public sealed record ChipPartDefinition(
             new("S1",    5),              new("/B2",   20),
             new("S0",    6),              new("/A3",   19),
             new("Cn",    7),              new("/B3",   18),
-            new("M",     8),              new("/Cn+4", 17, Out),
-            new("/F0",   9, Out),         new("X",     16, Out),
-            new("/F1",  10, Out),         new("Y",     15, Out),
+            new("M",     8),              new("Y",     17, Out),
+            new("/F0",   9, Out),         new("Cn+4",  16, Out),
+            new("/F1",  10, Out),         new("X",     15, Out),
             new("/F2",  11, Out),         new("A=B",   14, Out),
             new("GND",  12),              new("/F3",   13, Out),
         },

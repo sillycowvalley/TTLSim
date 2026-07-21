@@ -22,6 +22,15 @@ namespace TTLSim.Chips.Alu;
 ///   - Group /G and /P assert LOW; they exist for a further lookahead
 ///     level. Faithful to the original part, group /G excludes P0.
 ///
+/// DIVERGENCE FROM THE PHYSICAL 74182 — the real part asserts its carry
+/// outputs HIGH (TI SN54/74182: Cn+x = H when G0 = L), because it is drawn
+/// to pair with a '181 read in the active-LOW-data interpretation, where a
+/// carry into Cn is a HIGH. This model, and GAL_182.pld, assert Cn+x/y/z
+/// LOW to pair with the active-HIGH-data reading used by Hc181. The two are
+/// each self-consistent, but a genuine 74182 dropped into a schematic built
+/// against this model needs an inverter on each of Cn+x, Cn+y and Cn+z.
+/// Use the GAL and the question does not arise.
+///
 /// Lookahead, in asserted terms (c = carry in, gk / pk = slice k):
 ///   Cn+x:  c1 = g0 + p0.c
 ///   Cn+y:  c2 = g1 + p1.g0 + p1.p0.c

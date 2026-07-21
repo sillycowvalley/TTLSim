@@ -693,7 +693,7 @@ public sealed class ChipFactory : IChipFactory
     {
         // Required pins are the INPUTS only: 1,2 B0/A0, 3..6 S3..S0, 7 Cn,
         // 8 M, 18..23 B3/A3/B2/A2/B1/A1. The eight outputs -- F0..F3
-        // (9,10,11,13), A=B (14), /G (15), /P (16) and Cn+4 (17) -- are
+        // (9,10,11,13), A=B (14), X = /P (15), Cn+4 (16) and Y = /G (17) -- are
         // OPTIONAL: an open output drives nothing and must never block
         // instantiation (cf. the '138/'154 decoders, the '161/'163 counters
         // and the '283 carry-out). A '181 used as a plain adder slice
@@ -717,8 +717,8 @@ public sealed class ChipFactory : IChipFactory
             f0: Opt(9, "f0-nc"), f1: Opt(10, "f1-nc"),
             f2: Opt(11, "f2-nc"), f3: Opt(13, "f3-nc"),
             aeqb: Opt(14, "aeqb-nc"),
-            y: Opt(15, "y-nc"), x: Opt(16, "x-nc"),
-            cnP4: Opt(17, "cnp4-nc"),
+            y: Opt(17, "y-nc"), x: Opt(15, "x-nc"),
+            cnP4: Opt(16, "cnp4-nc"),
             b3: Get(18), a3: Get(19), b2: Get(20), a2: Get(21),
             b1: Get(22), a1: Get(23),
             delayPs: TtlTiming.ResolvePs(device));

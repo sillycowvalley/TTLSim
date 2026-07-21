@@ -1,6 +1,6 @@
 Name     SEQUENCER;
 Partno   ADDY-GAL1;
-Revision 02;
+Revision 03;
 Designer BlinkyJED;
 Device   G22V10;
 
@@ -112,8 +112,22 @@ HALTREQ = TB1 & !TB0 & !RST & IR15 & IR14 & IR13 & IR12 & IR11;
 
 /* ---- v2 memory control ---- */
 
-/* MAR latches the port-A address operand at T1, for LD or ST alike.       */
-MAR_CLK = !TB1 & TB0 & !RST & IR15 & IR14 & !IR13 & IR12;
+/* MAR latches the address operand at the edge ending T2, for LD or ST.
+
+   REV 03 MOVED THIS FROM T1. The v2 design note said T1, but the datapath
+   diagram in the same document feeds the MAR from the RESULT BUS -- and at
+   T1 the result bus carries PC+1 for the PC writeback, not rs. The two
+   statements cannot both be true.
+
+   T2 is the state that works, and it needs no extra datapath. At T2 of a
+   LD or ST: ASELRS selects rs, AOE puts R[rs] on the A bus, the B bus sits
+   at zero through its pulldowns, and the default add form gives
+   F = rs + 0 = rs. That reaches D through the fence, and the MAR latches
+   it on the ending edge. T3 then runs the memory cycle. The ALU is the
+   address path; no extra bus, no extra parts.
+
+   Note this makes AOE at T2 for LD/ST mandatory -- see GAL2 rev 03.       */
+MAR_CLK = TB1 & !TB0 & !RST & IR15 & IR14 & !IR13 & IR12;
 
 /* SRAM read strobe: T3 of LD (11010).                                     */
 SRAM_OE = TB1 & TB0 & !RST & IR15 & IR14 & !IR13 & IR12 & !IR11;
