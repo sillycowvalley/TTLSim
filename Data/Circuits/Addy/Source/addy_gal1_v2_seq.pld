@@ -1,0 +1,122 @@
+Name     SEQUENCER;
+Partno   ADDY-GAL1;
+Revision 02;
+Designer BlinkyJED;
+Device   G22V10;
+
+/* Addy CPU v2 -- GAL1: sequencer / memory control.
+   All outputs combinational. T states: T0 = !TB1&!TB0 (fetch),
+   T1 = !TB1&TB0 (PC writeback / operand fetch), T2 = TB1&!TB0 (execute),
+   T3 = TB1&TB0 (memory cycle, LD/ST only).
+
+   CHANGES FROM REV 01
+   -------------------
+   Retired : SUB  -- the '86 stage is gone, the '181 subtracts internally.
+             CIN  -- moved to GAL3 with inverted polarity (see that file).
+   Added   : MAR_CLK, SRAM_OE, SRAM_WE.
+   Moved   : WE and FLAGEN swap pins. WE grew from 5 to 14 product terms
+             and no longer fits pin 14's 8-term OLMC; FLAGEN is 1 term and
+             drops in comfortably.
+   New in  : C and N on pins 10 and 11, which were tied to GND. The class-11
+             conditional moves gate WE on them.
+
+   SCHEMATIC EDITS REQUIRED
+   ------------------------
+     pin 10  gnd -> C          pin 11  gnd -> N
+     pin 14  WE  -> FLAGEN     pin 19  FLAGEN -> WE
+     pin 15  SUB -> MAR_CLK    pin 16  CIN -> !SRAM_OE
+     pin 22  -   -> !SRAM_WE                                              */
+
+/* ---- inputs ---- */
+PIN 1  = TB0;        /* T counter bit 0 (clock module H3)                 */
+PIN 2  = TB1;        /* T counter bit 1                                   */
+PIN 3  = RST;        /* reset, active high (clock module H2.3)            */
+PIN 4  = Z;          /* zero flag ('74 Q)                                 */
+PIN 5  = IR15;
+PIN 6  = IR14;
+PIN 7  = IR13;
+PIN 8  = IR12;
+PIN 9  = IR11;
+PIN 10 = C;          /* carry flag  -- new, for MOVC / MOVNC              */
+PIN 11 = N;          /* negative flag -- new, for MOVN                    */
+
+/* ---- outputs ---- */
+PIN 14 = FLAGEN;     /*  8 terms: flag mux select, 1 = capture new        */
+PIN 15 = MAR_CLK;    /* 10 terms: MAR '374 clock enable                   */
+PIN 16 = !SRAM_OE;   /* 12 terms: SRAM /OE                                */
+PIN 17 = WSEL7;      /* 14 terms: OR onto WADDR bits -> write address 7   */
+PIN 18 = ASELRS;     /* 16 terms: AADDR '157 select, 1 = rs, 0 = rd       */
+PIN 19 = WE;         /* 16 terms: register file write enable, active high */
+PIN 20 = !TRST;      /* 14 terms: T counter sync reload                   */
+PIN 21 = !HALTREQ;   /* 12 terms: halt request to clock module            */
+PIN 22 = !SRAM_WE;   /* 10 terms: SRAM /WE                                */
+
+/* WE: reset vector (r7 <- 0), T1 PC writeback, T2 per opcode, T3 for LD.
+
+   Rev 01 used "!IR15 & !IR13" for both ALU classes. That is no longer
+   valid -- v2 fills the IR13 = 1 rows of both classes with opcodes that
+   DO write (OR at 00111; ADDC, SUBC and XOR at 011xx), so each class now
+   needs its own suppress mask:
+
+     class 00  suppress CMN(100) CMP(101) TST(110);  OR(111) writes
+     class 01  suppress CMPI(101) only                                    */
+WE = RST
+   # (!TB1 &  TB0)
+   # ( TB1 & !TB0 & !IR15 & !IR14 & !IR13)
+   # ( TB1 & !TB0 & !IR15 & !IR14 &  IR13 & IR12 & IR11)
+   # ( TB1 & !TB0 & !IR15 &  IR14 & !IR13)
+   # ( TB1 & !TB0 & !IR15 &  IR14 &  IR12)
+   # ( TB1 & !TB0 & !IR15 &  IR14 & !IR11)
+   # ( TB1 & !TB0 &  IR15 & !IR14 & ((!IR11 & Z) # (IR11 & !Z)))
+   # ( TB1 & !TB0 &  IR15 &  IR14 & !IR13 & !IR12 &  IR11)
+   # ( TB1 & !TB0 &  IR15 &  IR14 &  IR13 & !IR12 & !IR11 &  C)
+   # ( TB1 & !TB0 &  IR15 &  IR14 &  IR13 & !IR12 &  IR11 & !C)
+   # ( TB1 & !TB0 &  IR15 &  IR14 &  IR13 &  IR12 & !IR11 &  N)
+   # ( TB1 &  TB0 &  IR15 &  IR14 & !IR13 &  IR12 & !IR11);
+
+/* Write address forced to 7 for the T1 PC writeback and the reset vector. */
+WSEL7 = (!TB1 & TB0) # RST;
+
+/* AADDR = rs for reg-ALU (c00), conditional moves (c10 move-style),
+   OUT (11000), the class-01 three-operand ops ADDC/SUBC/XOR, and both
+   memory ops -- LD and ST take their address operand from rs.
+
+   Rev 01 defaulted all of class 01 to rd, which was correct when class 01
+   was purely read-modify-write. ADDC/SUBC/XOR read rs; CMPI still reads rd. */
+ASELRS = (!IR15 & !IR14)
+       # (!IR15 &  IR14 &  IR13 &  IR12)
+       # (!IR15 &  IR14 &  IR13 & !IR11)
+       # ( IR15 & !IR14 & !IR13 & !IR12)
+       # ( IR15 &  IR14 & !IR13 & !IR12 & !IR11)
+       # ( IR15 &  IR14 & !IR13 &  IR12);
+
+/* Flags capture on any class-00 / class-01 op completing at T2.
+   !IR15 is exactly "class 00 or class 01" -- one product term.            */
+FLAGEN = TB1 & !TB0 & !RST & !IR15;
+
+/* T counter reload. Three states for everything except LD and ST
+   (11010 / 11011), which release at T3 instead.
+
+   The v2 design note gives only "suppress /TRST at T2 for LD/ST" and never
+   supplies a T3 reload -- the counter would run its full 16-state lap. The
+   second half below is that missing reload.                               */
+TRST = ( TB1 & !TB0 & !IR15)
+     # ( TB1 & !TB0 & !IR14)
+     # ( TB1 & !TB0 &  IR13)
+     # ( TB1 & !TB0 & !IR12)
+     # ( TB1 &  TB0 &  IR15 & IR14 & !IR13 & IR12);
+
+/* HLT = 11111 (erased EEPROM word). Asserted during T2; PC already
+   points past the HLT, so any resume continues cleanly.                   */
+HALTREQ = TB1 & !TB0 & !RST & IR15 & IR14 & IR13 & IR12 & IR11;
+
+/* ---- v2 memory control ---- */
+
+/* MAR latches the port-A address operand at T1, for LD or ST alike.       */
+MAR_CLK = !TB1 & TB0 & !RST & IR15 & IR14 & !IR13 & IR12;
+
+/* SRAM read strobe: T3 of LD (11010).                                     */
+SRAM_OE = TB1 & TB0 & !RST & IR15 & IR14 & !IR13 & IR12 & !IR11;
+
+/* SRAM write strobe: T3 of ST (11011).                                    */
+SRAM_WE = TB1 & TB0 & !RST & IR15 & IR14 & !IR13 & IR12 & IR11;

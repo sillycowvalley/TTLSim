@@ -1,0 +1,119 @@
+Name     ENABLES;
+Partno   ADDY-GAL2;
+Revision 02;
+Designer BlinkyJED;
+Device   G22V10;
+
+/* Addy CPU v2 -- GAL2: operand-bus source enables + misc clock enables.
+   All outputs combinational. At most one B-bus source enabled at a time;
+   a disabled bus reads zero through its pulldowns.
+
+   CHANGES FROM REV 01
+   -------------------
+   Added : DBUS_OE  ('245 pair, SRAM -> D bus on LD)
+           FENCE_OE (HCT541 pair, ALU result -> D bus)
+   Fixed : BOE      -- rev 01 killed the B bus on IR12, which now switches
+                       off AND (00011) and OR (00111), both of which need
+                       two operands. The kill narrows to IR12 & !IR11.
+           IMMOE    -- rev 01 missed CMPI (01101) entirely, and switched the
+                       imm8 '541 on for ADDC (01100) and SUBC (01110), which
+                       take register operands. With BOE corrected that was
+                       two drivers on the B bus at once.
+           AOE      -- the LDI test needs the full !IR13 decode now that the
+                       IR13 = 1 rows of class 01 are populated.
+
+   ROM_CE / RAM_CE are deliberately absent: U84 MDEC (a '138 on A15) does
+   the memory decode. Those two OLMCs are what let this device fit.
+
+   SCHEMATIC EDITS REQUIRED
+   ------------------------
+     pin 22  -  ->  !DBUS_OE       pin 23  -  ->  !FENCE_OE               */
+
+/* ---- inputs ---- */
+PIN 1  = TB0;        /* T counter bit 0                                   */
+PIN 2  = TB1;        /* T counter bit 1                                   */
+PIN 3  = RST;        /* reset, active high                                */
+PIN 4  = !EQH;       /* '688 P=Q, result[15:8] == 0 (active low)          */
+PIN 5  = !EQL;       /* '688 P=Q, result[7:0]  == 0 (active low)          */
+PIN 6  = IR15;
+PIN 7  = IR14;
+PIN 8  = IR13;
+PIN 9  = IR12;
+PIN 10 = IR11;
+
+/* ---- outputs ---- */
+PIN 14 = !IRCE;      /*  8 terms: IR '377 clock enable                    */
+PIN 15 = !BOE;       /* 10 terms: B '574 output enable (rt)               */
+PIN 16 = !IMHOE;     /* 12 terms: imm-high '541 (ADDIH)                   */
+PIN 17 = !INOE;      /* 14 terms: input-switch '541 (IN)                  */
+PIN 18 = !AOE;       /* 16 terms: A '574 output enable                    */
+PIN 19 = !IMMOE;     /* 16 terms: imm8 '541                               */
+PIN 20 = !LEDCE;     /* 14 terms: LED '377 clock enable (OUT)             */
+PIN 21 = ZNEW;       /* 12 terms: combined zero detect                    */
+PIN 22 = !DBUS_OE;   /* 10 terms: '245 pair, SRAM -> D                    */
+PIN 23 = !FENCE_OE;  /*  8 terms: HCT541 pair, ALU -> D                   */
+
+/* IR loads exactly once per instruction, at the fetch edge.              */
+IRCE = !TB1 & !TB0;
+
+/* A drives the ALU: T1 (PC+1), and at T2 for every op that reads a
+   register through port A -- all of c00, all of c01 except LDI (01010),
+   c10 move-style reg source and all c10 arithmetic, and OUT.
+   The T1 term also covers the LD/ST address operand reaching the MAR.    */
+AOE = (!TB1 & TB0)
+    # ( TB1 & !TB0 & !IR15 & !IR14)
+    # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13)
+    # ( TB1 & !TB0 & !IR15 &  IR14 & !IR12)
+    # ( TB1 & !TB0 & !IR15 &  IR14 &  IR11)
+    # ( TB1 & !TB0 &  IR15 & !IR14 & (!IR12 # IR13))
+    # ( TB1 & !TB0 &  IR15 &  IR14 & !IR13 & !IR12 & !IR11);
+
+/* B '574: register operand rt.
+     class 00 -- everything except MOV (00010) and TST (00110), i.e. the
+                 kill condition is IR12 & !IR11
+     class 01 -- the three-operand ops ADDC (100), SUBC (110), XOR (111)
+     T3       -- store data for ST, reaching the SRAM through the ALU     */
+BOE = ( TB1 & !TB0 & !IR15 & !IR14 & !IR12)
+    # ( TB1 & !TB0 & !IR15 & !IR14 &  IR11)
+    # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12)
+    # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 & !IR12 & !IR11)
+    # ( TB1 &  TB0 &  IR15 &  IR14 & !IR13 &  IR12 &  IR11);
+
+/* imm8 low: class 01 ADDI (000), SUBI (001), LDI (010), CMPI (101);
+   ADDIH takes the high '541 instead, and ADDC/SUBC/XOR take registers.
+   Plus the c10 immediate forms -- LDIZ/LDINZ (IR12) and ADDIZ..SUBINZ. */
+IMMOE = ( TB1 & !TB0 & !IR15 &  IR14 & !IR13 & !IR12)
+      # ( TB1 & !TB0 & !IR15 &  IR14 & !IR13 &  IR12 & !IR11)
+      # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 & !IR12 &  IR11)
+      # ( TB1 & !TB0 &  IR15 & !IR14 & (IR12 # IR13));
+
+/* imm8 shifted onto bits 15:8: ADDIH = 01011.                            */
+IMHOE = TB1 & !TB0 & !IR15 & IR14 & !IR13 & IR12 & IR11;
+
+/* input switches: IN = 11001.                                            */
+INOE = TB1 & !TB0 & IR15 & IR14 & !IR13 & !IR12 & IR11;
+
+/* LED register loads at the edge ending T2 of an OUT (11000).            */
+LEDCE = TB1 & !TB0 & !RST & IR15 & IR14 & !IR13 & !IR12 & !IR11;
+
+/* 16-bit zero: both '688 halves equal to ground.                         */
+ZNEW = EQH & EQL;
+
+/* ---- v2 D-bus arbitration ----
+   Exactly one of these is asserted at any moment, so the D bus is never
+   left floating (it has no pulldowns -- those are on the A and B buses).
+   Both live on this device so the handover skew is one OLMC delay.       */
+
+/* SRAM drives D during T3 of a LD (11010).                               */
+DBUS_OE = TB1 & TB0 & !RST & IR15 & IR14 & !IR13 & IR12 & !IR11;
+
+/* The '181 result drives D at all other times -- including T3 of a ST,
+   where the store data reaches the SRAM through the ALU.                 */
+FENCE_OE = !TB1
+         # !TB0
+         #  RST
+         # !IR15
+         # !IR14
+         #  IR13
+         # !IR12
+         #  IR11;

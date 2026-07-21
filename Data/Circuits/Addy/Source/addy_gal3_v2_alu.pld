@@ -1,0 +1,115 @@
+Name     ALU;
+Partno   ADDY-GAL3;
+Revision 01;
+Designer BlinkyJED;
+Device   G22V10;
+
+/* Addy CPU v2 -- GAL3: '181 function decode.  *** NEW DEVICE (U85) ***
+
+   The ALU control group does not fit in GAL1/GAL2. Rev 01 of both left two
+   spare OLMCs each -- four in total -- and v2 needs ten more outputs than
+   rev 01 had. Keeping the whole '181 truth table on one device also means
+   the function decode can be read and probed as a single unit.
+
+   ============================ WARNING ============================
+   The S3..S0 / M / Cn codes below assume the 74181 ACTIVE-HIGH DATA
+   convention. The datasheet publishes two complete and different function
+   tables. Addy feeds the '181 straight from HC registers with no inverting
+   stage, which is what selects the active-high table -- but VERIFY EVERY
+   ROW AGAINST THE DATASHEET BEFORE BURNING.
+
+   Note especially that Cn polarity is INVERTED relative to the v1 '283.
+   On the '283, Cn high added one. On the '181 with active-high data,
+   Cn high means NO carry and Cn low means +1. Every v1 intuition about
+   the CIN net is backwards here, which is why CIN moved off GAL1 rather
+   than being edited in place.
+   =================================================================
+
+   Assumed active-high codes:
+     M=0 S=1001 Cn=H : A plus B         (add, and every pass-through case,
+                                         since a disabled bus reads zero)
+     M=0 S=1001 Cn=L : A plus B plus 1  (T1 PC increment, B bus = 0)
+     M=0 S=0110 Cn=L : A minus B        (subtract)
+     M=1 S=1011      : A and B
+     M=1 S=1110      : A or  B
+     M=1 S=0110      : A xor B
+
+   Several outputs are declared active low because the complement is far
+   cheaper in product terms -- the array holds the "is zero" condition and
+   the output buffer inverts it. Outside T2 every expression falls to zero,
+   which lands S = 1001 and M = 0: the add form, which is what the T1 PC
+   increment and the reset vector both need.                              */
+
+/* ---- inputs ---- */
+PIN 1  = TB0;        /* T counter bit 0                                   */
+PIN 2  = TB1;        /* T counter bit 1                                   */
+PIN 3  = RST;        /* reset, active high                                */
+PIN 4  = IR15;
+PIN 5  = IR14;
+PIN 6  = IR13;
+PIN 7  = IR12;
+PIN 8  = IR11;
+
+/* ---- outputs ---- */
+PIN 14 = M;          /*  8 terms: '181 mode, 1 = logic                    */
+PIN 15 = !S0;        /* 10 terms                                          */
+PIN 16 = S1;         /* 12 terms                                          */
+PIN 17 = S2;         /* 14 terms                                          */
+PIN 18 = !S3;        /* 16 terms                                          */
+PIN 19 = !CIN;       /* 16 terms: '181 Cn -- LOW means carry              */
+PIN 20 = CIN_SEL;    /* 14 terms: '157 select, 1 = C flag, 0 = CIN        */
+
+/* Logic opcodes: AND = 00011, OR = 00111, XOR = 01111.
+   AND and OR share "class 00 & IR12 & IR11" -- one term for the pair.    */
+M = ( TB1 & !TB0 & !RST & !IR15 & !IR14 &  IR12 & IR11)
+  # ( TB1 & !TB0 & !RST & !IR15 &  IR14 &  IR13 & IR12 & IR11);
+
+/* S3 = 0 for the subtract group and for XOR; 1 otherwise.
+
+   The subtract group is:
+     class 00  SUB(001) CMP(101)     -- !IR12 & IR11
+     class 01  SUBI(001) CMPI(101)   -- !IR12 & IR11   (shares the term
+               above, since !IR15 covers both classes)
+     class 01  SUBC(110)             -- IR13 & IR12 & !IR11
+     class 10  SUBIZ(110) SUBINZ(111)-- IR13 & IR12
+
+   Rev 01 of GAL1 used a bare IR11 for the class-00 half. That would now
+   also catch AND (00011) and OR (00111); hence the !IR12.                */
+S3 = ( TB1 & !TB0 & !IR15 & !IR12 &  IR11)
+   # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 & !IR11)
+   # ( TB1 & !TB0 &  IR15 & !IR14 &  IR13 &  IR12)
+   # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 &  IR11);
+
+/* S2 = 1 for subtract, OR and XOR.                                       */
+S2 = ( TB1 & !TB0 & !IR15 & !IR12 &  IR11)
+   # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 & !IR11)
+   # ( TB1 & !TB0 &  IR15 & !IR14 &  IR13 &  IR12)
+   # ( TB1 & !TB0 & !IR15 & !IR14 &  IR13 &  IR12 &  IR11)
+   # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 &  IR11);
+
+/* S1 = 1 for subtract and for all three logic ops.                       */
+S1 = ( TB1 & !TB0 & !IR15 & !IR12 &  IR11)
+   # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 & !IR11)
+   # ( TB1 & !TB0 &  IR15 & !IR14 &  IR13 &  IR12)
+   # ( TB1 & !TB0 & !IR15 & !IR14 &  IR12 &  IR11)
+   # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 &  IR11);
+
+/* S0 = 0 exactly where S2 = 1 -- subtract, OR and XOR. The two are
+   complementary across all five function codes.                          */
+S0 = ( TB1 & !TB0 & !IR15 & !IR12 &  IR11)
+   # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 & !IR11)
+   # ( TB1 & !TB0 &  IR15 & !IR14 &  IR13 &  IR12)
+   # ( TB1 & !TB0 & !IR15 & !IR14 &  IR13 &  IR12 &  IR11)
+   # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 &  IR11);
+
+/* Carry wanted: the T1 PC increment, and every subtract at T2.
+   The pin is declared active low, so "carry wanted" drives Cn low.       */
+CIN = (!TB1 &  TB0 & !RST)
+    # ( TB1 & !TB0 & !IR15 & !IR12 &  IR11)
+    # ( TB1 & !TB0 & !IR15 &  IR14 &  IR13 &  IR12 & !IR11)
+    # ( TB1 & !TB0 &  IR15 & !IR14 &  IR13 &  IR12);
+
+/* Swap the latched C flag onto Cn for ADDC (01100) and SUBC (01110).
+   IR13 & !IR11 selects exactly those two: CMPI (101) and XOR (111) both
+   have IR11 set.                                                         */
+CIN_SEL = TB1 & !TB0 & !RST & !IR15 & IR14 & IR13 & !IR11;
