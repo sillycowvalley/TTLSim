@@ -85,7 +85,7 @@ constexpr uint8_t PIN_PD7 = 31;  // red
 // Strobe/sense port, Teensy 34-41 consecutive. PE0 = CLK by convention.
 // Direction is set by jumper J15 for the whole port (fitted = drive).
 // PE6/PE7 are shared with the buttons via J6/J7 (see Buttons below).
-constexpr uint8_t PIN_PE0 = 34;  // white  (CLK)
+constexpr uint8_t PIN_PE0 = 13;  // white  (CLK)
 constexpr uint8_t PIN_PE1 = 35;  // grey
 constexpr uint8_t PIN_PE2 = 36;  // violet
 constexpr uint8_t PIN_PE3 = 37;  // blue
@@ -99,7 +99,7 @@ constexpr uint8_t PIN_PE7 = 41;  // red    (only with J7 in port position)
 // reads. 10 k pulldowns (R3/R4 on the OE nets) mean C and D power up
 // READING. Ports A/B/E have no runtime direction - jumpers J8/J12/J15.
 // The onboard LED is pin 13 = DIR0: lit = port C driving.
-constexpr uint8_t PIN_DIR0 = 13;
+constexpr uint8_t PIN_DIR0 = 34;
 constexpr uint8_t PIN_DIR1 = 33;
 
 // ------------------------------------------------------------------- Buttons

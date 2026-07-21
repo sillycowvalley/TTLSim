@@ -1,45 +1,57 @@
 // ============================================================================
-//  PortChaser.ino  -  LED chaser / pin-map verifier (dual platform)
+//  PortChaser.ino  -  walking-bit LED chaser on any port, A..E
 //
-//  Teensy 4.1 (LVC harness board pin map) or Arduino Mega 2560 -
+//  Teensy 4.1 on the LVC harness board, or Arduino Mega 2560 wired direct.
 //  AdapterPorts.h picks the mapping from the board selected in the IDE.
-//  Run this on any new board or wiring before trusting anything else:
-//  it is the pin-map verifier of record.
 //
-//  Needs AdapterPorts.h in the same sketch folder.
+//  This is the pin-map verifier: run it on any new board or wiring before
+//  trusting anything else. Point an 8-bit LED bar at the port's connector
+//  (or at the raw Teensy pins for bare-silicon Stage 0 checks) and watch a
+//  single lit bit walk from bit 0 (white) to bit 7 (red).
 //
-//  Usage: open the Serial Monitor and type a command:
-//    A, B, C, D, E : walking-bit chaser on that port (bit 0 white up to
-//                    bit 7 red), chasePasses passes, then back to the menu
-//    R             : (Teensy) walk DIR0/DIR1 alternately for chasePasses
-//                    passes - watch the LED (DIR0) and pin 33
-//    S             : report button states until any port command arrives
-//  Typing a different command mid-run switches immediately.
+//  MENU (115200; the baud is decorative on the Teensy):
+//    A B C D E : chase that port
+//    X         : exit - blank every port, back to the menu
+//    SPACE / S : pause / resume
+//    N         : bounce mode on/off (sweep back down instead of wrapping)
+//    +  /  -   : faster / slower (25 ms .. 800 ms per step)
+//    0  /  F   : all bits off / all bits on (lamp test; pauses the chase)
+//    ?         : status
+//  SW0 pauses/resumes, SW1 toggles bounce.
 //
-//  Bare-Teensy pin verification (Stage 0, see LVCBoard_Reference.md):
-//  probe with 8-bit LED Thing bars - power them from the Teensy's 3.3 V
-//  rail so their thresholds match, ground unused sense inputs. All 42
-//  pins are covered by A-E + R + S (buttons: short pin 40/41 to GND).
-//
-//  On the assembled board: fit J8/J12/J15 so A/B/E drive, and note that
-//  C/D chase through portDrive. PE6/PE7 only reach the headers with J6/J7
-//  in the port position.
+//  BOARD SETUP (LVC harness board):
+//    - Ports A, B, E drive only with their jumper FITTED: J8 (A),
+//      J12 (B), J15 (E). Parked = the port reads and its header stays dark.
+//    - Ports C and D are runtime-directional: this sketch calls
+//      portDrive() when you select them and portRelease() when you leave,
+//      so no jumper is involved.
+//    - PE0 is the clock line: chasing E blinks the onboard LED on bit 0.
+//    - PE6/PE7 only reach H11/H12 with J6/J7 in the port position.
+//    - LED bar: power from the board's 5 V pair (H13/H14), grounds
+//      commoned (H15/H16). Bare-Teensy instead: wire to the port's GPIOs
+//      and power the bar from the Teensy's 3.3 V rail.
 // ============================================================================
 
 #include "AdapterPorts.h"
 
-static const unsigned long stepMillis  = 100;  // chaser speed
-static const uint8_t       chasePasses = 5;    // passes before the menu
+static const unsigned long stepMinMillis  = 25;
+static const unsigned long stepMaxMillis  = 800;
+static const unsigned long debounceMillis = 30;
 
-static char          activeMode      = 0;   // 'A'..'E', 'R', 'S', 0 = menu
-static uint8_t       chaserBit       = 0;
-static uint8_t       completedPasses = 0;
-static unsigned long lastStep        = 0;
-static bool          lastSw0         = false;
-static bool          lastSw1         = false;
+static unsigned long stepMillis = 100;   // current chaser speed
+static unsigned long lastStep   = 0;
+static char          activePort = 0;     // 'A'..'E', 0 = at the menu
+static uint8_t       chaserBit  = 0;     // 0..7
+static bool          paused     = false;
+static bool          bounce     = false;
+static int8_t        direction  = 1;     // +1 up, -1 down (bounce mode)
+
+static bool          lastSw0    = false;
+static bool          lastSw1    = false;
+static unsigned long lastSwEdge = 0;
 
 void writeActivePort(uint8_t value) {
-  switch (activeMode) {
+  switch (activePort) {
     case 'A': writePortA(value); break;
     case 'B': writePortB(value); break;
     case 'C': writePortC(value); break;
@@ -55,131 +67,249 @@ void allPortsOff() {
   writePortC(0);
   writePortD(0);
   writePortE(0);
+}
+
+void printMenu() {
+  Serial.println(F("Chaser menu: A B C D E = chase port, X = exit"));
+  Serial.println(F("  SPACE/S pause, N bounce, +/- speed, 0 off, F on, ? status"));
+}
+
+void reportStatus() {
+  if (activePort == 0) {
+    Serial.println(F("At the menu."));
+    return;
+  }
+  Serial.print(F("Port "));
+  Serial.print(activePort);
+  Serial.print(F(": "));
+  Serial.print(paused ? F("paused") : F("running"));
+  Serial.print(F(", bit "));
+  Serial.print(chaserBit);
+  Serial.print(F(", "));
+  Serial.print(stepMillis);
+  Serial.print(F(" ms/step, "));
+  Serial.println(bounce ? F("bounce") : F("wrap"));
+}
+
+// PE6/PE7 are the same GPIOs as SW0/SW1 (40/41). While port E is driving,
+// those pins are outputs and reading them just returns what the chaser is
+// driving - which would look like button presses. Buttons are therefore
+// ignored while E is active. On the board the same overlap exists whenever
+// J6/J7 sit in the port position.
+bool buttonsUsable() {
 #if defined(__IMXRT1062__)
-  digitalWriteFast(PIN_DIR0, LOW);
-  digitalWriteFast(PIN_DIR1, LOW);
+  return activePort != 'E';
+#else
+  return true;   // Mega: SW0/SW1 are separate pins (2/3)
 #endif
 }
 
-void promptUser() {
-  Serial.println(F("Chaser - A,B,C,D,E = port walk; R = DIR walk; S = buttons:"));
+// Put pins 40/41 back to button duty and re-arm the edge detector so the
+// first poll after leaving E doesn't register a phantom press.
+void rearmButtons() {
+  pinMode(PIN_SW0, SW_PIN_MODE);
+  pinMode(PIN_SW1, SW_PIN_MODE);
+  lastSw0 = sw0Pressed();
+  lastSw1 = sw1Pressed();
+  lastSwEdge = millis();
 }
 
-void selectMode(char letter) {
+// Ports A/B/E: the Teensy pins drive whenever this sketch runs; the board
+// jumper decides whether that reaches the header. Ports C/D: take the bus
+// through the direction API on the Teensy, plain pinMode on the Mega.
+void claimPort(char port) {
+  switch (port) {
+    case 'A': setPortMode(PORT_A_PINS, OUTPUT); break;
+    case 'B': setPortMode(PORT_B_PINS, OUTPUT); break;
+    case 'E': setPortMode(PORT_E_PINS, OUTPUT); break;
+    case 'C':
+    case 'D':
+#if defined(__IMXRT1062__)
+      portDrive(port);
+#else
+      setPortMode(port == 'C' ? PORT_C_PINS : PORT_D_PINS, OUTPUT);
+#endif
+      break;
+    default: break;
+  }
+}
+
+void releasePort(char port) {
+  switch (port) {
+    case 'A': setPortMode(PORT_A_PINS, INPUT); break;
+    case 'B': setPortMode(PORT_B_PINS, INPUT); break;
+    case 'E':
+      setPortMode(PORT_E_PINS, INPUT);
+      rearmButtons();
+      break;
+    case 'C':
+    case 'D':
+#if defined(__IMXRT1062__)
+      portRelease(port);
+#else
+      setPortMode(port == 'C' ? PORT_C_PINS : PORT_D_PINS, INPUT);
+#endif
+      break;
+    default: break;
+  }
+}
+
+void showBit(uint8_t bit) {
+  writeActivePort((uint8_t)(1u << bit));
+}
+
+void advance() {
+  if (bounce) {
+    if (chaserBit == 7 && direction > 0) {
+      direction = -1;
+    } else if (chaserBit == 0 && direction < 0) {
+      direction = 1;
+    }
+    chaserBit = (uint8_t)(chaserBit + direction);
+  } else {
+    chaserBit = (uint8_t)((chaserBit + 1) & 0x07);
+  }
+  showBit(chaserBit);
+}
+
+void selectPort(char port) {
+  if (activePort != 0 && activePort != port) {
+    writeActivePort(0);
+    releasePort(activePort);
+  }
+  activePort = port;
+  chaserBit  = 0;
+  direction  = 1;
+  paused     = false;
+  claimPort(activePort);
+  showBit(chaserBit);
+  lastStep = millis();
+  reportStatus();
+}
+
+void exitToMenu() {
+  if (activePort != 0) {
+    writeActivePort(0);
+    releasePort(activePort);
+  }
   allPortsOff();
-  activeMode      = letter;
-  chaserBit       = 0;
-  completedPasses = 0;
-  lastStep        = millis();
-  Serial.print(F("Mode "));
-  Serial.println(activeMode);
-#if defined(__IMXRT1062__)
-  // C/D chase through the runtime direction path so the DUT side lights.
-  if (letter == 'C' || letter == 'D') portDrive(letter);
-#endif
+  activePort = 0;
+  Serial.println(F("Exited - all ports blank."));
+  printMenu();
 }
 
-void backToMenu() {
-#if defined(__IMXRT1062__)
-  if (activeMode == 'C' || activeMode == 'D') portRelease(activeMode);
-#endif
-  allPortsOff();
-  activeMode = 0;
-  Serial.println(F("Done."));
-  promptUser();
+void handleCommand(char c) {
+  if (c >= 'A' && c <= 'E') {
+    selectPort(c);
+    return;
+  }
+  switch (c) {
+    case 'X':
+      exitToMenu();
+      break;
+    case ' ':
+    case 'S':
+      if (activePort == 0) break;
+      paused = !paused;
+      if (!paused) lastStep = millis();
+      reportStatus();
+      break;
+    case 'N':
+      bounce = !bounce;
+      direction = 1;
+      reportStatus();
+      break;
+    case '+':
+    case '=':
+      if (stepMillis > stepMinMillis) {
+        stepMillis /= 2;
+        if (stepMillis < stepMinMillis) stepMillis = stepMinMillis;
+      }
+      reportStatus();
+      break;
+    case '-':
+    case '_':
+      if (stepMillis < stepMaxMillis) {
+        stepMillis *= 2;
+        if (stepMillis > stepMaxMillis) stepMillis = stepMaxMillis;
+      }
+      reportStatus();
+      break;
+    case '0':
+      if (activePort == 0) break;
+      paused = true;
+      writeActivePort(0x00);
+      Serial.println(F("Port = 0x00"));
+      break;
+    case 'F':
+      if (activePort == 0) break;
+      paused = true;
+      writeActivePort(0xFF);
+      Serial.println(F("Port = 0xFF (lamp test)"));
+      break;
+    case '?':
+      reportStatus();
+      break;
+    default:
+      break;  // CR/LF and anything else ignored
+  }
 }
 
 void setup() {
-  Serial.begin(115200);              // real on the Mega; ignored on Teensy
+  Serial.begin(115200);
 
 #if defined(__IMXRT1062__)
-  initPortDirections();
-  // Chaser drives every port from the Teensy side regardless of jumpers.
-  setPortMode(PORT_A_PINS, OUTPUT);
-  setPortMode(PORT_B_PINS, OUTPUT);
-  setPortMode(PORT_E_PINS, OUTPUT);
-  // C/D stay inputs until their chase runs (portDrive handles them).
+  initPortDirections();   // C/D reading, DIR lines low, all ports inputs
 #else
-  setPortMode(PORT_A_PINS, OUTPUT);
-  setPortMode(PORT_B_PINS, OUTPUT);
-  setPortMode(PORT_C_PINS, OUTPUT);
-  setPortMode(PORT_D_PINS, OUTPUT);
-  setPortMode(PORT_E_PINS, OUTPUT);
+  setPortMode(PORT_A_PINS, INPUT);
+  setPortMode(PORT_B_PINS, INPUT);
+  setPortMode(PORT_C_PINS, INPUT);
+  setPortMode(PORT_D_PINS, INPUT);
+  setPortMode(PORT_E_PINS, INPUT);
 #endif
-  allPortsOff();
 
   pinMode(PIN_SW0, SW_PIN_MODE);
   pinMode(PIN_SW1, SW_PIN_MODE);
+  lastSw0 = sw0Pressed();
+  lastSw1 = sw1Pressed();
 
   while (!Serial && millis() < 3000) { }
   Serial.print(F("PortChaser on "));
   Serial.println(F(PLATFORM_NAME));
-  promptUser();
+  Serial.println(F("Jumpers: A=J8, B=J12, E=J15 must be FITTED to reach the headers"));
+  printMenu();
 }
 
 void loop() {
-  // Command input - accepted at any time, running or not.
+  // Menu / commands - accepted at any time, running or not.
   while (Serial.available() > 0) {
     char c = (char)Serial.read();
     if (c >= 'a' && c <= 'z') {
       c = (char)(c - 'a' + 'A');
     }
-    if ((c >= 'A' && c <= 'E') || c == 'S') {
-      selectMode(c);
-    }
-#if defined(__IMXRT1062__)
-    if (c == 'R') {
-      selectMode('R');
-    }
-#endif
-    // CR/LF and anything else: ignored
+    handleCommand(c);
   }
 
-  if (activeMode == 0) return;
-
-  // Button reporting mode
-  if (activeMode == 'S') {
+  // Buttons: SW0 = pause/resume, SW1 = bounce. Skipped while port E owns
+  // pins 40/41 (see buttonsUsable) - use the serial commands there.
+  if (buttonsUsable() && (millis() - lastSwEdge >= debounceMillis)) {
     bool sw0 = sw0Pressed();
     if (sw0 != lastSw0) {
-      Serial.println(sw0 ? F("SW0 down") : F("SW0 up"));
       lastSw0 = sw0;
+      lastSwEdge = millis();
+      if (sw0) handleCommand('S');
     }
     bool sw1 = sw1Pressed();
     if (sw1 != lastSw1) {
-      Serial.println(sw1 ? F("SW1 down") : F("SW1 up"));
       lastSw1 = sw1;
+      lastSwEdge = millis();
+      if (sw1) handleCommand('N');
     }
-    return;
   }
 
-#if defined(__IMXRT1062__)
-  // DIR walk: DIR0 and DIR1 alternate; onboard LED shows DIR0.
-  if (activeMode == 'R') {
-    if (millis() - lastStep >= stepMillis * 3) {
-      lastStep = millis();
-      chaserBit = (uint8_t)((chaserBit + 1) & 0x03);
-      digitalWriteFast(PIN_DIR0, (chaserBit & 0x01) ? HIGH : LOW);
-      digitalWriteFast(PIN_DIR1, (chaserBit & 0x02) ? HIGH : LOW);
-      if (chaserBit == 0) {
-        completedPasses++;
-        if (completedPasses >= chasePasses) backToMenu();
-      }
-    }
-    return;
-  }
-#endif
-
-  // Port walk
-  if (millis() - lastStep >= stepMillis) {
+  // The chase itself.
+  if (activePort != 0 && !paused && (millis() - lastStep >= stepMillis)) {
     lastStep = millis();
-    writeActivePort((uint8_t)(1u << chaserBit));
-    chaserBit++;
-    if (chaserBit > 7) {               // pass complete (bit 7 just lit)
-      chaserBit = 0;
-      completedPasses++;
-      if (completedPasses >= chasePasses) {
-        backToMenu();
-      }
-    }
+    advance();
   }
 }
