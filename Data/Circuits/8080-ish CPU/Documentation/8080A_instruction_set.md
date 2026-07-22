@@ -8,8 +8,9 @@ results — same registers, same flags, same memory, same I/O behaviour. How
 many T-states it takes, what the bus looks like, and how many clock phases
 there are is our business.
 
-**Target implementation:** register file module + counter module + a 16-bit
-'181 ALU, clocked from the Blinky clock module.
+**Target implementation:** register file module + a 16-bit '181 ALU, clocked
+from the Blinky clock module, plus PC/SP holding registers and a memory
+subsystem still to be chosen (see Open questions).
 
 ---
 
@@ -48,7 +49,8 @@ These were deferrable before and are not now:
 4. **HLT exits on interrupt**, which forces a change to the halt design.
 5. **All five flags exact**, including the awkward AC cases.
 6. **DAA exact**, including its inability to clear carry.
-7. **A unified, writable 64 K byte-addressable memory space.**
+7. **A byte-addressable 16-bit memory space**, with RAM wherever running code
+   and data live (the ROM/RAM split is a decode decision — see Memory model).
 
 Each is expanded below.
 
@@ -78,20 +80,22 @@ state rather than freezing. That is correct behaviour and matches how a real
 
 ## Memory model
 
-**64 K, byte-addressable, read/write, unified code and data.**
+**Byte-addressable, read/write where it needs to be, 16-bit address space
+(0x0000–0xFFFF).** PC, SP and all 16-bit pairs wrap 0xFFFF → 0x0000 naturally.
 
-Not negotiable under the contract. 8080A software self-modifies, loads
-programs into RAM, and expects code and data to share one address space. PC,
-SP and all 16-bit pairs wrap 0xFFFF → 0x0000 naturally.
+The **split between ROM and RAM is a later decode decision**, not a constraint
+fixed here. 8080 software self-modifies and shares one address space between
+code and data, so the region the running program lives in must be RAM — but
+that does not mean the whole 64 K is RAM. The normal 8080-era shape is ROM low
+(reset vector, monitor, boot code) with RAM above and I/O decoded into its own
+space; where the boundaries fall is settled when the address bus is decoded.
 
-**This rules out a word-fetched ROM program store as the fetch path.** The
-Code & IR module (32 K × 16 EEPROM, /WE tied to VCC, private ROM data nets
-into a register stage) cannot serve this machine — it is write-protected,
-word-wide, and only half the required address space. A byte-wide 64 K SRAM
-with a boot ROM overlaid at reset is the shape that fits: map the ROM over
-low memory until the first write to a control port unmaps it.
-
-The register file module and counter module are unaffected either way.
+That decision governs which memory boards apply. A ROM in low memory is a
+legitimate — and conventional — part of the map, so a word-store like the
+Code & IR module is not ruled out on principle the way a single unified-RAM
+mandate would rule it out; whether it fits depends on the fetch-path width and
+the map chosen at decode time. The register file and counter modules are
+unaffected either way.
 
 ---
 
@@ -107,8 +111,8 @@ port and write-through behaviour, not by timing.
 | W, Z (temp) | Register file, slot 3 | Immediate addresses, and the XCHG temp |
 | A | Discrete 8-bit register | Frees the single write port across the whole ALU group |
 | F | Discrete flag flip-flops | Needs bit granularity a slot write cannot give |
-| PC | Counter module | Increment free; needs reset, which the file lacks |
-| SP | Counter module | ±1 free during PUSH/POP/CALL/RET |
+| PC | A counting register outside the file | Increment on fetch must be free, and it needs reset — which the file lacks |
+| SP | A counting register, or the file (open) | Wants free ±1; see Open questions for the two options |
 
 Register file: **8 × 16, two read ports (16 × '670)**, JW/JA/JB = 8R,
 JOEA/JOEB = GND. All four live slots sit in bank 0, so the bit-2 bank
@@ -300,9 +304,9 @@ No ALU pass; the immediate byte enters the merge path directly.
 | LXI B / D / H, nn | 3 | 10 |
 | LXI SP, nn | 3 | 10 |
 
-Two byte-wide writes into the halves of the target slot. `LXI SP` needs the
-counter module to accept **two independent 8-bit load enables**, not a single
-16-bit load — the two bytes arrive in different cycles.
+Two byte-wide writes into the halves of the target slot. `LXI SP` delivers its
+two address bytes in separate cycles, so whatever holds SP must accept its low
+and high halves independently rather than needing a single atomic 16-bit load.
 
 ### Group 4 — 8-bit ALU
 
@@ -466,22 +470,17 @@ free-running from 0x0000 — press STEP MODE first, or breakpoint the vector.
 
 ## Verification
 
-Under this contract, correctness is settled by test, not by inspection.
+Software compatibility is settled by running real 8080 code and checking
+results, not by inspecting the schematic. The flag corner cases pass casual
+tests and fail careful ones, so they need deliberate checking however the
+testing is done:
 
-| Test | What it proves |
-|---|---|
-| **TST8080.COM** | Smoke test — basic instruction sanity |
-| **CPUTEST.COM** (Supersoft) | Broader functional coverage; reports the failing group |
-| **8080EX1.COM** (Cringle / Bartholomew) | The real one: CRC-checks every instruction across exhaustive operand and flag combinations against values captured from real silicon |
+- the AC sense after subtraction (line reference: Flags, "AC on subtraction"),
+- the ANA / ANI half-carry rule (`AC = A3 OR operand3`, C = 0),
+- DAA's set-only carry (it can force C but never clear it).
 
-8080EX1 is the only thing that will catch the AC-after-subtract sense, the ANA
-half-carry rule, and the DAA carry-set-only quirk. All three tests need only
-64 K RAM plus BDOS calls 2 and 9 stubbed to a console — the I/O module's '541
-input port and '377 output register are enough for a parallel console.
-
-**Bring-up order:** TST8080 → CPUTEST → 8080EX1. Do not declare the machine
-working before 8080EX1 passes clean; every flag corner case above passes a
-casual test and fails the exerciser.
+Read AC back through `PUSH PSW` when checking it — an AC error is invisible to
+any test that only looks at the register or the other four flags.
 
 ---
 
@@ -501,20 +500,19 @@ casual test and fails the exerciser.
 | Rotates | Easy | '181 for left, 2 × '157 + wiring for right |
 | DAA | Easy | 1 × GAL22V10 |
 | XCHG | Easy | Three writes through WZ, no extra parts |
-| Stack | Easy | Up/down SP counter |
+| Stack | Easy | SP that decrements — counter or ALU path, per the SP decision |
 | Conditional abort | Moderate | Sequencer terminate input |
 | Undefined opcodes | Easy | 12 decode aliases + a debug trap switch |
 | **HLT** | **Moderate** | CPU-side spin state, not the clock module's halt flop |
 | **Interrupts** | **Hard, mandatory** | INT, INTA cycle, RST-from-bus, IFF, EI delay |
-| **64 K unified RAM** | **Mandatory** | Byte-wide SRAM; Code & IR module cannot serve this role |
+| **Memory** | **Mandatory** | Byte-wide RAM where code/data live; ROM/RAM split set at decode |
 
 ---
 
 ## I/O module integration
 
 The Addy I/O module drops in as the parallel console with no rework — it is an
-8-bit board on an 8-bit machine, so none of the width problems that rule out
-the Code & IR module apply. `IN`/`OUT` map directly: the '541 input port
+8-bit board on an 8-bit machine. `IN`/`OUT` map directly: the '541 input port
 drives the read bus when `/INOE` is low, the '377 output register captures the
 write bus on a strobed `CLK_A` edge with `/LEDCE` low.
 
@@ -543,27 +541,31 @@ one `IN` port number and one `OUT` port number at different addresses).
 
 ## Assembler note
 
-No 8080 assembler exists yet; this is a from-scratch tool. Two points fixed by
-the hardware above:
+No 8080 assembler exists yet; this is a from-scratch tool. Two points worth
+fixing early:
 
-- **Emit a flat 64 K byte image.** With the fetch path a byte-wide unified RAM
-  (not the word-wide Code & IR module), there is no byte-lane split — the
-  per-lane interleave was Addy's 16-bit-fetch tooling and does not apply here.
-- **The boot ROM overlays low memory at reset and unmaps on the first write to
-  its control port.** The assembler's origin/layout handling has to account for
-  the overlay window, not assume flat RAM from 0x0000 at power-on.
+- **Emit a flat byte image.** The 8080 fetches bytes, so the tool produces a
+  plain byte stream at consecutive addresses — no byte-lane split. (The
+  per-lane interleave belongs to Addy's 16-bit word fetch and does not apply.)
+- **Origin/layout follows the eventual memory map.** Once the ROM/RAM split is
+  decided at address-decode time, the assembler needs to know where code may be
+  placed (ROM or RAM regions) and where the reset vector lives. Leave this
+  parameterisable rather than assuming flat RAM from 0x0000.
 
 ## Open questions
 
-1. **Counter module capability.** The design assumes 16-bit parallel load with
-   two independent 8-bit load enables, synchronous count enable, up/down
-   control, three-state address-bus output, and asynchronous clear. If the
-   board is up-only ('161-based), SP moves into register file slot 4 — which
-   sits in bank 1, so every SP access takes the slow ~70 ns cross-bank path.
-   Swapping the map so SP takes slot 3 and WZ slot 4 is the better fallback,
-   since WZ is touched less often per instruction.
-2. **Memory board.** Nothing in the current module set provides 64 K of
-   byte-wide RAM. This is the largest unbuilt piece.
-3. **Console.** 8080EX1 needs BDOS 2 and 9. The I/O module covers a parallel
-   console; a serial one needs a UART or bit-banging — and bit-banging is
-   exactly the software class our free-running timing breaks.
+1. **What holds SP, and how.** SP needs ±1 during PUSH/POP/CALL/RET and a
+   two-cycle load for `LXI SP`. If a counter board with a down-count and a
+   split load is available, SP lives there and those operations are free
+   pulses. If not, SP moves into the register file and each adjustment becomes
+   a read → ALU ±1 → write. This is genuinely open — no counter module has
+   been specified yet — and it drives the slot map (an in-file SP wants a
+   bank-0 slot to stay on the fast read path). PC stays wherever it can be
+   cleared on reset and count on fetch, since the register file has no reset.
+2. **The memory map.** Where ROM ends and RAM begins, where I/O decodes, and
+   what physically provides each. This is the address-decode decision the rest
+   of the document defers to; until it is made, which memory boards apply
+   stays open.
+3. **Console.** The I/O module covers a parallel console (switches in, LEDs
+   out). A serial console needs a UART or bit-banging — and bit-banging is the
+   one software class the free-running timing genuinely breaks.
