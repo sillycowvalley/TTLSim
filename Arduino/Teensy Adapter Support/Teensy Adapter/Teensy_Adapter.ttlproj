@@ -3,7 +3,7 @@
     "devices": [
       {
         "id": "dev-r8-100k",
-        "designator": "R8",
+        "designator": "R10",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -17,7 +17,7 @@
       },
       {
         "id": "dev-r9-100k",
-        "designator": "R9",
+        "designator": "R11",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -535,7 +535,7 @@
       },
       {
         "id": "f78f9cedd4744015aa30cc579162a62c",
-        "designator": "J5",
+        "designator": "J11",
         "partKind": "passive",
         "partIdentifier": "jumper-2pin",
         "family": null,
@@ -605,20 +605,6 @@
       },
       {
         "id": "66810103381c4016a9f75ee5bd765f18",
-        "designator": "RN5",
-        "partKind": "passive",
-        "partIdentifier": "resnet-dip16",
-        "family": null,
-        "value": "100",
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "4c8a77bfa0e848f99c4426239298ce92",
         "designator": "RN6",
         "partKind": "passive",
         "partIdentifier": "resnet-dip16",
@@ -632,7 +618,7 @@
         "frequencyHz2": null
       },
       {
-        "id": "574783adae2344bbbfc133fef5b391c9",
+        "id": "4c8a77bfa0e848f99c4426239298ce92",
         "designator": "RN7",
         "partKind": "passive",
         "partIdentifier": "resnet-dip16",
@@ -646,7 +632,7 @@
         "frequencyHz2": null
       },
       {
-        "id": "97693c19e4ee4cfe86695c9c69c62a43",
+        "id": "574783adae2344bbbfc133fef5b391c9",
         "designator": "RN8",
         "partKind": "passive",
         "partIdentifier": "resnet-dip16",
@@ -660,8 +646,22 @@
         "frequencyHz2": null
       },
       {
-        "id": "e4731fc77c4f4115a981aed4949c3200",
+        "id": "97693c19e4ee4cfe86695c9c69c62a43",
         "designator": "RN9",
+        "partKind": "passive",
+        "partIdentifier": "resnet-dip16",
+        "family": null,
+        "value": "100",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "e4731fc77c4f4115a981aed4949c3200",
+        "designator": "RN10",
         "partKind": "passive",
         "partIdentifier": "resnet-dip16",
         "family": null,
@@ -703,7 +703,7 @@
       },
       {
         "id": "93fac2359d4243c6be6af9138afe3855",
-        "designator": "J6",
+        "designator": "J9",
         "partKind": "passive",
         "partIdentifier": "jumper-3pin",
         "family": null,
@@ -717,7 +717,7 @@
       },
       {
         "id": "1deac1256cc44ddfa74f26cd4091ee0e",
-        "designator": "J7",
+        "designator": "J10",
         "partKind": "passive",
         "partIdentifier": "jumper-3pin",
         "family": null,
@@ -731,7 +731,7 @@
       },
       {
         "id": "84f8d4afc31c475b85e04bceb97e5fb2",
-        "designator": "H11",
+        "designator": "H13",
         "partKind": "header",
         "partIdentifier": "hdr-out-2",
         "family": null,
@@ -745,7 +745,7 @@
       },
       {
         "id": "1ca4bc0ded7c4b4a8005cb3fe9b7a80e",
-        "designator": "H12",
+        "designator": "H14",
         "partKind": "header",
         "partIdentifier": "hdr-out-2",
         "family": null,
@@ -759,7 +759,7 @@
       },
       {
         "id": "a88281ecc5514f76b2b2c29ed07a19d0",
-        "designator": "H13",
+        "designator": "H15",
         "partKind": "header",
         "partIdentifier": "hdr-out-2",
         "family": null,
@@ -787,7 +787,7 @@
       },
       {
         "id": "f2dab5d0861a41568de1cc0a65a44535",
-        "designator": "U15",
+        "designator": "U12",
         "partKind": "chip",
         "partIdentifier": "245",
         "family": "LVC",
@@ -801,7 +801,7 @@
       },
       {
         "id": "c72b8d0399874c559af8670c8d5718d0",
-        "designator": "RN13",
+        "designator": "RN5",
         "partKind": "passive",
         "partIdentifier": "resnet-sip9",
         "family": null,
@@ -815,7 +815,7 @@
       },
       {
         "id": "adea07c1112d43cba9c603c71646f990",
-        "designator": "J11",
+        "designator": "J5",
         "partKind": "passive",
         "partIdentifier": "jumper-3pin",
         "family": null,
@@ -829,7 +829,7 @@
       },
       {
         "id": "2e20f7bd43984f518240e3139e2e73da",
-        "designator": "H14",
+        "designator": "H11",
         "partKind": "header",
         "partIdentifier": "hdr-out-2",
         "family": null,
@@ -843,7 +843,7 @@
       },
       {
         "id": "4a00ea546bd145759a9f31a13588ce15",
-        "designator": "H15",
+        "designator": "H12",
         "partKind": "header",
         "partIdentifier": "hdr-out-2",
         "family": null,
@@ -885,7 +885,7 @@
       },
       {
         "id": "4d751bca8202409a897656a08a9035a7",
-        "designator": "R10",
+        "designator": "R5",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -899,7 +899,7 @@
       },
       {
         "id": "1eba05d722694536b9cf95dcaa13b62c",
-        "designator": "J8",
+        "designator": "J6",
         "partKind": "passive",
         "partIdentifier": "jumper-2pin",
         "family": null,
@@ -913,7 +913,7 @@
       },
       {
         "id": "6e3dfe2e5d5c4b7db868bef1ca009a19",
-        "designator": "J12",
+        "designator": "J7",
         "partKind": "passive",
         "partIdentifier": "jumper-2pin",
         "family": null,
@@ -927,7 +927,7 @@
       },
       {
         "id": "f462bd2c0dc8469baa949ac010fd4ed0",
-        "designator": "J15",
+        "designator": "J8",
         "partKind": "passive",
         "partIdentifier": "jumper-2pin",
         "family": null,
@@ -1053,7 +1053,7 @@
       },
       {
         "id": "05b4e724b8ec4f2ab8379eb6e5f65882",
-        "designator": "R11",
+        "designator": "R12",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -1067,7 +1067,7 @@
       },
       {
         "id": "9429c21a78c6466299466ece7a3c2cd1",
-        "designator": "R12",
+        "designator": "R8",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -1081,7 +1081,7 @@
       },
       {
         "id": "f75c6ba1de084f1388a0250871d79310",
-        "designator": "R13",
+        "designator": "R9",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -1103,7 +1103,7 @@
           "x": -50,
           "y": -17
         },
-        "label": "",
+        "label": "PE6 PD",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1118,7 +1118,7 @@
           "x": -50,
           "y": -7
         },
-        "label": "",
+        "label": "PE7 PD",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1133,7 +1133,7 @@
           "x": -17,
           "y": -7
         },
-        "label": "",
+        "label": "TEENSY 4.1",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1148,7 +1148,7 @@
           "x": -179,
           "y": 80
         },
-        "label": "",
+        "label": "A OUT",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1163,7 +1163,7 @@
           "x": -75,
           "y": 15
         },
-        "label": "",
+        "label": "OE INV",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1178,7 +1178,7 @@
           "x": -160,
           "y": 139
         },
-        "label": "",
+        "label": "A PULL",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -1193,7 +1193,7 @@
           "x": -180,
           "y": 116
         },
-        "label": "",
+        "label": "A IN",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1208,7 +1208,7 @@
           "x": -127,
           "y": 106
         },
-        "label": "",
+        "label": "PORT A",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1223,7 +1223,7 @@
           "x": -90,
           "y": 77
         },
-        "label": "",
+        "label": "B OUT",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1238,7 +1238,7 @@
           "x": -91,
           "y": 113
         },
-        "label": "",
+        "label": "B IN",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1253,7 +1253,7 @@
           "x": -36,
           "y": 99
         },
-        "label": "",
+        "label": "PORT B",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1268,7 +1268,7 @@
           "x": -5,
           "y": 73
         },
-        "label": "",
+        "label": "C OUT",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1283,7 +1283,7 @@
           "x": -6,
           "y": 109
         },
-        "label": "",
+        "label": "C IN",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1298,7 +1298,7 @@
           "x": 45,
           "y": 93
         },
-        "label": "",
+        "label": "PORT C",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1313,7 +1313,7 @@
           "x": 77,
           "y": 75
         },
-        "label": "",
+        "label": "D OUT",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1328,7 +1328,7 @@
           "x": 76,
           "y": 111
         },
-        "label": "",
+        "label": "D IN",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1343,7 +1343,7 @@
           "x": 130,
           "y": 101
         },
-        "label": "",
+        "label": "PORT D",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1358,7 +1358,7 @@
           "x": 55,
           "y": -13
         },
-        "label": "",
+        "label": "E OUT",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1373,7 +1373,7 @@
           "x": -143,
           "y": 132
         },
-        "label": "",
+        "label": "A UP/DN",
         "rotation": 180,
         "layer": 0,
         "switchClosed": false,
@@ -1388,7 +1388,7 @@
           "x": -70,
           "y": 147
         },
-        "label": "",
+        "label": "B PULL",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -1403,7 +1403,7 @@
           "x": -56,
           "y": 139
         },
-        "label": "",
+        "label": "B UP/DN",
         "rotation": 180,
         "layer": 0,
         "switchClosed": false,
@@ -1418,7 +1418,7 @@
           "x": 14,
           "y": 134
         },
-        "label": "",
+        "label": "C PULL",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -1433,7 +1433,7 @@
           "x": 28,
           "y": 128
         },
-        "label": "",
+        "label": "C UP/DN",
         "rotation": 180,
         "layer": 0,
         "switchClosed": false,
@@ -1448,7 +1448,7 @@
           "x": 96,
           "y": 139
         },
-        "label": "",
+        "label": "D PULL",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -1463,7 +1463,7 @@
           "x": 111,
           "y": 132
         },
-        "label": "",
+        "label": "D UP/DN",
         "rotation": 180,
         "layer": 0,
         "switchClosed": false,
@@ -1478,7 +1478,7 @@
           "x": -154,
           "y": -9
         },
-        "label": "",
+        "label": "5V",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -1493,7 +1493,7 @@
           "x": -148,
           "y": -9
         },
-        "label": "",
+        "label": "5V",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -1508,7 +1508,7 @@
           "x": -166,
           "y": -9
         },
-        "label": "",
+        "label": "5V",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -1523,7 +1523,7 @@
           "x": -160,
           "y": -9
         },
-        "label": "",
+        "label": "5V",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -1538,7 +1538,7 @@
           "x": -172,
           "y": -9
         },
-        "label": "",
+        "label": "5V",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -1553,7 +1553,7 @@
           "x": -178,
           "y": -9
         },
-        "label": "",
+        "label": "5V",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -1568,7 +1568,7 @@
           "x": -184,
           "y": -9
         },
-        "label": "",
+        "label": "BULK 5V",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -1583,7 +1583,7 @@
           "x": 94,
           "y": -27
         },
-        "label": "",
+        "label": "PE0",
         "rotation": 270,
         "layer": 0,
         "switchClosed": null,
@@ -1598,7 +1598,7 @@
           "x": 104,
           "y": -24
         },
-        "label": "",
+        "label": "PE1",
         "rotation": 270,
         "layer": 0,
         "switchClosed": null,
@@ -1613,7 +1613,7 @@
           "x": 114,
           "y": -21
         },
-        "label": "",
+        "label": "PE2",
         "rotation": 270,
         "layer": 0,
         "switchClosed": null,
@@ -1628,7 +1628,7 @@
           "x": 124,
           "y": -18
         },
-        "label": "",
+        "label": "PE3",
         "rotation": 270,
         "layer": 0,
         "switchClosed": null,
@@ -1643,7 +1643,7 @@
           "x": 134,
           "y": -15
         },
-        "label": "",
+        "label": "PE4",
         "rotation": 270,
         "layer": 0,
         "switchClosed": null,
@@ -1658,7 +1658,7 @@
           "x": 144,
           "y": -12
         },
-        "label": "",
+        "label": "PE5",
         "rotation": 270,
         "layer": 0,
         "switchClosed": null,
@@ -1673,7 +1673,7 @@
           "x": -194,
           "y": 27
         },
-        "label": "",
+        "label": "DUT PWR",
         "rotation": 90,
         "layer": 0,
         "switchClosed": true,
@@ -1688,7 +1688,7 @@
           "x": -98,
           "y": 43
         },
-        "label": "",
+        "label": "OEA PD",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -1703,7 +1703,7 @@
           "x": -103,
           "y": 43
         },
-        "label": "",
+        "label": "OEB PD",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -1718,7 +1718,7 @@
           "x": -108,
           "y": 43
         },
-        "label": "",
+        "label": "OEC PD",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -1733,7 +1733,7 @@
           "x": -113,
           "y": 43
         },
-        "label": "",
+        "label": "OED PD",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -1748,7 +1748,7 @@
           "x": -151,
           "y": 102
         },
-        "label": "",
+        "label": "A TERM",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1763,7 +1763,7 @@
           "x": -56,
           "y": 97
         },
-        "label": "",
+        "label": "B TERM",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1778,7 +1778,7 @@
           "x": 22,
           "y": 93
         },
-        "label": "",
+        "label": "C TERM",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1793,7 +1793,7 @@
           "x": 106,
           "y": 97
         },
-        "label": "",
+        "label": "D TERM",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1808,7 +1808,7 @@
           "x": 83,
           "y": -9
         },
-        "label": "",
+        "label": "E TERM",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1823,7 +1823,7 @@
           "x": -76,
           "y": -17
         },
-        "label": "",
+        "label": "SW0 PROT",
         "rotation": 180,
         "layer": 0,
         "switchClosed": null,
@@ -1838,7 +1838,7 @@
           "x": -76,
           "y": -7
         },
-        "label": "",
+        "label": "SW1 PROT",
         "rotation": 180,
         "layer": 0,
         "switchClosed": null,
@@ -1853,7 +1853,7 @@
           "x": -68,
           "y": -17
         },
-        "label": "",
+        "label": "SW0/PE6",
         "rotation": 0,
         "layer": 0,
         "switchClosed": false,
@@ -1868,7 +1868,7 @@
           "x": -67,
           "y": -7
         },
-        "label": "",
+        "label": "SW1/PE7",
         "rotation": 0,
         "layer": 0,
         "switchClosed": false,
@@ -1883,7 +1883,7 @@
           "x": -187,
           "y": 40
         },
-        "label": "",
+        "label": "+5V",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1898,7 +1898,7 @@
           "x": -187,
           "y": 45
         },
-        "label": "",
+        "label": "+5V",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1913,7 +1913,7 @@
           "x": -167,
           "y": 34
         },
-        "label": "",
+        "label": "GND",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1928,7 +1928,7 @@
           "x": -167,
           "y": 39
         },
-        "label": "",
+        "label": "GND",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1943,7 +1943,7 @@
           "x": 55,
           "y": 25
         },
-        "label": "",
+        "label": "E IN",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1958,7 +1958,7 @@
           "x": 75,
           "y": 46
         },
-        "label": "",
+        "label": "E PULL",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -1973,7 +1973,7 @@
           "x": 92,
           "y": 50
         },
-        "label": "",
+        "label": "E UP/DN",
         "rotation": 180,
         "layer": 0,
         "switchClosed": false,
@@ -1988,7 +1988,7 @@
           "x": 154,
           "y": -9
         },
-        "label": "",
+        "label": "PE6",
         "rotation": 270,
         "layer": 0,
         "switchClosed": null,
@@ -2003,7 +2003,7 @@
           "x": 164,
           "y": -6
         },
-        "label": "",
+        "label": "PE7",
         "rotation": 270,
         "layer": 0,
         "switchClosed": null,
@@ -2018,7 +2018,7 @@
           "x": -90,
           "y": -16
         },
-        "label": "",
+        "label": "USER",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2033,7 +2033,7 @@
           "x": -90,
           "y": -6
         },
-        "label": "",
+        "label": "USER",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2048,7 +2048,7 @@
           "x": -118,
           "y": 43
         },
-        "label": "",
+        "label": "OEE PD",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -2063,7 +2063,7 @@
           "x": -136,
           "y": 15
         },
-        "label": "",
+        "label": "A DRIVE",
         "rotation": 0,
         "layer": 0,
         "switchClosed": false,
@@ -2078,7 +2078,7 @@
           "x": -136,
           "y": 19
         },
-        "label": "",
+        "label": "B DRIVE",
         "rotation": 0,
         "layer": 0,
         "switchClosed": false,
@@ -2093,7 +2093,7 @@
           "x": -136,
           "y": 31
         },
-        "label": "",
+        "label": "E DRIVE",
         "rotation": 0,
         "layer": 0,
         "switchClosed": false,
@@ -2108,7 +2108,7 @@
           "x": -176,
           "y": 21
         },
-        "label": "Power",
+        "label": "PWR",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -2123,7 +2123,7 @@
           "x": -190,
           "y": -9
         },
-        "label": "",
+        "label": "BULK 5V",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -2138,7 +2138,7 @@
           "x": -100,
           "y": -8
         },
-        "label": "",
+        "label": "3V",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -2153,7 +2153,7 @@
           "x": -112,
           "y": -8
         },
-        "label": "",
+        "label": "3V",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -2168,7 +2168,7 @@
           "x": -106,
           "y": -8
         },
-        "label": "",
+        "label": "3V",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -2183,7 +2183,7 @@
           "x": -118,
           "y": -8
         },
-        "label": "",
+        "label": "3V",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -2198,7 +2198,7 @@
           "x": -124,
           "y": -8
         },
-        "label": "",
+        "label": "3V",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -2213,7 +2213,7 @@
           "x": -130,
           "y": -8
         },
-        "label": "",
+        "label": "BULK 3V",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -2228,7 +2228,7 @@
           "x": -177,
           "y": 28
         },
-        "label": "",
+        "label": "PWR LED",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -2243,7 +2243,7 @@
           "x": -85,
           "y": -22
         },
-        "label": "",
+        "label": "SW0 PU",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -2258,7 +2258,7 @@
           "x": -81,
           "y": -22
         },
-        "label": "",
+        "label": "SW1 PU",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
