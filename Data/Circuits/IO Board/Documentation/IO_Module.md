@@ -115,6 +115,49 @@ catch them; on copper, tie or drive them.)
 The register's power-up contents are undefined — expect random LEDs until
 the first load. A host wanting dark LEDs at reset should write zero early.
 
+## Substituting the ICs — what fits and what doesn't
+
+**U2 (output register) — same three fitments as the Code & IR module.**
+The '377/'374/'373 substitution is pin-exact here for the same reason:
+identical data pins, with only pins 1 and 11 changing meaning, and this
+board routes exactly those two pins to the control header.
+
+| Fitted | H2.2 is | H2.3 is | Output port becomes |
+|---|---|---|---|
+| **74HC377** | CP | /E, synchronous | As documented — the CPU `OUT` register. Loads only on strobed edges; always drives. |
+| **74HC374** | CP | /OE, asynchronous | A **clocked bus monitor**: reloads from D on *every* CLK_A edge; LEDs and H6 show the bus as of the last clock, three-stated under /LEDCE. |
+| **74HC373** | LE | /OE, asynchronous | A **live bus probe**: with LE strapped high the LEDs transparently track D with no clock at all. Drop LE to freeze a value. |
+
+The flexibility is real — the '374/'373 fitments turn the panel into a
+D-bus display for bring-up and debug. Caveats this board does not share
+with Code & IR: there are **no pullups on CLK_A or /LEDCE** (only /INOE
+has one), so no fitment has a safe unconnected default here — both
+control lines must be driven or strapped in every fitment. And under
+'374/'373 the H6 header three-states whenever /LEDCE is high: LEDs read
+off, header lines float — don't hang logic inputs on H6 in those fitments
+without external pulls. For CPU `OUT` semantics only the '377 works, by
+the same argument as the IR: load exactly on the strobed edge, hold
+otherwise, no gated clock. As before, do not fit '573/'574 — broadside
+pinout, not footprint-compatible.
+
+**U1 (input buffer) — no useful drop-in, and one trap.**
+
+- **'244**: the same non-inverting buffer, but a grouped pinout (two ×4
+  banks, enables on 1 and 19 controlling interleaved halves) — not
+  footprint-compatible. Don't fit.
+- **'245 — fits the socket, must never be fitted.** Its data pins align
+  exactly with the '541's, so it drops in mechanically. But pin 19
+  becomes /OE — grounded on this board, so the part is *always enabled* —
+  and pin 1 becomes DIR. The R1 pullup then makes the power-on default
+  "drive the switches onto BBUS permanently", and pulling /INOE low
+  *reverses direction*, driving BBUS back into the switch network. Both
+  states violate bus discipline; the second is contention by design.
+  Label the socket.
+- **'540**: the inverting '541, pin-exact — a legitimate hardware fitment
+  if the input wiring is reworked active-low (switches to GND, pullups,
+  closed = 1 after inversion). Not in the TTLSim library, so
+  hardware-only; the capture cannot model it.
+
 ## Hooking up to a CPU (Addy)
 
 | Module pin | Connect to |
