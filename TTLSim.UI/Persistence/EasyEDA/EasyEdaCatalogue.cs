@@ -71,7 +71,6 @@ public sealed record CataloguePart(
     bool EmitValueLabel = false,
     bool IsNetFlag = false,
     string? NetName = null,
-    bool EmitNameOverride = false,
     string? InlineDeviceJson = null,
     string? InlineSymbolJson = null,
     System.Collections.Generic.IReadOnlyDictionary<string, string>? SymbolTemplateTokens = null,
@@ -91,12 +90,12 @@ public sealed record CataloguePart(
     // flips relative to the wire endpoints. Currently only DiodePart
     // needs this.
     int EasyEdaRotationOffsetDeg = 0,
-    // When true (combined with EmitNameOverride = true), the visible
-    // Name ATTR is written with the designator's font style (size 8)
-    // instead of the smaller Value style (size 6). Used by headers so
-    // their Name reads at the same size as the designator alongside it,
-    // matching the hand-edited reference. The LED uses the default
-    // (false) so its Name stays size 6 below the designator.
+    // When true, the visible Name ATTR is written with the designator's
+    // font style (size 8) instead of the smaller Value style (size 6).
+    // Used by headers so their Name reads at the same size as the
+    // designator alongside it, matching the hand-edited reference. The
+    // LED uses the default (false) so its Name stays size 6 below the
+    // designator.
 
     bool NameLabelUsesDesignatorStyle = false,
     // When EmitValueLabel is true, ValueOverride decides what text the
@@ -110,16 +109,14 @@ public sealed record CataloguePart(
     //              showing different resistances).
     // Has no effect when EmitValueLabel is false.
     string? ValueOverride = null,
-    // When true, the Name ATTR on the placed COMPONENT is emitted as
-    // value=null, valVisible=1, default style -- telling EasyEDA to
-    // render the device template's templated Name (e.g. the device's
-    // "={Manufacturer Part}") at this position. Used by DIP ICs, where
-    // the displayed part name ("NE555N") lives in the device template
-    // rather than being a user-typed label or a per-instance override.
-    // Distinct from EmitNameOverride (which writes the user's Label as
-    // the value) and from the resistor's blanked "" Name ATTR. Has no
-    // effect when EmitNameOverride is also set.
-    bool EmitTemplatedName = false);
+    // When true, the Device ATTR on the placed COMPONENT is emitted
+    // VISIBLE, so the part number EasyEDA resolves from the referenced
+    // device is drawn on the sheet. Set on the chip packages (DIP-n,
+    // TO-92): their Name slot now shows the user's Label, so the part
+    // number needs a slot of its own. Passives leave it false -- their
+    // Device entry is a generic Frankenstein part whose title says
+    // nothing useful, and their value is already on the sheet.
+    bool EmitDeviceLabel = false);
 
 /// <summary>
 /// Maps TTLSim parts to EasyEDA library entries. LED, VCC, GND, Switch, Button,
@@ -452,11 +449,12 @@ public static class EasyEDACatalogue
     // symbol, so it's per-chip-type too. Both UUIDs are derived, not
     // hand-supplied: no per-chip library data is needed.
     //
-    // The displayed chip name comes from each synthesised device's
-    // Name = "={Manufacturer Part}" template, where Manufacturer Part is
-    // set to the chip's FullPartNumber ("74HC393", "74HC74", "NE556", ...).
-    // EmitTemplatedName on the CataloguePart makes the sheet emit the
-    // template-fallback Name ATTR, exactly as DIP-8 does.
+    // Each synthesised device carries Manufacturer Part = the chip's
+    // FullPartNumber ("74HC393", "74HC74", "NE556", ...) and a
+    // Name = "={Manufacturer Part}" template. The sheet's Name ATTR no
+    // longer uses that template -- Name shows the user's Label -- so the
+    // part number reaches the sheet through the Device ATTR instead,
+    // which EmitDeviceLabel makes visible.
     internal const string Dip14FootprintUuid = "f8db98e4ac5c41b3b7fa99d6d16d6531";
 
     // The 74HC393 reference device entry -- used as the ATTRIBUTE TEMPLATE
@@ -609,7 +607,6 @@ public static class EasyEDACatalogue
             [1] = new Point(-20, 0),
             [2] = new Point(+20, 0),
         },
-        EmitNameOverride: true,
         // Hand-tuned in EasyEDA, read back from
         // LEDs_positions_tweaked_in_EDA.epro. Value entries unused (LED
         // doesn't emit Value); zero them.
@@ -784,7 +781,6 @@ public static class EasyEDACatalogue
             Rot90: new LabelOffsetSet(new(+20, +5), new(+30, +5), default),
             Rot180: new LabelOffsetSet(new(-15, +15), new(-5, +15), default),
             Rot270: new LabelOffsetSet(new(+20, -5), new(+30, -5), default)),
-        EmitNameOverride: true,
         NameLabelUsesDesignatorStyle: true,
         MatchesEasyEdaRotationSense: true);
 
@@ -803,7 +799,6 @@ public static class EasyEDACatalogue
             Rot90: new LabelOffsetSet(new(+25, 0), new(+35, 0), default),
             Rot180: new LabelOffsetSet(new(-10, +20), new(0, +20), default),
             Rot270: new LabelOffsetSet(new(+25, 0), new(+35, 0), default)),
-        EmitNameOverride: true,
         NameLabelUsesDesignatorStyle: true,
         MatchesEasyEdaRotationSense: true);
 
@@ -820,7 +815,6 @@ public static class EasyEDACatalogue
             Rot90: new LabelOffsetSet(new(+30, 0), new(+40, 0), default),
             Rot180: new LabelOffsetSet(new(-10, +25), new(0, +25), default),
             Rot270: new LabelOffsetSet(new(+30, 0), new(+40, 0), default)),
-        EmitNameOverride: true,
         NameLabelUsesDesignatorStyle: true,
         MatchesEasyEdaRotationSense: true);
 
@@ -837,7 +831,6 @@ public static class EasyEDACatalogue
             Rot90: new LabelOffsetSet(new(+40, 0), new(+50, 0), default),
             Rot180: new LabelOffsetSet(new(-10, +35), new(0, +35), default),
             Rot270: new LabelOffsetSet(new(+40, 0), new(+50, 0), default)),
-        EmitNameOverride: true,
         NameLabelUsesDesignatorStyle: true,
         MatchesEasyEdaRotationSense: true);
 
@@ -854,7 +847,6 @@ public static class EasyEDACatalogue
             Rot90: new LabelOffsetSet(new(+50, +5), new(+60, +5), default),
             Rot180: new LabelOffsetSet(new(-15, +45), new(-5, +45), default),
             Rot270: new LabelOffsetSet(new(+50, -5), new(+60, -5), default)),
-        EmitNameOverride: true,
         NameLabelUsesDesignatorStyle: true,
         MatchesEasyEdaRotationSense: true);
 
@@ -898,7 +890,6 @@ public static class EasyEDACatalogue
             [1] = new Point(-30, 0),
             [2] = new Point(+30, 0),
         },
-        EmitNameOverride: true,
         // Initial offsets only -- expected to be hand-tuned in EasyEDA
         // after the first export, same workflow as resistors and LEDs.
         // Body BBOX is roughly (-13.5 .. +13.5, -3.5 .. +9.5).
@@ -926,7 +917,6 @@ public static class EasyEDACatalogue
             [1] = new Point(-30, -10),
             [2] = new Point(+30, -10),
         },
-        EmitNameOverride: true,
         // Initial offsets only -- expected to be hand-tuned in EasyEDA
         // after the first export. Body BBOX is roughly (-20.5 .. +20.5,
         // -12.5 .. +10.5) so labels need wider clearance than the switch.
@@ -962,7 +952,6 @@ public static class EasyEDACatalogue
             [7] = new Point(50, 10),
             [8] = new Point(50, 30),
         },
-        EmitNameOverride: true,
         // DIP label rule at half-height 42: designator at half + 8,
         // Rot90/270 x at -(half + 10).
         LabelOffsets: new LabelOffsetsByRotation(
@@ -997,7 +986,6 @@ public static class EasyEDACatalogue
             [15] = new Point(50, 50),
             [16] = new Point(50, 70),
         },
-        EmitNameOverride: true,
         // DIP label rule at half-height 82.
         LabelOffsets: new LabelOffsetsByRotation(
             Rot0: new LabelOffsetSet(new(-40, +90), new(-20, +90), default),
@@ -1021,7 +1009,6 @@ public static class EasyEDACatalogue
             [3] = new Point(30, 10),
             [4] = new Point(30, -10),
         },
-        EmitNameOverride: true,
         LabelOffsets: new LabelOffsetsByRotation(
             Rot0: new LabelOffsetSet(new(-10, +25), new(-10, +15), default),
             Rot90: new LabelOffsetSet(new(-30, +5), new(-30, -5), default),
@@ -1045,7 +1032,6 @@ public static class EasyEDACatalogue
             [1] = new Point(-30, 0),
             [2] = new Point(+30, 0),
         },
-        EmitNameOverride: true,
         LabelOffsets: new LabelOffsetsByRotation(
             Rot0: new LabelOffsetSet(new(-10, +20), new(-10, +10), default),
             Rot90: new LabelOffsetSet(new(-25, +5), new(-25, -5), default),
@@ -1070,7 +1056,6 @@ public static class EasyEDACatalogue
             [2] = new Point(0, -5),
             [3] = new Point(+60, +5),
         },
-        EmitNameOverride: true,
         LabelOffsets: new LabelOffsetsByRotation(
             Rot0: new LabelOffsetSet(new(-10, +20), new(0, +20), default),
             Rot90: new LabelOffsetSet(new(+25, 0), new(+35, 0), default),
@@ -1096,7 +1081,6 @@ public static class EasyEDACatalogue
             [2] = new Point(-30, 0),
             [3] = new Point(+30, -10),
         },
-        EmitNameOverride: true,
         LabelOffsets: new LabelOffsetsByRotation(
             Rot0: new LabelOffsetSet(new(-10, +25), new(0, +25), default),
             Rot90: new LabelOffsetSet(new(+30, 0), new(+40, 0), default),
@@ -1126,7 +1110,6 @@ public static class EasyEDACatalogue
             [1] = new Point(+20, 0),
             [2] = new Point(-20, 0),
         },
-        EmitNameOverride: true,
         EasyEdaRotationOffsetDeg: 180,
         // Initial offsets only -- expected to be hand-tuned in EasyEDA
         // after first export. The diode symbol's BBOX is roughly
@@ -1532,7 +1515,6 @@ public static class EasyEDACatalogue
             ["3D Model"] = "f10af32c56eb4a21a68d2ce3222feb1b|0819f05c4eef4c71ace90d822a990e87",
             ["3D Model Title"] = "RES-ARRAY-TH_9P-L22.0-W2.5-P2.54-L",
             ["3D Model Transform"] = "898.03,97.851,0,0,0,0,0,0,-137.795",
-            ["Name"] = "={Value}",
             ["Type"] = "Resistor Network",
             ["Value"] = "4.7k\u03a9",
             ["Tolerance"] = "\u00b12%",
@@ -1641,7 +1623,6 @@ public static class EasyEDACatalogue
             ["3D Model"] = Dip16Reference3dModelUuid,
             ["3D Model Title"] = Dip16Reference3dModelTitle,
             ["3D Model Transform"] = Dip16Reference3dModelTransform,
-            ["Name"] = "={Value}",
             ["Type"] = "Resistor Network",
             ["Value"] = "4.7kΩ",
             ["Description"] = "Isolated DIP-16 resistor network (8 elements, pin n to pin 17-n) -- value supplied per instance via Value ATTR override",
@@ -1778,7 +1759,7 @@ public static class EasyEDACatalogue
             PartTitle: chip.SymbolName + ".1",
             PinLocalPositions: Dip8PinLocals,
             SymbolTemplateTokens: tokens,
-            EmitTemplatedName: true,
+            EmitDeviceLabel: true,
             // Label offsets hand-tuned in EasyEDA and read back from
             // DIP-8_labels.epro (EasyEDA_Export.md §0), then rescaled for
             // the 20px-pitch body. The chip name sits adjacent to the
@@ -1879,7 +1860,7 @@ public static class EasyEDACatalogue
             SymbolTemplateTokens: tokens,
             InlineDeviceJson: BuildDip14DeviceFragment(chipName, symbolUuid),
             InlineSymbolJson: BuildDip14SymbolFragment(chipName),
-            EmitTemplatedName: true,
+            EmitDeviceLabel: true,
             // Label offsets in the same style as DIP-8, rescaled for the
             // taller PDIP-14 body:
             //   R0/R180  (horizontal body, half-height 72): labels ABOVE
@@ -2039,7 +2020,7 @@ public static class EasyEDACatalogue
             SymbolTemplateTokens: tokens,
             InlineDeviceJson: BuildDip16DeviceFragment(chipName, symbolUuid),
             InlineSymbolJson: BuildDip16SymbolFragment(chipName),
-            EmitTemplatedName: true,
+            EmitDeviceLabel: true,
             // Same label layout as DIP-14, raised to clear the taller DIP-16
             // body (half-height 82, body top at +82; designator at +90).
             //   R0/R180:  labels ABOVE the body, text horizontal.
@@ -2193,7 +2174,7 @@ public static class EasyEDACatalogue
             SymbolTemplateTokens: tokens,
             InlineDeviceJson: BuildDip18DeviceFragment(chipName, symbolUuid),
             InlineSymbolJson: BuildDip18SymbolFragment(chipName),
-            EmitTemplatedName: true,
+            EmitDeviceLabel: true,
             // Same label layout as DIP-16, raised to clear the taller DIP-18
             // body (half-height 92, body top at +92; designator at +100 --
             // the DIP-16 rule, half + 8; Rot90/270 x at -(half + 10)).
@@ -2352,7 +2333,7 @@ public static class EasyEDACatalogue
             SymbolTemplateTokens: tokens,
             InlineDeviceJson: BuildDip20DeviceFragment(chipName, symbolUuid),
             InlineSymbolJson: BuildDip20SymbolFragment(chipName),
-            EmitTemplatedName: true,
+            EmitDeviceLabel: true,
             // Same label layout as DIP-16, raised to clear the taller DIP-20
             // body (half-height 102, body top at +102; designator at +110).
             //   R0/R180:  labels ABOVE the body, text horizontal.
@@ -2547,7 +2528,7 @@ public static class EasyEDACatalogue
             SymbolTemplateTokens: tokens,
             InlineDeviceJson: BuildDip24DeviceFragment(chipName, symbolUuid, wide),
             InlineSymbolJson: BuildDip24SymbolFragment(chipName),
-            EmitTemplatedName: true,
+            EmitDeviceLabel: true,
             // DIP-20 label rule at half-height 122: designator at half + 8,
             // Rot90/270 x at -(half + 10).
             LabelOffsets: new LabelOffsetsByRotation(
@@ -2745,7 +2726,7 @@ public static class EasyEDACatalogue
             SymbolTemplateTokens: tokens,
             InlineDeviceJson: BuildDip28DeviceFragment(chipName, symbolUuid, wide),
             InlineSymbolJson: BuildDip28SymbolFragment(chipName),
-            EmitTemplatedName: true,
+            EmitDeviceLabel: true,
             // DIP-20 label rule at half-height 142: designator at half + 8,
             // Rot90/270 x at -(half + 10).
             LabelOffsets: new LabelOffsetsByRotation(
@@ -2919,7 +2900,7 @@ public static class EasyEDACatalogue
             SymbolTemplateTokens: tokens,
             InlineDeviceJson: BuildDip32DeviceFragment(chipName, symbolUuid),
             InlineSymbolJson: BuildDip32SymbolFragment(chipName),
-            EmitTemplatedName: true,
+            EmitDeviceLabel: true,
             // DIP-20 label rule at half-height 162: designator at half + 8,
             // Rot90/270 x at -(half + 10).
             LabelOffsets: new LabelOffsetsByRotation(
@@ -3106,7 +3087,7 @@ public static class EasyEDACatalogue
             SymbolTemplateTokens: tokens,
             InlineDeviceJson: BuildDip48DeviceFragment(chipName, symbolUuid),
             InlineSymbolJson: BuildDip48SymbolFragment(chipName),
-            EmitTemplatedName: true,
+            EmitDeviceLabel: true,
             // DIP-32 label rule at half-height 242: designator at half + 8,
             // Rot90/270 x at -(half + 10).
             LabelOffsets: new LabelOffsetsByRotation(
@@ -3255,7 +3236,7 @@ public static class EasyEDACatalogue
             SymbolTemplateTokens: tokens,
             InlineDeviceJson: BuildTo92DeviceFragment(chipName, symbolUuid),
             InlineSymbolJson: BuildTo92SymbolFragment(chipName),
-            EmitTemplatedName: true,
+            EmitDeviceLabel: true,
             // Body box spans y[-20,+20]; legs hang to y=-30. Designator/Name
             // sit ABOVE the body at R0/R180 (text horizontal); to the LEFT,
             // text rotated 90, at R90/R270. Cosmetic -- verify/tune in the

@@ -868,36 +868,28 @@ internal static class EasyEDASheetWriter
             placement.ComponentX + offsets.Designator.X,
             placement.ComponentY + offsets.Designator.Y,
             labelTextRot, StyleDesignator, 0);
-        // Name ATTR has four shapes:
-        //   - For parts with EmitTemplatedName (DIP ICs): Name is emitted
-        //     as value=null, valVisible=1, default style -- EasyEDA renders
-        //     the device template's templated Name (e.g. "NE555N" from
-        //     "={Manufacturer Part}"). Takes precedence over the others.
-        //   - For parts with EmitNameOverride (LED): Name carries the
-        //     user's label as a visible inscription. Style StyleValue
-        //     (size 6), keyVisible=null, matching what EasyEDA's editor
-        //     writes when the user toggles Name visibility on.
-        //   - For parts with EmitNameOverride + NameLabelUsesDesignatorStyle
-        //     (header): Name is the user's label rendered at the same size
-        //     as the designator (StyleDesignator, size 8), with keyVisible=0
-        //     and rotation=0 -- matching the hand-edited Headers .epro.
-        //   - For parts without EmitNameOverride (resistor): Name is the
-        //     bookkeeping ATTR blanked to "". Style StyleDefault, keyVisible=0.
-        string nameValue = part.EmitNameOverride ? (item.Label ?? "") : "";
-        if (part.EmitTemplatedName)
+        // Name ATTR carries the item's Label -- the TTL Sim field that
+        // corresponds to EasyEDA's Name. One rule for every part:
+        //   - Label set   -> visible inscription with that text. The ATTR
+        //     value overrides whatever Name the referenced device carries,
+        //     so no part depends on a "={...}" device template any more.
+        //     Header-style parts draw it at designator size
+        //     (StyleDesignator, size 8); everything else uses StyleValue
+        //     (size 6), the size EasyEDA's editor writes when the user
+        //     toggles Name visibility on.
+        //   - Label empty -> the ATTR is still emitted (the key has to
+        //     exist) but with valVisible = 0, so EasyEDA draws nothing.
+        //     A visible empty ATTR leaves a dead label slot on the sheet.
+        string nameValue = (item.Label ?? "").Trim();
+        if (nameValue.Length == 0)
         {
-            // DIP IC: render the device template's templated Name (e.g.
-            // "={Manufacturer Part}" -> "NE555N") at this position.
-            // value=null tells EasyEDA to fall back to the template;
-            // valVisible=1 makes it show. labelTextRot rotates the text to
-            // sit beside the body at R90/R270 (null = horizontal otherwise).
             AppendRecord(sb, "ATTR", idGen.NewAttrId(), componentId,
-                "Name", null, null, 1,
+                "Name", "", 0, 0,
                 placement.ComponentX + offsets.Name.X,
                 placement.ComponentY + offsets.Name.Y,
-                labelTextRot, StyleDefault, 0);
+                0, StyleDefault, 0);
         }
-        else if (part.EmitNameOverride && part.NameLabelUsesDesignatorStyle)
+        else if (part.NameLabelUsesDesignatorStyle)
         {
             AppendRecord(sb, "ATTR", idGen.NewAttrId(), componentId,
                 "Name", nameValue, 0, 1,
@@ -905,24 +897,42 @@ internal static class EasyEDASheetWriter
                 placement.ComponentY + offsets.Name.Y,
                 0, StyleDesignator, 0);
         }
-        else if (part.EmitNameOverride)
+        else
         {
             AppendRecord(sb, "ATTR", idGen.NewAttrId(), componentId,
                 "Name", nameValue, null, 1,
                 placement.ComponentX + offsets.Name.X,
                 placement.ComponentY + offsets.Name.Y,
-                null, StyleValue, 0);
+                labelTextRot, StyleValue, 0);
+        }
+        // Device ATTR. For chips (EmitDeviceLabel) it is DRAWN on the
+        // sheet, so the part number stays visible even when the Name slot
+        // is showing the user's Label instead. For every other part it
+        // stays the invisible binding record it has always been.
+        //
+        // Its position is derived from the Designator offset rather than
+        // from a per-part table: one line further out at R0/R180, one
+        // column further out at R90/R270 (where the text is rotated to
+        // read along the body). So a chip reads
+        //     74HC163
+        //     U1  1 ALU
+        // top-down above the body. If a part ever needs its own position,
+        // give LabelOffsetSet a Device slot and read it here instead.
+        if (part.EmitDeviceLabel)
+        {
+            int deviceX = offsets.Designator.X + (labelTextRot is null ? 0 : -20);
+            int deviceY = offsets.Designator.Y + (labelTextRot is null ? 20 : 0);
+            AppendRecord(sb, "ATTR", idGen.NewAttrId(), componentId,
+                "Device", part.DeviceUuid, 0, 1,
+                placement.ComponentX + deviceX,
+                placement.ComponentY + deviceY,
+                labelTextRot, StyleValue, 0);
         }
         else
         {
             AppendRecord(sb, "ATTR", idGen.NewAttrId(), componentId,
-                "Name", nameValue, 0, 1,
-                placement.ComponentX + offsets.Name.X,
-                placement.ComponentY + offsets.Name.Y,
-                0, StyleDefault, 0);
+                "Device", part.DeviceUuid, 0, 0, null, null, 0, StyleDevice, 0);
         }
-        AppendRecord(sb, "ATTR", idGen.NewAttrId(), componentId,
-            "Device", part.DeviceUuid, 0, 0, null, null, 0, StyleDevice, 0);
         AppendRecord(sb, "ATTR", idGen.NewAttrId(), componentId,
             "Reuse Block", "", 0, 0, null, null, 0, StyleDefault, 0);
         AppendRecord(sb, "ATTR", idGen.NewAttrId(), componentId,
@@ -932,23 +942,30 @@ internal static class EasyEDASheetWriter
         AppendRecord(sb, "ATTR", idGen.NewAttrId(), componentId,
             "Unique ID", "gg" + componentId, 0, 0, null, null, 0, StyleDefault, 0);
 
-        // Value ATTR for parts that want a visible Value on the schematic.
-        // Two modes:
+        // Value ATTR for parts that carry a value. Two modes:
         //   - ValueOverride is non-null (Frankenstein resistor):
         //     emit the override string directly. The placed instance
         //     carries its own display text, separate from whatever
         //     value the shared device template carries.
         //   - ValueOverride is null:
-        //     emit value=null with valVisible=1 so EasyEDA falls back
-        //     to the device template's Value field. Original behaviour
-        //     from when each value had its own per-value device entry;
-        //     kept for parts that might still want it later.
+        //     emit value=null so EasyEDA falls back to the device
+        //     template's Value field. Original behaviour from when each
+        //     value had its own per-value device entry; kept for parts
+        //     that might still want it later.
         // Without this ATTR at all, EasyEDA stores any templated value
         // internally but doesn't render it.
+        //
+        // Visible whenever there is text to show. An explicitly empty
+        // ValueOverride is emitted hidden, for the same reason an empty
+        // Name is: a visible empty ATTR is a dead label slot. A null
+        // ValueOverride stays visible -- the device template supplies
+        // the text in that mode, so emptiness can't be judged here.
         if (part.EmitValueLabel)
         {
+            bool valueEmpty = part.ValueOverride is not null
+                && part.ValueOverride.Trim().Length == 0;
             AppendRecord(sb, "ATTR", idGen.NewAttrId(), componentId,
-                "Value", part.ValueOverride, null, 1,
+                "Value", part.ValueOverride, null, valueEmpty ? 0 : 1,
                 placement.ComponentX + offsets.Value.X,
                 placement.ComponentY + offsets.Value.Y,
                 null, StyleValue, 0);
