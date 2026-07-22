@@ -1,0 +1,222 @@
+<svg viewBox="0 0 1040 850" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <style>
+    .bg     { fill:#fafaf7; }
+    .thin   { stroke:#1f2933; stroke-width:1.2; fill:none; }
+    .body   { fill:#ffffff; stroke:#1f2933; stroke-width:2; }
+    .title  { fill:#1f2933; font-size:32px; font-weight:700; }
+    .sub    { fill:#52606d; font-size:15px; }
+    .panel  { fill:#3e4c59; font-size:14px; font-weight:600; letter-spacing:.4px; }
+    .pinno  { fill:#7b8794; font-size:11px; font-weight:600; }
+    .sig    { font-size:13px; font-weight:700; }
+    .green  { fill:#2e7d32 !important; }
+    .blue   { fill:#1565c0 !important; }
+    .orange { fill:#e65100 !important; }
+    .purple { fill:#7b1fa2 !important; }
+    .red    { fill:#c62828 !important; }
+    .slate  { fill:#37474f !important; }
+    .lbl    { fill:#1f2933; font-size:13px; font-weight:700; }
+    .small  { fill:#52606d; font-size:11px; }
+    .tbl    { fill:#1f2933; font-size:13px; }
+    .note   { fill:#3e4c59; font-size:13px; }
+    .busG   { stroke:#2e7d32; stroke-width:5; fill:none; }
+    .busGm  { stroke:#2e7d32; stroke-width:3; fill:none; }
+    .busB   { stroke:#1565c0; stroke-width:5; fill:none; }
+    .wG     { stroke:#2e7d32; stroke-width:2; fill:none; }
+    .wB     { stroke:#1565c0; stroke-width:2; fill:none; }
+    .wP     { stroke:#7b1fa2; stroke-width:2.5; fill:none; }
+    .wO     { stroke:#e65100; stroke-width:2; fill:none; }
+    .wOx    { stroke:#e65100; stroke-width:4; fill:none; }
+    .wI     { stroke:#1f2933; stroke-width:1.6; fill:none; }
+    .dash   { fill:#ffffff; stroke:#37474f; stroke-width:2; stroke-dasharray:7 5; }
+  </style>
+  <defs>
+    <marker id="arr"  markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#1f2933"/></marker>
+    <marker id="arrG" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#2e7d32"/></marker>
+    <marker id="arrGs" markerWidth="9" markerHeight="9" refX="1" refY="4" orient="auto"><path d="M8,0 L0,4 L8,8 Z" fill="#2e7d32"/></marker>
+    <marker id="arrB" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#1565c0"/></marker>
+    <marker id="arrP" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#7b1fa2"/></marker>
+    <marker id="arrO" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#e65100"/></marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1040" height="850"/>
+
+  <!-- ===== Title block ===== -->
+  <text class="title" x="40" y="48">Minimal '181 CPU — Module Block Diagram</text>
+  <text class="sub"   x="40" y="74">8-bit data  ·  16-bit address  ·  33 logic ICs + 3× 28C256 microcode  ·  133 opcodes  ·  Blinky Clock Module v3 companion</text>
+  <line class="thin" x1="40" y1="88" x2="1000" y2="88"/>
+
+  <!-- ===== Colour key strip ===== -->
+  <circle cx="60"  cy="108" r="5" fill="#2e7d32"/><text class="small" x="72"  y="112">data bus</text>
+  <circle cx="160" cy="108" r="5" fill="#1565c0"/><text class="small" x="172" y="112">address bus</text>
+  <circle cx="285" cy="108" r="5" fill="#7b1fa2"/><text class="small" x="297" y="112">always-output driver</text>
+  <circle cx="445" cy="108" r="5" fill="#e65100"/><text class="small" x="457" y="112">control / microcode</text>
+  <rect x="596" y="103" width="10" height="10" fill="none" stroke="#37474f" stroke-width="1.6" stroke-dasharray="4 3"/>
+  <text class="small" x="614" y="112">external module</text>
+  <text class="small" x="760" y="112">every bus: exactly one enabled driver per μstep</text>
+
+  <!-- ===== DATA BUS ===== -->
+  <line class="busG" x1="55" y1="140" x2="930" y2="140"/>
+  <text class="sig green" x="58" y="132">DATA BUS (8)</text>
+
+  <!-- ===== Register row ===== -->
+  <!-- A -->
+  <rect class="body" x="70" y="185" width="95" height="65"/>
+  <text class="lbl"   x="117" y="212" text-anchor="middle">A</text>
+  <text class="small" x="117" y="230" text-anchor="middle">74HC574</text>
+  <line class="wG" x1="117" y1="140" x2="117" y2="181" marker-end="url(#arrG)"/>
+  <!-- X -->
+  <rect class="body" x="185" y="185" width="95" height="65"/>
+  <text class="lbl"   x="232" y="212" text-anchor="middle">X</text>
+  <text class="small" x="232" y="230" text-anchor="middle">74HC574</text>
+  <line class="wG" x1="232" y1="140" x2="232" y2="181" marker-end="url(#arrG)"/>
+  <!-- B -->
+  <rect class="body" x="300" y="185" width="95" height="65"/>
+  <text class="lbl"   x="347" y="212" text-anchor="middle">B</text>
+  <text class="small" x="347" y="230" text-anchor="middle">74HC377</text>
+  <line class="wG" x1="347" y1="140" x2="347" y2="181" marker-end="url(#arrG)"/>
+  <!-- IR -->
+  <rect class="body" x="415" y="185" width="95" height="65"/>
+  <text class="lbl"   x="462" y="212" text-anchor="middle">IR</text>
+  <text class="small" x="462" y="230" text-anchor="middle">74HC377 → μROM</text>
+  <line class="wG" x1="462" y1="140" x2="462" y2="181" marker-end="url(#arrG)"/>
+  <!-- FLAGS -->
+  <rect class="body" x="530" y="185" width="115" height="65"/>
+  <text class="lbl"   x="587" y="206" text-anchor="middle">FLAGS  N · Z · C</text>
+  <text class="small" x="587" y="222" text-anchor="middle">'688 + 2× '377</text>
+  <text class="small" x="587" y="238" text-anchor="middle">N·Z from bus · C from '181</text>
+  <line class="wG" x1="587" y1="140" x2="587" y2="181" marker-end="url(#arrG)"/>
+  <!-- SP -->
+  <rect class="body" x="665" y="185" width="110" height="65"/>
+  <text class="lbl"   x="720" y="212" text-anchor="middle">SP</text>
+  <text class="small" x="720" y="230" text-anchor="middle">2× '193 + '541</text>
+  <line class="wG" x1="720" y1="185" x2="720" y2="140" marker-start="url(#arrGs)" marker-end="url(#arrG)"/>
+
+  <!-- ===== A-side mini-bus ===== -->
+  <line class="busGm" x1="65" y1="350" x2="635" y2="350"/>
+  <text class="sig green" x="645" y="346">A-SIDE</text>
+  <text class="sig green" x="645" y="361">MINI-BUS (8)</text>
+  <text class="small" x="645" y="376">six drivers · one per μstep</text>
+
+  <!-- feeds onto mini-bus -->
+  <line class="wG" x1="117" y1="250" x2="117" y2="345" marker-end="url(#arrG)"/>
+  <line class="wG" x1="232" y1="250" x2="232" y2="345" marker-end="url(#arrG)"/>
+  <!-- $00 driver -->
+  <rect class="body" x="255" y="288" width="70" height="40"/>
+  <text class="lbl"   x="290" y="305" text-anchor="middle">$00</text>
+  <text class="small" x="290" y="320" text-anchor="middle">'541</text>
+  <line class="wG" x1="290" y1="328" x2="290" y2="345" marker-end="url(#arrG)"/>
+  <!-- MASK driver -->
+  <rect class="body" x="400" y="288" width="145" height="40"/>
+  <text class="lbl"   x="472" y="305" text-anchor="middle">MASK  $01&lt;&lt;n</text>
+  <text class="small" x="472" y="320" text-anchor="middle">'238 + '541</text>
+  <line class="wI" x1="462" y1="250" x2="462" y2="284" marker-end="url(#arr)"/>
+  <text class="pinno" x="470" y="272">IR6:4</text>
+  <line class="wG" x1="472" y1="328" x2="472" y2="345" marker-end="url(#arrG)"/>
+  <!-- PCL / PCH drivers -->
+  <rect class="body" x="65" y="400" width="110" height="40"/>
+  <text class="lbl"   x="120" y="417" text-anchor="middle">PCL · PCH</text>
+  <text class="small" x="120" y="432" text-anchor="middle">2× '541</text>
+  <line class="wG" x1="120" y1="400" x2="120" y2="355" marker-end="url(#arrG)"/>
+
+  <!-- ===== ALU ===== -->
+  <rect class="body" x="300" y="400" width="275" height="90"/>
+  <text class="lbl"   x="437" y="432" text-anchor="middle">ALU  —  2× 74LS181</text>
+  <text class="small" x="437" y="452" text-anchor="middle">M · S3–S0 · Cn   (ripple carry)</text>
+  <text class="small" x="437" y="470" text-anchor="middle">16 logic + arithmetic functions</text>
+  <!-- A operand from mini-bus -->
+  <line class="wG" x1="320" y1="350" x2="320" y2="396" marker-end="url(#arrG)"/>
+  <text class="sig green" x="304" y="388">A</text>
+  <!-- B operand from B register -->
+  <path class="wG" d="M 347 250 L 347 372 L 430 372 L 430 396" marker-end="url(#arrG)"/>
+  <text class="sig green" x="438" y="390">B</text>
+  <!-- F output up to data bus -->
+  <path class="wP" d="M 575 430 L 800 430 L 800 146" marker-end="url(#arrP)"/>
+  <text class="sig purple" x="583" y="423">F</text>
+  <text class="small purple" x="794" y="300" text-anchor="end">'541</text>
+  <!-- carry to hidden state -->
+  <line class="wI" x1="575" y1="470" x2="611" y2="470" marker-end="url(#arr)"/>
+  <text class="pinno" x="577" y="463">Cn+8</text>
+
+  <!-- ===== Hidden state ===== -->
+  <rect class="body" x="615" y="455" width="165" height="85"/>
+  <text class="lbl"   x="697" y="478" text-anchor="middle">HIDDEN STATE</text>
+  <text class="small" x="697" y="496" text-anchor="middle">2× '74 : SGN · HCARRY · TEST</text>
+  <text class="small" x="697" y="512" text-anchor="middle">'153 : CSEL 0/1/C/HC</text>
+  <text class="small" x="697" y="528" text-anchor="middle">+ Z-line steer (TESTSEL)</text>
+
+  <!-- ===== MAR + load route ===== -->
+  <rect class="body" x="430" y="560" width="160" height="70"/>
+  <text class="lbl"   x="510" y="588" text-anchor="middle">MAR</text>
+  <text class="small" x="510" y="606" text-anchor="middle">2× 74HC574 · tri-state</text>
+  <path class="wG" d="M 830 140 L 830 548 L 560 548 L 560 556" marker-end="url(#arrG)"/>
+  <text class="pinno" x="824" y="166" text-anchor="end">MAR load</text>
+
+  <!-- ===== PC ===== -->
+  <rect class="body" x="65" y="490" width="165" height="90"/>
+  <text class="lbl"   x="147" y="520" text-anchor="middle">PC</text>
+  <text class="small" x="147" y="540" text-anchor="middle">4× 74HC161 · self-counting</text>
+  <text class="small" x="147" y="558" text-anchor="middle">dual /LOAD  (PCL←B · PCH←bus)</text>
+  <line class="wI" x1="120" y1="490" x2="120" y2="440"/>
+  <!-- PC to address bus -->
+  <line class="wB" x1="148" y1="580" x2="148" y2="646" marker-end="url(#arrB)"/>
+  <text class="small blue" x="156" y="618">2× '541</text>
+  <!-- MAR to address bus -->
+  <line class="wB" x1="510" y1="630" x2="510" y2="646" marker-end="url(#arrB)"/>
+
+  <!-- ===== PAGE driver ===== -->
+  <rect class="body" x="640" y="562" width="130" height="60"/>
+  <text class="lbl"   x="705" y="586" text-anchor="middle">PAGE  '541</text>
+  <text class="small" x="705" y="604" text-anchor="middle">$00 / $01 constant</text>
+  <line class="wB" x1="705" y1="622" x2="705" y2="646" marker-end="url(#arrB)"/>
+  <text class="pinno" x="713" y="640">A15:8</text>
+
+  <!-- ===== ADDRESS BUS ===== -->
+  <line class="busB" x1="55" y1="650" x2="930" y2="650"/>
+  <text class="sig blue" x="58" y="672">ADDRESS BUS (16)</text>
+
+  <!-- ===== MEMORY ===== -->
+  <rect class="body" x="855" y="170" width="140" height="380"/>
+  <text class="lbl"   x="925" y="205" text-anchor="middle">MEMORY</text>
+  <text class="small" x="925" y="235" text-anchor="middle">28C256 ROM</text>
+  <text class="small" x="925" y="251" text-anchor="middle">$8000–$FFFF</text>
+  <text class="small" x="925" y="285" text-anchor="middle">62256 RAM</text>
+  <text class="small" x="925" y="301" text-anchor="middle">$0000–$7FFF</text>
+  <text class="small" x="925" y="335" text-anchor="middle">zero page · stack</text>
+  <text class="small" x="925" y="351" text-anchor="middle">zp-mapped I/O</text>
+  <text class="small" x="925" y="385" text-anchor="middle">decode: A15 ('04)</text>
+  <line class="wG" x1="925" y1="140" x2="925" y2="170" marker-start="url(#arrGs)" marker-end="url(#arrG)"/>
+  <line class="wB" x1="925" y1="650" x2="925" y2="554" marker-end="url(#arrB)"/>
+
+  <!-- ===== Clock module (external) ===== -->
+  <rect class="dash" x="40" y="700" width="290" height="110"/>
+  <text class="lbl"   x="185" y="726" text-anchor="middle">BLINKY CLOCK MODULE v3</text>
+  <text class="small" x="185" y="744" text-anchor="middle">external · ~17 ICs</text>
+  <text class="small" x="185" y="762" text-anchor="middle">clock select · single-step · halt policy</text>
+  <text class="small" x="185" y="778" text-anchor="middle">supervised reset · T counter ('161)</text>
+
+  <!-- ===== Microcode ===== -->
+  <rect class="body" x="360" y="700" width="340" height="110"/>
+  <text class="lbl"   x="530" y="726" text-anchor="middle">MICROCODE  —  3× 28C256</text>
+  <text class="small" x="530" y="746" text-anchor="middle">address (15): IR opcode (8) + T (4) + C · Z/TEST · N</text>
+  <text class="small" x="530" y="764" text-anchor="middle">word (24): fully allocated</text>
+  <text class="small" x="530" y="782" text-anchor="middle">flags in the address ⇒ branches are free</text>
+  <!-- clock <-> microcode -->
+  <line class="wO" x1="330" y1="728" x2="356" y2="728" marker-end="url(#arrO)"/>
+  <text class="pinno orange" x="356" y="694" text-anchor="end">T3:0 · CLK</text>
+  <line class="wO" x1="360" y1="780" x2="334" y2="780" marker-end="url(#arrO)"/>
+  <text class="pinno orange" x="286" y="824">/TRST · /HALTREQ</text>
+  <!-- inputs from CPU (labelled stubs) -->
+  <line class="wO" x1="440" y1="676" x2="440" y2="696" marker-end="url(#arrO)"/>
+  <text class="pinno orange" x="404" y="672">IR opcode</text>
+  <line class="wO" x1="600" y1="676" x2="600" y2="696" marker-end="url(#arrO)"/>
+  <text class="pinno orange" x="566" y="672">C · Z/TEST · N</text>
+  <!-- control word out -->
+  <line class="wOx" x1="700" y1="755" x2="768" y2="755" marker-end="url(#arrO)"/>
+  <text class="sig orange" x="780" y="736">24-bit control word</text>
+  <text class="small" x="780" y="754">ADDR · BUS · DST · ASIDE</text>
+  <text class="small" x="780" y="770">ALU M/S · CSEL · TESTSEL</text>
+  <text class="small" x="780" y="786">PCINC · FLGC · FLGNZ · TRST · HREQ</text>
+
+  <!-- ===== Footnote ===== -->
+  <text class="small" x="40" y="838">Flags watch the data bus (loads set N·Z free)  ·  PC and SP count themselves  ·  PAGE conjures $00/$01 so zp and stack never load MARH  ·  the clock module owns T.</text>
+</svg>
