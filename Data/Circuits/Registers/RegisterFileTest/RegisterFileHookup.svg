@@ -1,0 +1,329 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 920" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="1180" height="920" fill="#ffffff"/>
+
+  <!-- ============================================================= -->
+  <!-- ARDUINO MEGA 2560 — top-down, component side, true 1.9:1      -->
+  <!-- USB left. Top edge left→right: SCL21 SDA20 AREF GND 13..8 |   -->
+  <!-- 7..0 | COMMUNICATION 14..21                                   -->
+  <!-- ============================================================= -->
+  <rect x="50" y="200" width="620" height="326" rx="10" fill="#0f7391" stroke="#0a5570" stroke-width="2"/>
+
+  <g fill="#ffffff" stroke="#0a5570">
+    <circle cx="70" cy="218" r="6"/>
+    <circle cx="652" cy="218" r="6"/>
+    <circle cx="652" cy="508" r="6"/>
+    <circle cx="70" cy="508" r="6"/>
+  </g>
+
+  <!-- USB-B -->
+  <rect x="30" y="232" width="84" height="58" fill="#b8bec6" stroke="#6b7280" stroke-width="1.5"/>
+  <rect x="38" y="242" width="66" height="38" fill="#8b929b"/>
+  <text x="72" y="266" font-size="10" fill="#374151" text-anchor="middle">USB-B</text>
+
+  <!-- Barrel jack -->
+  <rect x="30" y="420" width="80" height="58" fill="#111827"/>
+  <circle cx="36" cy="449" r="14" fill="#1f2937" stroke="#000"/>
+  <text x="75" y="452" font-size="9" fill="#9ca3af" text-anchor="middle">7–12 V</text>
+
+  <rect x="128" y="432" width="34" height="22" fill="#111827"/>
+  <circle cx="185" cy="446" r="10" fill="#111827" stroke="#6b7280"/>
+  <circle cx="212" cy="446" r="10" fill="#111827" stroke="#6b7280"/>
+
+  <rect x="150" y="250" width="30" height="30" fill="#111827"/>
+  <text x="165" y="296" font-size="7" fill="#cfe8f0" text-anchor="middle">16U2</text>
+  <rect x="196" y="256" width="26" height="12" rx="6" fill="#c0c6cd" stroke="#6b7280"/>
+
+  <g font-size="7" fill="#cfe8f0">
+    <rect x="248" y="282" width="8" height="5" fill="#fbbf24"/><text x="260" y="288">L</text>
+    <rect x="248" y="294" width="8" height="5" fill="#fbbf24"/><text x="260" y="300">TX</text>
+    <rect x="248" y="306" width="8" height="5" fill="#fbbf24"/><text x="260" y="312">RX</text>
+    <rect x="248" y="318" width="8" height="5" fill="#4ade80"/><text x="260" y="324">ON</text>
+  </g>
+
+  <rect x="138" y="376" width="30" height="26" fill="#c0c6cd" stroke="#6b7280"/>
+  <circle cx="153" cy="389" r="7" fill="#8b1a1a"/>
+  <text x="153" y="416" font-size="7" fill="#cfe8f0" text-anchor="middle">RESET</text>
+
+  <rect x="470" y="330" width="70" height="70" fill="#111827"/>
+  <circle cx="480" cy="340" r="3" fill="#374151"/>
+  <text x="505" y="368" font-size="8" fill="#9ca3af" text-anchor="middle">ATmega</text>
+  <text x="505" y="378" font-size="8" fill="#9ca3af" text-anchor="middle">2560</text>
+
+  <g fill="#e0b32d">
+    <circle cx="596" cy="332" r="2.5"/><circle cx="606" cy="332" r="2.5"/>
+    <circle cx="596" cy="342" r="2.5"/><circle cx="606" cy="342" r="2.5"/>
+    <circle cx="596" cy="352" r="2.5"/><circle cx="606" cy="352" r="2.5"/>
+  </g>
+  <text x="601" y="366" font-size="7" fill="#cfe8f0" text-anchor="middle">ICSP</text>
+
+  <text x="330" y="345" font-size="24" font-weight="bold" fill="#ffffff" text-anchor="middle">ARDUINO</text>
+  <text x="330" y="368" font-size="14" fill="#cfe8f0" text-anchor="middle">MEGA 2560</text>
+
+  <!-- ================= TOP EDGE HEADERS (silkscreen order) ================= -->
+  <rect x="124" y="204" width="178" height="20" fill="#111827"/>
+  <rect x="310" y="204" width="142" height="20" fill="#111827"/>
+  <rect x="480" y="204" width="142" height="20" fill="#111827"/>
+  <g fill="#e0b32d">
+    <circle cx="132" cy="214" r="2.5"/><circle cx="150" cy="214" r="2.5"/><circle cx="168" cy="214" r="2.5"/><circle cx="186" cy="214" r="2.5"/><circle cx="204" cy="214" r="2.5"/><circle cx="222" cy="214" r="2.5"/><circle cx="240" cy="214" r="2.5"/><circle cx="258" cy="214" r="2.5"/><circle cx="276" cy="214" r="2.5"/><circle cx="294" cy="214" r="2.5"/>
+    <circle cx="318" cy="214" r="2.5"/><circle cx="336" cy="214" r="2.5"/><circle cx="354" cy="214" r="2.5"/><circle cx="372" cy="214" r="2.5"/><circle cx="390" cy="214" r="2.5"/><circle cx="408" cy="214" r="2.5"/>
+    <circle cx="488" cy="214" r="2.5"/><circle cx="506" cy="214" r="2.5"/><circle cx="524" cy="214" r="2.5"/><circle cx="542" cy="214" r="2.5"/><circle cx="560" cy="214" r="2.5"/><circle cx="578" cy="214" r="2.5"/><circle cx="596" cy="214" r="2.5"/><circle cx="614" cy="214" r="2.5"/>
+  </g>
+  <!-- Pins 0/1 marked reserved (grey) -->
+  <g fill="#9ca3af">
+    <circle cx="426" cy="214" r="2.5"/><circle cx="444" cy="214" r="2.5"/>
+  </g>
+  <g font-size="7" fill="#ffffff">
+    <text x="132" y="234" transform="rotate(-90 132 234)" text-anchor="end">21</text>
+    <text x="150" y="234" transform="rotate(-90 150 234)" text-anchor="end">20</text>
+    <text x="168" y="234" transform="rotate(-90 168 234)" text-anchor="end">AREF</text>
+    <text x="186" y="234" transform="rotate(-90 186 234)" text-anchor="end">GND</text>
+    <text x="204" y="234" transform="rotate(-90 204 234)" text-anchor="end">13</text>
+    <text x="222" y="234" transform="rotate(-90 222 234)" text-anchor="end">12</text>
+    <text x="240" y="234" transform="rotate(-90 240 234)" text-anchor="end">11</text>
+    <text x="258" y="234" transform="rotate(-90 258 234)" text-anchor="end">10</text>
+    <text x="276" y="234" transform="rotate(-90 276 234)" text-anchor="end">9</text>
+    <text x="294" y="234" transform="rotate(-90 294 234)" text-anchor="end">8</text>
+    <text x="318" y="234" transform="rotate(-90 318 234)" text-anchor="end">7</text>
+    <text x="336" y="234" transform="rotate(-90 336 234)" text-anchor="end">6</text>
+    <text x="354" y="234" transform="rotate(-90 354 234)" text-anchor="end">5</text>
+    <text x="372" y="234" transform="rotate(-90 372 234)" text-anchor="end">4</text>
+    <text x="390" y="234" transform="rotate(-90 390 234)" text-anchor="end">3</text>
+    <text x="408" y="234" transform="rotate(-90 408 234)" text-anchor="end">2</text>
+    <text x="426" y="234" transform="rotate(-90 426 234)" text-anchor="end">1</text>
+    <text x="444" y="234" transform="rotate(-90 444 234)" text-anchor="end">0</text>
+    <text x="488" y="234" transform="rotate(-90 488 234)" text-anchor="end">14</text>
+    <text x="506" y="234" transform="rotate(-90 506 234)" text-anchor="end">15</text>
+    <text x="524" y="234" transform="rotate(-90 524 234)" text-anchor="end">16</text>
+    <text x="542" y="234" transform="rotate(-90 542 234)" text-anchor="end">17</text>
+    <text x="560" y="234" transform="rotate(-90 560 234)" text-anchor="end">18</text>
+    <text x="578" y="234" transform="rotate(-90 578 234)" text-anchor="end">19</text>
+    <text x="596" y="234" transform="rotate(-90 596 234)" text-anchor="end">20</text>
+    <text x="614" y="234" transform="rotate(-90 614 234)" text-anchor="end">21</text>
+  </g>
+  <g font-size="8" fill="#cfe8f0" text-anchor="middle">
+    <text x="213" y="262">PWM (SCL·SDA·AREF end)</text>
+    <text x="381" y="262">DIGITAL 7–0</text>
+    <text x="435" y="274">0·1 = USB serial — RESERVED</text>
+    <text x="551" y="262">COMMUNICATION</text>
+  </g>
+
+  <!-- ================= BOTTOM EDGE HEADERS ================= -->
+  <rect x="112" y="502" width="150" height="20" fill="#111827"/>
+  <rect x="272" y="502" width="146" height="20" fill="#111827"/>
+  <rect x="428" y="502" width="146" height="20" fill="#111827"/>
+  <g fill="#e0b32d">
+    <circle cx="120" cy="512" r="2.5"/><circle cx="138" cy="512" r="2.5"/><circle cx="156" cy="512" r="2.5"/><circle cx="174" cy="512" r="2.5"/><circle cx="192" cy="512" r="2.5"/><circle cx="210" cy="512" r="2.5"/><circle cx="228" cy="512" r="2.5"/><circle cx="246" cy="512" r="2.5"/>
+    <circle cx="280" cy="512" r="2.5"/><circle cx="298" cy="512" r="2.5"/><circle cx="316" cy="512" r="2.5"/><circle cx="334" cy="512" r="2.5"/><circle cx="352" cy="512" r="2.5"/><circle cx="370" cy="512" r="2.5"/><circle cx="388" cy="512" r="2.5"/><circle cx="406" cy="512" r="2.5"/>
+    <circle cx="436" cy="512" r="2.5"/><circle cx="454" cy="512" r="2.5"/><circle cx="472" cy="512" r="2.5"/><circle cx="490" cy="512" r="2.5"/><circle cx="508" cy="512" r="2.5"/><circle cx="526" cy="512" r="2.5"/><circle cx="544" cy="512" r="2.5"/><circle cx="562" cy="512" r="2.5"/>
+  </g>
+  <g font-size="7" fill="#ffffff">
+    <text x="120" y="496" transform="rotate(-90 120 496)">NC</text>
+    <text x="138" y="496" transform="rotate(-90 138 496)">IOREF</text>
+    <text x="156" y="496" transform="rotate(-90 156 496)">RESET</text>
+    <text x="174" y="496" transform="rotate(-90 174 496)">3V3</text>
+    <text x="192" y="496" transform="rotate(-90 192 496)">5V</text>
+    <text x="210" y="496" transform="rotate(-90 210 496)">GND</text>
+    <text x="228" y="496" transform="rotate(-90 228 496)">GND</text>
+    <text x="246" y="496" transform="rotate(-90 246 496)">VIN</text>
+    <text x="280" y="496" transform="rotate(-90 280 496)">A0</text>
+    <text x="298" y="496" transform="rotate(-90 298 496)">A1</text>
+    <text x="316" y="496" transform="rotate(-90 316 496)">A2</text>
+    <text x="334" y="496" transform="rotate(-90 334 496)">A3</text>
+    <text x="352" y="496" transform="rotate(-90 352 496)">A4</text>
+    <text x="370" y="496" transform="rotate(-90 370 496)">A5</text>
+    <text x="388" y="496" transform="rotate(-90 388 496)">A6</text>
+    <text x="406" y="496" transform="rotate(-90 406 496)">A7</text>
+    <text x="436" y="496" transform="rotate(-90 436 496)">A8</text>
+    <text x="454" y="496" transform="rotate(-90 454 496)">A9</text>
+    <text x="472" y="496" transform="rotate(-90 472 496)">A10</text>
+    <text x="490" y="496" transform="rotate(-90 490 496)">A11</text>
+    <text x="508" y="496" transform="rotate(-90 508 496)">A12</text>
+    <text x="526" y="496" transform="rotate(-90 526 496)">A13</text>
+    <text x="544" y="496" transform="rotate(-90 544 496)">A14</text>
+    <text x="562" y="496" transform="rotate(-90 562 496)">A15</text>
+  </g>
+  <g font-size="8" fill="#cfe8f0" text-anchor="middle">
+    <text x="187" y="472">POWER</text>
+    <text x="422" y="472">ANALOG IN  (A0–A15 = digital 54–69)</text>
+  </g>
+
+  <!-- ================= RIGHT EDGE: 18x2 DUAL ROW ================= -->
+  <rect x="634" y="222" width="36" height="278" fill="#111827"/>
+  <g fill="#0e7490">
+    <circle cx="644" cy="245" r="2.5"/><circle cx="644" cy="260" r="2.5"/><circle cx="644" cy="275" r="2.5"/><circle cx="644" cy="290" r="2.5"/>
+    <circle cx="644" cy="305" r="2.5"/><circle cx="644" cy="320" r="2.5"/><circle cx="644" cy="335" r="2.5"/><circle cx="644" cy="350" r="2.5"/>
+    <circle cx="644" cy="365" r="2.5"/><circle cx="644" cy="380" r="2.5"/><circle cx="644" cy="395" r="2.5"/><circle cx="644" cy="410" r="2.5"/>
+    <circle cx="644" cy="425" r="2.5"/><circle cx="644" cy="440" r="2.5"/><circle cx="644" cy="455" r="2.5"/><circle cx="644" cy="470" r="2.5"/>
+  </g>
+  <g fill="#67e8f9">
+    <circle cx="660" cy="245" r="2.5"/><circle cx="660" cy="260" r="2.5"/><circle cx="660" cy="275" r="2.5"/><circle cx="660" cy="290" r="2.5"/>
+    <circle cx="660" cy="305" r="2.5"/><circle cx="660" cy="320" r="2.5"/><circle cx="660" cy="335" r="2.5"/><circle cx="660" cy="350" r="2.5"/>
+    <circle cx="660" cy="365" r="2.5"/><circle cx="660" cy="380" r="2.5"/><circle cx="660" cy="395" r="2.5"/><circle cx="660" cy="410" r="2.5"/>
+    <circle cx="660" cy="425" r="2.5"/><circle cx="660" cy="440" r="2.5"/><circle cx="660" cy="455" r="2.5"/><circle cx="660" cy="470" r="2.5"/>
+  </g>
+  <g fill="#dc2626">
+    <circle cx="644" cy="230" r="2.5"/><circle cx="660" cy="230" r="2.5"/>
+  </g>
+  <g fill="#1e3a8a">
+    <circle cx="644" cy="485" r="2.5"/><circle cx="660" cy="485" r="2.5"/>
+  </g>
+  <g font-size="6.5" fill="#ffffff" text-anchor="end">
+    <text x="630" y="233">5V·5V</text>
+    <text x="630" y="248">22·23</text>
+    <text x="630" y="278">26·27</text>
+    <text x="630" y="308">30·31</text>
+    <text x="630" y="338">34·35</text>
+    <text x="630" y="368">38·39</text>
+    <text x="630" y="398">42·43</text>
+    <text x="630" y="428">46·47</text>
+    <text x="630" y="458">50·51</text>
+    <text x="630" y="488">GND</text>
+  </g>
+  <text x="652" y="516" font-size="7.5" fill="#cfe8f0" text-anchor="middle">even col = QA · odd col = QB</text>
+
+  <!-- ============================================================= -->
+  <!-- REGISTER FILE J1                                              -->
+  <!-- ============================================================= -->
+  <rect x="980" y="120" width="150" height="640" rx="8" fill="#4b5563" stroke="#1f2937" stroke-width="2"/>
+  <text x="1055" y="144" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">Register File J1</text>
+  <text x="1055" y="158" font-size="10" fill="#d1d5db" text-anchor="middle">2×40 box header (per module manual)</text>
+  <text x="1055" y="775" font-size="10" fill="#4b5563" text-anchor="middle">(physical J1 pin numbers per module manual)</text>
+
+  <g font-size="12" fill="#ffffff">
+    <text x="992" y="174">WADDR[2:0] · WE</text>
+    <text x="992" y="229">CLK</text>
+    <text x="992" y="284">AADDR[2:0] · /OEA</text>
+    <text x="992" y="339">BADDR[2:0] · /OEB</text>
+    <text x="992" y="444">QA[15:0]</text>
+    <text x="992" y="509">QB[15:0]</text>
+    <text x="992" y="579">D[15:0]</text>
+    <text x="992" y="639">GND</text>
+    <text x="992" y="684">VCC</text>
+  </g>
+  <g font-size="8" fill="#d1d5db">
+    <text x="992" y="186">bit0=pin 4 · WE=pin 7</text>
+    <text x="992" y="296">bit0=pin 14 · /OEA=pin 17</text>
+    <text x="992" y="351">bit0=pin 18 · /OEB=pin 21</text>
+    <text x="992" y="455">bit n = pin 22+2n</text>
+    <text x="992" y="520">bit n = pin 23+2n</text>
+    <text x="992" y="590">bit 0 = A0</text>
+  </g>
+
+  <!-- ============================================================= -->
+  <!-- WIRING — arrows run driver → receiver, nested, no crossings   -->
+  <!-- ============================================================= -->
+
+  <!-- Gather bars: 4-pin port chunks (green bit0 low end · red enable high end) -->
+  <rect x="318" y="188" width="54" height="6" rx="3" fill="#15803d"/>
+  <text x="314" y="184" font-size="7.5" fill="#dc2626" text-anchor="end">7=WE</text>
+  <text x="376" y="184" font-size="7.5" fill="#15803d">4=bit0</text>
+
+  <rect x="488" y="188" width="54" height="6" rx="3" fill="#15803d"/>
+  <text x="484" y="184" font-size="7.5" fill="#15803d" text-anchor="end">14=bit0</text>
+  <text x="546" y="184" font-size="7.5" fill="#dc2626">17=/OEA</text>
+
+  <rect x="560" y="176" width="54" height="6" rx="3" fill="#15803d"/>
+  <text x="556" y="172" font-size="7.5" fill="#15803d" text-anchor="end">18=bit0</text>
+  <text x="618" y="172" font-size="7.5" fill="#dc2626">21=/OEB</text>
+
+  <rect x="672" y="245" width="5" height="225" rx="2.5" fill="#0e7490"/>
+  <rect x="680" y="245" width="5" height="225" rx="2.5" fill="#67e8f9"/>
+  <text x="691" y="250" font-size="7.5" fill="#0e7490">22=QA0 · 23=QB0 (whites)</text>
+  <text x="691" y="475" font-size="7.5" fill="#0e7490">52=QA15 · 53=QB15</text>
+
+  <rect x="280" y="528" width="282" height="6" rx="3" fill="#1d4ed8"/>
+  <text x="276" y="545" font-size="7.5" fill="#1d4ed8" text-anchor="end">A0=D0</text>
+  <text x="566" y="545" font-size="7.5" fill="#1d4ed8">A15=D15</text>
+
+  <!-- WADDR chunk from 4–7 -->
+  <path d="M345,188 V40 H940 V170 H980" fill="none" stroke="#15803d" stroke-width="7" stroke-linejoin="round"/>
+  <text x="560" y="36" font-size="11" fill="#15803d">Mega 4·5·6 → WADDR[2:0] · 7 → WE   (green=bit0 · red=WE)</text>
+
+  <!-- CLK from 12 -->
+  <path d="M222,200 V56 H932 V225 H980" fill="none" stroke="#ea580c" stroke-width="3" stroke-linejoin="round"/>
+  <text x="580" y="52" font-size="11" fill="#ea580c">Mega 12 → CLK (idles HIGH)</text>
+
+  <!-- AADDR chunk from 14–17 -->
+  <path d="M515,188 V72 H924 V280 H980" fill="none" stroke="#15803d" stroke-width="7" stroke-linejoin="round"/>
+  <text x="600" y="68" font-size="11" fill="#15803d">Mega 14·15·16 → AADDR[2:0] · 17 → /OEA   (green=bit0 · red=/OEA)</text>
+
+  <!-- BADDR chunk from 18–21 -->
+  <path d="M587,176 V88 H916 V335 H980" fill="none" stroke="#15803d" stroke-width="7" stroke-linejoin="round"/>
+  <text x="620" y="84" font-size="11" fill="#15803d">Mega 18·19·20 → BADDR[2:0] · 21 → /OEB   (green=bit0 · red=/OEB)</text>
+
+  <!-- QA[15:0] from even row -->
+  <path d="M677,320 L980,440" fill="none" stroke="#0e7490" stroke-width="10" stroke-linecap="round"/>
+  <text x="700" y="352" font-size="12" font-weight="bold" fill="#0e7490">QA[15:0] → Mega EVEN row (pin = 22 + 2×bit)</text>
+  <text x="700" y="366" font-size="9" fill="#0e7490">chunks: 22–36 even = QA0–7 · 38–52 even = QA8–15</text>
+
+  <!-- QB[15:0] from odd row -->
+  <path d="M685,430 L980,505" fill="none" stroke="#67e8f9" stroke-width="10" stroke-linecap="round"/>
+  <path d="M685,430 L980,505" fill="none" stroke="#0e7490" stroke-width="2" stroke-dasharray="1 10"/>
+  <text x="700" y="452" font-size="12" font-weight="bold" fill="#0e7490">QB[15:0] → Mega ODD row (pin = 23 + 2×bit)</text>
+  <text x="700" y="466" font-size="9" fill="#0e7490">chunks: 23–37 odd = QB0–7 · 39–53 odd = QB8–15</text>
+
+  <!-- D[15:0] from analog row -->
+  <path d="M421,534 V560 H952 V575 H980" fill="none" stroke="#1d4ed8" stroke-width="10" stroke-linejoin="round"/>
+  <text x="440" y="554" font-size="12" font-weight="bold" fill="#1d4ed8">Mega A0–A15 → D[15:0]   (chunks: A0–A7 = D0–7 · A8–A15 = D8–15)</text>
+
+  <!-- GND from power header -->
+  <path d="M210,522 V610 H968 V635 H980" fill="none" stroke="#1e3a8a" stroke-width="4" stroke-linejoin="round"/>
+  <text x="300" y="604" font-size="11" fill="#1e3a8a">Mega GND ↔ board GND — common ground, essential</text>
+
+  <!-- VCC from 5V -->
+  <path d="M192,522 V660 H974 V680 H980" fill="none" stroke="#dc2626" stroke-width="4" stroke-linejoin="round"/>
+  <text x="300" y="654" font-size="11" fill="#dc2626">Mega 5V → VCC — one-chip build only; larger populations get their own supply</text>
+
+  <!-- ============================================================= -->
+  <!-- LEGEND                                                        -->
+  <!-- ============================================================= -->
+  <rect x="60" y="700" width="400" height="150" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="74" y="720" font-size="12" font-weight="bold" fill="#334155">Legend  (arrows run driver → receiver)</text>
+
+  <line x1="74" y1="736" x2="102" y2="736" stroke="#1d4ed8" stroke-width="6"/>
+  <text x="110" y="740" font-size="10.5" fill="#334155">Write data D — Mega drives (analog row as digital outputs)</text>
+
+  <line x1="74" y1="752" x2="102" y2="752" stroke="#15803d" stroke-width="5"/>
+  <text x="110" y="756" font-size="10.5" fill="#334155">Port chunks — 3 select bits + enable; green=bit0, red=enable</text>
+
+  <line x1="74" y1="768" x2="102" y2="768" stroke="#ea580c" stroke-width="3"/>
+  <text x="110" y="772" font-size="10.5" fill="#334155">CLK — Mega drives, idles HIGH</text>
+
+  <text x="74" y="788" font-size="10.5" font-weight="bold" fill="#dc2626">⚠ Mega drives WE, /OEA and /OEB — JOEA/JOEB jumpers must be OPEN</text>
+
+  <line x1="74" y1="800" x2="88" y2="800" stroke="#0e7490" stroke-width="6"/>
+  <line x1="88" y1="800" x2="102" y2="800" stroke="#67e8f9" stroke-width="6"/>
+  <text x="110" y="804" font-size="10.5" fill="#334155">Read data — dark cyan QA (even row) · light cyan QB (odd row)</text>
+
+  <line x1="74" y1="816" x2="102" y2="816" stroke="#1e3a8a" stroke-width="4"/>
+  <text x="110" y="820" font-size="10.5" fill="#334155">GND — common ground</text>
+
+  <line x1="74" y1="832" x2="102" y2="832" stroke="#dc2626" stroke-width="4"/>
+  <text x="110" y="836" font-size="10.5" fill="#334155">5V → VCC (one-chip build only)</text>
+
+  <!-- ============================================================= -->
+  <!-- PIN-FOR-PIN MAP                                               -->
+  <!-- ============================================================= -->
+  <rect x="480" y="700" width="480" height="150" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="494" y="720" font-size="12" font-weight="bold" fill="#334155">Pin-for-pin map — lowest pin in each chunk = its LSB (green/white wire)</text>
+
+  <g font-size="10" fill="#334155">
+    <text x="494" y="740">Mega 4·5·6 → WADDR 0·1·2 · 7 → WE</text>
+    <text x="494" y="756">Mega 14·15·16 → AADDR 0·1·2 · 17 → /OEA</text>
+    <text x="494" y="772">Mega 18·19·20 → BADDR 0·1·2 · 21 → /OEB</text>
+    <text x="494" y="788">Mega 12 → CLK</text>
+    <text x="494" y="804">Mega 0·1 = USB serial — never use</text>
+    <text x="494" y="820">Spares: 2, 3, 8–11, 13 (bit-3s → 8·9·10)</text>
+
+    <text x="724" y="740">QAn → even pin 22+2n (22,24,…,52)</text>
+    <text x="724" y="756">QBn → odd pin 23+2n (23,25,…,53)</text>
+    <text x="724" y="772">Mega A0..A15 → D0..D15</text>
+    <text x="724" y="788">Mega 5V → VCC · GND ↔ GND</text>
+    <text x="724" y="804">Enables driven low (both ports on);</text>
+    <text x="724" y="820">nothing else shares the Q buses</text>
+  </g>
+  <text x="494" y="838" font-size="9" fill="#64748b">Dual-row rows = [5V] + 16 signals + [GND]; two 1×8 chunks fill each exactly. Any exposed pin means misalignment.</text>
+  <text x="494" y="848" font-size="9" fill="#64748b">Address bit 3 of each port is jumper-strapped low in 8-register configurations (JW/JA/JB = 8R).</text>
+
+  <text x="590" y="898" font-size="16" font-weight="bold" fill="#334155" text-anchor="middle">Register File Module — Arduino Mega 2560 Test Harness Hookup (matches RegisterFileTest.ino)</text>
+</svg>

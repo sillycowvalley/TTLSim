@@ -1,132 +1,273 @@
 # Register File Module — User Guide
 
-A general-purpose register file board for TTL-class machines: up to 16
-registers of up to 16 bits, with one or two read ports, built from 74HC670
-register files behind a single backplane connector. One PCB serves every
-configuration; capability is set by which sockets are populated and three
-jumpers. In its Thumby configuration (8 × 16, two read ports) it is the
-machine's register file; minimally populated it is a Blinky-class 8 × 8
-register bank.
+**8 registers × 16 bits, two read ports, one write port.** Built from
+sixteen 74HC670 register files in two lockstep arrays behind a set of
+ribbon headers. This is the Thumby machine's register file, and the
+board's own title block says so: *"THUMBY REGISTER FILE — r0-r7 x 16-bit
+— 2R1W lockstep 670 arrays"*.
 
-The module is synchronous-write, asynchronous-read: writes commit under the
-system clock, reads are combinational and always live.
+The module is synchronous-write, asynchronous-read: writes commit under
+the system clock, reads are combinational and always live.
+
+> **This is a fixed-configuration board.** It is not a
+> populate-to-taste platform. There are no jumpers, no option straps and
+> no spare sockets. See *What this board cannot be* below — an earlier
+> revision of this document described a configurable module with up to
+> 16 registers and up to 32 '670s, and none of that is true of this
+> capture.
+
+## Contents
+
+| Function | Parts |
+|---|---|
+| Register array A (port QA) | U1–U8, 74HC670 |
+| Register array B (port QB) | U9–U16, 74HC670 |
+| Write decode + port A read decode | U17, 74HC139 |
+| Port B read decode | U18, 74HC139 |
+| Write gating | U19, 74HC00 |
+| Decoupling | 19 × 0.1 µF, one per package |
+
+**19 ICs.** There are no resistors on this board — see *No pulldowns*.
 
 ## Interface
 
-All signals on J1 (2×40 box header). Logic levels are 74HC at 5 V.
+Ten headers, not a single backplane connector. Six 8-pin, three 4-pin,
+one 3-pin: 63 pins total. Logic levels are 74HC at 5 V.
+
+| Header | Pins | Signal | Pin order |
+|---|---|---|---|
+| H1 | 8 | D[7:0] | pin 1 = D0 … pin 8 = D7 |
+| H2 | 8 | D[15:8] | pin 1 = D8 … pin 8 = D15 |
+| H3 | 8 | QA[7:0] | pin 1 = QA0 … pin 8 = QA7 |
+| H3 | 8 | QA[15:8] | pin 1 = QA8 … pin 8 = QA15 |
+| H4 | 8 | QB[7:0] | pin 1 = QB0 … pin 8 = QB7 |
+| H4 | 8 | QB[15:8] | pin 1 = QB8 … pin 8 = QB15 |
+| H5 | 4 | BADDR[2:0], /OEB | pins 1–3 = bits 0–2, pin 4 = /OEB |
+| H6 | 4 | AADDR[2:0], /OEA | pins 1–3 = bits 0–2, pin 4 = /OEA |
+| H7 | 4 | WADDR[2:0], WE | pins 1–3 = bits 0–2, pin 4 = WE |
+| H8 | 3 | VCC, CLK, GND | pin 1 = VCC, pin 2 = CLK, pin 3 = GND |
+
+In every multi-bit header **pin 1 carries bit 0** and bits ascend with
+pin number.
 
 | Signal | Dir | Function |
 |---|---|---|
-| D[15:0] | in | Write data. D[15:8] unused in 8-bit builds. |
-| WADDR[3:0] | in | Write register select. WADDR[3] used only in 16-register builds. |
-| WE | in | Write enable, active high. Sampled against the clock — see Writing. |
-| CLK | in | System clock. Used only to time the write window; reads ignore it. |
-| AADDR[3:0] | in | Read port A register select. |
-| QA[15:0] | out | Read port A data. Three-state, with on-board 10 k pulldowns. |
-| /OEA | in | Port A output enable, active low. Strap low in-machine. |
-| BADDR[3:0] | in | Read port B register select. |
-| QB[15:0] | out | Read port B data. Reads solid zeros in single-port builds. |
-| /OEB | in | Port B output enable. Strap high to decommission port B. |
-| VCC, GND | — | +5 V on multiple pins. |
+| D[15:0] | in | Write data. |
+| WADDR[2:0] | in | Write register select, 0–7. |
+| WE | in | Write enable, active high. Sampled against the clock. |
+| CLK | in | System clock. Times the write window; reads ignore it. |
+| AADDR[2:0] | in | Read port A register select. |
+| QA[15:0] | out | Read port A data. Three-state. |
+| /OEA | in | Port A enable, active low. Drive low to read. |
+| BADDR[2:0] | in | Read port B register select. |
+| QB[15:0] | out | Read port B data. Three-state. |
+| /OEB | in | Port B enable, active low. Drive low to read. |
+| VCC, GND | — | +5 V. Single entry point on H8. |
+
+**/OEA and /OEB are real connector inputs with no strapping option.**
+They drive the enable pins of the read decoders, so both must be driven
+— low to enable a port, high to tri-state it. Leaving them floating
+leaves the ports undefined.
+
+All 19 packages draw their power through H8's single VCC pin. At HC
+quiescent and normal switching rates that is a few milliamps and
+perfectly comfortable, but it is one pin.
+
+## Socket map
+
+Both arrays are organised the same way: **rows are banks, columns are
+nibbles.**
+
+| | bits 3:0 | bits 7:4 | bits 11:8 | bits 15:12 |
+|---|---|---|---|---|
+| **Array A** bank 0 (r0–r3) | U1 | U2 | U3 | U4 |
+| **Array A** bank 1 (r4–r7) | U5 | U6 | U7 | U8 |
+| **Array B** bank 0 (r0–r3) | U9 | U10 | U11 | U12 |
+| **Array B** bank 1 (r4–r7) | U13 | U14 | U15 | U16 |
+
+Array A feeds QA, array B feeds QB. Both arrays receive the same D and
+the same write strobes, so they hold identical contents — array B is a
+write-shadow of array A, and the two ports can never disagree.
+
+Address bits 1:0 go directly to each '670's WA/WB and RA/RB pins.
+Address bit 2 selects the bank, via the decoders.
+
+## Bank decode and write gating
+
+**U19 (74HC00)** — two gates used, two tied off:
+
+```
+gate 1:  /CLK  = NAND(CLK, CLK)          ; plain inverter
+gate 2:  /GWEN = NAND(WE, /CLK)          ; low when WE high AND CLK low
+```
+
+`/GWEN` is the write trap: it can only assert during the clock-low
+phase, and only when the host asserts WE. This is the module's internal
+glitch protection and it is not defeatable from the connector.
+
+**U17 (74HC139)**, both halves, B inputs tied low so each is a 1-of-2:
+
+```
+half 1:  /E = /GWEN,  A = WADDR[2]   ->  /GW[0], /GW[1]     write strobes
+half 2:  /E = /OEA,   A = AADDR[2]   ->  /GRA[0], /GRA[1]   port A read enables
+```
+
+**U18 (74HC139)**, one half used:
+
+```
+half 1:  /E = /OEB,   A = BADDR[2]   ->  /GRB[0], /GRB[1]   port B read enables
+half 2:  unused, inputs tied off
+```
+
+`/GW[n]` drives pin 12 (E_W) of every chip in bank *n* of **both**
+arrays — which is what keeps the shadow in lockstep. `/GRA[n]` drives
+pin 11 (E_R) of array A's bank *n*; `/GRB[n]` does the same for array B.
 
 ## Reading
 
 Both ports are independent and combinational: present an address, the
-addressed register's contents appear on Q after the access time. The two
-ports share nothing but the storage — reading r2 on port A while reading r5
-on port B is the normal case, and both may be read while a write is in
-progress elsewhere.
+addressed register's contents appear on Q after the access time.
+Reading r2 on port A while reading r5 on port B is the normal case, and
+both may be read while a write is in progress elsewhere.
 
-Access time has two shapes. Changing the low address bits (register within a
-bank) is a single-chip lookup, ~45 ns worst case. Changing an upper address
-bit crosses a bank boundary and re-steers the output enables: ~70 ns worst
-case, and the port passes through a brief high-impedance blink while banks
-hand over. The pulldowns define the bus during the blink, but the rule
-stands: **Q ports feed combinational logic inputs only.** Never hang
-anything edge-sensitive on QA or QB.
+Access time has two shapes. Changing the low address bits is a
+single-chip lookup, ~45 ns worst case. Changing address bit 2 crosses a
+bank boundary and re-steers the read enables: ~70 ns worst case, and
+the port passes through a brief high-impedance blink while the banks
+hand over.
 
-Reading the register currently being written returns the incoming data once
-the write window is open (write-through). Reading any other register during
-a write is undisturbed.
+**Q ports feed combinational logic inputs only.** Never hang anything
+edge-sensitive on QA or QB.
 
-Unpopulated data bits read as zero, so an 8-bit build presents clean
-zero-extended values on the full 16-bit port.
+Reading the register currently being written returns the incoming data
+once the write window is open (write-through), on both ports. Reading
+any other register during a write is undisturbed.
+
+### No pulldowns
+
+**This board has no resistors of any kind.** There are no pulldowns on
+QA or QB. Consequences:
+
+- During the bank-handover blink the Q bus is genuinely undefined, not
+  pulled low. It is high-impedance and holds residual charge.
+- If a socket is left unpopulated, its bits do not read as zero — they
+  float and return whatever charge they last held.
+- Any open in a Q path presents as an *intermittent* wrong bit,
+  sometimes high when a zero was written and sometimes low when a one
+  was, because nothing defines the node. A consistently wrong bit is a
+  short; an inconsistently wrong bit is an open. This distinction is
+  the fastest fault-finding tool the board offers.
+
+If the host needs a defined level on an unpopulated or handover-blinked
+bit, it must provide the pulldown itself.
 
 ## Writing
 
 One write port. The contract:
 
-1. Set WADDR and D. Both must be stable **before CLK falls** and held until
-   CLK rises again.
+1. Set WADDR and D. Both must be stable **before CLK falls** and held
+   until CLK rises again.
 2. Assert WE across that clock-low phase.
-3. The value is stored. At the next CLK rise the write is closed and D/WADDR
-   may change.
+3. The value is stored. At the next CLK rise the write is closed and
+   D/WADDR may change.
 
-The board performs its own write-hazard gating: the storage devices are
-transparent latches, and the module only opens them during CLK-low, after
-your data has had the high phase to settle. You supply plain WE and CLK; the
-glitch protection is internal and not defeatable from the connector. The
-consequence of the contract is the one real timing obligation the module
-imposes on the host: **whatever produces D must settle within the clock-high
+The storage devices are transparent latches and the module only opens
+them during CLK-low, after your data has had the high phase to settle.
+The consequence is the one real timing obligation the module imposes on
+the host: **whatever produces D must settle within the clock-high
 phase.** The low phase belongs to the write.
 
-Minimum usable low phase is ~100 ns (internal gating plus latch pulse and
-setup), which corresponds to a ~6.5 MHz ceiling at 50/50 duty — in practice
-the host datapath, not this module, sets the clock. Asymmetric duty (long
-high, short low) is supported and recommended when chasing speed.
+Minimum usable low phase is ~100 ns, corresponding to a ~6.5 MHz
+ceiling at 50/50 duty — in practice the host datapath, not this module,
+sets the clock. Asymmetric duty (long high, short low) is supported and
+recommended when chasing speed.
 
-Writes land in both read-port copies simultaneously; the two ports can never
-disagree. This is internal machinery — from the connector there is simply
-one register file with two windows into it.
+Writes land in both arrays simultaneously.
 
-## Configurations
+## What this board cannot be
 
-Capability is population plus jumpers. Registers grow by stuffing bank rows,
-width by stuffing nibble columns, the second read port by stuffing the
-mirror array.
+The '670 is 4 registers × 4 bits with one read port, so a build needs
+`(registers/4) × (bits/4) × ports` packages. With **sixteen sockets**:
 
-| Build | '670s | Jumpers |
+| Build | '670s needed | Possible here? |
 |---|---|---|
-| 8 reg × 8 bit, 1 port | 4 | JW/JA = 8R · JOEB = VCC |
-| 8 × 16, 1 port | 8 | JW/JA = 8R · JOEB = VCC |
-| 8 × 16, 2 ports (Thumby) | 16 | JW/JA/JB = 8R · JOEA/JOEB = GND |
-| 16 × 8, 2 ports | 16 | all jumpers 16R |
-| 16 × 16, 2 ports | 32 | all jumpers 16R |
+| 8 × 16, 2 ports | 16 | **yes — this board** |
+| 8 × 16, 1 port | 8 | only by leaving array B empty |
+| 16 × 8, 2 ports | 16 | no — see below |
+| 16 × 16, 2 ports | 32 | no — twice the sockets |
+| 16 × 16, 1 port | 16 | no — see below |
 
-JW, JA, JB select whether address bit 3 comes from the connector (16R) or is
-strapped low (8R). JOEA/JOEB select each port's enable source: GND
-(permanently on), VCC (port off), or open (driven from the connector).
+Sixteen registers is impossible on this capture for three independent
+reasons, any one of which is sufficient:
 
-**The one hard rule:** the second read port is a complete mirror or nothing.
-If any mirror-array socket is stuffed, its population must match the primary
-array exactly, or port B returns wrong data for the missing slices. The
-silkscreen says so; believe it.
+1. **No fourth address bit reaches the board.** H5, H6 and H7 are
+   4-pin headers carrying three address bits plus one enable. There is
+   no pin for WADDR[3], AADDR[3] or BADDR[3].
+2. **The decoders are wired for two banks.** The B input of each
+   '139 half is tied to GND, so only two of the four outputs are ever
+   asserted. Freeing them would require cutting those ties and routing
+   address bit 3 to them.
+3. **The sockets are committed.** Array B's sixteen positions are
+   hardwired to QB and to the /GRB enables. They cannot be repurposed
+   as extra banks of a single-port 16 × 16 file.
 
-Access and write timing are identical in every configuration — upgrading
-never moves the host's timing budget. The only full-population caution is
-fan-out on D and WADDR at 32 chips; the board carries optional buffer
-footprints (bypassed by zero-ohm links as shipped) if edges get lazy.
+Extending to 16 registers is a board respin, not a population change.
 
-## Bring-up
+## Partial population
 
-Each population step adds one observable capability and is testable with
-DIP switches on D/WADDR/AADDR, the clock module in STEP, and LEDs on QA:
+Sockets may be left empty during bring-up, and the module works with
+the populated subset. This is a diagnostic convenience, not a supported
+configuration — unpopulated bits float rather than reading zero.
 
-1. **One chip** — four 4-bit registers, one port. Write patterns, walk the
-   read address, watch them come back.
-2. **Its mirror twin** — the second read port appears. Two chips is the
+The useful ladder, each step adding one observable capability:
+
+1. **U1 alone** — four 4-bit registers on port A. Write patterns, walk
+   the read address, watch them come back.
+2. **U9** — array B's matching socket. Port B appears; this is the
    earliest demonstration of independent dual reading.
-3. **Width** — stuff nibble columns pairwise until 16 bits.
-4. **Banks** — stuff the second bank rows; registers r4–r7 appear, and the
-   bank-handover behavior on address bit 2 becomes observable.
+3. **Width** — add nibble columns: U2/U10, then U3/U11, then U4/U12.
+4. **Banks** — add the bank 1 rows. Registers r4–r7 appear and the
+   handover behaviour on address bit 2 becomes observable.
+
+**Keep the arrays matched.** If array B is populated at all, its
+population should mirror array A exactly, or port B returns floating
+garbage for the missing slices while port A looks fine.
+
+## Known issues in this capture
+
+- **Duplicate designators.** H3 and H4 are each used twice (the two
+  halves of QA and of QB), C5 four times, C6 eight times, C7 twice.
+  Twelve devices share five designators. Anything that keys on
+  designator — a BOM, a netlist diff, a pick-and-place file — will
+  mis-handle these. Renumber before the next respin.
+- **No pulldowns**, as described above. Whether that is a defect
+  depends on the host; for the Thumby CPU it is fine, because the
+  operand buses carry their own.
 
 ## Absolute ratings and habits
 
-74HC inputs: do not float any driven-from-connector input; the module
-pulls down its own outputs but not your inputs. Q ports drive normal HC
-loads with margin; they are not bus drivers — if a Q port must join a wider
-shared bus, use the /OE pins deliberately and buffer externally. One 0.1 µF
-per populated socket is factory policy; bulk capacitance sits at the
-connector. All timing figures above are datasheet maxima across temperature
-and voltage; room-temperature parts run meaningfully faster, and nothing in
-the module depends on that.
+74HC inputs: do not float any driven-from-connector input. The module
+pulls down nothing — not your inputs and not its own outputs. Q ports
+drive normal HC loads with margin; they are not bus drivers. If a Q
+port must join a wider shared bus, use /OEA and /OEB deliberately and
+buffer externally.
+
+One 0.1 µF per package is fitted; bulk capacitance belongs at the power
+header. All timing figures above are datasheet maxima across
+temperature and voltage; room-temperature parts run meaningfully
+faster, and nothing in the module depends on that.
+
+## Bit-order hazard
+
+Every multi-bit group on the '670 puts its **least significant bit on
+the higher pin number**: WA(14) > WB(13), RA(5) > RB(4), Q1(10) >
+Q2(9), Q3(7) > Q4(6). D1 is orphaned at pin 15 while D2–D4 sit at pins
+1–3. Wiring any group in ascending pin order silently reverses it.
+
+The capture gets this right — U1 pin 14 carries WADDR0 and pin 5
+carries AADDR0. The hazard lives in the **cabling**: two of the three
+faults found during bring-up were ribbons whose conductor order was
+reversed or transposed, and both survived repeated visual inspection
+because tracing a signal name from the board backwards confirms the
+naming convention rather than the wiring. Compare each ribbon's
+conductor colours against the others, or probe the physical pin.
