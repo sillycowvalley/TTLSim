@@ -34,7 +34,7 @@ clear the In Transit cells.
 | 74153  | Dual 4-to-1 Multiplexer                   | 29  |     |     |       |        |
 | 74157  | Quad 2-to-1 Multiplexer                   | 28  |     |     |       |        |
 | 74161  | 4-Bit Synchronous Counter (async clear)   | 13  |     |     |       |        |
-| 74163  | 4-Bit Synchronous Counter (sync clear)    |     |     |     | 8     |        |
+| 74163  | 4-Bit Synchronous Counter (sync clear)    | 8   |     |     | 8     |        |
 | 74164  | 8-Bit SIPO Shift Register                 | 4   |     |     |       |        |
 | 74165  | 8-Bit PISO Shift Register                 | 12  |     |     |       |        |
 | 74173  | 4-Bit D-Type Register (tri-state)         | 10  |     |     |       |        |

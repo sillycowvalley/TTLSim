@@ -2,19 +2,10 @@
 
 **8 registers × 16 bits, two read ports, one write port.** Built from
 sixteen 74HC670 register files in two lockstep arrays behind a set of
-ribbon headers. This is the Thumby machine's register file, and the
-board's own title block says so: *"THUMBY REGISTER FILE — r0-r7 x 16-bit
-— 2R1W lockstep 670 arrays"*.
+ribbon headers.
 
 The module is synchronous-write, asynchronous-read: writes commit under
 the system clock, reads are combinational and always live.
-
-> **This is a fixed-configuration board.** It is not a
-> populate-to-taste platform. There are no jumpers, no option straps and
-> no spare sockets. See *What this board cannot be* below — an earlier
-> revision of this document described a configurable module with up to
-> 16 registers and up to 32 '670s, and none of that is true of this
-> capture.
 
 ## Contents
 
@@ -64,10 +55,9 @@ pin number.
 | /OEB | in | Port B enable, active low. Drive low to read. |
 | VCC, GND | — | +5 V. Single entry point on H8. |
 
-**/OEA and /OEB are real connector inputs with no strapping option.**
-They drive the enable pins of the read decoders, so both must be driven
-— low to enable a port, high to tri-state it. Leaving them floating
-leaves the ports undefined.
+**/OEA and /OEB are connector inputs.** They drive the enable pins of
+the read decoders, so both must be driven — low to enable a port, high
+to tri-state it. Leaving them floating leaves the ports undefined.
 
 All 19 packages draw their power through H8's single VCC pin. At HC
 quiescent and normal switching rates that is a few milliamps and
@@ -184,35 +174,6 @@ recommended when chasing speed.
 
 Writes land in both arrays simultaneously.
 
-## What this board cannot be
-
-The '670 is 4 registers × 4 bits with one read port, so a build needs
-`(registers/4) × (bits/4) × ports` packages. With **sixteen sockets**:
-
-| Build | '670s needed | Possible here? |
-|---|---|---|
-| 8 × 16, 2 ports | 16 | **yes — this board** |
-| 8 × 16, 1 port | 8 | only by leaving array B empty |
-| 16 × 8, 2 ports | 16 | no — see below |
-| 16 × 16, 2 ports | 32 | no — twice the sockets |
-| 16 × 16, 1 port | 16 | no — see below |
-
-Sixteen registers is impossible on this capture for three independent
-reasons, any one of which is sufficient:
-
-1. **No fourth address bit reaches the board.** H5, H6 and H7 are
-   4-pin headers carrying three address bits plus one enable. There is
-   no pin for WADDR[3], AADDR[3] or BADDR[3].
-2. **The decoders are wired for two banks.** The B input of each
-   '139 half is tied to GND, so only two of the four outputs are ever
-   asserted. Freeing them would require cutting those ties and routing
-   address bit 3 to them.
-3. **The sockets are committed.** Array B's sixteen positions are
-   hardwired to QB and to the /GRB enables. They cannot be repurposed
-   as extra banks of a single-port 16 × 16 file.
-
-Extending to 16 registers is a board respin, not a population change.
-
 ## Partial population
 
 Sockets may be left empty during bring-up, and the module works with
@@ -233,16 +194,12 @@ The useful ladder, each step adding one observable capability:
 population should mirror array A exactly, or port B returns floating
 garbage for the missing slices while port A looks fine.
 
-## Known issues in this capture
+## Designator reuse
 
-- **Duplicate designators.** H3 and H4 are each used twice (the two
-  halves of QA and of QB), C5 four times, C6 eight times, C7 twice.
-  Twelve devices share five designators. Anything that keys on
-  designator — a BOM, a netlist diff, a pick-and-place file — will
-  mis-handle these. Renumber before the next respin.
-- **No pulldowns**, as described above. Whether that is a defect
-  depends on the host; for the Thumby CPU it is fine, because the
-  operand buses carry their own.
+H3 and H4 are each used twice (the two halves of QA and of QB), C5 four
+times, C6 eight times, C7 twice. Twelve devices share five designators.
+Anything that keys on designator — a BOM, a netlist diff, a
+pick-and-place file — will mis-handle these.
 
 ## Absolute ratings and habits
 
@@ -264,10 +221,10 @@ the higher pin number**: WA(14) > WB(13), RA(5) > RB(4), Q1(10) >
 Q2(9), Q3(7) > Q4(6). D1 is orphaned at pin 15 while D2–D4 sit at pins
 1–3. Wiring any group in ascending pin order silently reverses it.
 
-The capture gets this right — U1 pin 14 carries WADDR0 and pin 5
-carries AADDR0. The hazard lives in the **cabling**: two of the three
-faults found during bring-up were ribbons whose conductor order was
-reversed or transposed, and both survived repeated visual inspection
-because tracing a signal name from the board backwards confirms the
-naming convention rather than the wiring. Compare each ribbon's
-conductor colours against the others, or probe the physical pin.
+The board itself observes this convention — U1 pin 14 carries WADDR0
+and pin 5 carries AADDR0. The hazard lives in the **cabling**: a ribbon
+whose conductor order is reversed or transposed will survive repeated
+visual inspection, because tracing a signal name from the board
+backwards confirms the naming convention rather than the wiring.
+Compare each ribbon's conductor colours against the others, or probe
+the physical pin.
