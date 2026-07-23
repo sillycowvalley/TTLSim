@@ -1,0 +1,104 @@
+Name     RUNG2;
+PartNo   00;
+Date     07/2026;
+Revision 01;
+Designer 8080build;
+Company  none;
+Assembly Rung2;
+Location none;
+Device   g22v10;
+
+/* 8080 Rung 2 sequencer: NOP / JMP (0xC3) / HLT (0x76).
+   Combinational; CLK gates the WZ latch enables only. T0/T1 are bits 1:0
+   of the clock module's T counter; RST is the module's active-high reset.
+
+   This compiler has no intermediate signals, so JMP, HLT and the state
+   decodes are expanded inline in every equation:
+       JMP  = IR7 & IR6 & !IR5 & !IR4 & !IR3 & !IR2 & IR1 & IR0   (0xC3)
+       HLT  = !IR7 & IR6 & IR5 & IR4 & !IR3 & IR2 & IR1 & !IR0    (0x76)
+       S0 = !T1 & !T0    S1 = !T1 & T0    S2 = T1 & !T0    S3 = T1 & T0
+
+   Declared polarity is chosen per pin to keep the flat sum-of-products
+   small - see the term counts against each output. Pin 14 spare. */
+
+/* ---------------- inputs ---------------- */
+PIN 1  = CLK;
+PIN 2  = IR0;
+PIN 3  = IR1;
+PIN 4  = IR2;
+PIN 5  = IR3;
+PIN 6  = IR4;
+PIN 7  = IR5;
+PIN 8  = IR6;
+PIN 9  = IR7;
+PIN 10 = T0;
+PIN 11 = T1;
+PIN 13 = RST;
+
+/* ---------------- outputs ----------------
+   A '!' in the declaration means the pin is LOW when the equation is
+   true. PCOE is declared straight because its cheap form is the
+   *disable* condition. */
+PIN 23 = PCOE;      /* net /PCOE  - pin HIGH disables the PC buffers */
+PIN 22 = !WZOE;     /* net /WZOE  - pin LOW enables the WZ latches   */
+PIN 21 = !PCLE;     /* net /PCLE  - pin LOW writes PC                */
+PIN 20 = !IRCE;     /* net /IRCE  - pin LOW loads IR                 */
+PIN 19 = !TRST;     /* net /TRST  - pin LOW reloads T to 0           */
+PIN 18 = INC;       /* incrementer Cin, active high                  */
+PIN 17 = LEZ;       /* Z latch enable, active high                   */
+PIN 16 = LEW;       /* W latch enable, active high                   */
+PIN 15 = HREQ;      /* net /HALTREQ - open drain, see below          */
+
+/* PC buffers off during RST and during JMP.S3 (WZ owns the bus).
+   2 product terms; pin 23 has 8. The hardwired RST enable on the
+   buffers does the real reset work - this merely agrees with it. */
+PCOE = RST
+     # IR7 & IR6 & !IR5 & !IR4 & !IR3 & !IR2 & IR1 & IR0 & T1 & T0;
+
+/* WZ drives the address bus only in JMP.S3, never during RST.
+   1 product term; pin 22 has 10. */
+WZOE = IR7 & IR6 & !IR5 & !IR4 & !IR3 & !IR2 & IR1 & IR0 & T1 & T0 & !RST;
+
+/* PC writes on reset, on every fetch, and throughout JMP.
+   3 product terms; pin 21 has 12. */
+PCLE = RST
+     # !T1 & !T0
+     # IR7 & IR6 & !IR5 & !IR4 & !IR3 & !IR2 & IR1 & IR0;
+
+/* Fetch window. Reset-time IR loads are harmless - no S0 control
+   depends on IR. 1 product term; pin 20 has 14. */
+IRCE = !T1 & !T0;
+
+/* NOP and HLT (and every undecoded opcode) end at S1; JMP ends at S3.
+   The !JMP half expands to one product per negated literal: 8 + 1 = 9
+   product terms. Pin 19 has 16 - this is the equation that sets the
+   pin assignment. */
+TRST = !IR7 & !T1 & T0
+     # !IR6 & !T1 & T0
+     #  IR5 & !T1 & T0
+     #  IR4 & !T1 & T0
+     #  IR3 & !T1 & T0
+     #  IR2 & !T1 & T0
+     # !IR1 & !T1 & T0
+     # !IR0 & !T1 & T0
+     # IR7 & IR6 & !IR5 & !IR4 & !IR3 & !IR2 & IR1 & IR0 & T1 & T0;
+
+/* Count on the fetch and on both JMP operand reads; never during RST
+   (pass mode is what lets the zero driver write 0x0000 into PC).
+   3 product terms; pin 18 has 16. */
+INC = !RST & !T1 & !T0
+    # !RST & IR7 & IR6 & !IR5 & !IR4 & !IR3 & !IR2 & IR1 & IR0 & !T1 & T0
+    # !RST & IR7 & IR6 & !IR5 & !IR4 & !IR3 & !IR2 & IR1 & IR0 & T1 & !T0;
+
+/* WZ latch enables, gated CLK-high so the '373s are transparent while
+   D settles and close on the falling edge. 1 term each. */
+LEZ = IR7 & IR6 & !IR5 & !IR4 & !IR3 & !IR2 & IR1 & IR0 & !T1 & T0 & CLK;
+LEW = IR7 & IR6 & !IR5 & !IR4 & !IR3 & !IR2 & IR1 & IR0 & T1 & !T0 & CLK;
+
+/* /HALTREQ open-drain emulation: the net is shared with the clock
+   module's panel button and its 4k7 pullup, so a totem-pole high would
+   fight a pressed button. The data term is an explicit GND, so the pin
+   drives LOW whenever the output enable lets it drive - during HLT.S1
+   only - and floats to the pullup otherwise. */
+HREQ    = GND;
+HREQ.oe = !IR7 & IR6 & IR5 & IR4 & !IR3 & IR2 & IR1 & !IR0 & !T1 & T0;

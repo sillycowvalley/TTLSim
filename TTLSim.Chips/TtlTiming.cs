@@ -138,6 +138,8 @@ public static class TtlTiming
         ["HCT:574"] = new(44_000),
         ["HC:573"] = new(45_000),
         ["HCT:573"] = new(53_000), // transparent latch (Nexperia -40..125 max; D->Q and LE->Q both hit the row value, OE paths faster; no LS row until an LS sheet is verified)
+        ["HC:373"] = new(45_000),
+        ["HCT:373"] = new(53_000),  // '573 silicon core, interleaved pinout; rows anchored to the '573 (same die, same D->Q / LE->Q paths). No LS row for the same reason.
         ["LS:377"] = new(30_000),
         ["HC:377"] = new(44_000),  // octal D flip-flop, clock enable
         ["LS:191"] = new(27_000),
