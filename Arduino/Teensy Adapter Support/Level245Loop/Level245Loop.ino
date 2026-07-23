@@ -2,7 +2,7 @@
 //  Level245Loop.ino  -  74HCT245 / 74LVC245 8-bit level-translation loopback
 //
 //  All eight lines, Port A -> Port C, through the push-pull translation pair
-//  that is intended to replace the TXS0108E path.
+//  that replaces the TXS0108E path.
 //
 //      Port A (OUTPUT) --> 74HCT245  A1..A8 -> B1..B8 --+
 //                          (Vcc 5V, DIR=H, A->B)        |
@@ -13,51 +13,36 @@
 //
 //  Both '245s face B side to B side, so the 5V bus is a straight run:
 //  pin 18 to pin 18, 17 to 17, down to 11 to 11. Whatever Port A writes must
-//  appear on Port C. No switches in this build.
+//  appear on Port C. No buttons in this build.
 //
-//  NOTE ON STYLE: no enums or other user-defined types appear in any function
+//  All port plumbing - pin mapping, unrolled accessors, banked I/O, banner
+//  helpers - lives in AdapterPorts.h. This sketch holds only test logic.
+//
+//  NOTE ON STYLE: no enums or other sketch-level types appear in any function
 //  signature. The Arduino build inserts generated prototypes above the point
 //  where a sketch-level type is declared, so such a signature fails with
 //  "variable or field declared void". Mode values are plain uint8_t constants
-//  for that reason - do not "tidy" them into an enum.
+//  for that reason - do not "tidy" them into an enum. (Types defined in the
+//  header are fine: the include sits above the generated prototypes.)
 //
 //  --------------------------------------------------------- THE TWO PATHS --
-//  Measured on this board, 200,000 vectors each, no commanded settle:
-//
-//      header accessors (AdapterPorts.h) : 158 ns/vector
-//      banked GPIO (this sketch)         : 226 ns/vector
-//
-//  The header wins, and the reason is worth recording so nobody re-does the
-//  experiment. digitalWriteFast/digitalReadFast with a compile-time-constant
-//  pin fold to a single store or load, constant address, constant mask, on
-//  GPIO6-9 - the CPU-bus fast ports, one or two cycles each. There is no
-//  peripheral-bus penalty to remove. The banked path replaces those folded
-//  constants with runtime table lookups and a stack-indexed snapshot, which
-//  costs more than the redundant loads it eliminates. Port C in particular
-//  sits entirely in one GPIO bank, so the header's eight constant loads are
-//  already close to ideal.
-//
-//  The banked path is kept for one property the header cannot give:
-//  SIMULTANEITY. The header issues eight separate stores, so bit 0 changes
-//  roughly 70 ns before bit 7. Banked changes every bit within a bank on a
-//  single store - here three groups a few ns apart. As a coupling aggressor
-//  that is materially harsher, which is what you want when stressing a real
-//  DUT with a clock or strobe in the loom. Use 'F' to select it; 'M' compares
-//  them on the board in front of you; 'V' proves they agree.
-//
-//  Default is the header path: faster, simpler, and the verified mapping is
-//  the single source of truth. Teensy 4.1 only - elsewhere the banked path
-//  compiles away and 'F' does nothing.
+//  'F' switches between the header's unrolled accessors and its banked I/O.
+//  Measured here, 200,000 vectors each: unrolled 158 ns/vector, banked 226.
+//  The unrolled path is faster and is the default. The banked path is kept
+//  because it slews every bit in a GPIO bank on one store instead of eight
+//  staggered stores ~70 ns apart - a harsher, more realistic aggressor. Both
+//  have run 17,000,000 hammer vectors clean on this board. See the banked
+//  I/O commentary in AdapterPorts.h for why banked is not an optimisation.
 //
 //  --------------------------------------------------------------- SETTLE ---
 //  settleNs must not be zero. At zero the readback samples mid-transition and
 //  the slower channels return the PREVIOUS vector's value on that line - seen
-//  as walking-1 0x08 reading back 0x0C after 0x04. Note that on Teensy 4 a
-//  very small value is dominated by delayNanoseconds' own overhead (cycle
-//  counter read plus compare loop, tens of ns), so a nominal "2" is really
-//  that overhead rather than 2 ns. Run 'S' to find the real figure for this
-//  wiring and set settleNs to several times it, rather than relying on call
-//  overhead that a core or compiler change could shrink away.
+//  as walking-1 0x08 reading back 0x0C after 0x04. Note that a very small
+//  value is dominated by delayNanoseconds' own overhead (cycle counter read
+//  plus compare loop, tens of ns), so a nominal "2" is really that overhead
+//  rather than 2 ns. Run 'S' to find the real figure for this wiring and set
+//  settleNs to several times it, rather than relying on call overhead that a
+//  core or compiler change could shrink away.
 //
 //  ------------------------------------------------------------ BREADBOARD --
 //  Pin numbers come from AdapterPorts.h and are printed at boot - check them
@@ -101,21 +86,15 @@
 //  L  long soak, same aggressor, until 'X'
 //  S  settle sweep - find the real settle requirement
 //  M  measure throughput, both I/O paths
-//  V  verify banked path == header accessors (256 patterns)
+//  V  verify banked path == unrolled accessors (256 patterns)
 //  C  chaser, verified, slow enough to watch
 //  P  park a static pattern and hold it       press again to advance
-//  F  toggle header/banked I/O path
+//  F  toggle unrolled/banked I/O path
 //  A  recheck the path (/OE jumper)
 //  X  stop        R  last summary        ?  help
 // ============================================================================
 
 #include "AdapterPorts.h"
-
-#if defined(__IMXRT1062__)
-  #define HAVE_BANKED_IO 1
-#else
-  #define HAVE_BANKED_IO 0
-#endif
 
 // Mode values - plain constants, never an enum (see STYLE note above).
 static const uint8_t modeIdle       = 0;
@@ -146,129 +125,9 @@ static const uint16_t sweepTrials = 500;   // 0x00/0xFF pairs per delay point
 static const uint8_t parkPatterns[]   = { 0x00, 0xFF, 0x55, 0xAA, 0x0F, 0xF0 };
 static const uint8_t parkPatternCount = (uint8_t)(sizeof(parkPatterns) / sizeof(parkPatterns[0]));
 
-// ========================================================== banked GPIO ====
-// Not the default. Kept for its simultaneity, not its speed - see THE TWO
-// PATHS above before assuming this is an optimisation.
-#if HAVE_BANKED_IO
-
-static const uint8_t maxBanks = 4;
-
-static volatile uint32_t  bankScratch = 0;
-
-static volatile uint32_t *writeSetReg[maxBanks];
-static volatile uint32_t *writeClrReg[maxBanks];
-static uint32_t           writeSetTable[maxBanks][256];
-static uint32_t           writeAllMask[maxBanks];
-static uint8_t            writeBankCount = 0;
-
-static volatile uint32_t *readReg[maxBanks];
-static uint8_t            readBankOf[8];
-static uint32_t           readMaskOf[8];
-static uint8_t            readBankCount = 0;
-
-static void buildBanks() {
-  uint8_t  bankFor[8];
-  uint32_t maskFor[8];
-
-  writeBankCount = 0;
-  for (uint8_t i = 0; i < 8; i++) {
-    uint8_t pin = PORT_A_PINS[i];
-    volatile uint32_t *sr = portSetRegister(pin);
-    uint32_t m = digitalPinToBitMask(pin);
-
-    uint8_t b = 0xFF;
-    for (uint8_t k = 0; k < writeBankCount; k++) {
-      if (writeSetReg[k] == sr) { b = k; break; }
-    }
-    if (b == 0xFF) {
-      b = writeBankCount++;
-      writeSetReg[b]  = sr;
-      writeClrReg[b]  = portClearRegister(pin);
-      writeAllMask[b] = 0;
-    }
-    bankFor[i] = b;
-    maskFor[i] = m;
-    writeAllMask[b] |= m;
-  }
-
-  for (uint8_t b = 0; b < writeBankCount; b++) {
-    for (uint16_t v = 0; v < 256; v++) {
-      uint32_t s = 0;
-      for (uint8_t i = 0; i < 8; i++) {
-        if (bankFor[i] == b && (v & (1u << i))) {
-          s |= maskFor[i];
-        }
-      }
-      writeSetTable[b][v] = s;
-    }
-  }
-  for (uint8_t b = writeBankCount; b < maxBanks; b++) {
-    writeSetReg[b]  = &bankScratch;
-    writeClrReg[b]  = &bankScratch;
-    writeAllMask[b] = 0;
-    for (uint16_t v = 0; v < 256; v++) {
-      writeSetTable[b][v] = 0;
-    }
-  }
-
-  readBankCount = 0;
-  for (uint8_t i = 0; i < 8; i++) {
-    uint8_t pin = PORT_C_PINS[i];
-    volatile uint32_t *ir = portInputRegister(pin);
-
-    uint8_t b = 0xFF;
-    for (uint8_t k = 0; k < readBankCount; k++) {
-      if (readReg[k] == ir) { b = k; break; }
-    }
-    if (b == 0xFF) {
-      b = readBankCount++;
-      readReg[b] = ir;
-    }
-    readBankOf[i] = b;
-    readMaskOf[i] = digitalPinToBitMask(pin);
-  }
-  for (uint8_t b = readBankCount; b < maxBanks; b++) {
-    readReg[b] = &bankScratch;
-  }
-}
-
-static inline void fastWritePortA(uint8_t v) {
-  uint32_t s0 = writeSetTable[0][v];
-  uint32_t s1 = writeSetTable[1][v];
-  uint32_t s2 = writeSetTable[2][v];
-  uint32_t s3 = writeSetTable[3][v];
-  *writeSetReg[0] = s0;  *writeClrReg[0] = writeAllMask[0] & ~s0;
-  *writeSetReg[1] = s1;  *writeClrReg[1] = writeAllMask[1] & ~s1;
-  *writeSetReg[2] = s2;  *writeClrReg[2] = writeAllMask[2] & ~s2;
-  *writeSetReg[3] = s3;  *writeClrReg[3] = writeAllMask[3] & ~s3;
-}
-
-static inline uint8_t fastReadPortC() {
-  uint32_t snap[maxBanks];
-  snap[0] = *readReg[0];
-  snap[1] = *readReg[1];
-  snap[2] = *readReg[2];
-  snap[3] = *readReg[3];
-
-  uint8_t v = 0;
-  if (snap[readBankOf[0]] & readMaskOf[0]) v |= 0x01;
-  if (snap[readBankOf[1]] & readMaskOf[1]) v |= 0x02;
-  if (snap[readBankOf[2]] & readMaskOf[2]) v |= 0x04;
-  if (snap[readBankOf[3]] & readMaskOf[3]) v |= 0x08;
-  if (snap[readBankOf[4]] & readMaskOf[4]) v |= 0x10;
-  if (snap[readBankOf[5]] & readMaskOf[5]) v |= 0x20;
-  if (snap[readBankOf[6]] & readMaskOf[6]) v |= 0x40;
-  if (snap[readBankOf[7]] & readMaskOf[7]) v |= 0x80;
-  return v;
-}
-
-#else   // ---------------------------------------------------- other targets
-
-static void buildBanks() { }
-static inline void fastWritePortA(uint8_t v) { writePortA(v); }
-static inline uint8_t fastReadPortC() { return readPortC(); }
-
-#endif
+// Banked maps for the two ports this harness touches.
+static PortBanks banksA;
+static PortBanks banksC;
 
 // ================================================================ state ====
 
@@ -290,15 +149,14 @@ static uint16_t      sweepNs         = 0;
 static bool          sweepCleanSeen  = false;
 static uint16_t      sweepFirstClean = 0;
 
-static uint8_t       measurePhase    = 0;    // 0 = header accessors, 1 = banked
+static uint8_t       measurePhase    = 0;    // 0 = unrolled, 1 = banked
 static uint32_t      measureIndex    = 0;
 static uint32_t      measureStartUs  = 0;
 static uint32_t      measureSlowNs   = 0;
 
-// Default: the header accessors. Faster here, and the verified mapping stays
-// the single source of truth. 'F' selects the banked path when the harsher
-// simultaneous slew is wanted.
-static bool          useFastPath     = false;
+// Default: the unrolled accessors. Faster here; 'F' selects banked when the
+// harsher simultaneous slew is wanted.
+static bool          useBankedIo     = false;
 static bool          pathWasAlive    = false;
 static unsigned long lastAlivePoll   = 0;
 
@@ -308,15 +166,6 @@ static void printBin8(uint8_t v) {
   for (int8_t b = 7; b >= 0; b--) {
     Serial.write((v & (1u << b)) ? '1' : '0');
   }
-}
-
-static void printPinTable(const char *name, const uint8_t *pins) {
-  Serial.print(name);
-  for (uint8_t i = 0; i < 8; i++) {
-    Serial.print(' ');
-    Serial.print(pins[i]);
-  }
-  Serial.println();
 }
 
 static uint32_t nsPerVector(uint32_t elapsedUs, uint32_t vectors) {
@@ -329,7 +178,7 @@ static uint32_t nsPerVector(uint32_t elapsedUs, uint32_t vectors) {
 static void printHelp() {
   Serial.println(F("W walking 1/0   E exhaustive 256   H hammer 2M      L soak"));
   Serial.println(F("S settle sweep  M measure speed    V verify paths   C chaser"));
-  Serial.println(F("P park pattern  F header/banked    A recheck path"));
+  Serial.println(F("P park pattern  F unrolled/banked  A recheck path"));
   Serial.println(F("X stop          R last summary     ? help"));
 }
 
@@ -354,18 +203,27 @@ static void printSummary() {
   }
 }
 
+static void reportIoPath() {
+  Serial.print(F("I/O path: "));
+  if (useBankedIo) {
+    Serial.println(F("banked (simultaneous slew, slower)"));
+  } else {
+    Serial.println(F("unrolled accessors (default, faster)"));
+  }
+}
+
 // =========================================================== vector core ===
 
 static inline void portWrite(uint8_t v) {
-  if (useFastPath) {
-    fastWritePortA(v);
+  if (useBankedIo) {
+    bankedWritePort(banksA, v);
   } else {
     writePortA(v);
   }
 }
 
 static inline uint8_t portRead() {
-  return useFastPath ? fastReadPortC() : readPortC();
+  return useBankedIo ? bankedReadPort(banksC) : readPortC();
 }
 
 static bool applyVectorAt(uint8_t value, uint16_t delayNs) {
@@ -493,9 +351,6 @@ static void startSweep() {
   Serial.println(F("Low rows should show errors. The first clean row is the"));
   Serial.println(F("real settle requirement for this wiring - use several"));
   Serial.println(F("times that as settleNs."));
-#if !HAVE_BANKED_IO
-  Serial.println(F("NOTE: no banked I/O on this target - resolution is poor."));
-#endif
   Serial.println(F("  ns   errors"));
 }
 
@@ -514,53 +369,51 @@ static void startMeasure() {
   Serial.print(F("Measuring "));
   Serial.print(measureVectors);
   Serial.println(F(" vectors per path, no commanded settle..."));
+  Serial.println(F("(inner loop discards the read - compare the two figures"));
+  Serial.println(F(" against each other, not against a test run)"));
 }
 
 static void verifyPaths() {
-#if !HAVE_BANKED_IO
-  Serial.println(F("No banked I/O on this target - nothing to verify."));
-#else
   uint16_t bad = 0;
   for (uint16_t v = 0; v < 256; v++) {
     uint8_t pattern = (uint8_t)v;
 
     writePortA(pattern);
     delayNanoseconds(2000);
-    uint8_t slowSlow = readPortC();
-    uint8_t slowFast = fastReadPortC();
+    uint8_t unrUnr = readPortC();
+    uint8_t unrBank = bankedReadPort(banksC);
 
-    fastWritePortA(pattern);
+    bankedWritePort(banksA, pattern);
     delayNanoseconds(2000);
-    uint8_t fastSlow = readPortC();
-    uint8_t fastFast = fastReadPortC();
+    uint8_t bankUnr = readPortC();
+    uint8_t bankBank = bankedReadPort(banksC);
 
-    if (slowSlow != pattern || slowFast != pattern ||
-        fastSlow != pattern || fastFast != pattern) {
+    if (unrUnr != pattern || unrBank != pattern ||
+        bankUnr != pattern || bankBank != pattern) {
       bad++;
       if (bad <= 8) {
         Serial.print(F("  pattern "));
         printBin8(pattern);
-        Serial.print(F("  hdr/hdr "));
-        printBin8(slowSlow);
-        Serial.print(F("  hdr/fast "));
-        printBin8(slowFast);
-        Serial.print(F("  fast/hdr "));
-        printBin8(fastSlow);
-        Serial.print(F("  fast/fast "));
-        printBin8(fastFast);
+        Serial.print(F("  unr/unr "));
+        printBin8(unrUnr);
+        Serial.print(F("  unr/bank "));
+        printBin8(unrBank);
+        Serial.print(F("  bank/unr "));
+        printBin8(bankUnr);
+        Serial.print(F("  bank/bank "));
+        printBin8(bankBank);
         Serial.println();
       }
     }
   }
   portWrite(0);
   if (bad == 0) {
-    Serial.println(F("Verify PASS - banked path agrees with the header accessors."));
+    Serial.println(F("Verify PASS - banked path agrees with the unrolled accessors."));
   } else {
     Serial.print(F("Verify FAIL on "));
     Serial.print(bad);
-    Serial.println(F(" of 256 patterns - stay on the header path."));
+    Serial.println(F(" of 256 patterns - stay on the unrolled path."));
   }
-#endif
 }
 
 static void parkNext() {
@@ -598,15 +451,6 @@ static void parkNext() {
   vectorsRun++;
 }
 
-static void reportIoPath() {
-  Serial.print(F("I/O path: "));
-  if (useFastPath) {
-    Serial.println(F("banked (simultaneous slew, slower)"));
-  } else {
-    Serial.println(F("header accessors (default, faster)"));
-  }
-}
-
 // ================================================================ setup ====
 
 void setup() {
@@ -614,7 +458,8 @@ void setup() {
 
   setPortMode(PORT_A_PINS, OUTPUT);
   setPortMode(PORT_C_PINS, INPUT);
-  buildBanks();
+  buildPortBanks(banksA, PORT_A_PINS);
+  buildPortBanks(banksC, PORT_C_PINS);
   portWrite(0);
 
   while (!Serial && millis() < 3000) { }
@@ -622,15 +467,10 @@ void setup() {
   Serial.print(F("Level245Loop on "));
   Serial.println(F(PLATFORM_NAME));
   Serial.println(F("Port A -> HCT245 -> 5V bus (LED Thing) -> LVC245 -> Port C"));
-  printPinTable("Port A out:", PORT_A_PINS);
-  printPinTable("Port C in :", PORT_C_PINS);
-#if HAVE_BANKED_IO
-  Serial.print(F("GPIO banks: "));
-  Serial.print(writeBankCount);
-  Serial.print(F(" write, "));
-  Serial.print(readBankCount);
-  Serial.println(F(" read"));
-#endif
+  printPortPins("Port A out:", PORT_A_PINS);
+  printPortPins("Port C in :", PORT_C_PINS);
+  printPortBanks("Port A:", banksA);
+  printPortBanks("Port C:", banksC);
   reportIoPath();
   Serial.print(F("settleNs = "));
   Serial.println(settleNs);
@@ -660,7 +500,7 @@ void loop() {
       case 'V': verifyPaths();                                 break;
       case 'C': startTest(modeChaser,     'C', 0);             break;
       case 'P': parkNext();                                    break;
-      case 'F': useFastPath = !useFastPath;
+      case 'F': useBankedIo = !useBankedIo;
                 reportIoPath();                                break;
       case 'A': pathWasAlive = pathAlive();
                 reportPath(pathWasAlive, true);                break;
@@ -698,10 +538,10 @@ void loop() {
     return;
   }
 
-  // Throughput measurement: phase 0 header accessors, phase 1 banked.
+  // Throughput measurement: phase 0 unrolled, phase 1 banked.
   if (mode == modeMeasure) {
-    bool savedPath = useFastPath;
-    useFastPath = (measurePhase != 0);
+    bool savedPath = useBankedIo;
+    useBankedIo = (measurePhase != 0);
 
     uint16_t budget = measurePerPass;
     while (budget-- > 0 && measureIndex < measureVectors) {
@@ -710,15 +550,15 @@ void loop() {
       measureIndex++;
     }
 
-    useFastPath = savedPath;
+    useBankedIo = savedPath;
 
     if (measureIndex >= measureVectors) {
       uint32_t us = micros() - measureStartUs;
       uint32_t ns = nsPerVector(us, measureVectors);
       if (measurePhase == 0) {
-        Serial.print(F("  header accessors: "));
+        Serial.print(F("  unrolled: "));
       } else {
-        Serial.print(F("  banked          : "));
+        Serial.print(F("  banked  : "));
       }
       Serial.print(ns);
       Serial.println(F(" ns/vector"));
@@ -728,14 +568,11 @@ void loop() {
         measurePhase   = 1;
         measureIndex   = 0;
         measureStartUs = micros();
-#if !HAVE_BANKED_IO
-        Serial.println(F("  (no banked I/O here - second figure is the same path)"));
-#endif
       } else {
         if (ns > 0 && measureSlowNs > 0) {
-          Serial.print(F("  header is "));
-          Serial.print((ns * 100UL) / measureSlowNs);
-          Serial.println(F("% of banked cost (under 100 = header wins)"));
+          Serial.print(F("  unrolled is "));
+          Serial.print((measureSlowNs * 100UL) / ns);
+          Serial.println(F("% of banked cost (under 100 = unrolled wins)"));
         }
         stopRun(false);
       }
