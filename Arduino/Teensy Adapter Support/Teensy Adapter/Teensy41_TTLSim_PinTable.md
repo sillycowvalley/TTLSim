@@ -6,6 +6,9 @@ compatible. Pin numbers are solder positions; labels are the harness
 functions assigned to each GPIO. This table must agree with
 `ChipPartDefinition.cs` (the symbol) and `AdapterPorts.h` (the functions).
 
+Verified against `AdapterPorts.h` rev 2 (Teensy-only, 2026-07): all five
+ports, both DIR pins and the SW0/SW1 sharing agree.
+
 Power pins sit where the product puts them: symbol 1/34/47 (GND),
 15/46 (3.3 V), 48 (Vin). The 3.3 V pins are deliberately unconnected in
 the schematic (the rail feeds the LVC245s); Vin is hard-wired to the 5 V
@@ -76,3 +79,54 @@ Notes:
 - Symbol pin numbers, being physical, also order the loom: PE1–PE7 and
   DIR0/DIR1 sit consecutively (symbol 25–33), with PE0 apart at symbol 35
   — the price of the LED riding the clock, paid knowingly.
+
+---
+
+## GPIO Bank Membership — Which Ports Slew As One
+
+The RT1062's fast GPIO is four banks (GPIO6–9). A port whose eight pins all
+land in **one** bank can be written with a single register store and read
+with a single load, so every bit changes — and is sampled — on the same
+clock edge. A port split across banks changes in groups.
+
+This matters for two things and nothing else: coupling stress (a
+single-bank port is the harshest, most realistic bus-turnaround aggressor)
+and timing measurement (only a single-bank port gives a write-to-sample
+interval short enough to resolve the '245 pair's ~15 ns propagation). It
+does **not** matter for speed — banked and unrolled I/O measured within 1–2%
+of each other.
+
+| Port | Banks | Source |
+|---|---|---|
+| A | **3** | measured, Level245Loop 2026-07 |
+| C | **1** | measured, Level245Loop 2026-07 |
+| B, D, E | not yet recorded | print with `printPortBanks()` on first use |
+
+**Port C is the single-bank port.** For the '574 phantom-capture chase, the
+operand bus belongs on Port C: it is the only port measured to present a
+coherent byte in one instant, and it also has runtime direction (DIR0) for
+tri-state work. Record B, D and E the first time each is banked — the boot
+banner prints them via `printPortBanks()`, so it costs nothing.
+
+Bank membership follows the GPIO pins themselves, not direction, so a port's
+count is the same whether it is driving or reading.
+
+---
+
+## Two Hardware Consequences of This Mapping
+
+**PE0 carries the onboard LED, and PE0 is the clock.** The LED and its
+series resistor hang on the clock line's Teensy side, adding a few mA of
+load and some capacitance to the one signal whose edge timing matters most.
+Irrelevant at retro bus speeds and genuinely useful as an activity light —
+but for the chase test, where the clock edge is the time reference against
+which data slews are positioned, expect PE0's edge to be marginally slower
+than the other GPIOs. If that ever shows up as skew, the LED is the first
+suspect, and cutting it is the fix.
+
+**Vin is hard-wired to the 5 V rail.** That is correct for USB power, where
+the Teensy sources 5 V outward to the board. It also means an external 5 V
+supply must never be applied to that rail while USB is connected, or it
+back-feeds the host through the VUSB pad. If bench-supply operation is ever
+wanted, the VUSB pad has to be cut first — and then USB alone will no longer
+power the board. Note the choice on the board silkscreen if possible.

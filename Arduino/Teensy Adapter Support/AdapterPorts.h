@@ -1,45 +1,55 @@
 // ============================================================================
-//  AdapterPorts.h  -  virtual 8-bit ports A..E, dual platform
+//  AdapterPorts.h  -  virtual 8-bit ports A..E on the Teensy 5V Adapter board
 //
-//  Targets (auto-selected by the compiler, no #define needed):
-//    Teensy 4.1  (__IMXRT1062__)      - the LVC harness board: 74HCT245
-//                                       (drive, 5 V) + 74LVC245 (read,
-//                                       3.3 V) per port, /OE-steered.
-//                                       See LVCBoard_Reference.md.
-//    Mega 2560   (__AVR_ATmega2560__) - wired directly to a DUT, native
-//                                       5 V. Independent verification
-//                                       platform. See MegaDirect_Reference.md.
+//  Target: Teensy 4.1 (__IMXRT1062__) on the 5V Adapter board - 74HCT245
+//  (drive, 5 V) + 74LVC245 (read, 3.3 V) per port, /OE-steered.
 //
-//  Common API: PIN_PA0..PIN_PE7, port tables, setPortMode, unrolled fast
-//  accessors, samplePorts() (A-D), readPortE/writePortE, SW0/SW1 buttons,
-//  SW_PIN_MODE, PLATFORM_NAME. Ribbon colours: bit 0 = white .. bit 7 = red.
+//  This header is the single source of truth for the board's pin mapping and
+//  for every port-level access primitive. Sketches include it unchanged and
+//  add only project logic. If a sketch finds itself writing GPIO plumbing,
+//  the plumbing belongs here instead.
 //
-//  Direction control (Teensy/LVC board only):
+//  Provides:
+//    - PIN_PA0..PIN_PE7, PORT_x_PINS[8] tables, setPortMode()
+//    - unrolled fast accessors readPortA()..readPortE(), writePortA()..E()
+//    - samplePorts() - ports A-D as one uint32_t
+//    - banked port I/O: PortBanks, buildPortBanks(), bankedWritePort(),
+//      bankedReadPort() - simultaneous multi-line slew, see below
+//    - runtime direction for ports C/D: initPortDirections(), portDrive(),
+//      portRelease()
+//    - buttons SW0/SW1, SW_PIN_MODE, sw0Pressed(), sw1Pressed()
+//    - printPortPins(), printPortBanks() for boot banners
+//    - PLATFORM_NAME
+//
+//  Ribbon colours: bit 0 = white .. bit 7 = red.
+//
+//  Direction control:
 //    Ports A, B, E - direction set by board jumpers J8 / J12 / J15
 //                    (fitted = port drives the DUT, parked = port reads).
 //    Ports C, D    - runtime direction on PIN_DIR0 / PIN_DIR1
 //                    (high = drive, low = read; 10 k pulldowns = read at
 //                    power-up). portDrive('C'|'D') / portRelease('C'|'D').
 //    The sketch must match the jumpers - print the assumed configuration
-//    in the boot banner. On the Mega there are no shifters: direction is
-//    simply pinMode, and portDrive/portRelease are not defined.
+//    in the boot banner.
 //
-//  Keep pins as compile-time constants and the accessors unrolled: on the
-//  Teensy, digitalReadFast/digitalWriteFast then compile to single GPIO
-//  register operations. Never convert the accessors to loops.
+//  Keep pins as compile-time constants and the unrolled accessors unrolled:
+//  digitalReadFast/digitalWriteFast then fold to single GPIO register
+//  operations. Never convert the accessors to loops - a variable pin
+//  argument defeats the fast path entirely.
 // ============================================================================
 
 #pragma once
 #include <Arduino.h>
 
+#if !defined(__IMXRT1062__)
+#error "AdapterPorts.h targets the Teensy 5V Adapter board - build for Teensy 4.1."
+#endif
+
+#define PLATFORM_NAME "Teensy 4.1 + 5V Adapter board"
+
 // Naming: PIN_PA0..PIN_PE7 ("P" for port). PIN_A0..PIN_A9 cannot be used -
 // the cores define those as macros for the analog pins, which breaks any
 // declaration reusing the names.
-
-#if defined(__IMXRT1062__)
-// ================================================== Teensy 4.1, LVC board ===
-
-#define PLATFORM_NAME "Teensy 4.1 + LVC harness board"
 
 // ---------------------------------------------------------------- Port A pins
 constexpr uint8_t PIN_PA0 = 0;   // white
@@ -82,10 +92,10 @@ constexpr uint8_t PIN_PD6 = 30;  // orange
 constexpr uint8_t PIN_PD7 = 31;  // red
 
 // ---------------------------------------------------------------- Port E pins
-// Strobe/sense port, Teensy 34-41 consecutive. PE0 = CLK by convention.
-// Direction is set by jumper J15 for the whole port (fitted = drive).
-// PE6/PE7 are shared with the buttons via J6/J7 (see Buttons below).
-constexpr uint8_t PIN_PE0 = 34;  // white  (CLK)
+// Strobe/sense port. PE0 = CLK by convention. Direction is set by jumper J15
+// for the whole port (fitted = drive). PE6/PE7 are shared with the buttons
+// via J6/J7 (see Buttons below).
+constexpr uint8_t PIN_PE0 = 13;  // white  (CLK)
 constexpr uint8_t PIN_PE1 = 35;  // grey
 constexpr uint8_t PIN_PE2 = 36;  // violet
 constexpr uint8_t PIN_PE3 = 37;  // blue
@@ -98,8 +108,8 @@ constexpr uint8_t PIN_PE7 = 41;  // red    (only with J7 in port position)
 // DIR0 -> port C, DIR1 -> port D. High = HCT drives the DUT, low = LVC
 // reads. 10 k pulldowns (R3/R4 on the OE nets) mean C and D power up
 // READING. Ports A/B/E have no runtime direction - jumpers J8/J12/J15.
-// The onboard LED is pin 13 = DIR0: lit = port C driving.
-constexpr uint8_t PIN_DIR0 = 13;
+// The onboard LED is pin 13 = PE0.
+constexpr uint8_t PIN_DIR0 = 34;
 constexpr uint8_t PIN_DIR1 = 33;
 
 // ------------------------------------------------------------------- Buttons
@@ -111,94 +121,6 @@ constexpr uint8_t PIN_DIR1 = 33;
 constexpr uint8_t PIN_SW0 = 40;
 constexpr uint8_t PIN_SW1 = 41;
 constexpr uint8_t SW_PIN_MODE = INPUT_PULLUP;
-
-#elif defined(__AVR_ATmega2560__)
-// ============================================================== Mega 2560 ===
-// Direct DUT wiring on the Mega's header pins 22..53. 5 V push-pull drive,
-// no level shifters. Independent verification platform.
-
-#define PLATFORM_NAME "Arduino Mega 2560 (direct)"
-
-// Compatibility shims: sketches use the Teensy fast API and delayNanoseconds
-// directly. On AVR these map to the plain core calls; delayNanoseconds
-// rounds UP to whole microseconds.
-#define digitalWriteFast(pin, val) digitalWrite((pin), (val))
-#define digitalReadFast(pin)       digitalRead((pin))
-inline void delayNanoseconds(uint32_t ns) {
-  if (ns == 0) return;
-  delayMicroseconds((unsigned int)((ns + 999UL) / 1000UL));
-}
-
-// ---------------------------------------------------------------- Port A pins
-// Inner column, lower group = header evens 22..36 (ribbon colour in comment)
-constexpr uint8_t PIN_PA0 = 22;  // white
-constexpr uint8_t PIN_PA1 = 24;  // grey
-constexpr uint8_t PIN_PA2 = 26;  // violet
-constexpr uint8_t PIN_PA3 = 28;  // blue
-constexpr uint8_t PIN_PA4 = 30;  // green
-constexpr uint8_t PIN_PA5 = 32;  // yellow
-constexpr uint8_t PIN_PA6 = 34;  // orange
-constexpr uint8_t PIN_PA7 = 36;  // red
-
-// ---------------------------------------------------------------- Port B pins
-// Inner column, upper group = header evens 38..52
-constexpr uint8_t PIN_PB0 = 38;  // white
-constexpr uint8_t PIN_PB1 = 40;  // grey
-constexpr uint8_t PIN_PB2 = 42;  // violet
-constexpr uint8_t PIN_PB3 = 44;  // blue
-constexpr uint8_t PIN_PB4 = 46;  // green
-constexpr uint8_t PIN_PB5 = 48;  // yellow
-constexpr uint8_t PIN_PB6 = 50;  // orange
-constexpr uint8_t PIN_PB7 = 52;  // red
-
-// ---------------------------------------------------------------- Port C pins
-// Edge column, lower group = header odds 23..37
-constexpr uint8_t PIN_PC0 = 23;  // white
-constexpr uint8_t PIN_PC1 = 25;  // grey
-constexpr uint8_t PIN_PC2 = 27;  // violet
-constexpr uint8_t PIN_PC3 = 29;  // blue
-constexpr uint8_t PIN_PC4 = 31;  // green
-constexpr uint8_t PIN_PC5 = 33;  // yellow
-constexpr uint8_t PIN_PC6 = 35;  // orange
-constexpr uint8_t PIN_PC7 = 37;  // red
-
-// ---------------------------------------------------------------- Port D pins
-// Edge column, upper group = header odds 39..53
-constexpr uint8_t PIN_PD0 = 39;  // white
-constexpr uint8_t PIN_PD1 = 41;  // grey
-constexpr uint8_t PIN_PD2 = 43;  // violet
-constexpr uint8_t PIN_PD3 = 45;  // blue
-constexpr uint8_t PIN_PD4 = 47;  // green
-constexpr uint8_t PIN_PD5 = 49;  // yellow
-constexpr uint8_t PIN_PD6 = 51;  // orange
-constexpr uint8_t PIN_PD7 = 53;  // red
-
-// ---------------------------------------------------------------- Port E pins
-// Four strobe lines on PWM-capable pins; PE0 = CLK by convention. The Mega
-// has no PE4-PE7 - sketches that need more than four strobes are
-// Teensy-only.
-constexpr uint8_t PIN_PE0 = 5;   // white  (CLK)
-constexpr uint8_t PIN_PE1 = 6;   // grey
-constexpr uint8_t PIN_PE2 = 7;   // violet
-constexpr uint8_t PIN_PE3 = 8;   // blue
-constexpr uint8_t PIN_PE4 = 9;   // (present for compile compatibility;
-constexpr uint8_t PIN_PE5 = 10;  //  wire only if the project needs them)
-constexpr uint8_t PIN_PE6 = 11;
-constexpr uint8_t PIN_PE7 = 12;
-
-// ------------------------------------------------------------------- Buttons
-// Two spare pins with the internal pull-ups so that unwired = not pressed.
-// Wire momentary switches to GND on pins 2 (SW0) and 3 (SW1) if wanted;
-// every button function has a serial command.
-constexpr uint8_t PIN_SW0 = 2;
-constexpr uint8_t PIN_SW1 = 3;
-constexpr uint8_t SW_PIN_MODE = INPUT_PULLUP;
-
-#else
-#error "AdapterPorts.h: unsupported board - build for Teensy 4.1 or Arduino Mega 2560."
-#endif
-
-// ======================================================= shared definitions
 
 // -------------------------------------------------------- pin tables (setup)
 constexpr uint8_t PORT_A_PINS[8] = { PIN_PA0, PIN_PA1, PIN_PA2, PIN_PA3, PIN_PA4, PIN_PA5, PIN_PA6, PIN_PA7 };
@@ -216,7 +138,7 @@ inline void setPortMode(const uint8_t (&pins)[8], uint8_t mode) {
 
 // --------------------------------------------------------------- fast readers
 // Unrolled with named constants so every digitalReadFast folds to one
-// register test on the Teensy. Do NOT convert these to loops.
+// register test. Do NOT convert these to loops.
 
 inline uint8_t readPortA() {
   uint8_t v = 0;
@@ -353,7 +275,159 @@ inline uint32_t samplePorts() {
 inline bool sw0Pressed() { return digitalReadFast(PIN_SW0) == LOW; }
 inline bool sw1Pressed() { return digitalReadFast(PIN_SW1) == LOW; }
 
-#if defined(__IMXRT1062__)
+// ====================================================== banked port I/O =====
+// An alternative to the unrolled accessors above. NOT a speed optimisation -
+// pick it for what it does to TIMING, not throughput.
+//
+// The unrolled writer issues eight separate stores, so bit 0 changes roughly
+// 70 ns before bit 7, and the unrolled reader samples bit 0 well before
+// bit 7. Banked collapses each GPIO bank to a single store on write and a
+// single load on read, so every bit within a bank moves - and is sampled -
+// on one instant.
+//
+// Two consequences, both measured on this board (2026-07):
+//
+//  1. HARSHER AGGRESSOR. A genuinely simultaneous multi-line slew is what a
+//     real bus turnaround looks like, and what coupled a data bus into a
+//     clock line in the ALU campaign. The unrolled path's stagger softens it.
+//
+//  2. SHORTER WRITE-TO-SAMPLE INTERVAL, which makes it the instrument for
+//     timing measurement. A settle sweep on the unrolled path reports zero
+//     errors at every delay from 0 ns up, because the loop's own stagger
+//     already exceeds what is being resolved. Timing sweeps must run banked
+//     or they measure nothing.
+//
+//     What that sweep established here: a banked write followed immediately
+//     by a banked read FAILS every trial, while the same pair separated by
+//     delayNanoseconds(0) - which costs tens of ns in call overhead before
+//     it delays anything - is clean. So the '245 pair's settle requirement
+//     lies inside that gap: non-zero, but below what software timing can
+//     resolve on this part. Consistent with the datasheet sum of ~15 ns
+//     (HCT245 ~9-13 ns at 5V, LVC245 ~3.5-5 ns).
+//
+//     CAUTION when reading such a sweep: if the delay call is skipped at
+//     zero rather than made with a zero argument, row 0 is structurally
+//     different from every other row and the overhead appearing looks like
+//     a propagation cliff. It is not. Make the call at every row.
+//
+// SPEED: essentially a wash in real use. Hammer runs with the read consumed:
+// unrolled 285 ns/vector, banked 290. A microbenchmark that discards the
+// read will flatter banked badly (90 vs 151 ns was observed) because its
+// bit-extraction arithmetic is elidable while eight volatile loads are not.
+// Believe the workload, not the microbenchmark.
+//
+// Cost: each PortBanks is ~4 KB (a 256-entry set-mask table per bank).
+// Declare only the ports a sketch actually banks.
+//
+// Usage:
+//     static PortBanks banksA;
+//     buildPortBanks(banksA, PORT_A_PINS);   // in setup(), after setPortMode
+//     bankedWritePort(banksA, 0xFF);
+//     uint8_t v = bankedReadPort(banksA);
+//
+// The bank partition is derived from the pin table, so this stays correct if
+// the mapping above ever changes. Both the set/clear and input register
+// pointers come from the same GPIO base, so one partition serves reads and
+// writes.
+
+static const uint8_t PORT_MAX_BANKS = 4;
+
+struct PortBanks {
+  volatile uint32_t *setReg[PORT_MAX_BANKS];
+  volatile uint32_t *clrReg[PORT_MAX_BANKS];
+  volatile uint32_t *inReg[PORT_MAX_BANKS];
+  uint32_t           allMask[PORT_MAX_BANKS];
+  uint32_t           setTable[PORT_MAX_BANKS][256];
+  uint32_t           bitMask[8];
+  uint8_t            bitBank[8];
+  uint8_t            bankCount;
+};
+
+// Sink for unused bank slots, so the access paths stay branchless.
+inline volatile uint32_t *portBankSink() {
+  static volatile uint32_t sink = 0;
+  return &sink;
+}
+
+inline void buildPortBanks(PortBanks &pb, const uint8_t (&pins)[8]) {
+  pb.bankCount = 0;
+
+  for (uint8_t i = 0; i < 8; i++) {
+    uint8_t pin = pins[i];
+    volatile uint32_t *sr = portSetRegister(pin);
+
+    uint8_t b = 0xFF;
+    for (uint8_t k = 0; k < pb.bankCount; k++) {
+      if (pb.setReg[k] == sr) { b = k; break; }
+    }
+    if (b == 0xFF) {
+      b = pb.bankCount++;
+      pb.setReg[b]  = sr;
+      pb.clrReg[b]  = portClearRegister(pin);
+      pb.inReg[b]   = portInputRegister(pin);
+      pb.allMask[b] = 0;
+    }
+    pb.bitBank[i] = b;
+    pb.bitMask[i] = digitalPinToBitMask(pin);
+    pb.allMask[b] |= pb.bitMask[i];
+  }
+
+  for (uint8_t b = 0; b < pb.bankCount; b++) {
+    for (uint16_t v = 0; v < 256; v++) {
+      uint32_t s = 0;
+      for (uint8_t i = 0; i < 8; i++) {
+        if (pb.bitBank[i] == b && (v & (1u << i))) {
+          s |= pb.bitMask[i];
+        }
+      }
+      pb.setTable[b][v] = s;
+    }
+  }
+
+  for (uint8_t b = pb.bankCount; b < PORT_MAX_BANKS; b++) {
+    pb.setReg[b]  = portBankSink();
+    pb.clrReg[b]  = portBankSink();
+    pb.inReg[b]   = portBankSink();
+    pb.allMask[b] = 0;
+    for (uint16_t v = 0; v < 256; v++) {
+      pb.setTable[b][v] = 0;
+    }
+  }
+}
+
+// Every bit within a bank changes on one store.
+inline void bankedWritePort(const PortBanks &pb, uint8_t v) {
+  uint32_t s0 = pb.setTable[0][v];
+  uint32_t s1 = pb.setTable[1][v];
+  uint32_t s2 = pb.setTable[2][v];
+  uint32_t s3 = pb.setTable[3][v];
+  *pb.setReg[0] = s0;  *pb.clrReg[0] = pb.allMask[0] & ~s0;
+  *pb.setReg[1] = s1;  *pb.clrReg[1] = pb.allMask[1] & ~s1;
+  *pb.setReg[2] = s2;  *pb.clrReg[2] = pb.allMask[2] & ~s2;
+  *pb.setReg[3] = s3;  *pb.clrReg[3] = pb.allMask[3] & ~s3;
+}
+
+// Each bank sampled once, so the byte is one instant per bank rather than
+// eight instants spread over the read.
+inline uint8_t bankedReadPort(const PortBanks &pb) {
+  uint32_t snap[PORT_MAX_BANKS];
+  snap[0] = *pb.inReg[0];
+  snap[1] = *pb.inReg[1];
+  snap[2] = *pb.inReg[2];
+  snap[3] = *pb.inReg[3];
+
+  uint8_t v = 0;
+  if (snap[pb.bitBank[0]] & pb.bitMask[0]) v |= 0x01;
+  if (snap[pb.bitBank[1]] & pb.bitMask[1]) v |= 0x02;
+  if (snap[pb.bitBank[2]] & pb.bitMask[2]) v |= 0x04;
+  if (snap[pb.bitBank[3]] & pb.bitMask[3]) v |= 0x08;
+  if (snap[pb.bitBank[4]] & pb.bitMask[4]) v |= 0x10;
+  if (snap[pb.bitBank[5]] & pb.bitMask[5]) v |= 0x20;
+  if (snap[pb.bitBank[6]] & pb.bitMask[6]) v |= 0x40;
+  if (snap[pb.bitBank[7]] & pb.bitMask[7]) v |= 0x80;
+  return v;
+}
+
 // ------------------------------------------- runtime direction (C/D only)
 // Call initPortDirections() first thing in setup(): DIR pins low (C and D
 // reading, matching the pulldown power-up state), all port pins inputs.
@@ -396,4 +470,24 @@ inline void portRelease(char port) {
     digitalWriteFast(PIN_DIR1, LOW);
   }
 }
-#endif  // __IMXRT1062__
+
+// ------------------------------------------------------------ boot banner
+// Small helpers so every sketch reports its wiring the same way. Checking
+// the printed pins against the loom before trusting a run has caught more
+// faults than any amount of staring at the schematic.
+
+inline void printPortPins(const char *name, const uint8_t (&pins)[8]) {
+  Serial.print(name);
+  for (uint8_t i = 0; i < 8; i++) {
+    Serial.print(' ');
+    Serial.print(pins[i]);
+  }
+  Serial.println();
+}
+
+inline void printPortBanks(const char *name, const PortBanks &pb) {
+  Serial.print(name);
+  Serial.print(' ');
+  Serial.print(pb.bankCount);
+  Serial.println(F(" GPIO bank(s)"));
+}

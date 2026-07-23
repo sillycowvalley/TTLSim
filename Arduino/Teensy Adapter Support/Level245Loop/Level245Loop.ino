@@ -18,6 +18,24 @@
 //  All port plumbing - pin mapping, unrolled accessors, banked I/O, banner
 //  helpers - lives in AdapterPorts.h. This sketch holds only test logic.
 //
+//  ------------------------------------------------------------- RESULTS ----
+//  Campaign record for this board, 2026-07:
+//    - W, E clean on both I/O paths.
+//    - Hammer (0x00<->0xFF, all eight lines): 17,000,000 vectors clean on
+//      the banked path, 10,000,000+ on the unrolled path. The TXS0108E path
+//      failed the equivalent stress at up to ~90% per event. The HCT245 /
+//      LVC245 pair removes that failure class.
+//    - Banked and unrolled agree on all 256 patterns ('V').
+//    - The two I/O paths cost the same in real use: 192 vs 187 ns/vector
+//      measured with the read consumed, 285 vs 290 in a hammer run. Earlier
+//      figures showing banked far ahead came from a microbenchmark that
+//      discarded the read, letting the compiler delete banked's arithmetic.
+//    - Settle requirement is non-zero but below software resolution here -
+//      see SETTLE below.
+//  Still open: there is no clock and no register in this loopback, so the
+//  original phantom-capture failure is neither reproduced nor excluded. That
+//  needs a '574 on the 5V bus clocked from a ninth line, running the chase.
+//
 //  NOTE ON STYLE: no enums or other sketch-level types appear in any function
 //  signature. The Arduino build inserts generated prototypes above the point
 //  where a sketch-level type is declared, so such a signature fails with
@@ -27,22 +45,41 @@
 //
 //  --------------------------------------------------------- THE TWO PATHS --
 //  'F' switches between the header's unrolled accessors and its banked I/O.
-//  Measured here, 200,000 vectors each: unrolled 158 ns/vector, banked 226.
-//  The unrolled path is faster and is the default. The banked path is kept
-//  because it slews every bit in a GPIO bank on one store instead of eight
-//  staggered stores ~70 ns apart - a harsher, more realistic aggressor. Both
-//  have run 17,000,000 hammer vectors clean on this board. See the banked
-//  I/O commentary in AdapterPorts.h for why banked is not an optimisation.
+//  They cost the same; banked exists for simultaneity, not speed - see the
+//  banked I/O commentary in AdapterPorts.h. Default is unrolled.
+//
+//  'S' overrides that and forces the banked path for the duration of the
+//  sweep, restoring the previous choice afterwards. A sweep on the unrolled
+//  path measures nothing: its eight staggered stores already delay the
+//  sample past what is being resolved, so every row reads zero.
 //
 //  --------------------------------------------------------------- SETTLE ---
-//  settleNs must not be zero. At zero the readback samples mid-transition and
-//  the slower channels return the PREVIOUS vector's value on that line - seen
-//  as walking-1 0x08 reading back 0x0C after 0x04. Note that a very small
-//  value is dominated by delayNanoseconds' own overhead (cycle counter read
-//  plus compare loop, tens of ns), so a nominal "2" is really that overhead
-//  rather than 2 ns. Run 'S' to find the real figure for this wiring and set
-//  settleNs to several times it, rather than relying on call overhead that a
-//  core or compiler change could shrink away.
+//  settleNs = 50, from measurement rather than guesswork.
+//
+//  What the banked sweep established: a banked write followed immediately by
+//  a banked read fails every trial, while the same pair separated by
+//  delayNanoseconds(0) is clean. That call costs tens of ns in overhead
+//  (cycle counter read plus compare loop) before it delays anything, so the
+//  requirement lies inside that gap - non-zero, but below what this rig can
+//  resolve. Consistent with the datasheet sum of ~15 ns (HCT245 ~9-13 ns at
+//  5V, LVC245 ~3.5-5 ns, plus wiring).
+//
+//  An earlier sweep appeared to show a sharp cliff at 10 ns. That was an
+//  artifact: the delay call was skipped entirely at zero, so row 0 omitted
+//  the overhead every other row paid, and the overhead appearing looked like
+//  propagation. The sweep now calls delayNanoseconds at every row.
+//
+//  Commanded ns therefore UNDERSTATES elapsed time. settleNs = 50 commanded
+//  lands near 70-90 ns elapsed, roughly 2-4x the requirement. Empirically
+//  2,000,000 hammer vectors run clean at it.
+//  Raise it to 100 if more headroom is wanted; the cost is ~15% of vector
+//  time.
+//
+//  Do not set it to zero. At zero the readback samples mid-transition and
+//  slower channels return the PREVIOUS vector on that line - walking-1 0x08
+//  read back as 0x0C after 0x04. A nominal "2" appeared to work only because
+//  the call overhead was doing the work; a core or compiler change could
+//  shrink that away silently.
 //
 //  ------------------------------------------------------------ BREADBOARD --
 //  Pin numbers come from AdapterPorts.h and are printed at boot - check them
@@ -84,7 +121,7 @@
 //  E  exhaustive 0x00..0xFF (256 vectors)     complete for 8 bits
 //  H  hammer 0x00<->0xFF, 2,000,000 vectors   all 8 lines slew together
 //  L  long soak, same aggressor, until 'X'
-//  S  settle sweep - find the real settle requirement
+//  S  settle sweep (forces banked for the run)
 //  M  measure throughput, both I/O paths
 //  V  verify banked path == unrolled accessors (256 patterns)
 //  C  chaser, verified, slow enough to watch
@@ -107,7 +144,7 @@ static const uint8_t modeChaser     = 6;
 static const uint8_t modePark       = 7;
 
 static const long          serialBaud     = 115200L;  // ignored on Teensy USB CDC
-static const uint16_t      settleNs       = 2;        // MUST be non-zero - see SETTLE note
+static const uint16_t      settleNs       = 50;       // measured - see SETTLE note
 static const unsigned long chaserStepMs   = 100;
 static const uint16_t      vectorsPerPass = 2000;     // chunk - keeps loop() responsive
 static const uint8_t       maxErrorPrints = 12;
@@ -118,8 +155,10 @@ static const unsigned long alivePollMs    = 750;
 static const uint32_t      measureVectors = 200000UL;
 static const uint16_t      measurePerPass = 20000;
 
-static const uint16_t sweepStepNs = 10;
-static const uint16_t sweepMaxNs  = 400;
+// Sweep resolution: the cliff sits at the bottom, so step finely and stop
+// early - everything above 200 ns has always been clean.
+static const uint16_t sweepStepNs = 5;
+static const uint16_t sweepMaxNs  = 200;
 static const uint16_t sweepTrials = 500;   // 0x00/0xFF pairs per delay point
 
 static const uint8_t parkPatterns[]   = { 0x00, 0xFF, 0x55, 0xAA, 0x0F, 0xF0 };
@@ -148,14 +187,18 @@ static char          runLabel        = '-';
 static uint16_t      sweepNs         = 0;
 static bool          sweepCleanSeen  = false;
 static uint16_t      sweepFirstClean = 0;
+static bool          sweepFailSeen   = false;
+static uint16_t      sweepLastFail   = 0;
+static bool          sweepSavedPath  = false;
 
 static uint8_t       measurePhase    = 0;    // 0 = unrolled, 1 = banked
 static uint32_t      measureIndex    = 0;
 static uint32_t      measureStartUs  = 0;
 static uint32_t      measureSlowNs   = 0;
+static uint32_t      measureChecksum = 0;
 
-// Default: the unrolled accessors. Faster here; 'F' selects banked when the
-// harsher simultaneous slew is wanted.
+// Default: the unrolled accessors. 'F' selects banked when the harsher
+// simultaneous slew is wanted; 'S' forces banked for its own duration.
 static bool          useBankedIo     = false;
 static bool          pathWasAlive    = false;
 static unsigned long lastAlivePoll   = 0;
@@ -206,9 +249,9 @@ static void printSummary() {
 static void reportIoPath() {
   Serial.print(F("I/O path: "));
   if (useBankedIo) {
-    Serial.println(F("banked (simultaneous slew, slower)"));
+    Serial.println(F("banked (simultaneous slew)"));
   } else {
-    Serial.println(F("unrolled accessors (default, faster)"));
+    Serial.println(F("unrolled accessors (default)"));
   }
 }
 
@@ -226,6 +269,7 @@ static inline uint8_t portRead() {
   return useBankedIo ? bankedReadPort(banksC) : readPortC();
 }
 
+// Normal vector: no delay call at all when delayNs is zero.
 static bool applyVectorAt(uint8_t value, uint16_t delayNs) {
   portWrite(value);
   if (delayNs > 0) {
@@ -255,6 +299,24 @@ static bool applyVectorAt(uint8_t value, uint16_t delayNs) {
     }
   }
   return false;
+}
+
+// Sweep vector: ALWAYS calls delayNanoseconds, even at zero. Skipping the
+// call at zero made the first row structurally different from every other -
+// it omitted tens of ns of call overhead - which turned the overhead
+// appearing into a fake cliff between row 0 and row 1. Every row now pays
+// the same overhead, so differences between rows are the delay itself.
+static void applyVectorSweep(uint8_t value, uint16_t delayNs) {
+  portWrite(value);
+  delayNanoseconds(delayNs);
+  uint8_t got = portRead();
+
+  vectorsRun++;
+  uint8_t diff = (uint8_t)(got ^ value);
+  if (diff != 0) {
+    errorCount++;
+    stickyDiff |= diff;
+  }
 }
 
 static bool applyVector(uint8_t value) {
@@ -303,6 +365,9 @@ static void reportPath(bool alive, bool verbose) {
 // =========================================================== run control ===
 
 static void stopRun(bool announce) {
+  if (mode == modeSweep) {
+    useBankedIo = sweepSavedPath;   // sweep borrowed the banked path
+  }
   mode = modeIdle;
   portWrite(0);
   if (announce) {
@@ -336,41 +401,49 @@ static void startTest(uint8_t which, char label, uint32_t limit) {
 }
 
 static void startSweep() {
+  sweepSavedPath  = useBankedIo;
+  useBankedIo     = true;           // only the banked path can resolve this
+
   mode            = modeSweep;
   runLabel        = 'S';
   vectorsRun      = 0;
   errorCount      = 0;
   stickyDiff      = 0;
-  errorPrints     = maxErrorPrints;   // no per-vector spam during a sweep
+  errorPrints     = maxErrorPrints;
   sweepNs         = 0;
   sweepCleanSeen  = false;
   sweepFirstClean = 0;
+  sweepFailSeen   = false;
+  sweepLastFail   = 0;
   runStartUs      = micros();
 
   Serial.println(F("Settle sweep, 0x00<->0xFF - all eight lines slewing."));
-  Serial.println(F("Low rows should show errors. The first clean row is the"));
-  Serial.println(F("real settle requirement for this wiring - use several"));
-  Serial.println(F("times that as settleNs."));
+  Serial.println(F("Forcing the banked path: the unrolled accessors stagger"));
+  Serial.println(F("their stores enough to hide what is being measured."));
+  Serial.println(F("Commanded ns EXCLUDES delayNanoseconds' call overhead"));
+  Serial.println(F("(tens of ns), which every row pays equally."));
   Serial.println(F("  ns   errors"));
 }
 
 static void startMeasure() {
-  mode           = modeMeasure;
-  runLabel       = 'M';
-  measurePhase   = 0;
-  measureIndex   = 0;
-  measureSlowNs  = 0;
-  vectorsRun     = 0;
-  errorCount     = 0;
-  stickyDiff     = 0;
-  errorPrints    = maxErrorPrints;
-  runStartUs     = micros();
-  measureStartUs = runStartUs;
+  mode            = modeMeasure;
+  runLabel        = 'M';
+  measurePhase    = 0;
+  measureIndex    = 0;
+  measureSlowNs   = 0;
+  measureChecksum = 0;
+  vectorsRun      = 0;
+  errorCount      = 0;
+  stickyDiff      = 0;
+  errorPrints     = maxErrorPrints;
+  runStartUs      = micros();
+  measureStartUs  = runStartUs;
   Serial.print(F("Measuring "));
   Serial.print(measureVectors);
-  Serial.println(F(" vectors per path, no commanded settle..."));
-  Serial.println(F("(inner loop discards the read - compare the two figures"));
-  Serial.println(F(" against each other, not against a test run)"));
+  Serial.print(F(" vectors per path at settleNs = "));
+  Serial.println(settleNs);
+  Serial.println(F("(reads accumulate into a checksum, so neither path's work"));
+  Serial.println(F(" can be optimised away and both must read correctly)"));
 }
 
 static void verifyPaths() {
@@ -380,12 +453,12 @@ static void verifyPaths() {
 
     writePortA(pattern);
     delayNanoseconds(2000);
-    uint8_t unrUnr = readPortC();
+    uint8_t unrUnr  = readPortC();
     uint8_t unrBank = bankedReadPort(banksC);
 
     bankedWritePort(banksA, pattern);
     delayNanoseconds(2000);
-    uint8_t bankUnr = readPortC();
+    uint8_t bankUnr  = readPortC();
     uint8_t bankBank = bankedReadPort(banksC);
 
     if (unrUnr != pattern || unrBank != pattern ||
@@ -538,7 +611,9 @@ void loop() {
     return;
   }
 
-  // Throughput measurement: phase 0 unrolled, phase 1 banked.
+  // Throughput measurement: phase 0 unrolled, phase 1 banked. Runs at the
+  // real settleNs so both paths read correctly and the checksum means
+  // something; the read is folded in so neither path's work is elidable.
   if (mode == modeMeasure) {
     bool savedPath = useBankedIo;
     useBankedIo = (measurePhase != 0);
@@ -546,7 +621,8 @@ void loop() {
     uint16_t budget = measurePerPass;
     while (budget-- > 0 && measureIndex < measureVectors) {
       portWrite((measureIndex & 1u) ? 0xFF : 0x00);
-      (void)portRead();
+      delayNanoseconds(settleNs);
+      measureChecksum += portRead();
       measureIndex++;
     }
 
@@ -555,19 +631,29 @@ void loop() {
     if (measureIndex >= measureVectors) {
       uint32_t us = micros() - measureStartUs;
       uint32_t ns = nsPerVector(us, measureVectors);
+      uint32_t expected = (measureVectors / 2UL) * 255UL;
+
       if (measurePhase == 0) {
         Serial.print(F("  unrolled: "));
       } else {
         Serial.print(F("  banked  : "));
       }
       Serial.print(ns);
-      Serial.println(F(" ns/vector"));
+      Serial.print(F(" ns/vector   checksum "));
+      Serial.print(measureChecksum);
+      if (measureChecksum == expected) {
+        Serial.println(F(" ok"));
+      } else {
+        Serial.print(F(" WRONG, expected "));
+        Serial.println(expected);
+      }
 
       if (measurePhase == 0) {
-        measureSlowNs  = ns;
-        measurePhase   = 1;
-        measureIndex   = 0;
-        measureStartUs = micros();
+        measureSlowNs   = ns;
+        measurePhase    = 1;
+        measureIndex    = 0;
+        measureChecksum = 0;
+        measureStartUs  = micros();
       } else {
         if (ns > 0 && measureSlowNs > 0) {
           Serial.print(F("  unrolled is "));
@@ -583,8 +669,8 @@ void loop() {
   if (mode == modeSweep) {
     uint32_t before = errorCount;
     for (uint16_t i = 0; i < sweepTrials; i++) {
-      applyVectorAt(0xFF, sweepNs);
-      applyVectorAt(0x00, sweepNs);
+      applyVectorSweep(0xFF, sweepNs);
+      applyVectorSweep(0x00, sweepNs);
     }
     uint32_t hits = errorCount - before;
 
@@ -593,23 +679,35 @@ void loop() {
     Serial.print(F("   "));
     Serial.println(hits);
 
-    if (hits == 0 && !sweepCleanSeen) {
-      sweepCleanSeen  = true;
-      sweepFirstClean = sweepNs;
+    if (hits == 0) {
+      if (!sweepCleanSeen) {
+        sweepCleanSeen  = true;
+        sweepFirstClean = sweepNs;
+      }
+    } else {
+      sweepFailSeen   = true;
+      sweepLastFail   = sweepNs;
+      sweepCleanSeen  = false;    // a later failure invalidates an early clean
+      sweepFirstClean = 0;
     }
 
     sweepNs = (uint16_t)(sweepNs + sweepStepNs);
     if (sweepNs > sweepMaxNs) {
-      if (sweepCleanSeen && sweepFirstClean == 0) {
-        Serial.println(F("Clean even at 0 ns commanded - the call overhead of"));
-        Serial.println(F("delayNanoseconds alone is covering the pair. Margin is"));
-        Serial.println(F("unmeasured; do not read this as zero requirement."));
-      } else if (sweepCleanSeen) {
-        Serial.print(F("First clean settle: "));
-        Serial.print(sweepFirstClean);
-        Serial.println(F(" ns. Set settleNs to several times this."));
+      if (!sweepCleanSeen) {
+        Serial.println(F("Never came clean - fix wiring, /OE and DIR first."));
+      } else if (!sweepFailSeen) {
+        Serial.println(F("Clean at every row, including zero commanded delay."));
+        Serial.println(F("delayNanoseconds' call overhead alone already covers"));
+        Serial.println(F("the pair, so the requirement is below what this rig"));
+        Serial.println(F("can resolve. Keep settleNs explicit regardless."));
       } else {
-        Serial.println(F("Never came clean - fix wiring, /OE and DIR before timing."));
+        Serial.print(F("Cliff between "));
+        Serial.print(sweepLastFail);
+        Serial.print(F(" and "));
+        Serial.print(sweepFirstClean);
+        Serial.println(F(" ns commanded, plus the shared call overhead."));
+        Serial.println(F("True elapsed requirement is larger than the commanded"));
+        Serial.println(F("figure - budget settleNs against elapsed, not this."));
       }
       stopRun(false);
     }
