@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 760" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arrG" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#1a7a2e"/></marker>
+    <marker id="arrB" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#1c5bbf"/></marker>
+    <marker id="arrO" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#d97706"/></marker>
+    <marker id="arrY" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#b8860b"/></marker>
+    <marker id="arrC" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#0e8a8a"/></marker>
+    <marker id="arrOl" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#6b6b1f"/></marker>
+  </defs>
+
+  <text x="540" y="32" text-anchor="middle" font-size="21" font-weight="600" fill="#222">Rung 2 — Minimum Executing Machine (NOP / JMP / HLT)</text>
+  <text x="540" y="54" text-anchor="middle" font-size="13" fill="#666">Adds IR, WZ and the sequencer GAL to the Rung-1 fetch engine. One T-state = one M-cycle.</text>
+
+  <!-- Clock module -->
+  <rect x="30" y="100" width="190" height="215" rx="8" fill="#f4f1ea" stroke="#555" stroke-width="1.5"/>
+  <text x="125" y="125" text-anchor="middle" font-size="15" font-weight="600" fill="#333">Clock module</text>
+  <text x="125" y="143" text-anchor="middle" font-size="11" fill="#666">Blinky v3 — owns the T counter</text>
+  <text x="205" y="168" text-anchor="end" font-size="12" font-weight="600" fill="#d97706">CLK ▸</text>
+  <text x="205" y="192" text-anchor="end" font-size="12" font-weight="600" fill="#b8860b">/RST ▸</text>
+  <text x="205" y="216" text-anchor="end" font-size="12" font-weight="600" fill="#b8860b">T[1:0] ▸</text>
+  <text x="205" y="248" text-anchor="end" font-size="12" font-weight="600" fill="#b8860b">◂ /TRST</text>
+  <text x="205" y="272" text-anchor="end" font-size="12" font-weight="600" fill="#b8860b">◂ /HALTREQ</text>
+  <text x="125" y="298" text-anchor="middle" font-size="10" fill="#888">(open-drain from GAL — shared with panel button)</text>
+
+  <!-- PC -->
+  <rect x="320" y="100" width="140" height="100" rx="8" fill="#eef3fa" stroke="#555" stroke-width="1.5"/>
+  <text x="390" y="127" text-anchor="middle" font-size="15" font-weight="600" fill="#333">PC</text>
+  <text x="390" y="146" text-anchor="middle" font-size="12" fill="#555">2 × '273</text>
+  <text x="390" y="163" text-anchor="middle" font-size="11" fill="#777">clocks every edge</text>
+  <text x="390" y="179" text-anchor="middle" font-size="11" fill="#777">/MR = /RST</text>
+
+  <!-- 541 buffers -->
+  <rect x="530" y="100" width="130" height="100" rx="8" fill="#eef3fa" stroke="#555" stroke-width="1.5"/>
+  <text x="595" y="130" text-anchor="middle" font-size="15" font-weight="600" fill="#333">Addr buffers</text>
+  <text x="595" y="149" text-anchor="middle" font-size="12" fill="#555">2 × '541</text>
+  <text x="595" y="167" text-anchor="middle" font-size="11" fill="#b8860b">/PCOE ← GAL</text>
+
+  <!-- WZ -->
+  <rect x="850" y="330" width="180" height="130" rx="8" fill="#eef3fa" stroke="#555" stroke-width="1.5"/>
+  <text x="940" y="357" text-anchor="middle" font-size="15" font-weight="600" fill="#333">WZ</text>
+  <text x="940" y="376" text-anchor="middle" font-size="12" fill="#555">2 × '373</text>
+  <text x="940" y="394" text-anchor="middle" font-size="11" fill="#777">D in on D[7:0], LE_Z / LE_W select</text>
+  <text x="940" y="410" text-anchor="middle" font-size="11" fill="#777">Z → A[7:0], W → A[15:8]</text>
+  <text x="940" y="426" text-anchor="middle" font-size="11" fill="#b8860b">/WZOE ← GAL (three-state)</text>
+  <text x="940" y="444" text-anchor="middle" font-size="10" fill="#888">own '541s not needed</text>
+
+  <!-- CLK / RST wires to PC -->
+  <path d="M220,164 H320" stroke="#d97706" stroke-width="2" fill="none" marker-end="url(#arrO)"/>
+  <text x="250" y="158" font-size="11" fill="#d97706">CLK</text>
+  <path d="M220,188 H295 V180 H320" stroke="#b8860b" stroke-width="1.6" stroke-dasharray="5,3" fill="none" marker-end="url(#arrY)"/>
+
+  <!-- PC -> 541 (olive) -->
+  <path d="M460,150 H530" stroke="#6b6b1f" stroke-width="4" fill="none" marker-end="url(#arrOl)"/>
+  <text x="495" y="141" text-anchor="middle" font-size="11" fill="#6b6b1f">PC[15:0]</text>
+
+  <!-- Address bus -->
+  <path d="M290,270 H1050" stroke="#1a7a2e" stroke-width="5" fill="none"/>
+  <text x="1045" y="260" text-anchor="end" font-size="14" font-weight="600" fill="#1a7a2e">A[15:0]</text>
+  <path d="M595,200 V266" stroke="#1a7a2e" stroke-width="4" fill="none" marker-end="url(#arrG)"/>
+  <!-- WZ -> bus -->
+  <path d="M940,330 V274" stroke="#1a7a2e" stroke-width="4" fill="none" marker-end="url(#arrG)"/>
+
+  <!-- Incrementer -->
+  <rect x="320" y="330" width="150" height="120" rx="8" fill="#eef8f4" stroke="#555" stroke-width="1.5"/>
+  <text x="395" y="357" text-anchor="middle" font-size="15" font-weight="600" fill="#333">Incrementer</text>
+  <text x="395" y="376" text-anchor="middle" font-size="12" fill="#555">4 × '283</text>
+  <text x="395" y="394" text-anchor="middle" font-size="11" fill="#777">A ← address bus</text>
+  <text x="395" y="410" text-anchor="middle" font-size="11" fill="#b8860b">INC ← GAL · DEC = GND</text>
+  <text x="395" y="428" text-anchor="middle" font-size="11" fill="#777">pass mode ⇒ PC hold / PC ← WZ</text>
+
+  <path d="M395,270 V330" stroke="#1a7a2e" stroke-width="4" fill="none" marker-end="url(#arrG)"/>
+
+  <!-- incrementer -> PC D loop -->
+  <path d="M320,392 H268 V178 H320" stroke="#0e8a8a" stroke-width="3" fill="none" marker-end="url(#arrC)"/>
+  <text x="261" y="300" font-size="11" fill="#0e8a8a" transform="rotate(-90 261 300)">SUM[15:0] → PC.D</text>
+
+  <!-- ROM -->
+  <rect x="560" y="330" width="220" height="130" rx="8" fill="#faf0ee" stroke="#555" stroke-width="1.5"/>
+  <text x="670" y="357" text-anchor="middle" font-size="15" font-weight="600" fill="#333">ROM</text>
+  <text x="670" y="376" text-anchor="middle" font-size="12" fill="#555">Code &amp; IR module, single lane</text>
+  <text x="670" y="394" text-anchor="middle" font-size="11" fill="#777">U2 28C256 + U4 '373</text>
+  <text x="670" y="410" text-anchor="middle" font-size="11" fill="#777">LE on pullup, /OE = GND</text>
+  <text x="670" y="426" text-anchor="middle" font-size="11" fill="#777">sole D source at this rung</text>
+
+  <path d="M670,270 V330" stroke="#1a7a2e" stroke-width="4" fill="none" marker-end="url(#arrG)"/>
+  <text x="683" y="304" font-size="11" fill="#1a7a2e">A[14:0]</text>
+
+  <!-- Data bus -->
+  <path d="M300,540 H1050" stroke="#1c5bbf" stroke-width="5" fill="none"/>
+  <text x="1045" y="530" text-anchor="end" font-size="14" font-weight="600" fill="#1c5bbf">D[7:0]</text>
+  <path d="M670,460 V536" stroke="#1c5bbf" stroke-width="4" fill="none" marker-end="url(#arrB)"/>
+  <!-- D -> WZ -->
+  <path d="M940,540 V464" stroke="#1c5bbf" stroke-width="4" fill="none" marker-end="url(#arrB)"/>
+  <text x="953" y="505" font-size="11" fill="#1c5bbf">D → Z / W</text>
+
+  <!-- IR -->
+  <rect x="430" y="590" width="150" height="100" rx="8" fill="#eef3fa" stroke="#555" stroke-width="1.5"/>
+  <text x="505" y="617" text-anchor="middle" font-size="15" font-weight="600" fill="#333">IR</text>
+  <text x="505" y="636" text-anchor="middle" font-size="12" fill="#555">'377 · CP = CLK</text>
+  <text x="505" y="654" text-anchor="middle" font-size="11" fill="#b8860b">/E = /IRCE ← GAL</text>
+  <text x="505" y="671" text-anchor="middle" font-size="11" fill="#777">loads at edge ending state 0</text>
+  <path d="M505,540 V590" stroke="#1c5bbf" stroke-width="4" fill="none" marker-end="url(#arrB)"/>
+
+  <!-- GAL -->
+  <rect x="60" y="560" width="240" height="170" rx="8" fill="#fdf6e3" stroke="#555" stroke-width="1.5"/>
+  <text x="180" y="587" text-anchor="middle" font-size="15" font-weight="600" fill="#333">Sequencer / decoder</text>
+  <text x="180" y="606" text-anchor="middle" font-size="12" fill="#555">GAL22V10, combinational</text>
+  <text x="180" y="626" text-anchor="middle" font-size="11" fill="#777">in: IR[7:0], T[1:0], CLK</text>
+  <text x="180" y="644" text-anchor="middle" font-size="11" fill="#777">out: /PCOE /WZOE /IRCE /TRST</text>
+  <text x="180" y="660" text-anchor="middle" font-size="11" fill="#777">INC, LE_Z, LE_W, /HALTREQ (o.d.)</text>
+  <text x="180" y="682" text-anchor="middle" font-size="10" fill="#888">/PCOE and /WZOE complementary —</text>
+  <text x="180" y="696" text-anchor="middle" font-size="10" fill="#888">bus contention structurally impossible</text>
+
+  <!-- IR -> GAL -->
+  <path d="M430,640 H300" stroke="#0e8a8a" stroke-width="3" fill="none" marker-end="url(#arrC)"/>
+  <text x="365" y="632" text-anchor="middle" font-size="11" fill="#0e8a8a">IR[7:0]</text>
+
+  <!-- T + CLK from clock module down left edge to GAL -->
+  <path d="M55,212 H40 V600 H60" stroke="#b8860b" stroke-width="1.6" stroke-dasharray="5,3" fill="none" marker-end="url(#arrY)"/>
+  <text x="30" y="420" font-size="11" fill="#b8860b" transform="rotate(-90 30 420)">T[1:0], CLK</text>
+
+  <!-- GAL -> clock module (/TRST, /HALTREQ) -->
+  <path d="M110,560 V330 H92 V250 " stroke="#b8860b" stroke-width="1.6" stroke-dasharray="5,3" fill="none" marker-end="url(#arrY)"/>
+  <text x="122" y="420" font-size="11" fill="#b8860b" transform="rotate(-90 122 420)">/TRST · /HALTREQ</text>
+
+  <!-- GAL control fan-out (single labelled trunk) -->
+  <path d="M300,700 H900 V595" stroke="#b8860b" stroke-width="1.6" stroke-dasharray="5,3" fill="none"/>
+  <path d="M595,700 V204" stroke="#b8860b" stroke-width="1.6" stroke-dasharray="5,3" fill="none" marker-end="url(#arrY)"/>
+  <path d="M395,700 V454" stroke="#b8860b" stroke-width="1.6" stroke-dasharray="5,3" fill="none" marker-end="url(#arrY)"/>
+  <path d="M900,595 V464" stroke="#b8860b" stroke-width="1.6" stroke-dasharray="5,3" fill="none" marker-end="url(#arrY)"/>
+  <text x="700" y="694" font-size="11" fill="#b8860b">control: /PCOE · INC · LE_Z · LE_W · /WZOE</text>
+
+  <!-- Legend -->
+  <g font-size="11" fill="#444">
+    <rect x="330" y="80" width="10" height="0" fill="none"/>
+    <rect x="700" y="90" width="330" height="86" rx="6" fill="#fbfbfb" stroke="#ccc"/>
+    <text x="715" y="110" font-weight="600" fill="#333">Wire legend (project convention)</text>
+    <path d="M715,124 h26" stroke="#1a7a2e" stroke-width="4"/><text x="748" y="128">Address</text>
+    <path d="M815,124 h26" stroke="#1c5bbf" stroke-width="4"/><text x="848" y="128">Data</text>
+    <path d="M905,124 h26" stroke="#6b6b1f" stroke-width="4"/><text x="938" y="128">PC pre-buffer</text>
+    <path d="M715,146 h26" stroke="#0e8a8a" stroke-width="3"/><text x="748" y="150">Register feed</text>
+    <path d="M815,146 h26" stroke="#d97706" stroke-width="2"/><text x="848" y="150">Clock</text>
+    <path d="M905,146 h26" stroke="#b8860b" stroke-width="1.6" stroke-dasharray="5,3"/><text x="938" y="150">Control</text>
+    <text x="715" y="168" fill="#888" font-size="10">NOP = 2 cycles · JMP = 4 · HLT = 2 then frozen</text>
+  </g>
+</svg>
