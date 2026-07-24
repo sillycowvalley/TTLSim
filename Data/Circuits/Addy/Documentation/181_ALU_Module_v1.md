@@ -303,7 +303,7 @@ one name across the boundary; TTL014 does not apply.
 | CFLG | active-high | the host's latched C flag — U20's carry-in source for ADC/SBC-class codes |
 | /LEA, /LEB | per U5/U6 fit | latch enable ('573) or clock ('574). Strap for transparent |
 | /FOE, /SOE | active-low | drive FB / FB>>1 onto D |
-| SRIN | level | bit injected at result bit 7 of the shifted path (LK_SRIN: GND = LSR, FB7 = ASR, ext = ROR) |
+| SRIN | level | bit injected at result bit 7 of the shifted path. Host-strapped at H11: GND = LSR, loop FB7 (H8) back = ASR, drive the C flag = ROR. No on-board link |
 | /ZCASC | active-low | zero-detect cascade in from the lower-order board |
 | /CN8, CNX | pin-level (active-low) | raw carry seam: low board's /CN8 → high board's CNX. LK_CN selects CNX in place of U20's Cn on the high board |
 | /AUXOE | active-low | aux GAL owns the B port. One driver per net — host's discipline |
@@ -364,7 +364,7 @@ Then: **SIGN, V, COUT** are read from the high board; **HCOUT** from the low
 board (the bit-3 boundary); **ZERO** from the high board (the cascade has
 done the AND); **SRIN/SOUT** chain through for 16-bit shifts (low SOUT is
 the word's shift-out; high board's SRIN is the injected bit; low board's
-SRIN takes high FB0 — LK_SRIN ext position).
+SRIN takes high FB0, strapped at the H11 pins).
 
 Each board's '182 gives lookahead within the board; the seam adds one
 serial carry hop. For a pair chasing clock rate, both boards' group /G and
@@ -514,7 +514,7 @@ FC[3:0], and CFLG; LEDs on F and H12.
    on the switches: F = A, COUT = 0. Proves the pulldown-zero and the MOV
    path. JEDECs without a B-kill code can't exercise this stage — it's
    burn-dependent, and that's fine.
-7. **SHR driver.** F=81, SRIN=0 → D reads 40, SOUT=1. LK_SRIN to FB7 → C0.
+7. **SHR driver.** F=81, SRIN=0 → D reads 40, SOUT=1. Strap SRIN to FB7 → C0.
 8. **V.** `7F + 01` → V=1, SIGN=1. `FF + 01` → V=0. `80 − 01` on a
    subtract code → V=1.
 9. **Flag latch.** Clock a condition in, change the inputs, confirm hold.

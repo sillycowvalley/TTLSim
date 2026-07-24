@@ -22,12 +22,22 @@
 /// Deliberately absent, and why:
 /// </para>
 /// <list type="bullet">
-///   <item>Tri-state: '125 '126 '173 '244 '245 '257 '299 '373 '374 '541 '573
-///         '574 '590 '595
+///   <item>Tri-state: '125 '126 '173 '189 '244 '245 '257 '299 '373 '374 '541
+///         '573 '574 '590 '595
 ///         '670, all GALs, all EEPROM/SRAM parts. Sharing a net is the whole
-///         point of them.</item>
+///         point of them. ('189 is a 74-number among 74-numbers but it is a
+///         RAM -- 16x4, tri-state, complementary outputs -- so it is listed
+///         here explicitly rather than left to the EEPROM/SRAM catch-all.)</item>
 ///   <item>Open-drain / open-collector: '47 (segment drivers), DS1813 (/RST),
 ///         NE555 / NE556 (DISCHARGE). Wired-AND on these is legitimate.</item>
+///   <item>Passive pull-up: '48. Pin-identical to the '47 and active-HIGH
+///         rather than open-collector, which makes it look like a totem-pole
+///         part -- but its segment drivers pull up through internal resistors,
+///         not a push-pull stage. It is NOT a candidate for this list; the
+///         apparent gap next to the '47 is deliberate.</item>
+///   <item>Teensy 4.1. Its pins are configured in software, so the output
+///         stage of any given pin is unknowable from the schematic --
+///         precisely the "capability unknown" case this table stays out of.</item>
 ///   <item>Passives, headers, displays. They own no output pins, so they never
 ///         reach this check anyway.</item>
 /// </list>
