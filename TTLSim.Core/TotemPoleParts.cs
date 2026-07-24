@@ -30,6 +30,15 @@
 ///         here explicitly rather than left to the EEPROM/SRAM catch-all.)</item>
 ///   <item>Open-drain / open-collector: '47 (segment drivers), DS1813 (/RST),
 ///         NE555 / NE556 (DISCHARGE). Wired-AND on these is legitimate.</item>
+///   <item>Mixed drive: '181. F0..F3, /P, /G and Cn+4 are ordinary totem-pole
+///         stages, but A=B (pin 14) is OPEN-COLLECTOR -- it exists precisely
+///         to be wire-ANDed across slices on one pull-up for a multi-nibble
+///         equality signal. This table is per-PART, not per-pin, so the one
+///         OC pin disqualifies the whole part: listing it would raise TTL005
+///         on that legal A=B tie. Cost of the exclusion: a genuine F-to-F
+///         short between two '181s downgrades from a build error to the
+///         runtime detector (Net.DetectFault) -- the same trade every
+///         tri-state part above already makes.</item>
 ///   <item>Passive pull-up: '48. Pin-identical to the '47 and active-HIGH
 ///         rather than open-collector, which makes it look like a totem-pole
 ///         part -- but its segment drivers pull up through internal resistors,
@@ -87,8 +96,9 @@ public static class TotemPoleParts
         // its near-twin '257 does not -- the '257 is the tri-state part.
         "151", "153", "157",
 
-        // Arithmetic.
-        "181", "182", "283", "688",
+        // Arithmetic. (The '181 is deliberately absent -- see the
+        // mixed-drive bullet above: its A=B pin is open-collector.)
+        "182", "283", "688",
 
         // Parity. Both PE and PO are plain push-pull outputs -- the '280
         // has no enable and no high-Z state, so two of them on one net is

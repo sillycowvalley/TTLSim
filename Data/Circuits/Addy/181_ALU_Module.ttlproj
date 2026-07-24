@@ -36,7 +36,7 @@
         "partIdentifier": "GAL16V8",
         "family": null,
         "value": null,
-        "program": null,
+        "program": "\u0002\r\nUsed Program:   BlinkyJED\r\nName:           ALU_ADDY\r\nDevice:         GAL16V8\r\nPins:           2:FC0 3:FC1 4:FC2 5:FC3 6:CFLG 7:A7 12:BKILL 13:SUB 14:!CN\r\nPins:           15:M 16:S0 17:S1 18:S2 19:S3\r\n\r\n*QP20 \r\n*QF2194 \r\n*G0 \r\n*F0 \r\n*L00000 11111111111101111111111111111111\r\n*L00032 10111111111111111111111111111111\r\n*L00064 11111011011111111111111111111111\r\n*L00256 11111111111101111111111111111111\r\n*L00288 01111111101111111111111111111111\r\n*L00320 11110111011111111111111111111111\r\n*L00512 11111111111101111111111111111111\r\n*L00544 01111111111111111111111111111111\r\n*L00576 11110111011111111111111111111111\r\n*L00768 11111111111101111111111111111111\r\n*L00800 10111111101111111111111111111111\r\n*L00832 11111011011111111111111111111111\r\n*L01024 11110111011110111111111111111111\r\n*L01056 01111111011110111111111111111111\r\n*L01088 11111111111101111111111111111111\r\n*L01280 01111011101110111111111111111111\r\n*L01312 11110111101110110111111111111111\r\n*L01536 01111111101110111111111111111111\r\n*L01792 10111011011110111111111111111111\r\n*L02048 11111011111111111111111111111111\r\n*L02080 11111111111111111111111111111111\r\n*L02112 11111111000000001111111111111111\r\n*L02144 11111111111111111111111111111111\r\n*L02176 111111111111111110\r\n*C5A97\r\n*\u0003EBBC\n",
         "propagationDelayNs": null,
         "function1": null,
         "function2": null,
@@ -794,10 +794,10 @@
         "deviceId": "dev-u20",
         "unitLetter": "",
         "position": {
-          "x": 52,
+          "x": 53,
           "y": 88
         },
-        "label": "",
+        "label": "ALU ADDY",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1594,7 +1594,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -1619,7 +1621,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -1644,7 +1648,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -1669,7 +1675,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -1694,7 +1702,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -1719,7 +1729,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -1744,7 +1756,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -1769,7 +1783,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -1794,7 +1810,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -1819,7 +1837,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -1844,7 +1864,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -1869,7 +1891,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -1894,7 +1918,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -1919,7 +1945,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -1944,7 +1972,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -1969,7 +1999,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -1994,7 +2026,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -2019,7 +2053,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -2044,7 +2080,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -2069,7 +2107,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -2094,7 +2134,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -2119,7 +2161,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -2144,7 +2188,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -2169,7 +2215,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -2194,7 +2242,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -2219,7 +2269,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -2244,7 +2296,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -2269,7 +2323,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -2294,7 +2350,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -2319,7 +2377,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -2344,7 +2404,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -2369,7 +2431,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -2394,7 +2458,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -2419,7 +2485,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -2444,7 +2512,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -2469,7 +2539,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -2494,7 +2566,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -2519,12 +2593,14 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "text",
         "id": "txt-title",
-        "label": "'181 ALU MODULE v1 - Blinky family byte slice - solo Addy configuration",
+        "label": "\u0027181 ALU MODULE v1 - Blinky family byte slice - solo Addy configuration",
         "position": {
           "x": -60,
           "y": -46
@@ -2544,7 +2620,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": 6,
-        "textColor": "Black"
+        "textColor": "Black",
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "text",
@@ -2569,7 +2647,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": 3,
-        "textColor": "Grey"
+        "textColor": "Grey",
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "text",
@@ -2594,7 +2674,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": 3,
-        "textColor": "Grey"
+        "textColor": "Grey",
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "text",
@@ -2619,7 +2701,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": 3,
-        "textColor": "Grey"
+        "textColor": "Grey",
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "text",
@@ -2644,12 +2728,14 @@
         "mirrored": null,
         "color": null,
         "fontSize": 3,
-        "textColor": "Grey"
+        "textColor": "Grey",
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "text",
         "id": "txt-col-156",
-        "label": "FENCE + CARRY",
+        "label": "FENCE \u002B CARRY",
         "position": {
           "x": 156,
           "y": -22
@@ -2669,7 +2755,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": 3,
-        "textColor": "Grey"
+        "textColor": "Grey",
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "text",
@@ -2694,7 +2782,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": 3,
-        "textColor": "Grey"
+        "textColor": "Grey",
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "text",
@@ -2719,12 +2809,14 @@
         "mirrored": null,
         "color": null,
         "fontSize": 3,
-        "textColor": "Grey"
+        "textColor": "Grey",
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "text",
         "id": "txt-col-312",
-        "label": "FLAGS + AUX (opt)",
+        "label": "FLAGS \u002B AUX (opt)",
         "position": {
           "x": 312,
           "y": -22
@@ -2744,7 +2836,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": 3,
-        "textColor": "Grey"
+        "textColor": "Grey",
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -2769,7 +2863,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -2794,7 +2890,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -2819,7 +2917,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -2844,7 +2944,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -2869,7 +2971,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -2894,7 +2998,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -2919,7 +3025,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -2944,7 +3052,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -2969,7 +3079,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -2994,7 +3106,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3019,7 +3133,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3044,7 +3160,9 @@
         "mirrored": true,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3069,7 +3187,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3094,7 +3214,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3119,7 +3241,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3144,7 +3268,9 @@
         "mirrored": true,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3169,7 +3295,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3194,7 +3322,9 @@
         "mirrored": true,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3219,7 +3349,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3244,7 +3376,9 @@
         "mirrored": true,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3269,7 +3403,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3294,7 +3430,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3319,7 +3457,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3344,7 +3484,9 @@
         "mirrored": true,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3369,7 +3511,9 @@
         "mirrored": true,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3394,7 +3538,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3419,7 +3565,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3444,7 +3592,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3469,7 +3619,9 @@
         "mirrored": true,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3494,7 +3646,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3519,7 +3673,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3544,7 +3700,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3569,7 +3727,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3594,7 +3754,9 @@
         "mirrored": false,
         "color": "Cyan",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3619,7 +3781,9 @@
         "mirrored": false,
         "color": "Green",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3644,7 +3808,9 @@
         "mirrored": true,
         "color": "Green",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3669,7 +3835,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3694,7 +3862,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3719,7 +3889,9 @@
         "mirrored": false,
         "color": "Grey",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3744,7 +3916,9 @@
         "mirrored": false,
         "color": "Grey",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3769,7 +3943,9 @@
         "mirrored": false,
         "color": "Grey",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3794,7 +3970,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3819,7 +3997,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3844,7 +4024,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3869,7 +4051,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3894,7 +4078,9 @@
         "mirrored": false,
         "color": "Orange",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3919,7 +4105,9 @@
         "mirrored": false,
         "color": "Orange",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3944,7 +4132,9 @@
         "mirrored": false,
         "color": "Orange",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3969,7 +4159,9 @@
         "mirrored": false,
         "color": "Orange",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -3994,7 +4186,9 @@
         "mirrored": false,
         "color": "Grey",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4019,7 +4213,9 @@
         "mirrored": false,
         "color": "Grey",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4044,7 +4240,9 @@
         "mirrored": false,
         "color": "Grey",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4069,7 +4267,9 @@
         "mirrored": false,
         "color": "Grey",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4094,7 +4294,9 @@
         "mirrored": false,
         "color": "Grey",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4119,7 +4321,9 @@
         "mirrored": false,
         "color": "Grey",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4144,7 +4348,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4169,7 +4375,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4194,7 +4402,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4219,7 +4429,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4244,7 +4456,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4269,7 +4483,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4294,7 +4510,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4319,7 +4537,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4344,7 +4564,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4369,7 +4591,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4394,7 +4618,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4419,7 +4645,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4444,7 +4672,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4469,7 +4699,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4494,7 +4726,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4519,7 +4753,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4544,7 +4780,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4569,7 +4807,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4594,7 +4834,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4619,7 +4861,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4644,7 +4888,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4669,7 +4915,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4694,7 +4942,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4719,7 +4969,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4744,7 +4996,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4769,7 +5023,9 @@
         "mirrored": false,
         "color": "Blue",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4794,7 +5050,9 @@
         "mirrored": false,
         "color": "Blue",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4819,7 +5077,9 @@
         "mirrored": true,
         "color": "Blue",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4844,7 +5104,9 @@
         "mirrored": false,
         "color": "Orange",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4869,7 +5131,9 @@
         "mirrored": false,
         "color": "Orange",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4894,7 +5158,9 @@
         "mirrored": false,
         "color": "Orange",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4919,7 +5185,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4944,7 +5212,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4969,7 +5239,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -4994,7 +5266,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5019,7 +5293,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5044,7 +5320,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5069,7 +5347,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5094,7 +5374,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5119,7 +5401,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5144,7 +5428,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5169,7 +5455,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5194,7 +5482,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5219,7 +5509,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -5244,7 +5536,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -5269,7 +5563,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -5294,7 +5590,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -5319,7 +5617,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -5344,7 +5644,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -5369,7 +5671,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5394,7 +5698,9 @@
         "mirrored": false,
         "color": "Grey",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5419,7 +5725,9 @@
         "mirrored": false,
         "color": "Grey",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5444,7 +5752,9 @@
         "mirrored": false,
         "color": "Grey",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5469,7 +5779,9 @@
         "mirrored": false,
         "color": "Grey",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5494,7 +5806,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5519,7 +5833,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5544,7 +5860,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5569,7 +5887,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5594,7 +5914,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "vcc",
@@ -5619,7 +5941,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "gnd",
@@ -5644,7 +5968,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5669,7 +5995,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5694,7 +6022,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5719,7 +6049,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "netlabel",
@@ -5744,7 +6076,9 @@
         "mirrored": false,
         "color": "Yellow",
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": null,
+        "pinMap": null
       },
       {
         "type": "testbench",
@@ -5756,9 +6090,7 @@
         },
         "rotation": 0,
         "layer": 6,
-        "frequencyHz": 1000000.0,
-        "program": "A0,A1,A2,A3,A4,A5,A6,A7,B0,B1,B2,B3,B4,B5,B6,B7,FC0,FC1,FC2,FC3,CFLG,LEA,LEB,/FOE,/SOE,SRIN\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,H,H,H,H,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,L\nH,H,H,H,H,H,H,H,H,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,H,H,H,H,H,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,H,L,L,H,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,H,L,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,H,L,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,H,L,L,L,H,H,H,H,L\nH,L,H,L,L,L,L,L,H,H,L,L,L,L,L,L,H,L,L,L,L,L,L,H,H,L\nH,L,H,L,L,L,L,L,H,H,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nH,L,H,L,L,L,L,L,H,H,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nL,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,H,L,L,L,L,L,L,H,H,L\nL,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nL,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nL,H,L,H,H,L,H,L,L,H,L,H,H,L,H,L,H,H,L,L,L,L,L,H,H,L\nL,H,L,H,H,L,H,L,L,H,L,H,H,L,H,L,H,H,L,L,L,H,H,H,H,L\nL,H,L,H,H,L,H,L,L,H,L,H,H,L,H,L,H,H,L,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,H,H,H,L,L,L,H,H,L,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,H,H,H,H,L,L,L,H,H,L,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,H,H,H,L,L,L,H,H,L,L,L,H,H,H,H,L\nH,L,H,L,L,H,L,H,H,H,H,H,H,H,H,H,L,L,H,L,L,L,L,H,H,L\nH,L,H,L,L,H,L,H,H,H,H,H,H,H,H,H,L,L,H,L,L,H,H,H,H,L\nH,L,H,L,L,H,L,H,H,H,H,H,H,H,H,H,L,L,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,L,H,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,L,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,L,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,L,H,H,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,L,H,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,L,H,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,H,H,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,H,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,H,H,L,L,H,H,H,H,L\nH,H,H,H,H,H,H,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,L\nH,H,H,H,H,H,H,L,H,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,H,H,H,L,H,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nL,L,L,L,L,L,L,H,H,L,L,L,L,L,L,L,H,L,L,L,L,L,L,H,H,L\nL,L,L,L,L,L,L,H,H,L,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nL,L,L,L,L,L,L,H,H,L,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nH,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,H,H,L\nH,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,H,H,L\nH,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,H,H,L\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,L,L\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,L,H\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,L,L\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,H,L,L,L,L,H,H,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,H,H,L\nH,H,L,L,L,L,H,H,L,L,L,L,L,L,L,L,L,L,L,H,L,H,H,H,H,L\nH,H,L,L,L,L,H,H,L,L,L,L,L,L,L,L,L,L,L,H,L,H,H,H,H,L\n",
-        "pinMap": "1=A0,2=A1,3=A2,4=A3,5=A4,6=A5,7=A6,8=A7,9=B0,10=B1,11=B2,12=B3,13=B4,14=B5,15=B6,16=B7,17=FC0,18=FC1,19=FC2,20=FC3,21=CFLG,22=LEA,23=LEB,24=/FOE,25=/SOE,26=SRIN",
+        "frequencyHz": 1,
         "dutyCycle": null,
         "startHigh": null,
         "designator": null,
@@ -5771,7 +6103,9 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null
+        "textColor": null,
+        "program": "A0,A1,A2,A3,A4,A5,A6,A7,B0,B1,B2,B3,B4,B5,B6,B7,FC0,FC1,FC2,FC3,CFLG,LEA,LEB,/FOE,/SOE,SRIN\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,H,H,H,H,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,L\nH,H,H,H,H,H,H,H,H,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,H,H,H,H,H,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,H,L,L,H,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,H,L,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,H,L,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,H,L,L,L,H,H,H,H,L\nH,L,H,L,L,L,L,L,H,H,L,L,L,L,L,L,H,L,L,L,L,L,L,H,H,L\nH,L,H,L,L,L,L,L,H,H,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nH,L,H,L,L,L,L,L,H,H,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nL,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,H,L,L,L,L,L,L,H,H,L\nL,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nL,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nL,H,L,H,H,L,H,L,L,H,L,H,H,L,H,L,H,H,L,L,L,L,L,H,H,L\nL,H,L,H,H,L,H,L,L,H,L,H,H,L,H,L,H,H,L,L,L,H,H,H,H,L\nL,H,L,H,H,L,H,L,L,H,L,H,H,L,H,L,H,H,L,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,H,H,H,L,L,L,H,H,L,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,H,H,H,H,L,L,L,H,H,L,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,H,H,H,L,L,L,H,H,L,L,L,H,H,H,H,L\nH,L,H,L,L,H,L,H,H,H,H,H,H,H,H,H,L,L,H,L,L,L,L,H,H,L\nH,L,H,L,L,H,L,H,H,H,H,H,H,H,H,H,L,L,H,L,L,H,H,H,H,L\nH,L,H,L,L,H,L,H,H,H,H,H,H,H,H,H,L,L,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,L,H,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,L,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,L,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,L,H,H,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,L,H,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,L,H,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,H,H,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,H,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,H,H,L,L,H,H,H,H,L\nH,H,H,H,H,H,H,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,L\nH,H,H,H,H,H,H,L,H,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,H,H,H,L,H,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nL,L,L,L,L,L,L,H,H,L,L,L,L,L,L,L,H,L,L,L,L,L,L,H,H,L\nL,L,L,L,L,L,L,H,H,L,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nL,L,L,L,L,L,L,H,H,L,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nH,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,H,H,L\nH,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,H,H,L\nH,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,H,H,L\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,L,L\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,L,H\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,L,L\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,H,L,L,L,L,H,H,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,H,H,L\nH,H,L,L,L,L,H,H,L,L,L,L,L,L,L,L,L,L,L,H,L,H,H,H,H,L\nH,H,L,L,L,L,H,H,L,L,L,L,L,L,L,L,L,L,L,H,L,H,H,H,H,L\n",
+        "pinMap": "1=A0,2=A1,3=A2,4=A3,5=A4,6=A5,7=A6,8=A7,9=B0,10=B1,11=B2,12=B3,13=B4,14=B5,15=B6,16=B7,17=FC0,18=FC1,19=FC2,20=FC3,21=CFLG,22=LEA,23=LEB,24=/FOE,25=/SOE,26=SRIN"
       }
     ],
     "connections": [
@@ -12124,10 +12458,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 0.77257925,
+    "zoom": 1.5539325,
     "pan": {
-      "x": 292,
-      "y": 250
+      "x": -6,
+      "y": -146
     }
   }
 }

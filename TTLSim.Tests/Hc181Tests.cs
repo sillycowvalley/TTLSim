@@ -6,16 +6,27 @@ using Xunit;
 namespace TTLSim.Tests;
 
 /// <summary>
-/// Tests for the 74181 ALU model. The chip is purely combinational, so the
-/// test rig has no clock: each test builds a sim with every input wired to
-/// either VccDriver or GndDriver, runs it to quiescence, and reads the
-/// resulting output nets.
+/// Tests for the 74181 ALU model, ACTIVE-HIGH data convention (CR "181
+/// Model Implements the Active-LOW Column", 2026-07-24). The chip is purely
+/// combinational, so the test rig has no clock: each test builds a sim with
+/// every input wired to either VccDriver or GndDriver, runs it to
+/// quiescence, and reads the resulting output nets.
 ///
-/// All test inputs are expressed in active-HIGH terms (the convention the
-/// user thinks in) -- the rig inverts at the pin level before driving, and
-/// inverts again when reading the /F outputs, so the assertions in each
-/// test read like "A=3, B=5, ADD, expect F=8" rather than reasoning about
-/// active-low encodings.
+/// The A/B/F pins carry TRUE data, so the rig drives and reads them
+/// directly -- no pin-level inversion anywhere. The carry pins are active
+/// LOW: Cn pin LOW = carry-in of 1, Cn+4 pin LOW = carry-out of 1.
+///
+/// Coverage per the CR's acceptance section:
+///   1. Full sweep of all 32 S/M rows, both Cn states, several operand
+///      patterns, against reference tables transcribed independently of
+///      the model (Expected* methods below).
+///   2. Wrong-column canary rows as named spot tests: 1011/1 -> A.B,
+///      1110/1 -> A+B, 0110/1 -> A xor B, 0000/0 -> A plus Cn,
+///      1111/0 -> A minus 1 plus Cn.
+///   3. Carry sense: F+1 with Cn pin HIGH vs LOW, and Cn+4 asserting LOW
+///      on overflow (the 4-bit unit analogue of the CR's 0F+01 / FF+01).
+///   4. A=B releases only when all four F pins are HIGH (F = 1111), the
+///      equality signature of SUB with no injected carry.
 /// </summary>
 public class Hc181Tests
 {
@@ -30,25 +41,22 @@ public class Hc181Tests
         public Net F0 = null!, F1 = null!, F2 = null!, F3 = null!;
         public Net AeqB = null!, X = null!, Y = null!, CnP4 = null!;
 
-        // The A=B pin is open-collector; its net needs a pull-up so that
-        // "released" reads as High rather than HighZ. The test rig models
-        // this with a VccDriver on the same net at Weak strength.
-        public Net AeqBPullup = null!;
-
         public Simulator Sim = null!;
 
         public int ReadF()
         {
-            // /F is active-low; convert to active-high integer.
-            int notF = 0;
-            if (F0.Value == Signal.High) notF |= 1;
-            if (F1.Value == Signal.High) notF |= 2;
-            if (F2.Value == Signal.High) notF |= 4;
-            if (F3.Value == Signal.High) notF |= 8;
-            return (~notF) & 0xF;
+            // F pins carry true data: HIGH pin = 1.
+            int f = 0;
+            if (F0.Value == Signal.High) f |= 1;
+            if (F1.Value == Signal.High) f |= 2;
+            if (F2.Value == Signal.High) f |= 4;
+            if (F3.Value == Signal.High) f |= 8;
+            return f;
         }
 
-        public bool ReadCarryOut() => CnP4.Value == Signal.High;
+        /// <summary>Logical carry-out. The Cn+4 pin is active LOW.</summary>
+        public bool ReadCarryOut() => CnP4.Value == Signal.Low;
+
         public bool ReadAEqualsB() => AeqB.Value == Signal.High;
         public bool ReadPropagate() => X.Value == Signal.Low;  // active-low
         public bool ReadGenerate() => Y.Value == Signal.Low;   // active-low
@@ -56,11 +64,10 @@ public class Hc181Tests
 
     /// <summary>
     /// Build a '181 with every signal pin driven from a static source.
-    /// Inputs are given as active-HIGH 4-bit ints for A and B; the rig
-    /// converts to /A and /B at the pin level. s is the raw 4-bit S code
-    /// (the same value that goes on S3..S0 as active-high). modeLogic=true
-    /// drives M high; carryIn=true drives Cn low (which means "carry asserted"
-    /// in the active-high-input convention).
+    /// a and b are true 4-bit operand values driven straight onto the pins.
+    /// s is the raw 4-bit S code on S3..S0 (active-high). modeLogic=true
+    /// drives M high; carryIn=true drives the Cn pin LOW (carry asserted --
+    /// the pin is active LOW).
     /// </summary>
     private static Rig Build(int a, int b, int s, bool modeLogic, bool carryIn)
     {
@@ -85,16 +92,16 @@ public class Hc181Tests
             cnP4: r.CnP4,
             b3: r.B3, a3: r.A3, b2: r.B2, a2: r.A2, b1: r.B1, a1: r.A1);
 
-        // Active-low operand pins: drive LOW when the bit is 1, HIGH when 0.
+        // Operand pins carry true data: drive HIGH when the bit is 1.
         List<IChip> chips = new() { alu };
-        DriveActiveLowBit(chips, r.A0, a, 0);
-        DriveActiveLowBit(chips, r.A1, a, 1);
-        DriveActiveLowBit(chips, r.A2, a, 2);
-        DriveActiveLowBit(chips, r.A3, a, 3);
-        DriveActiveLowBit(chips, r.B0, b, 0);
-        DriveActiveLowBit(chips, r.B1, b, 1);
-        DriveActiveLowBit(chips, r.B2, b, 2);
-        DriveActiveLowBit(chips, r.B3, b, 3);
+        DriveActiveHighBit(chips, r.A0, a, 0);
+        DriveActiveHighBit(chips, r.A1, a, 1);
+        DriveActiveHighBit(chips, r.A2, a, 2);
+        DriveActiveHighBit(chips, r.A3, a, 3);
+        DriveActiveHighBit(chips, r.B0, b, 0);
+        DriveActiveHighBit(chips, r.B1, b, 1);
+        DriveActiveHighBit(chips, r.B2, b, 2);
+        DriveActiveHighBit(chips, r.B3, b, 3);
 
         // S, M are active-high.
         DriveActiveHighBit(chips, r.S0, s, 0);
@@ -104,7 +111,7 @@ public class Hc181Tests
         if (modeLogic) chips.Add(new VccDriver(r.M));
         else chips.Add(new GndDriver(r.M));
 
-        // Cn pin: LOW asserts carry-in (active-high convention).
+        // Cn pin is active LOW: LOW asserts carry-in.
         if (carryIn) chips.Add(new GndDriver(r.Cn));
         else chips.Add(new VccDriver(r.Cn));
 
@@ -120,13 +127,6 @@ public class Hc181Tests
         r.Sim.Start();
         r.Sim.RunUntilQuiescent();
         return r;
-    }
-
-    private static void DriveActiveLowBit(List<IChip> chips, Net net, int value, int bit)
-    {
-        bool asserted = ((value >> bit) & 1) != 0;
-        // active-low: assert means drive LOW
-        chips.Add(asserted ? (IChip)new GndDriver(net) : new VccDriver(net));
     }
 
     private static void DriveActiveHighBit(List<IChip> chips, Net net, int value, int bit)
@@ -157,23 +157,201 @@ public class Hc181Tests
         public void OnInputChanged(int pinIndex, IScheduler scheduler) { }
     }
 
-    // ---------------------------------------------------- arithmetic mode
+    // -------------------------------------------- reference function tables
+    //
+    // Transcribed here independently of the model so the sweep is a real
+    // cross-check, not a tautology. Same source: TI SDLS136, ACTIVE-HIGH
+    // DATA column. If the model's table is ever "fixed" to the wrong
+    // column again, every logic row except 0011/0110's twin/1100/1111
+    // fails loudly here.
+
+    private static int ExpectedLogic(int s, int a, int b)
+    {
+        int notA = (~a) & 0xF;
+        int notB = (~b) & 0xF;
+        return s switch
+        {
+            0b0000 => notA,                       // /A
+            0b0001 => notA & notB,                // /(A+B)
+            0b0010 => notA & b,                   // /A . B
+            0b0011 => 0,                          // Logic 0
+            0b0100 => (~(a & b)) & 0xF,           // /(A.B)
+            0b0101 => notB,                       // /B
+            0b0110 => a ^ b,                      // A xor B
+            0b0111 => a & notB,                   // A . /B
+            0b1000 => (notA | b) & 0xF,           // /A + B
+            0b1001 => (~(a ^ b)) & 0xF,           // A xnor B
+            0b1010 => b,                          // B
+            0b1011 => a & b,                      // A . B
+            0b1100 => 0xF,                        // Logic 1
+            0b1101 => (a | notB) & 0xF,           // A + /B
+            0b1110 => (a | b) & 0xF,              // A + B
+            0b1111 => a,                          // A
+            _ => 0
+        };
+    }
+
+    /// <summary>Unbounded 5-bit result; bit 4 is the logical carry-out.</summary>
+    private static int ExpectedArithmetic(int s, int a, int b, int cin)
+    {
+        int notB = (~b) & 0xF;
+        int aOrB = (a | b) & 0xF;
+        int aOrNotB = (a | notB) & 0xF;
+        return s switch
+        {
+            0b0000 => a + cin,                              // A
+            0b0001 => aOrB + cin,                           // A + B
+            0b0010 => aOrNotB + cin,                        // A + /B
+            0b0011 => 0xF + cin,                            // minus 1
+            0b0100 => a + (a & notB) + cin,                 // A plus A./B
+            0b0101 => aOrB + (a & notB) + cin,              // (A+B) plus A./B
+            0b0110 => a + notB + cin,                       // A minus B minus 1
+            0b0111 => (a & notB) + 0xF + cin,               // A./B minus 1
+            0b1000 => a + (a & b) + cin,                    // A plus A.B
+            0b1001 => a + b + cin,                          // A plus B
+            0b1010 => aOrNotB + (a & b) + cin,              // (A+/B) plus A.B
+            0b1011 => (a & b) + 0xF + cin,                  // A.B minus 1
+            0b1100 => a + a + cin,                          // A plus A
+            0b1101 => aOrB + a + cin,                       // (A+B) plus A
+            0b1110 => aOrNotB + a + cin,                    // (A+/B) plus A
+            0b1111 => a + 0xF + cin,                        // A minus 1
+            _ => 0
+        };
+    }
+
+    // Operand pairs chosen to exercise every bit position, equal operands,
+    // complements, and asymmetric values (order-sensitivity in A./B rows).
+    private static readonly (int A, int B)[] OperandPairs =
+    {
+        (0x0, 0x0), (0xF, 0xF), (0xC, 0xA), (0xA, 0xC),
+        (0x3, 0x5), (0xF, 0x0), (0x0, 0xF), (0x9, 0x6),
+        (0x5, 0x5), (0xA, 0x5), (0x1, 0xE), (0x7, 0x8)
+    };
+
+    // ------------------------------------------------------------- sweeps
+
+    [Fact]
+    public void Logic_sweep_all_16_rows()
+    {
+        foreach ((int a, int b) in OperandPairs)
+            for (int s = 0; s < 16; s++)
+                foreach (bool carryIn in new[] { false, true })
+                {
+                    var r = Build(a, b, s, modeLogic: true, carryIn: carryIn);
+                    int expected = ExpectedLogic(s, a, b);
+                    Assert.True(expected == r.ReadF(),
+                        $"logic S={s:B4} A={a:X1} B={b:X1} Cn={(carryIn ? "L" : "H")}: " +
+                        $"got F={r.ReadF():X1}, expected {expected:X1}");
+                    // Cn must be ignored in logic mode, and the carry chain
+                    // is inhibited: Cn+4 sits deasserted (pin HIGH).
+                    Assert.False(r.ReadCarryOut());
+                    // A=B is a pin-level fact: released iff F pins all HIGH.
+                    Assert.True((expected == 0xF) == r.ReadAEqualsB(),
+                        $"logic S={s:B4} A={a:X1} B={b:X1}: A=B mismatch for F={expected:X1}");
+                }
+    }
+
+    [Fact]
+    public void Arithmetic_sweep_all_16_rows_both_carry_states()
+    {
+        foreach ((int a, int b) in OperandPairs)
+            for (int s = 0; s < 16; s++)
+                foreach (bool carryIn in new[] { false, true })
+                {
+                    var r = Build(a, b, s, modeLogic: false, carryIn: carryIn);
+                    int unbounded = ExpectedArithmetic(s, a, b, carryIn ? 1 : 0);
+                    int expectedF = unbounded & 0xF;
+                    bool expectedCarry = ((unbounded >> 4) & 1) != 0;
+                    Assert.True(expectedF == r.ReadF() && expectedCarry == r.ReadCarryOut(),
+                        $"arith S={s:B4} A={a:X1} B={b:X1} Cn={(carryIn ? "L(carry)" : "H")}: " +
+                        $"got F={r.ReadF():X1} Cout={r.ReadCarryOut()}, " +
+                        $"expected F={expectedF:X1} Cout={expectedCarry}");
+                    Assert.True((expectedF == 0xF) == r.ReadAEqualsB(),
+                        $"arith S={s:B4} A={a:X1} B={b:X1}: A=B mismatch for F={expectedF:X1}");
+                }
+    }
+
+    // ------------------------------------- wrong-column canaries (CR §Acceptance)
+
+    [Fact]
+    public void Canary_logic_1011_is_AND_not_OR()
+    {
+        var r = Build(a: 0xC, b: 0xA, s: 0b1011, modeLogic: true, carryIn: false);
+        Assert.Equal(0x8, r.ReadF());
+    }
+
+    [Fact]
+    public void Canary_logic_1110_is_OR_not_AND()
+    {
+        var r = Build(a: 0xC, b: 0xA, s: 0b1110, modeLogic: true, carryIn: false);
+        Assert.Equal(0xE, r.ReadF());
+    }
+
+    [Fact]
+    public void Canary_logic_0110_is_XOR_not_XNOR()
+    {
+        var r = Build(a: 0xC, b: 0xA, s: 0b0110, modeLogic: true, carryIn: false);
+        Assert.Equal(0x6, r.ReadF());
+    }
+
+    [Fact]
+    public void Canary_logic_0001_is_NOR_not_NAND()
+    {
+        // The row the old table mis-transcribed: /(A+B), not /A + /B.
+        var r = Build(a: 0xC, b: 0xA, s: 0b0001, modeLogic: true, carryIn: false);
+        Assert.Equal(0x1, r.ReadF());   // ~(C|A) = ~E = 1
+    }
+
+    [Fact]
+    public void Canary_arith_0000_is_A_plus_Cn_not_A_minus_1()
+    {
+        var r = Build(a: 0xA, b: 0x3, s: 0b0000, modeLogic: false, carryIn: true);
+        Assert.Equal(0xB, r.ReadF());
+    }
+
+    [Fact]
+    public void Canary_arith_1111_is_A_minus_1_plus_Cn_not_A()
+    {
+        var r = Build(a: 0xA, b: 0x3, s: 0b1111, modeLogic: false, carryIn: false);
+        Assert.Equal(0x9, r.ReadF());
+    }
+
+    [Fact]
+    public void Canary_MOV_add_with_B_killed_has_no_phantom_plus_one()
+    {
+        // ADD, B=0, Cn pin HIGH (no carry): F must be exactly A.
+        var r = Build(a: 0xA, b: 0x0, s: 0b1001, modeLogic: false, carryIn: false);
+        Assert.Equal(0xA, r.ReadF());
+    }
+
+    // ------------------------------------------------ carry sense (CR §Acceptance 2)
+
+    [Fact]
+    public void Add_F_plus_1_carry_pin_high_gives_zero_and_asserts_carry_out()
+    {
+        // 4-bit unit analogue of the CR's 0F+01: Cn pin HIGH = no carry in.
+        // F wraps to 0 and Cn+4 must go LOW (carry asserted).
+        var r = Build(a: 0xF, b: 0x1, s: 0b1001, modeLogic: false, carryIn: false);
+        Assert.Equal(0x0, r.ReadF());
+        Assert.True(r.ReadCarryOut());
+        Assert.Equal(Signal.Low, r.CnP4.Value);   // pin-level: active LOW
+    }
+
+    [Fact]
+    public void Add_F_plus_1_carry_pin_low_gives_one()
+    {
+        var r = Build(a: 0xF, b: 0x1, s: 0b1001, modeLogic: false, carryIn: true);
+        Assert.Equal(0x1, r.ReadF());
+        Assert.True(r.ReadCarryOut());
+    }
 
     [Fact]
     public void Add_three_plus_five_is_eight_no_carry_out()
     {
-        // S=1001 ADD; M=L; Cn=H (no carry in from active-high convention).
         var r = Build(a: 3, b: 5, s: 0b1001, modeLogic: false, carryIn: false);
         Assert.Equal(8, r.ReadF());
         Assert.False(r.ReadCarryOut());
-    }
-
-    [Fact]
-    public void Add_eight_plus_eight_overflows_with_carry_out()
-    {
-        var r = Build(a: 8, b: 8, s: 0b1001, modeLogic: false, carryIn: false);
-        Assert.Equal(0, r.ReadF());
-        Assert.True(r.ReadCarryOut());
+        Assert.Equal(Signal.High, r.CnP4.Value);  // deasserted = pin HIGH
     }
 
     [Fact]
@@ -188,8 +366,8 @@ public class Hc181Tests
     [Fact]
     public void Subtract_seven_minus_three_with_carry_in_is_four()
     {
-        // S=0110 is "A minus B minus 1" in active-high; Cn=L (carryIn=true)
-        // adds 1, producing A minus B. 7 - 3 = 4. Carry-out high == no borrow.
+        // S=0110 is "A minus B minus 1"; Cn asserted (pin LOW) adds 1,
+        // producing A minus B. 7 - 3 = 4. Carry-out asserted == no borrow.
         var r = Build(a: 7, b: 3, s: 0b0110, modeLogic: false, carryIn: true);
         Assert.Equal(4, r.ReadF());
         Assert.True(r.ReadCarryOut());
@@ -198,71 +376,56 @@ public class Hc181Tests
     [Fact]
     public void Subtract_three_minus_seven_underflows_with_no_carry_out()
     {
-        // 3 - 7 = -4 = 0xC in 4-bit two's complement.
-        // No borrow signalled means carry-out low.
+        // 3 - 7 = -4 = 0xC in 4-bit two's complement. Borrow = carry-out
+        // deasserted (Cn+4 pin HIGH).
         var r = Build(a: 3, b: 7, s: 0b0110, modeLogic: false, carryIn: true);
         Assert.Equal(0xC, r.ReadF());
         Assert.False(r.ReadCarryOut());
     }
 
+    // --------------------------------------------------------------- A=B
+
     [Fact]
-    public void Subtract_equal_operands_yields_zero_and_AeqB_high()
+    public void Sub_equal_operands_no_carry_in_gives_all_ones_and_releases_AeqB()
     {
-        // 5 - 5 = 0. A=B should release (and the rig's pull-up reads it High).
-        var r = Build(a: 5, b: 5, s: 0b0110, modeLogic: false, carryIn: true);
-        Assert.Equal(0, r.ReadF());
+        // Equality idiom: SUB with Cn pin HIGH. A minus A minus 1 = -1 =
+        // all ones -- every F pin HIGH, so the open-collector A=B releases
+        // and the pull-up reads it High. (CR integration row v7: F=FF,
+        // AEQB=1.)
+        var r = Build(a: 5, b: 5, s: 0b0110, modeLogic: false, carryIn: false);
+        Assert.Equal(0xF, r.ReadF());
         Assert.True(r.ReadAEqualsB());
     }
 
     [Fact]
-    public void Subtract_unequal_operands_pulls_AeqB_low()
+    public void Sub_unequal_operands_pull_AeqB_low()
     {
-        var r = Build(a: 5, b: 3, s: 0b0110, modeLogic: false, carryIn: true);
-        Assert.Equal(2, r.ReadF());
+        var r = Build(a: 5, b: 3, s: 0b0110, modeLogic: false, carryIn: false);
+        Assert.Equal(0x1, r.ReadF());   // 5 - 3 - 1
+        Assert.False(r.ReadAEqualsB());
+    }
+
+    [Fact]
+    public void Sub_equal_operands_with_carry_in_gives_zero_and_AeqB_stays_low()
+    {
+        // A=B is NOT a zero detect: with the injected carry the result is
+        // 0, the F pins are all LOW, and A=B stays driven LOW. Zero detect
+        // in the module is the '688's job.
+        var r = Build(a: 5, b: 5, s: 0b0110, modeLogic: false, carryIn: true);
+        Assert.Equal(0x0, r.ReadF());
         Assert.False(r.ReadAEqualsB());
     }
 
     // -------------------------------------------------------- logic mode
 
     [Fact]
-    public void Logic_AND_returns_bitwise_and()
-    {
-        // S=1011 in M=H column is "A . B" (logical AND).
-        var r = Build(a: 0b1100, b: 0b1010, s: 0b1011, modeLogic: true, carryIn: false);
-        Assert.Equal(0b1000, r.ReadF());
-    }
-
-    [Fact]
-    public void Logic_OR_returns_bitwise_or()
-    {
-        // S=1110 in M=H column is "A + B" (logical OR).
-        var r = Build(a: 0b1100, b: 0b1010, s: 0b1110, modeLogic: true, carryIn: false);
-        Assert.Equal(0b1110, r.ReadF());
-    }
-
-    [Fact]
-    public void Logic_XOR_returns_bitwise_xor()
-    {
-        // S=0110 in M=H column is "A xor B".
-        var r = Build(a: 0b1100, b: 0b1010, s: 0b0110, modeLogic: true, carryIn: false);
-        Assert.Equal(0b0110, r.ReadF());
-    }
-
-    [Fact]
-    public void Logic_NOT_A_returns_complement()
-    {
-        // S=0000 in M=H column is /A.
-        var r = Build(a: 0b1010, b: 0, s: 0b0000, modeLogic: true, carryIn: false);
-        Assert.Equal(0b0101, r.ReadF());
-    }
-
-    [Fact]
-    public void Logic_mode_inhibits_carry_out()
+    public void Logic_mode_holds_carry_out_deasserted()
     {
         // Even with inputs that would generate carry in arithmetic mode,
-        // M=H must hold Cn+4 high (carry chain disabled).
+        // M=H must leave Cn+4 deasserted -- pin HIGH (carry chain disabled).
         var r = Build(a: 0xF, b: 0xF, s: 0b1110, modeLogic: true, carryIn: false);
-        Assert.True(r.ReadCarryOut());
+        Assert.False(r.ReadCarryOut());
+        Assert.Equal(Signal.High, r.CnP4.Value);
     }
 
     // ------------------------------------------------- carry lookahead
@@ -270,55 +433,24 @@ public class Hc181Tests
     [Fact]
     public void Add_propagate_asserts_when_sum_is_fifteen_or_more()
     {
-        // 7 + 8 = 15. Per datasheet, P (X pin, active-low) asserts when the
-        // sum is 15 or more.
+        // 7 + 8 = 15: P asserts (X pin LOW), G does not.
         var r = Build(a: 7, b: 8, s: 0b1001, modeLogic: false, carryIn: false);
-        Assert.True(r.ReadPropagate());
-        Assert.False(r.ReadGenerate());  // G asserts at 16, not 15
-    }
-
-    [Fact]
-    public void Add_generate_asserts_when_sum_is_sixteen_or_more()
-    {
-        // 8 + 8 = 16. G asserts.
-        var r = Build(a: 8, b: 8, s: 0b1001, modeLogic: false, carryIn: false);
-        Assert.True(r.ReadPropagate());
-        Assert.True(r.ReadGenerate());
-    }
-
-    // SUB P/G convention, in this rig's ACTIVE-HIGH terms: P asserts when
-    // A >= B, G asserts when A > B. Derivation: SUB computes A + /B, and
-    // with /B = 15 - B, generate (carry-out regardless of Cn) means
-    // A + 15 - B >= 16, i.e. A > B; propagate means >= 15, i.e. A >= B.
-    // Equivalently: SUB carry-out asserted = no borrow = A >= B, and the
-    // cascade identity carry-out = G + P.carry-in only holds this way
-    // round (the Hc182Tests 16-bit SUB sweep proves it exhaustively).
-    //
-    // The "A <= B / A < B" phrasing seen in the '181 datasheet narrative
-    // and the Thumby carry notes is the ACTIVE-LOW-DATA description of the
-    // same pin behaviour; asserting it against this rig's active-high
-    // values inverts the polarity -- the exact trap that produced an
-    // earlier, wrong version of these two tests (caught because A=3,B=5
-    // is the one case in this file where the two conventions disagree;
-    // the A=B case below coincidentally passes under either).
-
-    [Fact]
-    public void Sub_propagate_asserts_at_equality_but_generate_does_not()
-    {
-        // A=5, B=5: A >= B so P asserts; A == B so G (asserts at A > B)
-        // does not. Note A=B is the one operand relation where the correct
-        // (>=, >) and inverted (<=, <) conventions agree on P -- this test
-        // alone cannot detect an inverted model; the two below can.
-        var r = Build(a: 5, b: 5, s: 0b0110, modeLogic: false, carryIn: false);
         Assert.True(r.ReadPropagate());
         Assert.False(r.ReadGenerate());
     }
 
     [Fact]
-    public void Sub_generate_asserts_when_A_gt_B()
+    public void Add_generate_asserts_when_sum_is_sixteen_or_more()
     {
-        // A=5, B=3: A > B so both P and G assert (A + /B = 17 >= 16 --
-        // carry out with or without carry in).
+        // 8 + 8 = 16: G asserts.
+        var r = Build(a: 8, b: 8, s: 0b1001, modeLogic: false, carryIn: false);
+        Assert.True(r.ReadGenerate());
+    }
+
+    [Fact]
+    public void Sub_both_assert_when_A_gt_B()
+    {
+        // A=5, B=3: A + /B = 17 >= 16 -- both P and G assert.
         var r = Build(a: 5, b: 3, s: 0b0110, modeLogic: false, carryIn: false);
         Assert.True(r.ReadPropagate());
         Assert.True(r.ReadGenerate());

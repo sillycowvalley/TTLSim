@@ -19,6 +19,11 @@ using TTLSim.Core;
 ///    catches inverted P/G polarity on the '181 -- it fails against an
 ///    Hc181 whose SUB row returns (a &lt;= b, a &lt; b) and passes with
 ///    (a &gt;= b, a &gt; b).
+///
+/// The cascade rig follows the '181's ACTIVE-HIGH data convention (CR
+/// 2026-07-24): A/B/F pins carry true data, and BOTH carry pins are active
+/// LOW -- the '181's Cn+4 now asserts LOW, matching the '182's Cn+x/y/z,
+/// so the whole carry web is one polarity with no inverters anywhere.
 /// </summary>
 public class Hc182Tests
 {
@@ -195,9 +200,9 @@ public class Hc182Tests
             Net[] bN = { N(), N(), N(), N() };
             for (int i = 0; i < 4; i++)
             {
-                // Active-low operand pins: bit = 1 -> pin LOW.
-                chips.Add(DriveAsserted(aN[i], ((aNib >> i) & 1) != 0));
-                chips.Add(DriveAsserted(bN[i], ((bNib >> i) & 1) != 0));
+                // Operand pins carry TRUE data: bit = 1 -> pin HIGH.
+                chips.Add(DriveHigh(aN[i], ((aNib >> i) & 1) != 0));
+                chips.Add(DriveHigh(bN[i], ((bNib >> i) & 1) != 0));
             }
 
             fNets[k] = new[] { N(), N(), N(), N() };
@@ -231,11 +236,11 @@ public class Hc182Tests
         int f = 0;
         for (int k = 0; k < 4; k++)
             for (int i = 0; i < 4; i++)
-                if (fNets[k][i].Value == Signal.Low)   // /F active-low
+                if (fNets[k][i].Value == Signal.High)   // F pins carry true data
                     f |= 1 << (4 * k + i);
 
-        // Slice 3's Cn+4 is the 16-bit carry out, active HIGH.
-        int carryOut = cn4Nets[3].Value == Signal.High ? 1 : 0;
+        // Slice 3's Cn+4 is the 16-bit carry out, active LOW.
+        int carryOut = cn4Nets[3].Value == Signal.Low ? 1 : 0;
         return (f, carryOut);
     }
 

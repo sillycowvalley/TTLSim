@@ -312,6 +312,12 @@ public sealed class SchematicBuilder
         // a dead short. Runs before the error gate so a short blocks the build.
         diagnostics.AddRange(ScanNetsForElectricalFaults(input, netTable));
 
+        // Phase 1h: program-image presence. An EEPROM with no Intel HEX and a
+        // GAL with no JEDEC map both build happily and simulate as blank parts
+        // -- correct, but silent. Surface both, plus the malformed case the
+        // chip factory currently only writes to the log (TTL040/TTL041).
+        diagnostics.AddRange(ProgramImageCheck.Check(input));
+
         // If we've hit errors, don't try to build chips.
         bool anyErrors = diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error);
         if (anyErrors)
