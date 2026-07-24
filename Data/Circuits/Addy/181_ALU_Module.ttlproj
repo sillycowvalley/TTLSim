@@ -3,7 +3,7 @@
     "devices": [
       {
         "id": "dev-u5",
-        "designator": "U5",
+        "designator": "U1",
         "partKind": "chip",
         "partIdentifier": "574",
         "family": "HC",
@@ -17,7 +17,7 @@
       },
       {
         "id": "dev-u6",
-        "designator": "U6",
+        "designator": "U2",
         "partKind": "chip",
         "partIdentifier": "574",
         "family": "HC",
@@ -31,7 +31,7 @@
       },
       {
         "id": "dev-u20",
-        "designator": "U20",
+        "designator": "U3",
         "partKind": "chip",
         "partIdentifier": "GAL16V8",
         "family": null,
@@ -45,7 +45,7 @@
       },
       {
         "id": "dev-u1",
-        "designator": "U1",
+        "designator": "U4",
         "partKind": "chip",
         "partIdentifier": "181",
         "family": "LS",
@@ -59,7 +59,7 @@
       },
       {
         "id": "dev-u2",
-        "designator": "U2",
+        "designator": "U5",
         "partKind": "chip",
         "partIdentifier": "181",
         "family": "LS",
@@ -73,7 +73,7 @@
       },
       {
         "id": "dev-u3",
-        "designator": "U3",
+        "designator": "U6",
         "partKind": "chip",
         "partIdentifier": "182",
         "family": "LS",
@@ -87,7 +87,7 @@
       },
       {
         "id": "dev-u9",
-        "designator": "U9",
+        "designator": "U7",
         "partKind": "chip",
         "partIdentifier": "541",
         "family": "HCT",
@@ -101,7 +101,7 @@
       },
       {
         "id": "dev-u12",
-        "designator": "U12",
+        "designator": "U8",
         "partKind": "chip",
         "partIdentifier": "04",
         "family": "HCT",
@@ -115,7 +115,7 @@
       },
       {
         "id": "dev-u13",
-        "designator": "U13",
+        "designator": "U9",
         "partKind": "chip",
         "partIdentifier": "86",
         "family": "HCT",
@@ -143,7 +143,7 @@
       },
       {
         "id": "dev-u19",
-        "designator": "U19",
+        "designator": "U11",
         "partKind": "chip",
         "partIdentifier": "00",
         "family": "HC",
@@ -157,7 +157,7 @@
       },
       {
         "id": "dev-u7",
-        "designator": "U7",
+        "designator": "U14",
         "partKind": "chip",
         "partIdentifier": "541",
         "family": "HC",
@@ -171,7 +171,7 @@
       },
       {
         "id": "dev-u8",
-        "designator": "U8",
+        "designator": "U15",
         "partKind": "chip",
         "partIdentifier": "541",
         "family": "HC",
@@ -185,7 +185,7 @@
       },
       {
         "id": "dev-u16",
-        "designator": "U16",
+        "designator": "U12",
         "partKind": "chip",
         "partIdentifier": "86",
         "family": "HC",
@@ -199,7 +199,7 @@
       },
       {
         "id": "dev-u17",
-        "designator": "U17",
+        "designator": "U13",
         "partKind": "chip",
         "partIdentifier": "280",
         "family": "HC",
@@ -213,7 +213,7 @@
       },
       {
         "id": "dev-u14",
-        "designator": "U14",
+        "designator": "U16",
         "partKind": "chip",
         "partIdentifier": "377",
         "family": "HC",
@@ -227,7 +227,7 @@
       },
       {
         "id": "dev-u15",
-        "designator": "U15",
+        "designator": "U17",
         "partKind": "chip",
         "partIdentifier": "377",
         "family": "HC",
@@ -255,7 +255,7 @@
       },
       {
         "id": "dev-c1",
-        "designator": "C1",
+        "designator": "C4",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -269,34 +269,6 @@
       },
       {
         "id": "dev-c2",
-        "designator": "C2",
-        "partKind": "passive",
-        "partIdentifier": "capacitor",
-        "family": null,
-        "value": "100nF",
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-c3",
-        "designator": "C3",
-        "partKind": "passive",
-        "partIdentifier": "capacitor",
-        "family": null,
-        "value": "100nF",
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-c5",
         "designator": "C5",
         "partKind": "passive",
         "partIdentifier": "capacitor",
@@ -310,7 +282,7 @@
         "frequencyHz2": null
       },
       {
-        "id": "dev-c6",
+        "id": "dev-c3",
         "designator": "C6",
         "partKind": "passive",
         "partIdentifier": "capacitor",
@@ -324,8 +296,36 @@
         "frequencyHz2": null
       },
       {
+        "id": "dev-c5",
+        "designator": "C1",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": "100nF",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-c6",
+        "designator": "C2",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": "100nF",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
         "id": "dev-c7",
-        "designator": "C7",
+        "designator": "C14",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -339,7 +339,7 @@
       },
       {
         "id": "dev-c8",
-        "designator": "C8",
+        "designator": "C15",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -353,7 +353,7 @@
       },
       {
         "id": "dev-c9",
-        "designator": "C9",
+        "designator": "C7",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -381,7 +381,7 @@
       },
       {
         "id": "dev-c12",
-        "designator": "C12",
+        "designator": "C8",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -395,7 +395,7 @@
       },
       {
         "id": "dev-c13",
-        "designator": "C13",
+        "designator": "C9",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -409,34 +409,6 @@
       },
       {
         "id": "dev-c14",
-        "designator": "C14",
-        "partKind": "passive",
-        "partIdentifier": "capacitor",
-        "family": null,
-        "value": "100nF",
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-c15",
-        "designator": "C15",
-        "partKind": "passive",
-        "partIdentifier": "capacitor",
-        "family": null,
-        "value": "100nF",
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-c16",
         "designator": "C16",
         "partKind": "passive",
         "partIdentifier": "capacitor",
@@ -450,8 +422,36 @@
         "frequencyHz2": null
       },
       {
-        "id": "dev-c17",
+        "id": "dev-c15",
         "designator": "C17",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": "100nF",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-c16",
+        "designator": "C12",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": "100nF",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-c17",
+        "designator": "C13",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -479,7 +479,7 @@
       },
       {
         "id": "dev-c19",
-        "designator": "C19",
+        "designator": "C11",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -493,7 +493,7 @@
       },
       {
         "id": "dev-c20",
-        "designator": "C20",
+        "designator": "C3",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -549,7 +549,7 @@
       },
       {
         "id": "dev-h4",
-        "designator": "H4",
+        "designator": "H3",
         "partKind": "header",
         "partIdentifier": "hdr-out-8",
         "family": null,
@@ -563,7 +563,7 @@
       },
       {
         "id": "dev-h10",
-        "designator": "H10",
+        "designator": "H4",
         "partKind": "header",
         "partIdentifier": "hdr-out-8",
         "family": null,
@@ -577,48 +577,6 @@
       },
       {
         "id": "dev-h8",
-        "designator": "H8",
-        "partKind": "header",
-        "partIdentifier": "hdr-out-8",
-        "family": null,
-        "value": null,
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-h12",
-        "designator": "H12",
-        "partKind": "header",
-        "partIdentifier": "hdr-out-8",
-        "family": null,
-        "value": null,
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-h13",
-        "designator": "H13",
-        "partKind": "header",
-        "partIdentifier": "hdr-out-8",
-        "family": null,
-        "value": null,
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-h6",
         "designator": "H6",
         "partKind": "header",
         "partIdentifier": "hdr-out-8",
@@ -632,8 +590,50 @@
         "frequencyHz2": null
       },
       {
+        "id": "dev-h12",
+        "designator": "H7",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-8",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-h13",
+        "designator": "H8",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-8",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-h6",
+        "designator": "H9",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-8",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
         "id": "dev-h14",
-        "designator": "H14",
+        "designator": "H10",
         "partKind": "header",
         "partIdentifier": "hdr-out-8",
         "family": null,
@@ -647,7 +647,7 @@
       },
       {
         "id": "dev-raeq",
-        "designator": "RAEQ",
+        "designator": "R1",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -675,7 +675,7 @@
       },
       {
         "id": "ec6d09c2beec4966946dd81231affc18",
-        "designator": "H11",
+        "designator": "H5",
         "partKind": "header",
         "partIdentifier": "hdr-out-4",
         "family": null,
@@ -745,7 +745,7 @@
       },
       {
         "id": "dev-rsrin",
-        "designator": "RSRIN",
+        "designator": "R2",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -767,7 +767,7 @@
           "x": 0,
           "y": 0
         },
-        "label": "",
+        "label": "A LATCH",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -782,7 +782,7 @@
           "x": 0,
           "y": 44
         },
-        "label": "",
+        "label": "B LATCH",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -812,7 +812,7 @@
           "x": 104,
           "y": 0
         },
-        "label": "",
+        "label": "ALU 0-3",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -827,7 +827,7 @@
           "x": 104,
           "y": 44
         },
-        "label": "",
+        "label": "ALU 4-7",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -842,7 +842,7 @@
           "x": 104,
           "y": 88
         },
-        "label": "",
+        "label": "LOOKAHEAD",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -857,7 +857,7 @@
           "x": 156,
           "y": 0
         },
-        "label": "",
+        "label": "LS\u003EHC FENCE",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -872,7 +872,7 @@
           "x": 156,
           "y": 44
         },
-        "label": "",
+        "label": "CARRY INV",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -887,7 +887,7 @@
           "x": 156,
           "y": 72
         },
-        "label": "",
+        "label": "BORROW XOR",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -902,7 +902,7 @@
           "x": 208,
           "y": 0
         },
-        "label": "",
+        "label": "ZERO DET",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -917,7 +917,7 @@
           "x": 208,
           "y": 44
         },
-        "label": "",
+        "label": "GLUE",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -932,7 +932,7 @@
           "x": 260,
           "y": 0
         },
-        "label": "",
+        "label": "FB DRV",
         "rotation": 0,
         "layer": 1,
         "switchClosed": null,
@@ -947,7 +947,7 @@
           "x": 260,
           "y": 44
         },
-        "label": "",
+        "label": "SHR DRV",
         "rotation": 0,
         "layer": 1,
         "switchClosed": null,
@@ -962,7 +962,7 @@
           "x": 208,
           "y": 72
         },
-        "label": "",
+        "label": "V LOGIC",
         "rotation": 0,
         "layer": 2,
         "switchClosed": null,
@@ -977,7 +977,7 @@
           "x": 208,
           "y": 100
         },
-        "label": "",
+        "label": "PARITY",
         "rotation": 0,
         "layer": 3,
         "switchClosed": null,
@@ -992,7 +992,7 @@
           "x": 312,
           "y": 0
         },
-        "label": "",
+        "label": "FLAGS C",
         "rotation": 0,
         "layer": 4,
         "switchClosed": null,
@@ -1007,7 +1007,7 @@
           "x": 312,
           "y": 44
         },
-        "label": "",
+        "label": "FLAGS NZ",
         "rotation": 0,
         "layer": 4,
         "switchClosed": null,
@@ -1022,7 +1022,7 @@
           "x": 312,
           "y": 88
         },
-        "label": "",
+        "label": "AUX/DAA",
         "rotation": 0,
         "layer": 5,
         "switchClosed": null,
@@ -1322,7 +1322,7 @@
           "x": -60,
           "y": -24
         },
-        "label": "",
+        "label": "PWR",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1337,7 +1337,7 @@
           "x": -60,
           "y": 4
         },
-        "label": "",
+        "label": "A[7:0]",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1352,7 +1352,7 @@
           "x": -60,
           "y": 48
         },
-        "label": "",
+        "label": "B[7:0]",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1367,7 +1367,7 @@
           "x": -60,
           "y": 88
         },
-        "label": "",
+        "label": "FC\u002BCTL",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1382,7 +1382,7 @@
           "x": 380,
           "y": 0
         },
-        "label": "",
+        "label": "F[7:0]",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1397,7 +1397,7 @@
           "x": 380,
           "y": 44
         },
-        "label": "",
+        "label": "COND",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1412,7 +1412,7 @@
           "x": 380,
           "y": 66
         },
-        "label": "",
+        "label": "CASCADE",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1427,7 +1427,7 @@
           "x": 380,
           "y": 88
         },
-        "label": "",
+        "label": "D[7:0]",
         "rotation": 0,
         "layer": 1,
         "switchClosed": null,
@@ -1442,7 +1442,7 @@
           "x": 380,
           "y": 132
         },
-        "label": "",
+        "label": "FLAGS",
         "rotation": 0,
         "layer": 4,
         "switchClosed": null,
@@ -1457,7 +1457,7 @@
           "x": 131,
           "y": 16
         },
-        "label": "",
+        "label": "A=B PU",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1472,7 +1472,7 @@
           "x": 26,
           "y": 141
         },
-        "label": "",
+        "label": "BQ PD",
         "rotation": 180,
         "layer": 0,
         "switchClosed": null,
@@ -1487,7 +1487,7 @@
           "x": -66,
           "y": 111
         },
-        "label": "",
+        "label": "STROBES",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1502,7 +1502,7 @@
           "x": 78,
           "y": 112
         },
-        "label": "",
+        "label": "LK_CN",
         "rotation": 0,
         "layer": 0,
         "switchClosed": false,
@@ -1517,7 +1517,7 @@
           "x": 200,
           "y": -7
         },
-        "label": "",
+        "label": "LK_ZC",
         "rotation": 0,
         "layer": 0,
         "switchClosed": false,
@@ -1532,7 +1532,7 @@
           "x": 156,
           "y": 94
         },
-        "label": "",
+        "label": "LK_BORROW",
         "rotation": 0,
         "layer": 0,
         "switchClosed": false,
@@ -1547,7 +1547,7 @@
           "x": 248,
           "y": 100
         },
-        "label": "",
+        "label": "OE PU",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1562,7 +1562,7 @@
           "x": 266,
           "y": 120
         },
-        "label": "",
+        "label": "SRIN PD",
         "rotation": 90,
         "layer": 0,
         "switchClosed": null,
@@ -2627,7 +2627,7 @@
       {
         "type": "text",
         "id": "txt-note",
-        "label": "Layers 1-5 = optional population. RN1 = BKILL pulldowns (SIP9 bussed), RAEQ = A=B pull-up, RN2 = /FOE //SOE //AUXOE pull-ups (elements 5-9 NC), RSRIN = SRIN pulldown (LSR-safe idle). BKILL is ACTIVE-HIGH (high = U6 /OE deasserted, pulldowns give B=0). GND on pin 1 of H10/H11/H12/H14; data headers all-signal. Jumpers (pos 1-2 = solo/Addy): J1 LK_CN, J2 LK_ZC, J3 LK_BORROW. SRIN source host-strapped at H11.",
+        "label": "Layers 1-5 = optional population. RN1 = BQ/BKILL pulldowns (SIP9 bussed), R1 = A=B pull-up, RN2 = /FOE //SOE //AUXOE pull-ups (elements 5-9 NC), R2 = SRIN pulldown (LSR-safe idle). BKILL is ACTIVE-HIGH. GND on pin 1 of H4/H5/H7/H10; data headers all-signal. Jumpers (1-2 = solo/Addy; switchClosed true = 2-3): J1 LK_CN, J2 LK_ZC, J3 LK_BORROW.",
         "position": {
           "x": -60,
           "y": -38
@@ -12431,19 +12431,19 @@
         "visible": true
       },
       {
-        "name": "Opt: Bus drivers (U7 U8)",
+        "name": "Opt: Bus drivers (U14 U15)",
         "visible": true
       },
       {
-        "name": "Opt: V logic (U16)",
+        "name": "Opt: V logic (U12)",
         "visible": true
       },
       {
-        "name": "Opt: Parity (U17)",
+        "name": "Opt: Parity (U13)",
         "visible": true
       },
       {
-        "name": "Opt: Flag latch (U14 U15)",
+        "name": "Opt: Flag latch (U16 U17)",
         "visible": true
       },
       {
@@ -12460,8 +12460,8 @@
   "view": {
     "zoom": 0.77257925,
     "pan": {
-      "x": 855,
-      "y": 287
+      "x": 744,
+      "y": 218
     }
   }
 }
