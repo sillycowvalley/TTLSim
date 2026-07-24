@@ -79,6 +79,11 @@ public static class TotemPoleParts
 
         // Arithmetic.
         "181", "182", "283", "688",
+
+        // Parity. Both PE and PO are plain push-pull outputs -- the '280
+        // has no enable and no high-Z state, so two of them on one net is
+        // an unconditional short.
+        "280",
     };
 
     /// <summary>

@@ -43,7 +43,7 @@ public sealed class LibraryPanel : UserControl
     private static readonly HashSet<string> SimulatedChipIdentifiers = new(StringComparer.Ordinal)
     {
         "00", "02", "04", "08", "10", "14", "20", "30", "32", "86",
-        "47", "74", "125", "126", "138", "139", "151", "153", "154", "157", "161", "163", "173", "181", "182", "191", "194", "244", "245", "257", "273", "283", "299", "373", "374", "377", "390", "393", "541", "573", "574", "670", "688",
+        "47", "74", "125", "126", "138", "139", "151", "153", "154", "157", "161", "163", "173", "181", "182", "191", "194", "244", "245", "257", "273", "280", "283", "299", "373", "374", "377", "390", "393", "541", "573", "574", "670", "688",
         "DS1813",
         "7seg-ca",
         "NE555", "NE556",
@@ -277,6 +277,7 @@ public sealed class LibraryPanel : UserControl
         AddBoxPart(alu, ChipPartDefinition.Ic74182, "Carry Lookahead Generator");
         AddBoxPart(alu, ChipPartDefinition.Ic74283, "4-bit Binary Adder, fast carry");
         AddBoxPart(alu, ChipPartDefinition.Ic74688, "8-bit Identity Comparator");
+        AddBoxPart(alu, ChipPartDefinition.Ic74280, "9-bit Odd/Even Parity Generator");
         alu.Expand();
     }
 

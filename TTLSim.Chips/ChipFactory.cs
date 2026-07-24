@@ -11,6 +11,7 @@ using TTLSim.Chips.Pld;
 using TTLSim.Chips.Registers;
 using TTLSim.Chips.Sources;
 using TTLSim.Chips.Comparators;
+using TTLSim.Chips.Parity;
 using TTLSim.Core;
 
 using Microsoft.Extensions.Logging;
@@ -527,6 +528,7 @@ public sealed class ChipFactory : IChipFactory
             "573" => TryCreateHc573(device, pinToNet),
             "574" => TryCreateHc574(device, pinToNet),
             "670" => TryCreateHc670(device, pinToNet),
+            "280" => TryCreateHc280(device, pinToNet),
             "688" => TryCreateHc688(device, pinToNet),
             "DS1813" => TryCreateDs1813(pinToNet),
             "GAL16V8" or "GAL20V8" or "GAL22V10" => TryCreateGal(device, pinToNet),
@@ -1266,6 +1268,42 @@ public sealed class ChipFactory : IChipFactory
             delayPs: TtlTiming.ResolvePs(device));
     }
 
+    private IChip? TryCreateHc280(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        // At least ONE of the two outputs -- PE (pin 5) or PO (pin 6) -- must
+        // be wired. Nearly every real use takes one and leaves the other open
+        // (cf. the '151's Y / /Y pair), so requiring both would break the
+        // common case; requiring neither would instantiate a part that cannot
+        // affect anything. The unwired one of the pair gets a local stand-in
+        // net that drives nothing.
+        //
+        // All nine data inputs are OPTIONAL. The '280 is routinely used below
+        // its full width -- an 8-bit parity check leaves one input tied off --
+        // and an unconnected pin gets a stand-in that reads Low, which is
+        // exactly what tying an unused input to GND does to the parity sum:
+        // nothing. Same precedent as the '688's P/Q pins. TTL011 still flags
+        // genuinely unwired inputs at design time.
+        //
+        // Pin 3 is the package's no-connect and never reaches the model.
+        // Pin 7 GND and pin 14 VCC are consumed by the build pipeline.
+        bool hasPe = pinToNet.TryGetValue(5, out Net? pe) && pe is not null;
+        bool hasPo = pinToNet.TryGetValue(6, out Net? po) && po is not null;
+        if (!hasPe && !hasPo) return null;
+
+        Net Opt(int pin, string tag) =>
+            pinToNet.TryGetValue(pin, out Net? x) && x is not null
+                ? x : new Net(-1, tag);   // local stand-in, drives nothing
+
+        return new Hc280(
+            i0: Opt(8, "i0-nc"), i1: Opt(9, "i1-nc"), i2: Opt(10, "i2-nc"),
+            i3: Opt(11, "i3-nc"), i4: Opt(12, "i4-nc"), i5: Opt(13, "i5-nc"),
+            i6: Opt(1, "i6-nc"), i7: Opt(2, "i7-nc"), i8: Opt(4, "i8-nc"),
+            pe: hasPe ? pe! : new Net(-1, "pe-nc"),
+            po: hasPo ? po! : new Net(-1, "po-nc"),
+            label: "280", logger: logger,
+            delayPs: TtlTiming.ResolvePs(device));
+    }
+
     private IChip? TryCreateHc151(BuildDevice device, IReadOnlyDictionary<int, Net> pinToNet)
     {
         // The inputs are required: all eight data inputs (I0..I3 pins 4,3,2,1;
@@ -1345,7 +1383,7 @@ public sealed class ChipFactory : IChipFactory
     {
         // Box-chip ICs (per-unit dispatch in CreateForUnit).
         "47" or "74" or "138" or "139" or "151" or "153" or "154" or "157" or "161" or "163" or "173" or "181" or "182" or "191" or "194"
-            or "244" or "245" or "257" or "273" or "283" or "299" or "373" or "374" or "377" or "541" or "573" or "574" or "670" or "688" or "7seg-ca"
+            or "244" or "245" or "257" or "273" or "280" or "283" or "299" or "373" or "374" or "377" or "541" or "573" or "574" or "670" or "688" or "7seg-ca"
             => true,
         // Reset supervisor (per-unit dispatch in CreateForUnit).
         "DS1813"

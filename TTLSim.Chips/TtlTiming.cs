@@ -117,6 +117,8 @@ public static class TtlTiming
         ["HC:688"] = new(45_000),  // 8-bit identity comparator
         ["LS:670"] = new(35_000),
         ["HC:670"] = new(45_000),  // 4x4 register file (read address → Q)
+        ["HC:280"] = new(60_000),
+        ["HCT:280"] = new(68_000), // 9-bit parity generator/checker. Nexperia Rev. 4, VCC 4.5 V, -40..+125 C, worst of the two output paths: HC In→PE and In→PO both 60 ns; HCT In→PE 63 ns, In→PO 68 ns. No LS row until an LS sheet is verified.
 
 
         // ---- clocked (tCO = clock → Q, max) -----------------------------

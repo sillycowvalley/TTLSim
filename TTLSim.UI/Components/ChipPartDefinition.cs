@@ -1149,6 +1149,40 @@ public sealed record ChipPartDefinition(
         IsSeries74: true
         );
 
+    /// <summary>74HC280 9-bit odd/even parity generator/checker, 14-pin DIP.
+    /// Fully combinational, no enable. PE (pin 5) is HIGH when an EVEN number
+    /// of the nine data inputs I0..I8 is HIGH; PO (pin 6) is its complement.
+    /// Both outputs always drive -- there is no high-Z state.
+    ///
+    /// <para>Pin 3 has no bond wire and is named "NC": that spelling is
+    /// load-bearing, since SchematicBuildInput builds its no-connect set by
+    /// matching the name string, which is what keeps TTL011 from reporting
+    /// the pin as a floating CMOS input.</para>
+    ///
+    /// <para>Word length is extended by cascading -- feed the PE output of a
+    /// lower stage into a spare data input of the next (datasheet Fig. 7 wires
+    /// two packages into a 17-bit checker). Unused inputs tie LOW, which leaves
+    /// the parity of the used bits unchanged.</para>
+    ///
+    /// <para>Package note: only SO14 and TSSOP14 are current. The through-hole
+    /// 74HC280N / 74HCT280N were withdrawn at datasheet Rev. 3, so a DIP build
+    /// needs a different vendor or an adapter.</para></summary>
+    public static readonly ChipPartDefinition Ic74280 = new(
+        PartNumber: "280", PinCount: 14, PowerPin: 14, GroundPin: 7,
+        BodyWidth: 8,
+        Pins: new ChipPin[]
+        {
+            new("I6",  1),              new("VCC", 14),
+            new("I7",  2),              new("I5",  13),
+            new("NC",  3),              new("I4",  12),
+            new("I8",  4),              new("I3",  11),
+            new("PE",  5, Out),         new("I2",  10),
+            new("PO",  6, Out),         new("I1",   9),
+            new("GND", 7),              new("I0",   8),
+        },
+        IsSeries74: true
+        );
+
     /// <summary>74HC299 8-bit universal shift register with 3-state I/O,
     /// 20-pin DIP. Four modes via S0/S1: hold, shift-right, shift-left,
     /// parallel load. DSR / DSL are serial data into the right and left
