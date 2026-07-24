@@ -1,6 +1,6 @@
-Name     addy_gal1_seq;
+Name     SEQUENCER;
 Partno   ADDY-GAL1;
-Revision 01;
+Revision 02;
 Designer BlinkyJED;
 Device   G22V10;
 
@@ -10,7 +10,17 @@ Device   G22V10;
 
    Opcode classes (IR[15:14]): 00 reg ALU, 01 imm ALU, 10 conditional,
    11 special. IR13 = suppress-write (ALU classes), IR11 = subtract /
-   polarity, IR12 = operand kill-steer / cond-arithmetic subtract.        */
+   polarity, IR12 = operand kill-steer / cond-arithmetic subtract.
+
+   Rev 02: /TRST and /HALTREQ are now tri-stated instead of push-pull.
+   Both are wired-AND nets on the clock module -- pulled up, every driver
+   pulls low only. /HALTREQ in particular is also driven low by the clock
+   module's SW2 HALT REQ button; a push-pull GAL output driving high into
+   that button is a dead short held for the duration of the press.
+   Output term and OE term are identical, so each pin drives low exactly
+   when asserted and releases to Hi-Z otherwise. The OE row is separate
+   from the logic rows in the 22V10 array, so this costs no product terms.
+   No other equation changed.                                            */
 
 /* ---- inputs ---- */
 PIN 1  = TB0;        /* T counter bit 0 (clock module H3)                 */
@@ -30,12 +40,17 @@ PIN 16 = CIN;        /* adder carry in                                    */
 PIN 17 = WSEL7;      /* OR onto WADDR bits -> write address 7             */
 PIN 18 = ASELRS;     /* AADDR '157 select: 1 = rs, 0 = rd                 */
 PIN 19 = FLAGEN;     /* flag recirculating-mux select: 1 = capture new    */
-PIN 20 = !TRST;      /* T counter sync reload, asserted (low) during T2   */
-PIN 21 = !HALTREQ;   /* halt request to clock module, asserted during T2  */
+PIN 20 = !TRST;      /* T counter sync reload, open low during T2         */
+PIN 21 = !HALTREQ;   /* halt request to clock module, open low during T2  */
 
 /* WE: reset vector (r7 <- 0), T1 PC writeback, T2 per opcode:
    ALU classes with write (!IR15&!IR13), conditionals gated by Z xor
-   polarity, and IN (11001).                                              */
+   polarity, and IN (11001).
+   NOTE: 6 of the 8 product terms available on pin 14, the smallest OLMC
+   block on the device. v2's class-11 conditional writes (MOVC, MOVNC,
+   MOVN) and LD's T3 write will not fit here. Consider swapping WE to
+   pin 19 (16 terms) and FLAGEN to pin 14 (1 term) while the board is
+   still a file.                                                          */
 WE = RST
    # (!TB1 &  TB0)
    # ( TB1 & !TB0 & !IR15 & !IR13)
@@ -48,7 +63,9 @@ SUB = TB1 & !TB0 & !RST &
       ( (!IR15 & IR11 & (!IR14 # !IR12))
       # ( IR15 & !IR14 & IR13 & IR12) );
 
-/* CIN: +1 for the PC increment at T1, else follows SUB (two's comp).     */
+/* CIN: +1 for the PC increment at T1, else follows SUB (two's comp).
+   Restated rather than read back from the SUB pin, deliberately -- pin
+   feedback would add a propagation hop into the adder's critical path.  */
 CIN = (!TB1 & TB0 & !RST)
     # ( TB1 & !TB0 & !RST &
         ( (!IR15 & IR11 & (!IR14 # !IR12))
@@ -67,9 +84,14 @@ ASELRS = (!IR15 & !IR14)
 /* Flags capture on any class-00 / class-01 op completing at T2.           */
 FLAGEN = TB1 & !TB0 & !RST & !IR15;
 
-/* T counter reloads every T2 -> three states per instruction, forever.    */
-TRST = TB1 & !TB0;
+/* T counter reloads every T2 -> three states per instruction, forever.
+   Open low: asserted = drive low, otherwise Hi-Z onto the clock module's
+   pullup. Only driver today, but the T Service header can add one.       */
+TRST    = TB1 & !TB0;
+TRST.oe = TB1 & !TB0;
 
 /* HLT = 11111 (erased EEPROM word). Asserted during T2; PC already
-   points past the HLT, so any resume continues cleanly.                   */
-HALTREQ = TB1 & !TB0 & !RST & IR15 & IR14 & IR13 & IR12 & IR11;
+   points past the HLT, so any resume continues cleanly.
+   Open low -- SW2 HALT REQ on the clock module shares this net.          */
+HALTREQ    = TB1 & !TB0 & !RST & IR15 & IR14 & IR13 & IR12 & IR11;
+HALTREQ.oe = TB1 & !TB0 & !RST & IR15 & IR14 & IR13 & IR12 & IR11;

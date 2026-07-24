@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -13,7 +13,8 @@ namespace TTLSim.UI.Export;
 /// BOM label sheet export: one printable stick-on label per physical chip on
 /// the current schematic, duplicates included and grouped by part number,
 /// written as a multi-page A4 PDF. Print at 100% (no printer scaling), cut
-/// out, and place on the DIP top -- pin names align with the legs.
+/// out, and place on the DIP top -- pin names align with the legs, and the
+/// notch in the label's top edge goes over the notch in the package.
 ///
 /// All geometry, typography, and provenance rules live in Chip_Labels.md and
 /// are ratified by physical print tests; the constants below transcribe that
@@ -35,19 +36,40 @@ public static class ChipLabelSheetExporter
     private const double WideWidth = 36.0;           // 12.7 mm (0.6 in packages)
     private const double BorderStroke = 0.4;
 
+    /// <summary>Tint of the label outline: a gray level from 0.0 (black) to
+    /// 1.0 (white). The outline is only a cut guide -- it is scissored along
+    /// and does not survive onto the finished sticker -- so it is drawn gray
+    /// to keep it out of the way of the pin names. The orientation notch is
+    /// NOT covered by this and stays black. The single knob for that colour.
+    /// </summary>
+    private const double BorderGray = 0.55;
+
     /// <summary>
     /// Narrow (0.3 in) package label lengths in mm, keyed by pin count.
-    /// Sized to the SHORTEST common JEDEC body so the sticker fits any
-    /// manufacturer. The 24 row is the skinny DIP-24 (GAL20V8 class) --
-    /// provisional pending a caliper check against real stock. An unknown
-    /// pin count falls back to rows x 2.54 mm so a new package still
-    /// exports; add its measured row here afterwards.
+    ///
+    /// The 14 and 16 rows are MEASURED. Both are JEDEC MS-001 300-mil bodies
+    /// with an identical 0.735-0.775 in (18.67-19.69 mm) length range -- a
+    /// DIP-16 is NOT longer than a DIP-14, it just crowds its 8 pins per row
+    /// closer to the ends. Calipers across real stock read ~19.5 mm, but
+    /// MS-001 note 3 excludes mould flash from that dimension and allows
+    /// 0.010 in (0.25 mm) of it per end, so ~19.5 mm is the nominal 19.05 mm
+    /// body plus its full flash allowance measured at the parting line. The
+    /// label lands on the flat TOP face, which is inside the flash (and may
+    /// be slightly smaller still, since the package is drafted), so these are
+    /// set to 19.0 mm: the nominal body, flash excluded.
+    ///
+    /// The remaining rows are UNVERIFIED -- sized to the shortest common
+    /// JEDEC body so the sticker fits any manufacturer. The 24 row is the
+    /// skinny DIP-24 (GAL20V8 class). Measure and correct them the same way
+    /// as 14/16 when the stock is to hand. An unknown pin count falls back to
+    /// rows x 2.54 mm so a new package still exports; add its measured row
+    /// here afterwards.
     /// </summary>
     private static readonly Dictionary<int, double> NarrowLengthMm = new()
     {
         [8] = 9.0,
-        [14] = 18.5,
-        [16] = 18.5,
+        [14] = 19.0,
+        [16] = 19.0,
         [18] = 21.5,
         [20] = 23.5,
         [24] = 29.0,
@@ -68,6 +90,38 @@ public static class ChipLabelSheetExporter
     private const double PartNumberGray = 0.78;
     private const double PartNumberWidthFraction = 0.62;
     private const double PartNumberLengthFraction = 0.88;
+
+    // ---- orientation notch ----------------------------------------------
+    /// <summary>
+    /// Half-ellipse notch cut into the label's TOP edge, mirroring the moulded
+    /// notch on the DIP package (and the schematic symbol's notch in
+    /// ChipUnit.DrawShape). It marks the pin-1 end, so a cut-out sticker can
+    /// only go on one way round.
+    ///
+    /// The nominal size (half-width and depth alike) scales with the label
+    /// width and is capped, giving a round notch. That is what a DIP-8 or
+    /// DIP-14 gets: those centre their rows in a body with room to spare, so
+    /// the notch drops in above the top row untouched. A DIP-16/18/20/24 fills
+    /// its body with rows and leaves nothing above, so the notch instead
+    /// narrows into the free gap BETWEEN the two name columns on the top row
+    /// and comes out as an ellipse.
+    ///
+    /// NotchHalfWidthMin is the floor: below it the notch stops being
+    /// recognisable, so a label whose top row leaves less than that much room
+    /// gets a slight overlap instead of an invisible notch.
+    /// </summary>
+    private const double NotchNominalFraction = 0.14;
+    private const double NotchNominalMax = 3.0;
+    private const double NotchHalfWidthMin = 0.8;
+    private const double NotchNameClearance = 0.3;
+
+    /// <summary>Deepest the notch may go relative to its half-width. Keeps a
+    /// narrowed notch looking like a notch rather than a slot.</summary>
+    private const double NotchMaxAspect = 1.4;
+
+    /// <summary>Circle-to-cubic-Bezier constant: a quarter circle of radius r
+    /// is drawn with control points offset by Kappa * r.</summary>
+    private const double Kappa = 0.5523;
 
     // ---- sheet layout ----------------------------------------------------
     private const double GapInsideGroup = 8.0;       // between duplicate labels
@@ -369,32 +423,13 @@ public static class ChipLabelSheetExporter
         (double width, double height) = LabelSize(chip);
         double yBottom = yTop - height;
 
-        // Border.
-        ops.Append(LabelVectorFont.Fmt(BorderStroke)).Append(" w\n0 0 0 RG\n")
-           .Append(LabelVectorFont.Fmt(x)).Append(' ')
-           .Append(LabelVectorFont.Fmt(yBottom)).Append(' ')
-           .Append(LabelVectorFont.Fmt(width)).Append(' ')
-           .Append(LabelVectorFont.Fmt(height)).Append(" re S\n");
-
-        // Part number FIRST (underneath): gray, rotated 90, centred, as large
-        // as fits -- 62% of the width (cap-height basis), shrinking until its
-        // length fits 88% of the label.
-        double partSize = PartNumberWidthFraction * width / LabelVectorFont.CapHeightEm;
-        while (partSize > 4.0 && font.MeasureText(partName, partSize) > PartNumberLengthFraction * height)
-            partSize -= 0.25;
-        double partLength = font.MeasureText(partName, partSize);
-        string gray = LabelVectorFont.Fmt(PartNumberGray);
-        ops.Append(gray).Append(' ').Append(gray).Append(' ').Append(gray).Append(" rg\n");
-        font.AppendTextOps(ops, partName,
-            x + width / 2 + LabelVectorFont.CapHeightEm * partSize / 2,
-            yTop - height / 2 - partLength / 2,
-            partSize, rotationDeg: 90);
-        ops.Append("0 0 0 rg\n");
-
-        // Pin names on top. Left column pins 1..N/2 top-to-bottom; right
-        // column pin N opposite pin 1 (DIP mirror). Rows on exact 0.1 in
-        // pitch centred in the body; names verbatim from the definition;
-        // NC prints blank; leading '/' kept literally.
+        // Pin names. Left column pins 1..N/2 top-to-bottom; right column pin N
+        // opposite pin 1 (DIP mirror). Rows on exact 0.1 in pitch centred in
+        // the body; names verbatim from the definition; NC prints blank;
+        // leading '/' kept literally.
+        //
+        // The row fitting runs BEFORE anything is drawn, because the notch
+        // geometry below is derived from the top row's resolved layout.
         // Pin names: the group's overrides (GAL header signal names over
         // fuse-derived roles) where present, else the static definition.
         var namesByNumber = chip.Pins.ToDictionary(p => p.Number, p => p.Name);
@@ -409,7 +444,7 @@ public static class ChipLabelSheetExporter
         // Pass 2 draws every row at the label-wide MINIMUM of those sizes,
         // so all pin names on one label share a single font size -- the
         // most crowded row sets it (Chip_Labels.md section 2).
-        var rowPlans = new List<(double CentreY, string[] Left, string[] Right, double Inset, double Size)>();
+        var rowPlans = new List<(int Row, double CentreY, string[] Left, string[] Right, double Inset, double Size)>();
         for (int row = 0; row < rows; row++)
         {
             double centreY = firstRowCentreY - row * RowPitch;
@@ -432,7 +467,7 @@ public static class ChipLabelSheetExporter
             double plain = SizeFor(unitLeft, unitRight, EdgeInset);
             if (plain >= ComfortableSize)
             {
-                rowPlans.Add((centreY, new[] { left }, new[] { right }, EdgeInset, plain));
+                rowPlans.Add((row, centreY, new[] { left }, new[] { right }, EdgeInset, plain));
                 continue;
             }
 
@@ -451,9 +486,9 @@ public static class ChipLabelSheetExporter
                 SizeFor(MaxUnitWidth(font, leftLines), MaxUnitWidth(font, rightLines), TightInset)));
 
             if (anySplit && splitSize > singleSize)
-                rowPlans.Add((centreY, leftLines, rightLines, TightInset, splitSize));
+                rowPlans.Add((row, centreY, leftLines, rightLines, TightInset, splitSize));
             else
-                rowPlans.Add((centreY, new[] { left }, new[] { right }, TightInset, singleSize));
+                rowPlans.Add((row, centreY, new[] { left }, new[] { right }, TightInset, singleSize));
         }
 
         // Pass 2: uniform size = the smallest natural fit on this label.
@@ -461,6 +496,121 @@ public static class ChipLabelSheetExporter
         foreach (var plan in rowPlans)
             uniformSize = Math.Min(uniformSize, plan.Size);
 
+        // ---- notch geometry -------------------------------------------------
+        // Two independent constraints, and which one bites depends on the
+        // package.
+        //
+        // VERTICAL: the free strip between the top edge and the top row's
+        // glyphs. A DIP-14 centres 7 rows in a 19.0 mm body and leaves 5.3 pt
+        // there, so a full round notch drops in above the names untouched.
+        // A DIP-16 fits 8 rows in that SAME body (both are JEDEC MS-001,
+        // 0.735-0.775 in -- the 16-pin just crowds its pins toward the ends),
+        // leaving 1.7 pt, and DrawPinText's clamp then pushes the row up to
+        // BorderClearance from the edge. Nothing fits above it at any depth.
+        //
+        // HORIZONTAL: the gap between the two name columns on the top row --
+        // the strip a centred notch sits in. This is the fallback when the
+        // vertical room runs out: the notch narrows into the gap and becomes
+        // an ellipse rather than overprinting a name, with depth following the
+        // half-width up to NotchMaxAspect so it stays notch-shaped instead of
+        // degenerating into a slot.
+        double topRowGap = width;    // no names on the top row: the whole width is free
+        double topGlyphTop = yBottom;   // ... and nothing above to clear either
+        foreach (var plan in rowPlans)
+        {
+            if (plan.Row != 0) continue;
+            double used = (MaxUnitWidth(font, plan.Left) + MaxUnitWidth(font, plan.Right)) * uniformSize;
+            topRowGap = width - 2 * plan.Inset - used;
+
+            // Top of this row's glyph block, mirroring DrawPinText's centring
+            // and its clamp against the border.
+            int lineCount = Math.Max(plan.Left.Length, plan.Right.Length);
+            double capTop = LabelVectorFont.CapHeightEm * uniformSize;
+            double lineGap = lineCount > 1 ? 0.35 * uniformSize : 0;
+            double blockTop = plan.CentreY + lineGap / 2
+                              + (lineCount > 1 ? capTop : capTop / 2);
+            topGlyphTop = Math.Min(blockTop, yTop - BorderClearance);
+            break;
+        }
+
+        double notchNominal = Math.Min(NotchNominalFraction * width, NotchNominalMax);
+        double notchHalfWidth = notchNominal;
+        double notchDepth = notchNominal;
+        if (notchDepth > yTop - topGlyphTop - NotchNameClearance)
+        {
+            notchHalfWidth = Math.Min(notchNominal,
+                Math.Max(NotchHalfWidthMin, topRowGap / 2 - NotchNameClearance));
+            notchDepth = Math.Min(notchNominal, notchHalfWidth * NotchMaxAspect);
+        }
+
+        double notchCentreX = x + width / 2;
+        double notchBottomY = yTop - notchDepth;
+        double notchLeftX = notchCentreX - notchHalfWidth;
+        double notchRightX = notchCentreX + notchHalfWidth;
+
+        // ---- border and notch ------------------------------------------------
+        // Two strokes, not one path, because they mean different things. The
+        // border is only a cut guide, so it is GRAY and disappears into the
+        // scissor line; the notch is the orientation cue that has to survive
+        // on the finished sticker, so it stays BLACK.
+        //
+        // Cut guide: one open polyline running the long way round from the
+        // notch's left lip to its right lip -- left along the top, down the
+        // left side, across the bottom, up the right side, back along the top.
+        // Open (no "h") so nothing is drawn across the notch mouth.
+        string borderGray = LabelVectorFont.Fmt(BorderGray);
+        ops.Append(LabelVectorFont.Fmt(BorderStroke)).Append(" w\n")
+           .Append(borderGray).Append(' ').Append(borderGray).Append(' ')
+           .Append(borderGray).Append(" RG\n");
+        AppendPoint(ops, notchLeftX, yTop, "m");
+        AppendPoint(ops, x, yTop, "l");
+        AppendPoint(ops, x, yBottom, "l");
+        AppendPoint(ops, x + width, yBottom, "l");
+        AppendPoint(ops, x + width, yTop, "l");
+        AppendPoint(ops, notchRightX, yTop, "l");
+        ops.Append("S\n");
+
+        // The notch itself: a black half-ellipse dipping into the label from
+        // the top edge, left lip down to the deepest point and back up to the
+        // right lip. Kappa scales independently in x and y, so half-width and
+        // depth are free to differ.
+        ops.Append("0 0 0 RG\n");
+        AppendPoint(ops, notchLeftX, yTop, "m");
+        AppendCurve(ops,
+            notchLeftX, yTop - Kappa * notchDepth,
+            notchCentreX - Kappa * notchHalfWidth, notchBottomY,
+            notchCentreX, notchBottomY);
+        AppendCurve(ops,
+            notchCentreX + Kappa * notchHalfWidth, notchBottomY,
+            notchRightX, yTop - Kappa * notchDepth,
+            notchRightX, yTop);
+        ops.Append("S\n");
+
+        // ---- part number ------------------------------------------------------
+        // Drawn BEFORE the pin names so it sits underneath them: gray, rotated
+        // 270 so it reads TOP-TO-BOTTOM -- the way a real DIP is marked once
+        // the package is stood on end with its notch up, which is the
+        // orientation this label is printed in. (It was 90 -- bottom-to-top --
+        // which is the same text upside down.) Centred, as large as fits: 62%
+        // of the width (cap-height basis), shrinking until its length fits 88%
+        // of the label.
+        double partSize = PartNumberWidthFraction * width / LabelVectorFont.CapHeightEm;
+        while (partSize > 4.0 && font.MeasureText(partName, partSize) > PartNumberLengthFraction * height)
+            partSize -= 0.25;
+        double partLength = font.MeasureText(partName, partSize);
+        string gray = LabelVectorFont.Fmt(PartNumberGray);
+        ops.Append(gray).Append(' ').Append(gray).Append(' ').Append(gray).Append(" rg\n");
+        // Origin is the mirror of the old 90-degree one. At 270 the pen
+        // advances DOWNWARD and the glyph cap band extends to the RIGHT of
+        // the baseline, so the baseline start is the TOP of the run and sits
+        // half a cap-height LEFT of the label centre. Both terms flip sign.
+        font.AppendTextOps(ops, partName,
+            x + width / 2 - LabelVectorFont.CapHeightEm * partSize / 2,
+            yTop - height / 2 + partLength / 2,
+            partSize, rotationDeg: 270);
+        ops.Append("0 0 0 rg\n");
+
+        // ---- pin names on top --------------------------------------------------
         foreach (var plan in rowPlans)
         {
             DrawPinText(ops, font, plan.Left, uniformSize, x, yTop, yBottom,
@@ -469,6 +619,22 @@ public static class ChipLabelSheetExporter
                 plan.CentreY, width, plan.Inset, alignRight: true);
         }
     }
+
+    /// <summary>Append a PDF path operator that takes a single point:
+    /// "m" (moveto) or "l" (lineto).</summary>
+    private static void AppendPoint(StringBuilder ops, double x, double y, string op) =>
+        ops.Append(LabelVectorFont.Fmt(x)).Append(' ')
+           .Append(LabelVectorFont.Fmt(y)).Append(' ')
+           .Append(op).Append('\n');
+
+    /// <summary>Append a cubic Bezier segment ("c"): two control points and
+    /// an end point, starting from the current path point.</summary>
+    private static void AppendCurve(StringBuilder ops,
+        double c1x, double c1y, double c2x, double c2y, double endX, double endY) =>
+        ops.Append(LabelVectorFont.Fmt(c1x)).Append(' ').Append(LabelVectorFont.Fmt(c1y)).Append(' ')
+           .Append(LabelVectorFont.Fmt(c2x)).Append(' ').Append(LabelVectorFont.Fmt(c2y)).Append(' ')
+           .Append(LabelVectorFont.Fmt(endX)).Append(' ').Append(LabelVectorFont.Fmt(endY))
+           .Append(" c\n");
 
     /// <summary>
     /// Draw one pin's name as one or two stacked lines, vertically centred

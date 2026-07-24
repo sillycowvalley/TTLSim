@@ -103,7 +103,7 @@ public sealed class MainForm : Form
         var saveAsItem = new ToolStripMenuItem("Save &As...", null, OnSaveAs)
         { ShortcutKeys = Keys.Control | Keys.Shift | Keys.S };
         var exportEasyEDAItem = new ToolStripMenuItem("&Export EasyEDA...", null, OnExportEasyEDA);
-        var exportLabelsItem = new ToolStripMenuItem("Export Chip &Labels...", null, OnExportChipLabels);
+        var exportLabelsItem = new ToolStripMenuItem("Export Chi&p Labels...", null, OnExportChipLabels);
         importHexItem = new ToolStripMenuItem("&Import HEX into EEPROM...", null, OnImportHex);
         exportHexItem = new ToolStripMenuItem("E&xport EEPROM HEX...", null, OnExportHex);
         importJedecItem = new ToolStripMenuItem("Import &JEDEC into GAL...", null, OnImportJedec);

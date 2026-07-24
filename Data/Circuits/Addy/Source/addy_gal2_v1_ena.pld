@@ -1,12 +1,20 @@
 Name     ENABLE;
 Partno   ADDY-GAL2;
-Revision 01;
+Revision 02;
 Designer BlinkyJED;
 Device   G22V10;
 
 /* Addy CPU -- GAL2: operand-bus source enables + misc clock enables.
    All outputs combinational. At most one B-bus source enabled at a time;
-   a disabled bus reads zero through its pulldowns.                       */
+   a disabled bus reads zero through its pulldowns.
+
+   Rev 02: AOE and IMMOE gain an explicit !RST guard. Previously the
+   reset vector (D = 0 -> r7 <- 0) depended on the clock module clearing
+   the T counter during reset, so that every T2-qualified term went false
+   by side effect. That is true today but it is a cross-module behavioural
+   dependency with nothing in this file expressing it. RST is already on
+   pin 3 and the guard adds literals, not product terms -- AOE stays at 7
+   terms, IMMOE at 4. No other equation changed.                          */
 
 /* ---- inputs ---- */
 PIN 1  = TB0;        /* T counter bit 0                                   */
@@ -30,14 +38,16 @@ PIN 19 = !IMMOE;     /* imm8 '541 (IR[7:0] -> bits 7:0)                   */
 PIN 20 = !LEDCE;     /* LED '377 clock enable (OUT)                       */
 PIN 21 = ZNEW;       /* combined zero detect -> flag recirculating mux    */
 
-/* IR loads exactly once per instruction, at the fetch edge.              */
+/* IR loads exactly once per instruction, at the fetch edge.
+   Decoded from the T bits rather than taken from FETCH, so it does not
+   depend on the FETCH signal path.                                       */
 IRCE = !TB1 & !TB0;
 
 /* A drives the adder: T1 (PC+1), and at T2 for every op that reads a
    register through port A -- all of c00, c01 except LDI, c10 move-style
-   reg source and all c10 arithmetic, and OUT. Off during reset (T=0).    */
-AOE = (!TB1 & TB0)
-    # ( TB1 & !TB0 &
+   reg source and all c10 arithmetic, and OUT. Held off during reset.    */
+AOE = (!TB1 & TB0 & !RST)
+    # ( TB1 & !TB0 & !RST &
         ( (!IR15 & !IR14)
         # (!IR15 &  IR14 & (!IR12 # IR11))
         # ( IR15 & !IR14 & (!IR12 # IR13))
@@ -48,8 +58,9 @@ AOE = (!TB1 & TB0)
 BOE = TB1 & !TB0 & !IR15 & !IR14 & !IR12;
 
 /* imm8 low: c01 ADDI/SUBI/LDI/CMPI (everything but ADDIH), and c10
-   immediate forms -- LDIZ/LDINZ (IR12) and ADDIZ..SUBINZ (IR13).         */
-IMMOE = TB1 & !TB0 &
+   immediate forms -- LDIZ/LDINZ (IR12) and ADDIZ..SUBINZ (IR13).
+   Held off during reset so D = 0 for the r7 vector.                     */
+IMMOE = TB1 & !TB0 & !RST &
         ( (!IR15 & IR14 & (!IR12 # !IR11))
         # ( IR15 & !IR14 & (IR12 # IR13)) );
 
