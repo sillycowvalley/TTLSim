@@ -425,6 +425,7 @@ public static class SchematicDtoMapper
                 // CanOscillatorDip8 derives from CanOscillator, so it MUST be
                 // matched first -- otherwise the half-size DIP-8 oscillator
                 // would serialise (and round-trip) as a full-size "canosc".
+                TestbenchItem => "testbench",
                 CanOscillatorDip8 => "canosc8",
                 CanOscillator => "canosc",
                 RectangleItem => "rect",
@@ -443,6 +444,21 @@ public static class SchematicDtoMapper
         }
         if (item is CanOscillator osc)
             dto.FrequencyHz = osc.FrequencyHz;
+
+        // Testbench: the stimulus CSV rides in the file (as an EEPROM image
+        // does), the frequency field carries the ROW rate, and PinMap records
+        // which pin number each column owns. The map is not derivable from the
+        // program -- see ItemDto.PinMap -- so omitting it would reattach wires
+        // to the wrong signals on any testbench whose columns were ever
+        // reordered or removed and re-added. SourcePath is deliberately NOT
+        // persisted: it is a convenience for the current session only, and a
+        // path from another machine is worse than no path at all.
+        if (item is TestbenchItem bench)
+        {
+            dto.FrequencyHz = bench.FrequencyHz;
+            dto.Program = bench.Program;
+            dto.PinMap = FormatPinMap(bench);
+        }
 
         if (item is RectangleItem rect)
         {
@@ -960,10 +976,78 @@ public static class SchematicDtoMapper
             Width = dto.Width ?? 1,
             Color = dto.Color is null ? TTLColor.Black : ParseTtlColor(dto.Color)
         },
+        "testbench" => CreateTestbench(dto),
         _ => throw new System.IO.InvalidDataException(
             $"Unknown standalone item type '{dto.Type}'. " +
-            "Expected 'vcc', 'gnd', 'clock', 'canosc', 'canosc8', 'rect', 'text', or 'netlabel'.")
+            "Expected 'vcc', 'gnd', 'clock', 'canosc', 'canosc8', 'rect', 'text', "
+            + "'netlabel', or 'testbench'.")
     };
+
+    /// <summary>
+    /// Rebuild a testbench. The program is adopted directly rather than through
+    /// TryLoadProgram: this is reconstruction, not an edit, so it must not run
+    /// the wired-pin check (the item is not in a schematic yet and has no
+    /// probe) and must restore the pin NUMBERS the connections in this same
+    /// file refer to.
+    ///
+    /// <para>A file with a program but no pin map -- hand-written, or produced
+    /// before the map was recorded -- falls back to numbering the columns 1..N
+    /// in order, which is exactly what a testbench whose columns never moved
+    /// would have had.</para>
+    /// </summary>
+    private static TestbenchItem CreateTestbench(ItemDto dto)
+    {
+        var bench = new TestbenchItem
+        {
+            FrequencyHz = dto.FrequencyHz ?? 1_000_000.0,
+            Program = dto.Program
+        };
+
+        var map = ParsePinMap(dto.PinMap).ToList();
+        if (map.Count == 0 && bench.Parsed is not null)
+        {
+            int n = 1;
+            foreach (string name in bench.Parsed.ColumnNames)
+                map.Add((name, n++));
+        }
+        if (map.Count > 0)
+            bench.RestorePins(map);
+
+        return bench;
+    }
+
+    /// <summary>Serialise a testbench pin map as "number=name" entries in
+    /// display order. See ItemDto.PinMap.</summary>
+    private static string FormatPinMap(TestbenchItem bench) =>
+        string.Join(",", bench.PinMap().Select(e => $"{e.Number}={e.Name}"));
+
+    /// <summary>
+    /// Parse the "number=name" pin map. Malformed or duplicate entries are
+    /// skipped rather than thrown: a damaged map degrades the item to the
+    /// entries it can read, which the caller then tops up, whereas throwing
+    /// would refuse to open the whole project over one bad field.
+    /// </summary>
+    private static IEnumerable<(string Name, int Number)> ParsePinMap(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) yield break;
+
+        var usedNumbers = new HashSet<int>();
+        var usedNames = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (string entry in text.Split(','))
+        {
+            int eq = entry.IndexOf('=');
+            if (eq <= 0) continue;
+            if (!int.TryParse(entry[..eq].Trim(), out int number)) continue;
+
+            string name = entry[(eq + 1)..].Trim();
+            if (name.Length == 0) continue;
+            if (!usedNumbers.Add(number)) continue;
+            if (!usedNames.Add(name)) continue;
+
+            yield return (name, number);
+        }
+    }
 
     private static TTLColor ParseTtlColor(string? name) =>
         Enum.TryParse<TTLColor>(name, out var c) ? c : TTLColor.Grey;

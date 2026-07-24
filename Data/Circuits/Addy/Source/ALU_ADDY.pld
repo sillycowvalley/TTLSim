@@ -1,0 +1,83 @@
+Name     ALU_ADDY;
+PartNo   ATF16V8B;
+Date     2026-07-24;
+Revision 01;
+Designer Michael;
+Company  Blinky;
+Assembly '181 ALU Module v1;
+Location U20;
+Device   g16v8;
+
+/*
+ * Function-code decode, Addy v2 host.
+ *
+ * FC table (FC3..FC0):
+ *   0000  ADD  / ADDI / ADDIH / CMN   M=0 S=1001 Cn=0
+ *   0001  SUB  / SUBI / CMP / CMPI    M=0 S=0110 Cn=1      SUB=1
+ *   0010  ADDC                        M=0 S=1001 Cn=CFLG
+ *   0011  SUBC                        M=0 S=0110 Cn=CFLG   SUB=1
+ *   0100  MOV  / LDI / TST            M=0 S=1001 Cn=0      BKILL=1
+ *   0101  AND                         M=1 S=1011
+ *   0110  OR                          M=1 S=1110
+ *   0111  XOR                         M=1 S=0110
+ *   1xxx  spare -> pass A             M=1 S=1111           (fails toward safe)
+ *
+ * Polarity notes:
+ *   CN is declared !CN: the array holds the logical carry-wanted condition
+ *   and the OLMC inverts, so the '181/'182 Cn pin goes LOW when a carry of 1
+ *   is injected - the active-low pin convention lives in this file, nowhere
+ *   on the board.
+ *   BKILL is ACTIVE-HIGH: it drives the B latch '574 /OE, and Hi-Z is what
+ *   lets the pulldowns present B = 0.
+ *   A7 is a reserved module input (rotate carry-around on 8080-class hosts);
+ *   unused in this JEDEC.
+ */
+
+/* inputs */
+PIN 2  = FC0;
+PIN 3  = FC1;
+PIN 4  = FC2;
+PIN 5  = FC3;
+PIN 6  = CFLG;
+PIN 7  = A7;
+
+/* outputs */
+PIN 12 = BKILL;
+PIN 13 = SUB;
+PIN 14 = !CN;
+PIN 15 = M;
+PIN 16 = S0;
+PIN 17 = S1;
+PIN 18 = S2;
+PIN 19 = S3;
+
+/* mode: logic rows for AND/OR/XOR and the spare pass-A page */
+M     = !FC3 & FC2 & (FC1 # FC0)
+      # FC3;
+
+/* function select, active-HIGH column */
+S3    = FC3
+      # !FC0
+      # !FC1 & FC2;
+
+S2    = FC3
+      # !FC2 & FC0
+      # FC2 & FC1;
+
+S1    = FC3
+      # FC0
+      # FC2 & FC1;
+
+S0    = FC3
+      # !FC2 & !FC0
+      # FC2 & !FC1;
+
+/* logical carry-in wanted; OLMC inversion makes the pin active-low */
+CN    = !FC3 & !FC2 & !FC1 & FC0          /* SUB: true subtract needs Cn=1 */
+      # !FC3 & !FC2 &  FC1 & CFLG;        /* ADDC / SUBC: carry from the flag */
+
+/* subtract indicator: V rule always, COUT/HCOUT sense only via J3 */
+SUB   = !FC3 & !FC2 & FC0;
+
+/* MOV/LDI/TST: kill the B latch, pulldowns give B = 0 */
+BKILL = !FC3 & FC2 & !FC1 & !FC0;

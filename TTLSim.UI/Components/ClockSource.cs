@@ -252,37 +252,4 @@ public sealed class ClockSource : SchematicItem
             return null;
         return value * scale;
     }
-
-    /// <summary>
-    /// TypeConverter for the FrequencyHz property: shows "1 MHz" in the
-    /// PropertyGrid and accepts free-form input ("1MHz", "10k", "1e6").
-    /// </summary>
-    private sealed class FrequencyConverter : TypeConverter
-    {
-        public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType) =>
-            sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
-
-        public override bool CanConvertTo(ITypeDescriptorContext? context, Type? destinationType) =>
-            destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
-
-        public override object? ConvertFrom(ITypeDescriptorContext? context,
-            CultureInfo? culture, object value)
-        {
-            if (value is string s)
-            {
-                var parsed = ParseFrequency(s);
-                if (parsed.HasValue) return parsed.Value;
-                throw new FormatException($"'{s}' is not a valid frequency.");
-            }
-            return base.ConvertFrom(context, culture, value);
-        }
-
-        public override object? ConvertTo(ITypeDescriptorContext? context,
-            CultureInfo? culture, object? value, Type destinationType)
-        {
-            if (destinationType == typeof(string) && value is double hz)
-                return FormatFrequency(hz);
-            return base.ConvertTo(context, culture, value, destinationType);
-        }
-    }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -41,9 +41,11 @@ public sealed class MainForm : Form
     private ToolStripMenuItem cutItem = null!;
     private ToolStripMenuItem copyItem = null!;
     private ToolStripMenuItem pasteItem = null!;
-    private ToolStripMenuItem importHexItem = null!;
+    // One Import item for every programmable thing on the canvas -- EEPROM,
+    // GAL, testbench. Its text and enabled state follow the selection, so the
+    // File menu carries one entry instead of one per part family.
+    private ToolStripMenuItem importItem = null!;
     private ToolStripMenuItem exportHexItem = null!;
-    private ToolStripMenuItem importJedecItem = null!;
 
     private ICommand? savedAtCommand;
 
@@ -104,9 +106,8 @@ public sealed class MainForm : Form
         { ShortcutKeys = Keys.Control | Keys.Shift | Keys.S };
         var exportEasyEDAItem = new ToolStripMenuItem("&Export EasyEDA...", null, OnExportEasyEDA);
         var exportLabelsItem = new ToolStripMenuItem("Export Chi&p Labels...", null, OnExportChipLabels);
-        importHexItem = new ToolStripMenuItem("&Import HEX into EEPROM...", null, OnImportHex);
+        importItem = new ToolStripMenuItem("&Import...", null, OnImport);
         exportHexItem = new ToolStripMenuItem("E&xport EEPROM HEX...", null, OnExportHex);
-        importJedecItem = new ToolStripMenuItem("Import &JEDEC into GAL...", null, OnImportJedec);
         var exitItem = new ToolStripMenuItem("E&xit", null, (_, _) => Close());
         fileMenu.DropDownItems.Add(newItem);
         fileMenu.DropDownItems.Add(openItem);
@@ -115,12 +116,11 @@ public sealed class MainForm : Form
         fileMenu.DropDownItems.Add(new ToolStripSeparator());
         fileMenu.DropDownItems.Add(exportEasyEDAItem);
         fileMenu.DropDownItems.Add(exportLabelsItem);
-        fileMenu.DropDownItems.Add(importHexItem);
+        fileMenu.DropDownItems.Add(importItem);
         fileMenu.DropDownItems.Add(exportHexItem);
-        fileMenu.DropDownItems.Add(importJedecItem);
         fileMenu.DropDownItems.Add(new ToolStripSeparator());
         fileMenu.DropDownItems.Add(exitItem);
-        fileMenu.DropDownOpening += (_, _) => { UpdateHexMenuItems(); UpdateGalMenuItems(); };
+        fileMenu.DropDownOpening += (_, _) => { UpdateImportMenuItem(); UpdateHexMenuItems(); };
         menu.Items.Add(fileMenu);
 
         var viewMenu = new ToolStripMenuItem("&View");
@@ -365,12 +365,6 @@ public sealed class MainForm : Form
         };
         leftPanel.Controls.Add(netLabelsPanel);
 
-        // A row click in the Net Labels panel puts its own summary -- including
-        // the full error description for a red row -- in the status bar. This
-        // fires AFTER the canvas selection is applied, so it overwrites the
-        // generic "Selected: ..." text with the richer one.
-        netLabelsPanel.StatusRequested += (_, msg) => selectionLabel.Text = msg;
-
 
 
         propertyGrid.PropertyValueChanged += (_, e) =>
@@ -458,6 +452,19 @@ public sealed class MainForm : Form
         statusStrip.Items.Add(zoomLabel);
         statusStrip.Items.Add(selectionLabel);
 
+        // A row click in the Net Labels panel puts its own summary -- including
+        // the full error description for a red row -- in the status bar. This
+        // fires AFTER the canvas selection is applied, so it overwrites the
+        // generic "Selected: ..." text with the richer one.
+        //
+        // Subscribed HERE, rather than beside the panel's construction above,
+        // purely so the lambda captures selectionLabel after it is assigned:
+        // the field is readonly and written just above, and capturing it any
+        // earlier makes the compiler treat the dereference as possibly-null
+        // (CS8602) even though the handler cannot run until the constructor
+        // has long since returned.
+        netLabelsPanel.StatusRequested += (_, msg) => selectionLabel.Text = msg;
+
         // Add canvas FIRST so it ends up at the bottom of the Controls
         // Z-order; the edge-docked panels then claim their space and Fill
         // honours what's left. Reverse order is the common WinForms gotcha
@@ -512,7 +519,7 @@ public sealed class MainForm : Form
             // which covers external clipboard changes).
             UpdateEditMenuItems();
             UpdateHexMenuItems();
-            UpdateGalMenuItems();
+            UpdateImportMenuItem();
             layersPanel.OnSelectionChanged();
             netLabelsPanel.OnSelectionChanged();
         };
@@ -643,6 +650,7 @@ public sealed class MainForm : Form
     private const string DefaultExt = "ttlproj";
     private const string HexFilter = "Intel HEX (*.hex;*.ihex)|*.hex;*.ihex|All files (*.*)|*.*";
     private const string JedecFilter = "JEDEC fuse map (*.jed;*.jedec)|*.jed;*.jedec|All files (*.*)|*.*";
+    private const string TestbenchFilter = "Testbench CSV (*.csv;*.txt)|*.csv;*.txt|All files (*.*)|*.*";
 
     private void OnNew(object? sender, EventArgs e)
     {
@@ -827,12 +835,111 @@ public sealed class MainForm : Form
         return gals.Count == 1 ? gals[0] : null;
     }
 
-    private void UpdateGalMenuItems()
+    /// <summary>The single selected testbench item, or null if the selection
+    /// is not exactly one. Mirrors SingleSelectedEeprom / SingleSelectedGal;
+    /// a testbench is a standalone SchematicItem, not a Unit, so it is picked
+    /// straight out of the selection.</summary>
+    private TTLSim.UI.Components.TestbenchItem? SingleSelectedTestbench()
     {
-        importJedecItem.Enabled = SingleSelectedGal() is not null;
+        var benches = canvas.Schematic.Selected
+            .OfType<TTLSim.UI.Components.TestbenchItem>()
+            .ToList();
+        return benches.Count == 1 ? benches[0] : null;
     }
 
-    private void OnImportJedec(object? sender, EventArgs e)
+    /// <summary>
+    /// Point the one Import item at whatever is selected. The text names the
+    /// target so the menu says what it will actually do; with nothing
+    /// importable selected it stays enabled-looking but disabled, which reads
+    /// better than an item that vanishes.
+    /// </summary>
+    private void UpdateImportMenuItem()
+    {
+        if (SingleSelectedEeprom() is Device eeprom)
+        {
+            importItem.Text = $"&Import HEX into {eeprom.Designator}...";
+            importItem.Enabled = true;
+            return;
+        }
+        if (SingleSelectedGal() is Device gal)
+        {
+            importItem.Text = $"&Import JEDEC into {gal.Designator}...";
+            importItem.Enabled = true;
+            return;
+        }
+        if (SingleSelectedTestbench() is not null)
+        {
+            importItem.Text = "&Import testbench CSV...";
+            importItem.Enabled = true;
+            return;
+        }
+
+        importItem.Text = "&Import...";
+        importItem.Enabled = false;
+    }
+
+    /// <summary>
+    /// Dispatch the merged Import action on the current selection. The order
+    /// matches UpdateImportMenuItem so the action always matches the text the
+    /// user just read.
+    /// </summary>
+    private void OnImport(object? sender, EventArgs e)
+    {
+        if (SingleSelectedEeprom() is not null) { ImportHexIntoSelectedEeprom(); return; }
+        if (SingleSelectedGal() is not null) { ImportJedecIntoSelectedGal(); return; }
+        if (SingleSelectedTestbench() is not null) { ImportProgramIntoSelectedTestbench(); return; }
+    }
+
+    /// <summary>
+    /// Load a CSV stimulus program into the selected testbench. Validation and
+    /// the by-name pin reconciliation both live on the item; everything that
+    /// can go wrong comes back as a message rather than an exception, and a
+    /// failed load leaves the item exactly as it was.
+    /// </summary>
+    private void ImportProgramIntoSelectedTestbench()
+    {
+        TTLSim.UI.Components.TestbenchItem? bench = SingleSelectedTestbench();
+        if (bench is null) return;
+
+        using var dlg = new OpenFileDialog
+        {
+            Filter = TestbenchFilter,
+            DefaultExt = "csv",
+            InitialDirectory = TestbenchInitialDirectory()
+        };
+        if (dlg.ShowDialog(this) != DialogResult.OK) return;
+        RecentFolders.RememberTestbenchFromFile(dlg.FileName);
+
+        string text;
+        try
+        {
+            text = System.IO.File.ReadAllText(dlg.FileName);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Could not read the file:\n{ex.Message}",
+                "Import failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
+        if (!bench.TryLoadProgram(text, dlg.FileName, out string error))
+        {
+            MessageBox.Show(this, error,
+                "Import testbench", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        dirty = true;
+        UpdateTitle();
+        propertyGrid.Refresh();
+        canvas.Invalidate();   // the pin set changed -- redraw the symbol
+        MessageBox.Show(this,
+            $"Loaded {System.IO.Path.GetFileName(dlg.FileName)}: "
+            + $"{bench.Columns} column(s), {bench.Rows} row(s).",
+            "Import testbench", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    private void ImportJedecIntoSelectedGal()
     {
         Device? dev = SingleSelectedGal();
         if (dev is null) return;
@@ -841,10 +948,10 @@ public sealed class MainForm : Form
         {
             Filter = JedecFilter,
             DefaultExt = "jed",
-            InitialDirectory = HexInitialDirectory()
+            InitialDirectory = JedecInitialDirectory()
         };
         if (dlg.ShowDialog(this) != DialogResult.OK) return;
-        RecentFolders.RememberHexFromFile(dlg.FileName);
+        RecentFolders.RememberJedecFromFile(dlg.FileName);
 
         try
         {
@@ -906,7 +1013,6 @@ public sealed class MainForm : Form
             dirty = true;
             UpdateTitle();
             propertyGrid.Refresh();
-            UpdateGalMenuItems();
             canvas.Invalidate();   // pins follow the new fuse map -- redraw the symbol
             MessageBox.Show(this,
                 $"Imported {System.IO.Path.GetFileName(dlg.FileName)} into {dev.Designator}.",
@@ -924,16 +1030,19 @@ public sealed class MainForm : Form
     private void UpdateHexMenuItems()
     {
         Device? dev = SingleSelectedEeprom();
-        importHexItem.Enabled = dev is not null;
         exportHexItem.Enabled = dev is not null && !string.IsNullOrWhiteSpace(dev.Program);
     }
 
-    private static string HexInitialDirectory() =>
-        !string.IsNullOrEmpty(RecentFolders.HexFolder)
-            ? RecentFolders.HexFolder
+    private static string FolderOrDocuments(string? folder) =>
+        !string.IsNullOrEmpty(folder)
+            ? folder
             : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
-    private void OnImportHex(object? sender, EventArgs e)
+    private static string HexInitialDirectory() => FolderOrDocuments(RecentFolders.HexFolder);
+    private static string JedecInitialDirectory() => FolderOrDocuments(RecentFolders.JedecFolder);
+    private static string TestbenchInitialDirectory() => FolderOrDocuments(RecentFolders.TestbenchFolder);
+
+    private void ImportHexIntoSelectedEeprom()
     {
         Device? dev = SingleSelectedEeprom();
         if (dev is null) return;
@@ -1263,8 +1372,10 @@ internal static class RecentFolders
 
     public static string? ProjectFolder { get; set; }
     public static string? ExportFolder { get; set; }
-    public static string? HexFolder { get; set; }   // shared by HEX import + export
-    public static string? LabelFolder { get; set; } // chip label sheet export
+    public static string? HexFolder { get; set; }       // shared by HEX import + export
+    public static string? JedecFolder { get; set; }     // GAL fuse map import
+    public static string? TestbenchFolder { get; set; } // testbench CSV import
+    public static string? LabelFolder { get; set; }     // chip label sheet export
     public static int? WindowX { get; set; }
     public static int? WindowY { get; set; }
     public static int? WindowW { get; set; }
@@ -1285,6 +1396,8 @@ internal static class RecentFolders
                 if (key == "project" && Directory.Exists(val)) ProjectFolder = val;
                 else if (key == "export" && Directory.Exists(val)) ExportFolder = val;
                 else if (key == "hex" && Directory.Exists(val)) HexFolder = val;
+                else if (key == "jedec" && Directory.Exists(val)) JedecFolder = val;
+                else if (key == "testbench" && Directory.Exists(val)) TestbenchFolder = val;
                 else if (key == "labels" && Directory.Exists(val)) LabelFolder = val;
                 else if (key == "x" && int.TryParse(val, out var x)) WindowX = x;
                 else if (key == "y" && int.TryParse(val, out var y)) WindowY = y;
@@ -1307,6 +1420,8 @@ internal static class RecentFolders
                 $"project={ProjectFolder ?? ""}",
                 $"export={ExportFolder ?? ""}",
                 $"hex={HexFolder ?? ""}",
+                $"jedec={JedecFolder ?? ""}",
+                $"testbench={TestbenchFolder ?? ""}",
                 $"labels={LabelFolder ?? ""}",
                 $"x={WindowX?.ToString() ?? ""}",
                 $"y={WindowY?.ToString() ?? ""}",
@@ -1334,6 +1449,18 @@ internal static class RecentFolders
     {
         var dir = Path.GetDirectoryName(path);
         if (!string.IsNullOrEmpty(dir)) { HexFolder = dir; Save(); }
+    }
+
+    public static void RememberJedecFromFile(string path)
+    {
+        var dir = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(dir)) { JedecFolder = dir; Save(); }
+    }
+
+    public static void RememberTestbenchFromFile(string path)
+    {
+        var dir = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(dir)) { TestbenchFolder = dir; Save(); }
     }
 
     public static void RememberLabelFromFile(string path)

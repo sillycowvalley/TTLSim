@@ -252,10 +252,14 @@ public sealed class SchematicBuildInput : IBuildInput
                     GndSymbol => BuildItemKind.Gnd,
                     ClockSource => BuildItemKind.ClockSource,
                     CanOscillator => BuildItemKind.ClockSource,
+                    TestbenchItem => BuildItemKind.Testbench,
                     _ => null
                 };
                 if (kind is null) continue;
 
+                // Pin order matters for the testbench and only for the
+                // testbench: TestbenchItem keeps its Pins list in program
+                // column order, so column i of the CSV is PinNumbers[i].
                 List<int> pins = new();
                 foreach (Pin p in item.Pins)
                     pins.Add(p.Number);
@@ -264,10 +268,15 @@ public sealed class SchematicBuildInput : IBuildInput
                 {
                     ClockSource cs => (long)(1e12 / cs.FrequencyHz),
                     CanOscillator osc => (long)(1e12 / osc.FrequencyHz),
+                    // The testbench's frequency is a ROW rate, not a square
+                    // wave: one row per period, no half-period toggling.
+                    TestbenchItem tb when tb.FrequencyHz > 0 => (long)(1e12 / tb.FrequencyHz),
                     _ => null
                 };
 
-                yield return new BuildItem(item.Id, kind.Value, pins, period);
+                string? program = item is TestbenchItem bench ? bench.Program : null;
+
+                yield return new BuildItem(item.Id, kind.Value, pins, period, program);
             }
         }
     }

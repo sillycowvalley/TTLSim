@@ -728,6 +728,34 @@
         "function2": null,
         "frequencyHz1": null,
         "frequencyHz2": null
+      },
+      {
+        "id": "dev-rn2",
+        "designator": "RN2",
+        "partKind": "passive",
+        "partIdentifier": "resnet-sip9",
+        "family": null,
+        "value": "10k",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-rsrin",
+        "designator": "RSRIN",
+        "partKind": "passive",
+        "partIdentifier": "resistor",
+        "family": null,
+        "value": "10k",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
       }
     ],
     "units": [
@@ -1508,6 +1536,36 @@
         "rotation": 0,
         "layer": 0,
         "switchClosed": false,
+        "switchPositions": null,
+        "mirrored": null
+      },
+      {
+        "id": "rn2",
+        "deviceId": "dev-rn2",
+        "unitLetter": "",
+        "position": {
+          "x": 248,
+          "y": 100
+        },
+        "label": "",
+        "rotation": 0,
+        "layer": 0,
+        "switchClosed": null,
+        "switchPositions": null,
+        "mirrored": null
+      },
+      {
+        "id": "rsrin",
+        "deviceId": "dev-rsrin",
+        "unitLetter": "",
+        "position": {
+          "x": 266,
+          "y": 120
+        },
+        "label": "",
+        "rotation": 90,
+        "layer": 0,
+        "switchClosed": null,
         "switchPositions": null,
         "mirrored": null
       }
@@ -2466,7 +2524,7 @@
       {
         "type": "text",
         "id": "txt-title",
-        "label": "\u0027181 ALU MODULE v1 - Blinky family byte slice - solo Addy configuration",
+        "label": "'181 ALU MODULE v1 - Blinky family byte slice - solo Addy configuration",
         "position": {
           "x": -60,
           "y": -46
@@ -2491,7 +2549,7 @@
       {
         "type": "text",
         "id": "txt-note",
-        "label": "Layers 1-5 = optional population. RN1 = /BKILL pulldowns (SIP9 bussed), RAEQ = A=B pull-up. GND on pin 1 of H10/H11/H12/H14; data headers all-signal. Jumpers (pos 1-2 = solo/Addy default): J1 LK_CN (/CNGAL vs CNX seam), J2 LK_ZC (GND vs /ZCASC), J3 LK_BORROW (GND vs SUB). SRIN source is host-strapped at H11 - no LK_SRIN.",
+        "label": "Layers 1-5 = optional population. RN1 = BKILL pulldowns (SIP9 bussed), RAEQ = A=B pull-up, RN2 = /FOE //SOE //AUXOE pull-ups (elements 5-9 NC), RSRIN = SRIN pulldown (LSR-safe idle). BKILL is ACTIVE-HIGH (high = U6 /OE deasserted, pulldowns give B=0). GND on pin 1 of H10/H11/H12/H14; data headers all-signal. Jumpers (pos 1-2 = solo/Addy): J1 LK_CN, J2 LK_ZC, J3 LK_BORROW. SRIN source host-strapped at H11.",
         "position": {
           "x": -60,
           "y": -38
@@ -2591,7 +2649,7 @@
       {
         "type": "text",
         "id": "txt-col-156",
-        "label": "FENCE \u002B CARRY",
+        "label": "FENCE + CARRY",
         "position": {
           "x": 156,
           "y": -22
@@ -2666,7 +2724,7 @@
       {
         "type": "text",
         "id": "txt-col-312",
-        "label": "FLAGS \u002B AUX (opt)",
+        "label": "FLAGS + AUX (opt)",
         "position": {
           "x": 312,
           "y": -22
@@ -3716,7 +3774,7 @@
       {
         "type": "netlabel",
         "id": "nlBK-0",
-        "label": "/BKILL",
+        "label": "BKILL",
         "position": {
           "x": 71,
           "y": 104
@@ -3741,7 +3799,7 @@
       {
         "type": "netlabel",
         "id": "nlBK-1",
-        "label": "/BKILL",
+        "label": "BKILL",
         "position": {
           "x": 37,
           "y": 40
@@ -5535,6 +5593,183 @@
         "startBit": 0,
         "mirrored": false,
         "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "vcc",
+        "id": "vcc-rn2",
+        "label": "",
+        "position": {
+          "x": 244,
+          "y": 92
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "gnd",
+        "id": "gnd-rsrin",
+        "label": "",
+        "position": {
+          "x": 262,
+          "y": 138
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlFOE-rn2",
+        "label": "/FOE",
+        "position": {
+          "x": 256,
+          "y": 104
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlSOE-rn2",
+        "label": "/SOE",
+        "position": {
+          "x": 256,
+          "y": 108
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlAUX-rn2",
+        "label": "/AUXOE",
+        "position": {
+          "x": 256,
+          "y": 112
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlSRIN-rn",
+        "label": "SRIN",
+        "position": {
+          "x": 274,
+          "y": 120
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "testbench",
+        "id": "tb-alu",
+        "label": "ALU module self-test",
+        "position": {
+          "x": -130,
+          "y": -10
+        },
+        "rotation": 0,
+        "layer": 6,
+        "frequencyHz": 1000000.0,
+        "program": "A0,A1,A2,A3,A4,A5,A6,A7,B0,B1,B2,B3,B4,B5,B6,B7,FC0,FC1,FC2,FC3,CFLG,LEA,LEB,/FOE,/SOE,SRIN\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,H,H,H,H,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,L\nH,H,H,H,H,H,H,H,H,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,H,H,H,H,H,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,H,L,L,H,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,H,L,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,H,L,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,L,L,L,L,L,L,L,L,H,L,L,L,H,H,H,H,L\nH,L,H,L,L,L,L,L,H,H,L,L,L,L,L,L,H,L,L,L,L,L,L,H,H,L\nH,L,H,L,L,L,L,L,H,H,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nH,L,H,L,L,L,L,L,H,H,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nL,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,H,L,L,L,L,L,L,H,H,L\nL,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nL,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nL,H,L,H,H,L,H,L,L,H,L,H,H,L,H,L,H,H,L,L,L,L,L,H,H,L\nL,H,L,H,H,L,H,L,L,H,L,H,H,L,H,L,H,H,L,L,L,H,H,H,H,L\nL,H,L,H,H,L,H,L,L,H,L,H,H,L,H,L,H,H,L,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,H,H,H,L,L,L,H,H,L,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,H,H,H,H,L,L,L,H,H,L,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,H,H,H,L,L,L,H,H,L,L,L,H,H,H,H,L\nH,L,H,L,L,H,L,H,H,H,H,H,H,H,H,H,L,L,H,L,L,L,L,H,H,L\nH,L,H,L,L,H,L,H,H,H,H,H,H,H,H,H,L,L,H,L,L,H,H,H,H,L\nH,L,H,L,L,H,L,H,H,H,H,H,H,H,H,H,L,L,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,L,H,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,L,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,L,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,L,H,H,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,L,H,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,L,H,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,H,H,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,H,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,H,H,L,L,H,H,H,H,L\nH,H,H,H,H,H,H,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,L\nH,H,H,H,H,H,H,L,H,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,H,H,H,L,H,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nL,L,L,L,L,L,L,H,H,L,L,L,L,L,L,L,H,L,L,L,L,L,L,H,H,L\nL,L,L,L,L,L,L,H,H,L,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nL,L,L,L,L,L,L,H,H,L,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nH,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,H,H,L\nH,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,H,H,L\nH,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,H,H,L\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,L,L\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,L,H\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,L,L\nH,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,H,L,L,L,L,H,H,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,H,H,L\nH,H,L,L,L,L,H,H,L,L,L,L,L,L,L,L,L,L,L,H,L,H,H,H,H,L\nH,H,L,L,L,L,H,H,L,L,L,L,L,L,L,L,L,L,L,H,L,H,H,H,H,L\n",
+        "pinMap": "1=A0,2=A1,3=A2,4=A3,5=A4,6=A5,7=A6,8=A7,9=B0,10=B1,11=B2,12=B3,13=B4,14=B5,15=B6,16=B7,17=FC0,18=FC1,19=FC2,20=FC3,21=CFLG,22=LEA,23=LEB,24=/FOE,25=/SOE,26=SRIN",
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
         "fontSize": null,
         "textColor": null
       }
@@ -11405,6 +11640,454 @@
           "external": false
         },
         "color": "Yellow"
+      },
+      {
+        "id": "w800",
+        "a": {
+          "itemId": "rn2",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "vcc-rn2",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Red"
+      },
+      {
+        "id": "w801",
+        "a": {
+          "itemId": "rn2",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlFOE-rn2",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "w802",
+        "a": {
+          "itemId": "rn2",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlSOE-rn2",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "w803",
+        "a": {
+          "itemId": "rn2",
+          "pinNumber": 4,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlAUX-rn2",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "w804",
+        "a": {
+          "itemId": "rsrin",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlSRIN-rn",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "w805",
+        "a": {
+          "itemId": "rsrin",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd-rsrin",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "w900",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "h2",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Cyan"
+      },
+      {
+        "id": "w901",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 9,
+          "external": false
+        },
+        "b": {
+          "itemId": "h4",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Cyan"
+      },
+      {
+        "id": "w902",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "h2",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Cyan"
+      },
+      {
+        "id": "w903",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 10,
+          "external": false
+        },
+        "b": {
+          "itemId": "h4",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Cyan"
+      },
+      {
+        "id": "w904",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "h2",
+          "pinNumber": 3,
+          "external": false
+        },
+        "color": "Cyan"
+      },
+      {
+        "id": "w905",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 11,
+          "external": false
+        },
+        "b": {
+          "itemId": "h4",
+          "pinNumber": 3,
+          "external": false
+        },
+        "color": "Cyan"
+      },
+      {
+        "id": "w906",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 4,
+          "external": false
+        },
+        "b": {
+          "itemId": "h2",
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": "Cyan"
+      },
+      {
+        "id": "w907",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 12,
+          "external": false
+        },
+        "b": {
+          "itemId": "h4",
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": "Cyan"
+      },
+      {
+        "id": "w908",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 5,
+          "external": false
+        },
+        "b": {
+          "itemId": "h2",
+          "pinNumber": 5,
+          "external": false
+        },
+        "color": "Cyan"
+      },
+      {
+        "id": "w909",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 13,
+          "external": false
+        },
+        "b": {
+          "itemId": "h4",
+          "pinNumber": 5,
+          "external": false
+        },
+        "color": "Cyan"
+      },
+      {
+        "id": "w910",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 6,
+          "external": false
+        },
+        "b": {
+          "itemId": "h2",
+          "pinNumber": 6,
+          "external": false
+        },
+        "color": "Cyan"
+      },
+      {
+        "id": "w911",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 14,
+          "external": false
+        },
+        "b": {
+          "itemId": "h4",
+          "pinNumber": 6,
+          "external": false
+        },
+        "color": "Cyan"
+      },
+      {
+        "id": "w912",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 7,
+          "external": false
+        },
+        "b": {
+          "itemId": "h2",
+          "pinNumber": 7,
+          "external": false
+        },
+        "color": "Cyan"
+      },
+      {
+        "id": "w913",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 15,
+          "external": false
+        },
+        "b": {
+          "itemId": "h4",
+          "pinNumber": 7,
+          "external": false
+        },
+        "color": "Cyan"
+      },
+      {
+        "id": "w914",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 8,
+          "external": false
+        },
+        "b": {
+          "itemId": "h2",
+          "pinNumber": 8,
+          "external": false
+        },
+        "color": "Cyan"
+      },
+      {
+        "id": "w915",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 16,
+          "external": false
+        },
+        "b": {
+          "itemId": "h4",
+          "pinNumber": 8,
+          "external": false
+        },
+        "color": "Cyan"
+      },
+      {
+        "id": "w916",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 17,
+          "external": false
+        },
+        "b": {
+          "itemId": "h10",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Green"
+      },
+      {
+        "id": "w917",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 18,
+          "external": false
+        },
+        "b": {
+          "itemId": "h10",
+          "pinNumber": 3,
+          "external": false
+        },
+        "color": "Green"
+      },
+      {
+        "id": "w918",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 19,
+          "external": false
+        },
+        "b": {
+          "itemId": "h10",
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": "Green"
+      },
+      {
+        "id": "w919",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 20,
+          "external": false
+        },
+        "b": {
+          "itemId": "h10",
+          "pinNumber": 5,
+          "external": false
+        },
+        "color": "Green"
+      },
+      {
+        "id": "w920",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 21,
+          "external": false
+        },
+        "b": {
+          "itemId": "h10",
+          "pinNumber": 6,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "w921",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 22,
+          "external": false
+        },
+        "b": {
+          "itemId": "h10",
+          "pinNumber": 7,
+          "external": false
+        },
+        "color": "Orange"
+      },
+      {
+        "id": "w922",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 23,
+          "external": false
+        },
+        "b": {
+          "itemId": "h10",
+          "pinNumber": 8,
+          "external": false
+        },
+        "color": "Orange"
+      },
+      {
+        "id": "w923",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 24,
+          "external": false
+        },
+        "b": {
+          "itemId": "710c2c582808407192cd27e8f1f8e56d",
+          "pinNumber": 2,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "w924",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 25,
+          "external": false
+        },
+        "b": {
+          "itemId": "710c2c582808407192cd27e8f1f8e56d",
+          "pinNumber": 3,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "w925",
+        "a": {
+          "itemId": "tb-alu",
+          "pinNumber": 26,
+          "external": false
+        },
+        "b": {
+          "itemId": "710c2c582808407192cd27e8f1f8e56d",
+          "pinNumber": 4,
+          "external": false
+        },
+        "color": "Yellow"
       }
     ],
     "links": [],
@@ -11431,6 +12114,10 @@
       },
       {
         "name": "Opt: Aux GAL (U18)",
+        "visible": true
+      },
+      {
+        "name": "Testbench",
         "visible": true
       }
     ],

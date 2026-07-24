@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -57,6 +57,8 @@ public sealed class Schematic
             label.ConnectionProbe = null;
             label.HigherBitsProbe = null;
         }
+        if (item is TestbenchItem bench)
+            bench.ConnectionProbe = null;
     }
 
     public void Add(Connection connection) => Connections.Add(connection);
@@ -135,6 +137,22 @@ public sealed class Schematic
     /// </summary>
     private void InstallNetLabelProbe(SchematicItem item)
     {
+        // The testbench takes the same "is this pin wired" probe, for the same
+        // reason: reloading a program that drops a column would otherwise
+        // destroy a pin that a Connection still points at. With no probe it
+        // refuses the reload -- fail safe, exactly as a net label refuses to
+        // shrink.
+        if (item is TestbenchItem bench)
+        {
+            bench.ConnectionProbe = pin =>
+            {
+                foreach (var c in Connections)
+                    if (c.A == pin || c.B == pin) return true;
+                return false;
+            };
+            return;
+        }
+
         if (item is not NetLabelItem label) return;
         label.ConnectionProbe = pin =>
         {

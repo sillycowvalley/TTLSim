@@ -190,7 +190,7 @@ Standalone items not owned by a device. The `type` field discriminates.
 ```
 
 `type` is one of: `"vcc"`, `"gnd"`, `"clock"`, `"canosc"`, `"canosc8"`,
-`"netlabel"`, `"rect"`, `"text"`.
+`"netlabel"`, `"rect"`, `"text"`, `"testbench"`.
 
 Common fields on every item: `type`, `id`, `label`, `position`, `rotation`,
 `layer`. Type-specific fields:
@@ -204,6 +204,7 @@ Common fields on every item: `type`, `id`, `label`, `position`, `rotation`,
 | `netlabel` | `width` (int), `startBit` (0), `mirrored` (false), `color` | Named-net / bus tap. See the dedicated section below. |
 | `rect` | `width` (20), `height` (12), `filled` (true), `fillColor`, `borderColor` | Cosmetic rectangle. No electrical meaning. |
 | `text` | `fontSize` (4.0), `textColor` | Cosmetic text label; the text rides on `label`. |
+| `testbench` | `frequencyHz` (1e6), `program`, `pinMap` | Simulation-only stimulus source. See the dedicated section below. |
 
 Values in parentheses are the defaults applied when the field is absent. Colour
 fields are TTLColor enum **names** (`"Red"`, `"Black"`, `"Blue"`, `"Grey"`,
@@ -212,6 +213,76 @@ back to `"Grey"`.
 
 `canosc`/`canosc8` carry a `designator` (the `X`-series reference). VCC, GND and
 clock do not.
+
+---
+
+## `testbench` — CSV stimulus source
+
+A simulation-only instrument: one named pin per column of an embedded CSV
+program, stepped one row per period of `frequencyHz`.
+
+```json
+{
+  "type": "testbench",
+  "id": "tb-alu",
+  "label": "ALU stimulus",
+  "position": { "x": 20, "y": 40 },
+  "rotation": 0,
+  "layer": 2,
+  "frequencyHz": 1000000.0,
+  "program": "CLK,/RESET,D0\nL,L,L\nH,L,H\n",
+  "pinMap": "1=CLK,2=/RESET,3=D0"
+}
+```
+
+| Field | Type | Notes |
+|---|---|---|
+| `frequencyHz` | double | ROW rate, not a square wave: one row of the program is applied per period. Default 1e6. |
+| `program` | string | The stimulus CSV, embedded verbatim (newlines escaped by JSON), so the project carries its own stimulus. |
+| `pinMap` | string | `number=name` entries separated by commas, in display (column) order. |
+
+### Program format
+
+Line 1 is the column names; every later line is one row of values, one per
+column. Blank lines are ignored anywhere.
+
+```
+CLK,/RESET,D0,D1
+L,L,L,L
+H,L,H,L
+L,H,Z,Z
+```
+
+Cells are `H` (drive high), `L` (drive low) or `Z` (release the pin),
+case-insensitive. `Z` is what lets a testbench column share a net with
+something the circuit itself drives — a column parked on `H`/`L` against a
+circuit output is a real contention and is reported as one.
+
+Column names must be non-empty and unique. Comparison is **ordinal**, the same
+rule net labels use, so `/WE`, `WE` and `we` are three different columns.
+There is no quoting, so a name cannot contain a comma. A name beginning with
+`?` is **reserved** for a future expected-value (assertion) column and is
+rejected today.
+
+The last row **holds**: every pin keeps its final value for the rest of the run.
+
+### Why `pinMap` exists
+
+Pin numbers are the permanent identity that `connections` persist against.
+Reloading a program matches columns to existing pins **by name**, so a column
+added, removed and re-added — or a file whose columns were reordered — leaves
+pin numbers that no longer run 1..N in column order. The map cannot be derived
+from the program, and dropping it would silently reattach wires to the wrong
+signals.
+
+A testbench with a `program` but no `pinMap` numbers its columns 1..N in
+order, which is correct for one whose wires never moved.
+
+### Not exportable
+
+A testbench has no PCB footprint, so an EasyEDA export containing a **visible**
+one fails with a specific error. Put it on its own layer and hide the layer to
+export the board it was testing — hidden items are excluded from the export.
 
 ---
 

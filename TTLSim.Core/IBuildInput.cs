@@ -60,18 +60,32 @@ public sealed record BuildUnit(
     bool SwitchClosed = false,
     IReadOnlyList<bool>? SwitchPositions = null);   // DIP switch per-position closed states; null otherwise
 
-/// <summary>A stand-alone non-device item (VCC, GND, clock).</summary>
+/// <summary>A stand-alone non-device item (VCC, GND, clock, testbench).</summary>
+/// <param name="PinNumbers">For a testbench these are in PROGRAM COLUMN ORDER --
+/// entry i is the pin carrying column i of <paramref name="Program"/>. For every
+/// other kind the order is irrelevant.</param>
+/// <param name="ClockPeriodPicoseconds">Clock period for a clock source; the
+/// per-ROW period for a testbench.</param>
+/// <param name="Program">Testbench stimulus CSV (see TestbenchProgram); null
+/// for every other kind.</param>
 public sealed record BuildItem(
     string ItemId,
     BuildItemKind Kind,
     IReadOnlyList<int> PinNumbers,
-    long? ClockPeriodPicoseconds = null);
+    long? ClockPeriodPicoseconds = null,
+    string? Program = null);
 
 public enum BuildItemKind
 {
     Vcc,
     Gnd,
-    ClockSource
+    ClockSource,
+
+    /// <summary>Simulation-only stimulus source: N named pins driven from a
+    /// CSV program, one row per ClockPeriodPicoseconds. Unlike the other
+    /// kinds this one owns MANY pins, so its factory path cannot assume a
+    /// single pin the way the VCC/GND/clock path does.</summary>
+    Testbench
 }
 
 /// <summary>

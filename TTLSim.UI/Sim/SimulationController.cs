@@ -342,6 +342,7 @@ public sealed class SimulationController
                     GndSymbol => "GND",
                     ClockSource => "CLK",
                     CanOscillator => "OSC",
+                    TestbenchItem tb => string.IsNullOrWhiteSpace(tb.Label) ? "TB" : tb.Label,
                     _ => itemId
                 };
 

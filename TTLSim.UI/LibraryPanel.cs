@@ -141,6 +141,9 @@ public sealed class LibraryPanel : UserControl
         // property grid after placement; the drop default is a width-1 label
         // with an empty (tie-nothing) name.
         AddSymbol(io, "Net label / bus port", () => new NetLabelItem());
+        // Testbench: a simulation-only stimulus source. Dropped with no pins;
+        // File > Import loads a CSV, whose column names become the pins.
+        AddSymbol(io, "Testbench (CSV stimulus)", () => new TestbenchItem());
         io.Expand();
 
         var power = tree.Nodes.Add("Power");

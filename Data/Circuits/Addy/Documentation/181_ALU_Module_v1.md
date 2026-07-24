@@ -98,7 +98,7 @@ JEDEC is burned per host. All eight OLMCs are used:
 |------------|--------|------------------------|
 | S3–S0, M | the '181s directly | five raw select lines |
 | SUB | the V rule; the LK_BORROW conditioning | a host-driven SUB wire |
-| /BKILL | B latch /OE (pulldowns give B = 0) | a host-driven /BKILL wire |
+| BKILL | B latch /OE, **active-high** (high = latch Hi-Z; pulldowns give B = 0) | a host-driven B-kill wire |
 | Cn | the '181/'182 carry-in **pin-direct, active-low sense in the equation** | a '153 carry mux, its select lines, and the carry-in polarity gate |
 
 Inputs: FC[3:0], **CFLG** (the host's latched C flag), and **A7** (tapped
@@ -145,7 +145,7 @@ the assignments the exemplar JEDECs will use. Arithmetic rows implicitly
 
 **`ALU_ADDY.pld`** (FC emitted by GAL1 from the opcode):
 
-| FC | Op | M | S | Cn | SUB | /BKILL |
+| FC | Op | M | S | Cn | SUB | BKILL |
 |----|----|---|---|----|-----|--------|
 | 0000 | ADD / ADDI / ADDIH / CMN | 0 | 1001 | 0 | 0 | — |
 | 0001 | SUB / SUBI / CMP / CMPI | 0 | 0110 | 1 | 1 | — |
@@ -203,7 +203,7 @@ SUB asserted on 0110, 0111 (V rule; LK_BORROW open — 6502 C is no-borrow).
 
 **Trap, recorded:** M=0 S=1111 is *A − 1 plus Cn* — it passes A only with
 Cn = 1. The Addy v2 design's MOV entry (M=0, S=1111, no Cn note) is this
-trap. The /BKILL form (ADD, B forced to 0) removes the case entirely and
+trap. The BKILL form (ADD, B forced to 0) removes the case entirely and
 produces the same real arithmetic flags MOV already promises.
 
 ---
@@ -215,13 +215,13 @@ produces the same real arithmetic flags MOV already promises.
   (H2/H3)        /OE = GND                      │        │
                                                 │        │
   B port ──► U6 '573/'574 B latch ──────────────┤        │
-  (H4/H5)        /OE = /BKILL ◄──────────────┐  │        │
+  (H4/H5)        /OE ◄ BKILL ────────────────┐  │        │
                  10k pulldowns ┴ (B = 0)     │  │        │
                                           ┌──▼──▼─────┐  │
   FC3:0 ──►┌──────────────┐  S3:0, M ────►│           │──► Cn+8 ─► cond. ─► COUT
   CFLG ───►│ U20 GAL16V8  │  Cn (direct) ►│ U1, U2    │──► Cn+4 ─► cond. ─► HCOUT
            │ per-host     │  SUB ─► V,LK  │ 2×74LS181 │──► A=B (pull-up) ─► AEQB
-           │ JEDEC        │  /BKILL ──────┘ + U3 '182 │──► /G, /P ────────► H13
+           │ JEDEC        │  BKILL ───────┘ + U3 '182 │──► /G, /P ────────► H13
            └──────────────┘                └─────┬─────┘◄── LK_CN: GAL Cn / CNX (seam)
                                                  │ F (LS levels)
                                         ┌────────▼────────┐
@@ -258,7 +258,7 @@ produces the same real arithmetic flags MOV already promises.
 | U20 | GAL16V8 (ATF16V8) | **function-code decode** — per-host JEDEC; socketed |
 
 Plus one pull-up for the wire-ANDed A=B, 10 k pulldown network on the
-post-latch B nets (the /BKILL zero), 0.1 µF per populated socket, link field.
+post-latch B nets (the BKILL zero), 0.1 µF per populated socket, link field.
 
 ### Options
 
@@ -387,7 +387,7 @@ implicitly *plus Cn*.
 |---|------|----------|---------|----------|----------|
 | 0 | 0000 | A | — | INR (Cn=1) | INC, INX, INY (Cn=1) |
 | 0 | 0110 | A − B − 1 | SUB, SUBI (Cn=1); SUBC (Cn=C); CMP, CMPI (Cn=1) | SUB, SUI (Cn=1); SBB, SBI (Cn=¬CY); CMP, CPI (Cn=1) | SBC (Cn=C); CMP, CPX, CPY (Cn=1) |
-| 0 | 1001 | A + B | ADD, ADDI, ADDIH, CMN (Cn=0); ADDC (Cn=C); **MOV, LDI, TST via /BKILL** | ADD, ADI (Cn=0); ADC, ACI (Cn=CY); DAA correction pass (aux GAL on B) | ADC (Cn=C) |
+| 0 | 1001 | A + B | ADD, ADDI, ADDIH, CMN (Cn=0); ADDC (Cn=C); **MOV, LDI, TST via BKILL** | ADD, ADI (Cn=0); ADC, ACI (Cn=CY); DAA correction pass (aux GAL on B) | ADC (Cn=C) |
 | 0 | 1100 | A + A | — | RLC (Cn=A7), RAL (Cn=CY) | ASL (Cn=0), ROL (Cn=C) |
 | 0 | 1111 | A − 1 | — | DCR (Cn=0) | DEC, DEX, DEY (Cn=0) |
 | 1 | 0000 | /A | — | CMA | — |
@@ -468,8 +468,8 @@ board.
    board of a pair is the class of error that yields plausible numbers with
    the wrong flag.
 5. **Fails toward safe:** /FOE, /SOE, /AUXOE, /ZCASC idle high (inactive)
-   via pull-ups, and /BKILL is GAL-driven with a pull-up for the empty-socket
-   case; a disconnected control ribbon yields a passive board driving
+   via pull-ups, and BKILL is GAL-driven (active-high — the '574 /OE sense is why the
+   polarity is high-asserted); a disconnected control ribbon yields a passive board driving
    nothing onto any shared net. The one unsafe state is U20's socket empty —
    S, M, and Cn float. Don't power the board without a burned GAL fitted.
 
@@ -510,7 +510,7 @@ FC[3:0], and CFLG; LEDs on F and H12.
    code with CFLG set so Cn=0 (SBB/SBC/SUBC class) and equal operands —
    then confirm it lies on a plain-subtract code (that's the point of the
    demonstration).
-6. **/BKILL** via a code that asserts it (MOV on `ALU_ADDY`). Any B pattern
+6. **BKILL** via a code that asserts it (MOV on `ALU_ADDY`). Any B pattern
    on the switches: F = A, COUT = 0. Proves the pulldown-zero and the MOV
    path. JEDECs without a B-kill code can't exercise this stage — it's
    burn-dependent, and that's fine.
@@ -562,7 +562,7 @@ Structural observations that hold regardless of the numbers:
 ## Absolute ratings and habits
 
 74HC inputs: no connector-driven input may float. The board pulls its own
-option nets (/FOE, /SOE, /AUXOE, /ZCASC, /BKILL) inactive; **FC, CFLG,
+option nets (/FOE, /SOE, /AUXOE, /ZCASC) inactive via pull-ups, and SRIN low (LSR-safe); **FC, CFLG,
 SRIN, and the latch controls must be driven or strapped whenever the board
 is powered**, and the board is never powered with U20's socket empty — a
 floating S line produces results that look like a microcode bug for a long
@@ -638,7 +638,7 @@ survives.
 
 **Added in this revision:** the function-code GAL (U20) — 4-bit FC + CFLG
 replaces the nine-line raw control interface; carry-in becomes a per-host
-equation driving the Cn pin directly; SUB and /BKILL become GAL outputs;
+equation driving the Cn pin directly; SUB and BKILL become GAL outputs;
 per-board identical JEDECs keep pair boards interchangeable, with LK_CN as
 the single differing link; the raw /CN8→CNX seam replaces the conditioned
 COUT→CIN_A cascade.

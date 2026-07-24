@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace TTLSim.UI.Persistence;
 
@@ -166,6 +166,32 @@ public sealed class ItemDto
     // Cosmetic text label (Type "text"). The text itself rides on Label above.
     public float? FontSize { get; set; }
     public string? TextColor { get; set; }
+
+    /// <summary>
+    /// Testbench (Type "testbench") only: the stimulus CSV, embedded the same
+    /// way an Intel HEX image is embedded on DeviceDto, so a project file
+    /// carries its own stimulus and runs on any machine. Null on every other
+    /// item type.
+    /// </summary>
+    public string? Program { get; set; }
+
+    /// <summary>
+    /// Testbench only: the pin name-to-number map, in display (program column)
+    /// order, as "number=name" entries separated by commas -- for example
+    /// "1=CLK,3=D0,2=/RESET". A name may contain anything except a comma or an
+    /// equals sign; the CSV parser already forbids a comma in a column name.
+    ///
+    /// <para>This CANNOT be derived from the program. Pin numbers are the
+    /// permanent identity that connections persist against, so a column that is
+    /// added, removed and re-added -- or a file whose columns are reordered --
+    /// leaves numbers that no longer run 1..N in column order. Losing this map
+    /// would silently reattach wires to the wrong signals.</para>
+    ///
+    /// <para>Null on every other item type. A testbench that has a program but
+    /// no map (a hand-written file) rebuilds its pins numbered 1..N in column
+    /// order, which is correct for a file whose wires never moved.</para>
+    /// </summary>
+    public string? PinMap { get; set; }
 
 }
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Security.Cryptography;
@@ -1241,6 +1241,19 @@ public static class EasyEDACatalogue
             // it and hands it the DIP-14 pin map (no pin 4).
             CanOscillatorDip8 => CanOscDip8Part,
             CanOscillator => CanOscDip14Part,
+            // The testbench is a simulation instrument with no physical
+            // counterpart, so there is nothing to put on a board. This arm
+            // exists only to replace the generic "add a CataloguePart entry"
+            // message below, which would read as an unfinished feature rather
+            // than a deliberate refusal. Hiding the layer it sits on excludes
+            // it from the export -- CollectUsedParts filters inactive items
+            // before reaching this lookup -- which is the intended workflow:
+            // keep the testbench on its own layer, hide the layer, export.
+            TestbenchItem => throw new NotImplementedException(
+                "EasyEDA export: the schematic contains a visible testbench. "
+                + "A testbench is a simulation-only instrument and has no PCB "
+                + "footprint. Delete it, or move it to its own layer and hide "
+                + "that layer, then export again."),
             _ => throw new NotImplementedException(
                 $"EasyEDA export: no catalogue entry for item of type " +
                 $"{item.GetType().Name}. Add a CataloguePart entry and " +

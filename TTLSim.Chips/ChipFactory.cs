@@ -35,6 +35,12 @@ public sealed class ChipFactory : IChipFactory
 
     public IChip? CreateForItem(BuildItem item, IReadOnlyDictionary<int, Net> pinToNet)
     {
+        // The testbench owns many pins, so it is handled before the
+        // single-pin path below (which reads PinNumbers[0] and would
+        // silently model only the first column).
+        if (item.Kind == BuildItemKind.Testbench)
+            return TryCreateTestbench(item, pinToNet);
+
         if (item.PinNumbers.Count == 0) return null;
         int pin = item.PinNumbers[0];
         if (!pinToNet.TryGetValue(pin, out Net? net) || net is null) return null;
@@ -47,6 +53,59 @@ public sealed class ChipFactory : IChipFactory
                 => new ClockSource(net, period),
             _ => null
         };
+    }
+
+    /// <summary>
+    /// Build the stimulus source for a testbench item. PinNumbers arrive in
+    /// program column order, so column i is PinNumbers[i].
+    ///
+    /// <para>An unwired column gets a local stand-in net: the testbench must
+    /// still run when only some of its columns are hooked up, which is the
+    /// normal state while a circuit is being brought up one signal at a time.
+    /// A stand-in drives nothing real (cf. the open-output stand-ins the chip
+    /// models use).</para>
+    ///
+    /// <para>A program that no longer parses yields no chip rather than a
+    /// half-built one. The GUI validates on import through the same parser, so
+    /// this only fires on a hand-edited .ttlproj.</para>
+    /// </summary>
+    private IChip? TryCreateTestbench(BuildItem item, IReadOnlyDictionary<int, Net> pinToNet)
+    {
+        if (string.IsNullOrWhiteSpace(item.Program)) return null;
+
+        TestbenchProgram program;
+        try
+        {
+            program = TestbenchProgram.Parse(item.Program);
+        }
+        catch (FormatException ex)
+        {
+            logger?.LogWarning(
+                "Testbench {ItemId}: program will not parse, so it drives nothing. {Message}",
+                item.ItemId, ex.Message);
+            return null;
+        }
+
+        if (item.PinNumbers.Count != program.ColumnCount)
+        {
+            logger?.LogWarning(
+                "Testbench {ItemId}: {PinCount} pin(s) but {ColumnCount} program column(s); "
+                + "the item and its program are out of step, so it drives nothing.",
+                item.ItemId, item.PinNumbers.Count, program.ColumnCount);
+            return null;
+        }
+
+        var nets = new Net[program.ColumnCount];
+        for (int c = 0; c < program.ColumnCount; c++)
+        {
+            int pinNumber = item.PinNumbers[c];
+            nets[c] = pinToNet.TryGetValue(pinNumber, out Net? n) && n is not null
+                ? n
+                : new Net(-1, $"tb-col{c}-nc");
+        }
+
+        long rowPeriod = item.ClockPeriodPicoseconds is long p && p > 0 ? p : 1;
+        return new TestbenchSource(program, item.PinNumbers, nets, rowPeriod);
     }
 
     public IEnumerable<IChip> CreateForUnits(
