@@ -27,7 +27,14 @@ bring-up, fails toward safe.
 > chained 16-bit right shift — all passing, same date, with the boards
 > joined exactly as the copper will be: three ribbon `links` (H8→H11
 > cascade, H4↔H4H and H5↔H5H multi-drop) and J1H/J2H at 2-3, nothing
-> else shared. Jumper state in a
+> else shared. **The 8080 configuration is also verified** (`ALU_8080.pld`
+> in U3, J3 at 2-3): 24 vectors + the RRC/RAR shift rows, all passing —
+> including the LK_BORROW conditioning, the A7 rotate carry, and the
+> S=0000/1111/1100 arithmetic codes no Addy vector touches. Every copper
+> path on the board has now been exercised in simulation. Along the way
+> three TTLSim '181 model defects were found and fixed (A=B drive type,
+> wrong function-table column, P̄/Ḡ exports inconsistent at S=1100).
+> Jumper state in a
 > `.ttlproj`: `switchClosed` false = position 1-2, true = 2-3.
 > Verification en route surfaced and fixed two
 > TTLSim model defects (A=B drive type; wrong function-table column) and

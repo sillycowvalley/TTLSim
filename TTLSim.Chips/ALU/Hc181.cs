@@ -54,10 +54,12 @@ namespace TTLSim.Chips.Alu;
 ///   X, Y        propagate (/P, pin 15) and generate (/G, pin 17) for
 ///               cascading through a 74182; pin assignment per the ST
 ///               M74HC181 pin description table (15 = P/X, 16 = Cn+4,
-///               17 = G/Y). Both active-LOW; not affected by Cn.
-///               Documented only for ADD and SUBTRACT modes; computed via
-///               the standard 4-bit carry-lookahead equations for all
-///               other operations.
+///               17 = G/Y). Both active-LOW; not affected by Cn or M.
+///               DERIVED from the model's own arithmetic for all 16 codes
+///               (G = carry-out at Cn=0 on the Ḡ pin, T = carry-out at
+///               Cn=1 on the P̄ pin -- see ComputeCarryLookahead), so
+///               F, Cn+4 and the exports can never disagree about the
+///               same operation.
 ///
 /// Propagation delay: the datasheet quotes a spread (20–62 ns depending on
 /// path; A=B is the slowest). We use a single 22 ns figure for every
@@ -226,13 +228,10 @@ public sealed class Hc181 : IChip
         scheduler.Schedule(delayPs, drivers[DriverAeqB],
             f == 0xF ? Signal.HighZ : Signal.Low);
 
-        // Step 6: P and G (X and Y pins). Active-low, not affected by Cn.
-        // Datasheet defines their behavioural meaning only for ADD and SUB;
-        // for other ops we still emit the standard carry-lookahead values
-        // (computed from the true pin data under the currently-selected
-        // operation's arithmetic transformation), which is what real
-        // cascade hardware would see -- it just isn't documented as useful.
-        (bool pAsserted, bool gAsserted) = ComputeCarryLookahead(s, a, b, modeLogic);
+        // Step 6: P and G (X and Y pins). Active-low, not affected by Cn,
+        // and (as on real silicon, where M only gates the internal carries
+        // into the output stage) not affected by M either.
+        (bool pAsserted, bool gAsserted) = ComputeCarryLookahead(s, a, b);
         scheduler.Schedule(delayPs, drivers[DriverX], pAsserted ? Signal.Low : Signal.High);
         scheduler.Schedule(delayPs, drivers[DriverY], gAsserted ? Signal.Low : Signal.High);
     }
@@ -331,67 +330,51 @@ public sealed class Hc181 : IChip
 
     /// <summary>
     /// Compute P (propagate, X pin) and G (generate, Y pin). Returns whether
-    /// each is asserted (i.e., whether the active-low pin should be driven LOW).
-    /// Per the datasheet these are unaffected by Cn.
+    /// each is asserted (i.e., whether the active-low pin should be driven
+    /// LOW). Unaffected by Cn and by M.
     ///
-    /// The datasheet documents P and G's behavioural meaning only for two
-    /// rows: ADD (S=1001, "A plus B") and SUBTRACT (S=0110, "A minus B
-    /// minus 1"). We implement those two correctly and provide defined-but-
-    /// not-externally-meaningful values for the other 14 arithmetic rows
-    /// (and all 16 logic rows, where the chip's internal carry chain is
-    /// disabled anyway).
+    /// DERIVED, NOT TRANSCRIBED (CR "'181 P̄/Ḡ Exports Wrong for S=1100",
+    /// 2026-07-24 — the third '181 transcription defect; this closes the
+    /// category). The exports are evaluated from ComputeArithmetic itself,
+    /// so they are consistent with the model's own F and Cn+4 for all 16
+    /// arithmetic codes by construction:
     ///
-    /// This is enough for the CPU built on this simulator -- cascading
-    /// through a '182 is only documented for ADD and SUB, which is exactly
-    /// the set we have correct.
+    ///   G = carry-out with carry-in 0   ("generate")
+    ///   T = carry-out with carry-in 1   ("transmit", = G OR textbook-P)
+    ///
+    /// The P̄ pin carries T. T is a standard substitution for P: in every
+    /// '182 expression, G + T·Cn = G + (G+P)·Cn = G + P·Cn, and the extra
+    /// minterms T contributes to the group Ḡ/P̄ outputs are absorbed, so a
+    /// paired '182 (or GAL_182) behaves identically. For ADD (S=1001) and
+    /// SUB (S=0110) — the only rows the datasheet documents — T equals
+    /// textbook P exactly, because G implies P on those rows.
+    ///
+    /// Previous revision: ADD and SUB were special-cased (correctly) and
+    /// the other 14 codes fell through to a generic per-bit A-plus-B
+    /// lookahead — which reports "nothing" for any code whose operand
+    /// masking differs from plain ADD. At S=1100 (A plus A) with A=8 that
+    /// gave P̄=Ḡ=inactive while F wrapped: the slice's F and its exports
+    /// disagreed about the same addition, and a paired '182 dropped the
+    /// carry (the RLC/RAL CY failures in the 8080-host testbench).
+    ///
+    /// The invariant this guarantees, for every arithmetic code, operand
+    /// pair, and Cn state:
+    ///   Cout(S,A,B,Cn) == G(S,A,B) OR (P(S,A,B) AND Cn)
+    /// where all three readings are the logical (asserted) senses of the
+    /// model's own pins. The property sweep in Hc181Tests checks all 8,192
+    /// combinations.
+    ///
+    /// M=1: real silicon exports whatever falls out of the array; nothing
+    /// on any board consumes P̄/Ḡ in logic mode. We emit the same derived
+    /// values regardless of M — stable, defined, and matching real
+    /// silicon's M-independence of these pins.
     /// </summary>
     private static (bool propagate, bool generate) ComputeCarryLookahead(
-        int s, int a, int b, bool modeLogic)
+        int s, int a, int b)
     {
-        // ADD: P=LOW when A+B >= 15, G=LOW when A+B >= 16.
-        if (!modeLogic && s == 0b1001)
-        {
-            int sum = a + b;
-            return (sum >= 15, sum >= 16);
-        }
-
-        // SUBTRACT: F = A + /B + Cn (A minus B minus 1, plus injected carry).
-        // P=LOW when A >= B (A + /B >= 15); G=LOW when A > B (A + /B >= 16).
-        // These satisfy the cascade identity "carry-out = G + P.carry-in"
-        // against this model's carry-out (asserted iff A + /B + Cn >= 16) --
-        // the identity a '182 (or the GAL-182) relies on. "A <= B / A < B"
-        // is the ACTIVE-LOW-data description of the same pin condition;
-        // applying it to the true pin data inverts the polarity and breaks
-        // '182-carried subtraction.
-        if (!modeLogic && s == 0b0110)
-        {
-            return (a >= b, a > b);
-        }
-
-        // Every other operation: derive a defined value from the per-bit
-        // propagate/generate equations that the chip's internal gates
-        // produce. The standard 4-bit lookahead at Cn=0 reduces to:
-        //   p_i = a_i | b_i,   g_i = a_i & b_i
-        //   P = p3 & p2 & p1 & p0
-        //   G = g3 | (p3 & g2) | (p3 & p2 & g1) | (p3 & p2 & p1 & g0)
-        // This is what real silicon presents for these unsupported rows.
-        // External hardware that cascades non-ADD/SUB operations through a
-        // '182 is non-standard; this value is here so the chip model is
-        // deterministic, not because anyone is expected to rely on it.
-        int p = 0, g = 0;
-        for (int i = 0; i < 4; i++)
-        {
-            int ai = (a >> i) & 1;
-            int bi = (b >> i) & 1;
-            p |= (ai | bi) << i;
-            g |= (ai & bi) << i;
-        }
-        bool P = ((p & 0xF) == 0xF);
-        bool G = ((g >> 3) & 1) != 0
-              || (((p >> 3) & 1) != 0 && ((g >> 2) & 1) != 0)
-              || (((p >> 3) & 1) != 0 && ((p >> 2) & 1) != 0 && ((g >> 1) & 1) != 0)
-              || (((p >> 3) & 1) != 0 && ((p >> 2) & 1) != 0 && ((p >> 1) & 1) != 0 && ((g >> 0) & 1) != 0);
-        return (P, G);
+        bool g = ((ComputeArithmetic(s, a, b, 0) >> 4) & 1) != 0;
+        bool t = ((ComputeArithmetic(s, a, b, 1) >> 4) & 1) != 0;
+        return (t, g);
     }
 
     // ------------------------------------------------------------- helpers

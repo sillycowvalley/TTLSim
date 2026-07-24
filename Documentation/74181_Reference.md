@@ -344,6 +344,7 @@ expectations; A = 0F, B = 33 for the logic rows.
 | 8 | M=0 S=1001, A=FF B=01 | Cn+4 pin LOW | pin high | Cn+4 sense; also pin-map rotation if it appears on 15 or 17 |
 | 9 | M=0 S=0110, A=B, Cn pin H | F = all ones, A=B releases | | A=B totem-pole modelling (contention on a wire-AND) |
 | 10 | 8-bit pair, 0F+01 via '182 | 10 | | P̄/Ḡ pin rotation, '182 pairing |
+| 11 | M=0 S=1100 (A plus A), A=81 | Cn+4 asserts; paired '182 carry asserts | | **lookahead exports inconsistent with the slice's own arithmetic** — the rotate codes are the first place a per-code P̄/Ḡ transcription slip surfaces |
 
 Vectors 1 and 6 together are the sixty-second version: AND that returns OR
 is the column; ADD that returns +1 is the carry sense. Both must pass —

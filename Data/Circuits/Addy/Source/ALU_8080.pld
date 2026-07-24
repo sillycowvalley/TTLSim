@@ -1,0 +1,102 @@
+Name     ALU_8080;
+PartNo   ATF16V8B;
+Date     2026-07-24;
+Revision 01;
+Designer Michael;
+Company  Blinky;
+Assembly '181 ALU Module v1;
+Location U3;
+Device   g16v8;
+
+/*
+ * Function-code decode, 8080-ish host. FC[2:0] = IR[5:3] on page 0.
+ *
+ * FC table (FC3..FC0):
+ *   0000  ADD / ADI    M=0 S=1001 Cn=0
+ *   0001  ADC / ACI    M=0 S=1001 Cn=CFLG
+ *   0010  SUB / SUI    M=0 S=0110 Cn=1        SUB=1
+ *   0011  SBB / SBI    M=0 S=0110 Cn=!CFLG    SUB=1   (A - B - CY)
+ *   0100  ANA / ANI    M=1 S=1011
+ *   0101  XRA / XRI    M=1 S=0110
+ *   0110  ORA / ORI    M=1 S=1110
+ *   0111  CMP / CPI    M=0 S=0110 Cn=1        SUB=1
+ *   1000  INR          M=0 S=0000 Cn=1
+ *   1001  DCR          M=0 S=1111 Cn=0
+ *   1010  CMA          M=1 S=0000
+ *   1011  RLC          M=0 S=1100 Cn=A7       (A plus A plus bit 7 = rotate left circular)
+ *   1100  RAL          M=0 S=1100 Cn=CFLG     (rotate left through carry)
+ *   1101  DAA pass     M=0 S=1001 Cn=0        BKILL=1 (aux GAL drives the adjust on BQ;
+ *                                              with U18 absent, degrades to pass-A)
+ *   1110  PASS A       M=1 S=1111             (RRC / RAR ride the SHR driver)
+ *   1111  spare        M=1 S=1111             (fails toward safe: pass A)
+ *
+ * Polarity notes:
+ *   CN declared !CN: the array holds the logical carry-wanted condition; the
+ *   OLMC inverts so the '181/'182 Cn pin goes LOW to inject 1.
+ *   SUB feeds the V rule and, with LK_BORROW (J3 at 2-3) fitted for this
+ *   host, flips COUT/HCOUT on subtract codes: CY = 1 = borrow, AC likewise.
+ *   BKILL is ACTIVE-HIGH (kills the B latch '574; pulldowns present B = 0).
+ *   A7 is live in this JEDEC - the rotate carry-around for RLC.
+ */
+
+/* inputs */
+PIN 2  = FC0;
+PIN 3  = FC1;
+PIN 4  = FC2;
+PIN 5  = FC3;
+PIN 6  = CFLG;
+PIN 7  = A7;
+
+/* outputs */
+PIN 12 = BKILL;
+PIN 13 = SUB;
+PIN 14 = !CN;
+PIN 15 = M;
+PIN 16 = S0;
+PIN 17 = S1;
+PIN 18 = S2;
+PIN 19 = S3;
+
+/* mode: ANA/XRA/ORA, CMA, PASS, spare */
+M     = !FC3 & FC2 & !FC1
+      # !FC3 & FC2 & !FC0
+      # FC3 & !FC2 & FC1 & !FC0
+      # FC3 & FC2 & FC1;
+
+/* function select, active-HIGH column */
+S3    = !FC3 & !FC2 & !FC1
+      # !FC3 & FC2 & !FC0
+      # FC3 & !FC2 & FC0
+      # FC3 & FC2;
+
+S2    = !FC3 & FC1
+      # !FC3 & FC2 & FC0
+      # FC3 & !FC2 & FC0
+      # FC3 & FC2 & FC1
+      # FC3 & FC2 & !FC1 & !FC0;
+
+S1    = !FC3 & FC2
+      # !FC3 & FC1
+      # FC3 & !FC2 & !FC1 & FC0
+      # FC3 & FC2 & FC1;
+
+S0    = !FC3 & !FC2 & !FC1
+      # !FC3 & FC2 & !FC1 & !FC0
+      # FC3 & !FC1 & FC0
+      # FC3 & FC2 & FC1;
+
+/* logical carry-in wanted; OLMC inversion makes the pin active-low */
+CN    = !FC3 & !FC2 & FC1 & !FC0             /* SUB: true subtract */
+      # !FC3 & FC2 & FC1 & FC0               /* CMP: true subtract */
+      # FC3 & !FC2 & !FC1 & !FC0             /* INR */
+      # !FC3 & !FC2 & !FC1 & FC0 & CFLG      /* ADC */
+      # !FC3 & !FC2 & FC1 & FC0 & !CFLG      /* SBB: A - B - CY */
+      # FC3 & FC2 & !FC1 & !FC0 & CFLG       /* RAL: carry into bit 0 */
+      # FC3 & !FC2 & FC1 & FC0 & A7;         /* RLC: bit 7 wraps to bit 0 */
+
+/* subtract indicator: LK_BORROW conditioning + V rule */
+SUB   = !FC3 & !FC2 & FC1
+      # !FC3 & FC2 & FC1 & FC0;
+
+/* DAA: kill the B latch so the aux GAL (or the pulldowns) own BQ */
+BKILL = FC3 & FC2 & !FC1 & FC0;

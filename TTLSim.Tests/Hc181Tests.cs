@@ -466,4 +466,58 @@ public class Hc181Tests
         Assert.False(r.ReadPropagate());
         Assert.False(r.ReadGenerate());
     }
+
+    [Fact]
+    public void Lookahead_invariant_holds_for_all_arithmetic_codes()
+    {
+        // CR "'181 P̄/Ḡ Exports Wrong for S=1100" acceptance 1: for every
+        // arithmetic S code, all 256 operand pairs, both Cn states, the
+        // exports must satisfy the lookahead identity against the model's
+        // OWN carry out:
+        //     Cout == G or (P and Cn)
+        // (with the T substitution on the P̄ pin the identity still holds
+        // verbatim: at Cn=1 it reads Cout == T, which is T's definition).
+        // 8,192 checks. This is the property that makes a paired '182
+        // agree with ripple for every code, not just ADD and SUB.
+        for (int s = 0; s < 16; s++)
+            for (int a = 0; a < 16; a++)
+                for (int b = 0; b < 16; b++)
+                    foreach (bool carryIn in new[] { false, true })
+                    {
+                        var r = Build(a, b, s, modeLogic: false, carryIn: carryIn);
+                        bool cout = r.ReadCarryOut();
+                        bool g = r.ReadGenerate();
+                        bool p = r.ReadPropagate();
+                        Assert.True(cout == (g || (p && carryIn)),
+                            $"invariant S={s:B4} A={a:X1} B={b:X1} " +
+                            $"Cn={(carryIn ? "L(carry)" : "H")}: " +
+                            $"Cout={cout} G={g} P={p}");
+                    }
+    }
+
+    [Fact]
+    public void Discriminator_double_of_eight_exports_generate()
+    {
+        // The CR's failing shape at unit level: S=1100 (A plus A), A=8 --
+        // 8+8 wraps, so the slice MUST export generate for a paired '182
+        // to see the carry. B is ignored by this row; drive it nonzero to
+        // prove that. (Module-level: RLC A=81, high slice.)
+        var r = Build(a: 0x8, b: 0x3, s: 0b1100, modeLogic: false, carryIn: false);
+        Assert.Equal(0x0, r.ReadF());
+        Assert.True(r.ReadCarryOut());
+        Assert.True(r.ReadGenerate());
+        Assert.True(r.ReadPropagate());   // T = G or P; G alone suffices
+    }
+
+    [Fact]
+    public void Discriminator_double_of_four_exports_nothing()
+    {
+        // S=1100, A=4: 4+4(+1) never reaches 16 -- no carry, and neither
+        // export may assert. (Module-level: the A=41 control vector.)
+        var r = Build(a: 0x4, b: 0x3, s: 0b1100, modeLogic: false, carryIn: false);
+        Assert.Equal(0x8, r.ReadF());
+        Assert.False(r.ReadCarryOut());
+        Assert.False(r.ReadGenerate());
+        Assert.False(r.ReadPropagate());
+    }
 }

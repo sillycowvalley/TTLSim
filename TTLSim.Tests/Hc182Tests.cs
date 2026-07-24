@@ -148,6 +148,27 @@ public class Hc182Tests
                 }
     }
 
+    [Fact]
+    public void Sixteen_bit_double_matches_arithmetic()
+    {
+        // S=1100 (A plus A) -- the code the derived-exports CR was raised
+        // on. Each slice doubles its own nibble; the '182 must chain the
+        // inter-slice carries so the cascade equals 2*A + Cn. B is ignored
+        // by this row; drive it with a busy pattern to prove that. The
+        // 0x8000 / 0xAAAA operands are the discriminators: their high
+        // nibbles wrap, which only reaches the next slice via the exports.
+        foreach (int a in Operands)
+            foreach (bool carry in new[] { false, true })
+            {
+                int cin = carry ? 1 : 0;
+                int total = a + a + cin;
+                AssertCascade(0b1100, a, 0x5A5A, carry,
+                    expectedF: total & 0xFFFF,
+                    expectedCarry: (total >> 16) & 1,
+                    op: "2xA");
+            }
+    }
+
     private static void AssertCascade(
         int s, int a, int b, bool carryAsserted,
         int expectedF, int expectedCarry, string op)
