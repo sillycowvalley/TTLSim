@@ -24,7 +24,10 @@ bring-up, fails toward safe.
 > 2026-07-24, zero warnings). **The 16-bit pair configuration is also
 > verified** (`181_ALU_Pair.ttlproj`): 15 vectors covering seam carry both
 > directions, the zero cascade, cross-board AEQB, word-wide V/SIGN, and the
-> chained 16-bit right shift — all passing, same date. Jumper state in a
+> chained 16-bit right shift — all passing, same date, with the boards
+> joined exactly as the copper will be: three ribbon `links` (H8→H11
+> cascade, H4↔H4H and H5↔H5H multi-drop) and J1H/J2H at 2-3, nothing
+> else shared. Jumper state in a
 > `.ttlproj`: `switchClosed` false = position 1-2, true = 2-3.
 > Verification en route surfaced and fixed two
 > TTLSim model defects (A=B drive type; wrong function-table column) and

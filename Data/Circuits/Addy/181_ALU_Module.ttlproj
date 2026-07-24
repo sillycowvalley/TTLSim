@@ -913,7 +913,7 @@
           "x": 156,
           "y": 0
         },
-        "label": "LS\u003EHC FENCE",
+        "label": "LS>HC FENCE",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1423,7 +1423,7 @@
           "x": -60,
           "y": 88
         },
-        "label": "FC\u002BCTL",
+        "label": "FC+CTL",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2716,7 +2716,7 @@
       {
         "type": "text",
         "id": "txt-title",
-        "label": "\u0027181 ALU MODULE v1 - Blinky family byte slice - solo Addy configuration",
+        "label": "'181 ALU MODULE v1 - Blinky family byte slice - solo Addy configuration",
         "position": {
           "x": -60,
           "y": -46
@@ -2743,7 +2743,7 @@
       {
         "type": "text",
         "id": "txt-note",
-        "label": "Layers 1-5 = optional population. RN1 = BQ/BKILL pulldowns (SIP9 bussed), R1 = A=B pull-up, RN2 = /FOE //SOE //AUXOE pull-ups (elements 5-9 NC), R2 = SRIN pulldown (LSR-safe idle). BKILL is ACTIVE-HIGH. GND on pin 1 of H4/H5/H7/H10; data headers all-signal. Jumpers (1-2 = solo/Addy; switchClosed true = 2-3): J1 LK_CN, J2 LK_ZC, J3 LK_BORROW. Cascade: straight 6-way ribbon, board N H8 -\u003E board N\u002B1 H11, pin-for-pin (GND, /CN8-\u003ECNX, /ZOUT-\u003E/ZCASC, AEQB\u003C-\u003EAEQB, SRIN\u003C-FB0).",
+        "label": "Layers 1-5 = optional population. RN1 = BQ/BKILL pulldowns (SIP9 bussed), R1 = A=B pull-up, R3-R5 = /FOE //SOE //AUXOE pull-ups, R2 = SRIN pulldown (LSR-safe idle). BKILL is ACTIVE-HIGH. GND on pin 1 of H4/H5/H7/H10; data headers all-signal. Jumpers (1-2 = solo/Addy; switchClosed true = 2-3): J1 LK_CN, J2 LK_ZC, J3 LK_BORROW. Cascade: straight 6-way ribbon, board N H8 -> board N+1 H11, pin-for-pin (GND, /CN8->CNX, /ZOUT->/ZCASC, AEQB<->AEQB, SRIN<-FB0).",
         "position": {
           "x": -60,
           "y": -38
@@ -2851,7 +2851,7 @@
       {
         "type": "text",
         "id": "txt-col-156",
-        "label": "FENCE \u002B CARRY",
+        "label": "FENCE + CARRY",
         "position": {
           "x": 156,
           "y": -22
@@ -2932,7 +2932,7 @@
       {
         "type": "text",
         "id": "txt-col-312",
-        "label": "FLAGS \u002B AUX (opt)",
+        "label": "FLAGS + AUX (opt)",
         "position": {
           "x": 312,
           "y": -22
@@ -3691,7 +3691,7 @@
         "label": "FB",
         "position": {
           "x": 300,
-          "y": 50
+          "y": 52
         },
         "rotation": 180,
         "layer": 4,
@@ -4419,10 +4419,10 @@
         "id": "nlCOUT-0",
         "label": "COUT",
         "position": {
-          "x": 148,
-          "y": 76
+          "x": 184,
+          "y": 48
         },
-        "rotation": 180,
+        "rotation": 0,
         "layer": 0,
         "frequencyHz": null,
         "dutyCycle": null,
@@ -4500,10 +4500,10 @@
         "id": "nlHC-0",
         "label": "HCOUT",
         "position": {
-          "x": 148,
-          "y": 82
+          "x": 184,
+          "y": 52
         },
-        "rotation": 180,
+        "rotation": 0,
         "layer": 0,
         "frequencyHz": null,
         "dutyCycle": null,
@@ -4554,10 +4554,10 @@
         "id": "nlZ-0",
         "label": "ZERO",
         "position": {
-          "x": 143,
-          "y": 54
+          "x": 184,
+          "y": 56
         },
-        "rotation": 180,
+        "rotation": 0,
         "layer": 0,
         "frequencyHz": null,
         "dutyCycle": null,
@@ -4635,8 +4635,8 @@
         "id": "nlV-0",
         "label": "V",
         "position": {
-          "x": 170,
-          "y": 56
+          "x": 184,
+          "y": 60
         },
         "rotation": 0,
         "layer": 0,
@@ -4690,7 +4690,7 @@
         "label": "V",
         "position": {
           "x": 300,
-          "y": 6
+          "y": 8
         },
         "rotation": 180,
         "layer": 4,
@@ -5068,7 +5068,7 @@
         "label": "CLK",
         "position": {
           "x": 300,
-          "y": 10
+          "y": 12
         },
         "rotation": 180,
         "layer": 4,
@@ -5095,7 +5095,7 @@
         "label": "CLK",
         "position": {
           "x": 300,
-          "y": 54
+          "y": 56
         },
         "rotation": 180,
         "layer": 4,
@@ -5229,10 +5229,10 @@
         "id": "nlCLAT-0",
         "label": "CLAT",
         "position": {
-          "x": 300,
-          "y": 2
+          "x": 344,
+          "y": 4
         },
-        "rotation": 180,
+        "rotation": 0,
         "layer": 4,
         "frequencyHz": null,
         "dutyCycle": null,
@@ -5310,10 +5310,10 @@
         "id": "nlZLAT-0",
         "label": "ZLAT",
         "position": {
-          "x": 300,
-          "y": 46
+          "x": 339,
+          "y": 52
         },
-        "rotation": 180,
+        "rotation": 0,
         "layer": 4,
         "frequencyHz": null,
         "dutyCycle": null,
@@ -5364,10 +5364,10 @@
         "id": "nlNLAT-0",
         "label": "NLAT",
         "position": {
-          "x": 300,
-          "y": 52
+          "x": 339,
+          "y": 56
         },
-        "rotation": 180,
+        "rotation": 0,
         "layer": 4,
         "frequencyHz": null,
         "dutyCycle": null,
@@ -5418,10 +5418,10 @@
         "id": "nlVLAT-0",
         "label": "VLAT",
         "position": {
-          "x": 300,
+          "x": 344,
           "y": 8
         },
-        "rotation": 180,
+        "rotation": 0,
         "layer": 4,
         "frequencyHz": null,
         "dutyCycle": null,
@@ -5743,9 +5743,9 @@
         "label": "SUBB",
         "position": {
           "x": 148,
-          "y": 74
+          "y": 68
         },
-        "rotation": 180,
+        "rotation": 0,
         "layer": 0,
         "frequencyHz": null,
         "dutyCycle": null,
@@ -6415,7 +6415,7 @@
       {
         "type": "text",
         "id": "txt-edge-l",
-        "label": "LEFT EDGE - host in: H1 PWR  H2 A  H3 B  H4 FC\u002BCTL  H5 STROBES",
+        "label": "LEFT EDGE - host in: H1 PWR  H2 A  H3 B  H4 FC+CTL  H5 STROBES",
         "position": {
           "x": -70,
           "y": -70
@@ -6442,7 +6442,7 @@
       {
         "type": "text",
         "id": "txt-edge-r",
-        "label": "TOP: H8 CASC UP -\u003E next board\u0027s H11",
+        "label": "TOP: H8 CASC UP -> next board's H11",
         "position": {
           "x": 150,
           "y": -70
@@ -6469,7 +6469,7 @@
       {
         "type": "text",
         "id": "txt-edge-b",
-        "label": "BOTTOM: H11 CASC DN \u003C- previous board\u0027s H8",
+        "label": "BOTTOM: H11 CASC DN <- previous board's H8",
         "position": {
           "x": 151,
           "y": 150
@@ -12983,10 +12983,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 2.7178483,
+    "zoom": 0.38410962,
     "pan": {
-      "x": -3689,
-      "y": 221
+      "x": 416,
+      "y": 470
     }
   }
 }
