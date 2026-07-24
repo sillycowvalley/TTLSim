@@ -111,11 +111,19 @@ public class OpenCollectorResolutionTests
 /// <summary>
 /// The change-request's integration case built directly in code: two '181
 /// slices with their open-collector A=B pins wire-ANDed on one net under a
-/// weak pull-up, forming an 8-bit equality signal. Each slice runs
-/// S=0110 (subtract) with carry asserted, so its slice result is A minus B
-/// and the A=B pin releases exactly on nibble equality. The rig mirrors
-/// Hc181Tests' conventions (active-low operand pins, StaticWeakDriver
-/// pull-up) so the two files read alike.
+/// weak pull-up, forming an 8-bit equality signal.
+///
+/// ACTIVE-HIGH data convention (CR 2026-07-24): operand pins carry true
+/// data, and the equality idiom is S=0110 (subtract) with the Cn pin HIGH
+/// -- NO injected carry. Each slice then computes A minus B minus 1, which
+/// is all ones exactly on nibble equality (F = 0xF + (A - B) masked to 4
+/// bits: 0xF iff A = B, and provably never 0xF otherwise for nibbles), so
+/// every F pin goes HIGH and the open-collector A=B releases -- the
+/// pin-level release condition. Driving Cn LOW instead (the pre-CR idiom,
+/// A minus B, release-on-zero) is exactly wrong under the pin-level
+/// semantics: on equality F = 0 puts every F pin LOW and A=B stays driven.
+/// The rig mirrors Hc181Tests' conventions (true-data operand pins,
+/// StaticDriver pull-up) so the two files read alike.
 /// </summary>
 public class Hc181WireAndTests
 {
@@ -160,8 +168,9 @@ public class Hc181WireAndTests
     /// <summary>
     /// Two '181s: the low slice on bits 3..0, the high slice on bits 7..4,
     /// A=B pins on ONE shared net with a weak pull-up. Every other output
-    /// gets its own private net. S=0110, M low, Cn low (carry asserted), so
-    /// per slice F = A - B and A=B releases on nibble equality.
+    /// gets its own private net. S=0110, M low, Cn pin HIGH (no injected
+    /// carry), so per slice F = A minus B minus 1 -- all ones on nibble
+    /// equality -- and A=B releases exactly when all four F pins are HIGH.
     /// </summary>
     private static (Net AeqB, Simulator Sim) BuildTwoSlices(int a, int b)
     {
@@ -191,15 +200,15 @@ public class Hc181WireAndTests
                 cnP4: N(),
                 b3: b3, a3: a3, b2: b2, a2: a2, b1: b1, a1: a1));
 
-            // Active-low operand pins: a 1 bit drives the pin LOW.
-            DriveActiveLow(chips, a0, an, 0);
-            DriveActiveLow(chips, a1, an, 1);
-            DriveActiveLow(chips, a2, an, 2);
-            DriveActiveLow(chips, a3, an, 3);
-            DriveActiveLow(chips, b0, bn, 0);
-            DriveActiveLow(chips, b1, bn, 1);
-            DriveActiveLow(chips, b2, bn, 2);
-            DriveActiveLow(chips, b3, bn, 3);
+            // Operand pins carry TRUE data: a 1 bit drives the pin HIGH.
+            DriveActiveHigh(chips, a0, an, 0);
+            DriveActiveHigh(chips, a1, an, 1);
+            DriveActiveHigh(chips, a2, an, 2);
+            DriveActiveHigh(chips, a3, an, 3);
+            DriveActiveHigh(chips, b0, bn, 0);
+            DriveActiveHigh(chips, b1, bn, 1);
+            DriveActiveHigh(chips, b2, bn, 2);
+            DriveActiveHigh(chips, b3, bn, 3);
 
             // S=0110 subtract: S1, S2 high; S0, S3 low. M low (arithmetic).
             chips.Add(new GndDriver(s0));
@@ -208,10 +217,11 @@ public class Hc181WireAndTests
             chips.Add(new GndDriver(s3));
             chips.Add(new GndDriver(m));
 
-            // Cn LOW asserts carry, making the slice result A - B, so the
-            // release condition is plain nibble equality. Each slice gets
-            // its own Cn drive -- the equality tie needs no carry chain.
-            chips.Add(new GndDriver(cn));
+            // Cn pin HIGH: no injected carry (the pin is active LOW). The
+            // slice result is A minus B minus 1, whose all-ones-on-equality
+            // signature is what the A=B pin detects. Each slice gets its
+            // own Cn drive -- the equality tie needs no carry chain.
+            chips.Add(new VccDriver(cn));
         }
 
         // The pull-up resistor: a weak High on the shared net, as in the
@@ -226,10 +236,10 @@ public class Hc181WireAndTests
         return (aeqb, sim);
     }
 
-    private static void DriveActiveLow(List<IChip> chips, Net net, int value, int bit)
+    private static void DriveActiveHigh(List<IChip> chips, Net net, int value, int bit)
     {
         bool asserted = ((value >> bit) & 1) != 0;
-        chips.Add(asserted ? (IChip)new GndDriver(net) : new VccDriver(net));
+        chips.Add(asserted ? (IChip)new VccDriver(net) : new GndDriver(net));
     }
 
     /// <summary>Schedules one fixed value onto a pre-built Driver at

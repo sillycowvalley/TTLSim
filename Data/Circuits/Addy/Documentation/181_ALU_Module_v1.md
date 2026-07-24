@@ -16,10 +16,16 @@ Companion to the **Blinky Clock Module v3** and the **Register File Module**
 under the same discipline: one board, one job, generic headers, staged
 bring-up, fails toward safe.
 
-> **Status: design document, not a built board.** Nothing captured in TTLSim
-> yet. All timing figures are catalogue-model estimates marked as such; the
-> sweep-captured function table (self-test stage 1, in simulation) is the
-> module's real datasheet once it exists.
+> **Status: captured and simulation-verified (solo/Addy configuration),
+> not yet built in copper.** The TTLSim capture (`181_ALU_Module.ttlproj`,
+> with embedded testbench and the `ALU_ADDY` JEDEC in U20) passes all 18
+> function-code vectors and the SHR sequence with every condition output
+> correct — F, COUT, HCOUT, ZERO, SIGN, SOUT, AEQB, V, PAR (run of
+> 2026-07-24, zero warnings). Verification en route surfaced and fixed two
+> TTLSim model defects (A=B drive type; wrong function-table column) and
+> one schematic defect ('86 gate-3/gate-4 output pin swap in the V logic).
+> Timing figures remain catalogue-model estimates; the pair configuration
+> and the 8080/6502 JEDECs are not yet exercised.
 
 This document supersedes three earlier drafts — *6502 Byte ALU Module v1*,
 *8080 ALU Module*, and *Thumby ALU Module* — reconciling them into one
