@@ -299,7 +299,7 @@ labels keep one name across the boundary; TTL014 does not apply.
 | H2 | 8 | A[7:0] | A operand, all-signal |
 | H3 | 8 | B[7:0] | B operand, all-signal |
 | H3 | 8 | FC+CTL | 1 GND · 2–5 FC0–FC3 · 6 CFLG · 7 LEA · 8 LEB |
-| H5 | 4 | STROBES | 1 GND · 2 /FOE · 3 /SOE · 4 SRIN |
+| H5 | 4 | STROBES | 1 GND · 2 /FOE · 3 /SOE · 4 spare — fully multi-droppable |
 | H9 | 8 | F[7:0] | result (FB), all-signal |
 | H7 | 8 | COND | 1 GND · 2 COUT · 3 HCOUT · 4 ZERO · 5 SIGN · 6 SOUT · 7 AEQB · 8 V |
 | H6 | 8 | CASCADE | 1 /G · 2 /P · 3 /CN8 · 4 CNX · 5 /ZCASC · 6 /AUXOE · 7 PAR · 8 /ZOUT — all-signal (full) |
@@ -314,7 +314,7 @@ labels keep one name across the boundary; TTL014 does not apply.
 | CFLG | active-high | the host's latched C flag — U3's carry-in source for ADC/SBC-class codes |
 | /LEA, /LEB | per U1/U2 fit | latch enable ('573) or clock ('574). Strap for transparent |
 | /FOE, /SOE | active-low | drive FB / FB>>1 onto D |
-| SRIN | level | bit injected at result bit 7 of the shifted path. Host-strapped at H5: GND = LSR, loop FB7 (H6) back = ASR, drive the C flag = ROR. No on-board link |
+| SRIN | level | bit injected at result bit 7 of the shifted path. Strapped at the **top board's unplugged H8 (CASC UP) pin 5** — GND = LSR, loop FB7 (H6) back = ASR, drive the C flag = ROR. Lower boards receive it on the cascade ribbon (H11 pin 5 ← the board above's FB0). Deliberately absent from H5 so the strobes ribbon can multi-drop |
 | /ZCASC | active-low | zero-detect cascade in from the lower-order board |
 | /CN8, CNX | pin-level (active-low) | raw carry seam: low board's /CN8 → high board's CNX. LK_CN selects CNX in place of U3's Cn on the high board |
 | /AUXOE | active-low | aux GAL owns the B port. One driver per net — host's discipline |
@@ -358,13 +358,18 @@ split, or its own flag mask, already expresses this).
 The board is a byte slice. 16 bits = two identical boards with identically
 burned U20s:
 
-| Wire | From (low board) | To (high board) |
-|------|------------------|-----------------|
-| Carry | /CN8 (raw Cn+8, active-low, LS levels) | CNX, with LK_CN in the SEAM position |
-| Zero | '688 active-low out (/ZOUT) | /ZCASC, with LK_ZC in the SEAM position |
-| Equality | AEQB | AEQB — same net deliberately: the open-collector wire-AND spans both boards, pull-ups in parallel |
-| Function | one FC3:0 + CFLG | both boards in parallel |
-| Bus enables | one /FOE, /SOE, latch strobes | both boards in parallel |
+One straight ribbon, H8 (low) → H11 (high), pin-for-pin:
+
+| Ribbon pin | Low board (H8) | High board (H11) | Direction |
+|------------|----------------|-------------------|-----------|
+| 1 | GND | GND | reference |
+| 2 | /CN8 (raw Cn+y, LS levels) | CNX — LK_CN in the SEAM position | up |
+| 3 | /ZOUT ('688 active-low) | /ZCASC — LK_ZC in the SEAM position | up |
+| 4 | AEQB | AEQB — the OC wire-AND, pull-ups in parallel | both |
+| 5 | SRIN | FB0 | **down** — the shift chain |
+
+FC3:0, CFLG, LEA, LEB, /FOE, /SOE parallel across both boards via the
+host's multi-drop bus ribbons on H4/H5.
 
 The seam carry is a **raw pin-level wire** — Cn+8 out and Cn in are both
 active-low LS-side signals and agree directly, exactly like the inter-slice
@@ -473,12 +478,12 @@ board.
 3. Operands to H2–H5, FC and CFLG to H4, conditions from H7. F from H6/H9
    **or** the D bus via H9/H7 — a register-file machine (Addy) uses F and
    leaves D unpopulated; a bus machine uses D and may leave F unread.
-4. Pair join per the width table: /CN8 → CNX, zero cascade, and the
-   paralleled FC/CFLG/enables. LK_CN to SEAM on the high board — this is the
-   one link that differs between the two boards of a pair. Read word-wide
-   conditions from the boards stated above — reading SIGN or V from the low
-   board of a pair is the class of error that yields plausible numbers with
-   the wrong flag.
+4. Pair join: one straight ribbon, low H8 → high H11, plus the host's
+   multi-drop control ribbons on both boards' H4/H5. LK_CN and LK_ZC to
+   SEAM (2-3) on the high board — the only shunts that differ between the
+   boards of a pair. Read word-wide conditions from the boards stated
+   above — reading SIGN or V from the low board of a pair is the class of
+   error that yields plausible numbers with the wrong flag.
 5. **Fails toward safe:** /FOE, /SOE, /AUXOE, /ZCASC idle high (inactive)
    via pull-ups, and BKILL is GAL-driven (active-high — the '574 /OE sense is why the
    polarity is high-asserted); a disconnected control ribbon yields a passive board driving

@@ -3,7 +3,7 @@
     "devices": [
       {
         "id": "dev-u5",
-        "designator": "U5",
+        "designator": "U1",
         "partKind": "chip",
         "partIdentifier": "574",
         "family": "HC",
@@ -17,7 +17,7 @@
       },
       {
         "id": "dev-u6",
-        "designator": "U6",
+        "designator": "U2",
         "partKind": "chip",
         "partIdentifier": "574",
         "family": "HC",
@@ -31,7 +31,7 @@
       },
       {
         "id": "dev-u20",
-        "designator": "U20",
+        "designator": "U3",
         "partKind": "chip",
         "partIdentifier": "GAL16V8",
         "family": null,
@@ -45,7 +45,7 @@
       },
       {
         "id": "dev-u1",
-        "designator": "U1",
+        "designator": "U4",
         "partKind": "chip",
         "partIdentifier": "181",
         "family": "LS",
@@ -59,7 +59,7 @@
       },
       {
         "id": "dev-u2",
-        "designator": "U2",
+        "designator": "U5",
         "partKind": "chip",
         "partIdentifier": "181",
         "family": "LS",
@@ -73,7 +73,7 @@
       },
       {
         "id": "dev-u3",
-        "designator": "U3",
+        "designator": "U6",
         "partKind": "chip",
         "partIdentifier": "182",
         "family": "LS",
@@ -87,7 +87,7 @@
       },
       {
         "id": "dev-u9",
-        "designator": "U9",
+        "designator": "U7",
         "partKind": "chip",
         "partIdentifier": "541",
         "family": "HCT",
@@ -101,7 +101,7 @@
       },
       {
         "id": "dev-u12",
-        "designator": "U12",
+        "designator": "U8",
         "partKind": "chip",
         "partIdentifier": "04",
         "family": "HCT",
@@ -115,7 +115,7 @@
       },
       {
         "id": "dev-u13",
-        "designator": "U13",
+        "designator": "U9",
         "partKind": "chip",
         "partIdentifier": "86",
         "family": "HCT",
@@ -143,7 +143,7 @@
       },
       {
         "id": "dev-u19",
-        "designator": "U19",
+        "designator": "U11",
         "partKind": "chip",
         "partIdentifier": "00",
         "family": "HC",
@@ -157,7 +157,7 @@
       },
       {
         "id": "dev-u7",
-        "designator": "U7",
+        "designator": "U14",
         "partKind": "chip",
         "partIdentifier": "541",
         "family": "HC",
@@ -171,7 +171,7 @@
       },
       {
         "id": "dev-u8",
-        "designator": "U8",
+        "designator": "U15",
         "partKind": "chip",
         "partIdentifier": "541",
         "family": "HC",
@@ -185,7 +185,7 @@
       },
       {
         "id": "dev-u16",
-        "designator": "U16",
+        "designator": "U12",
         "partKind": "chip",
         "partIdentifier": "86",
         "family": "HC",
@@ -199,7 +199,7 @@
       },
       {
         "id": "dev-u17",
-        "designator": "U17",
+        "designator": "U13",
         "partKind": "chip",
         "partIdentifier": "280",
         "family": "HC",
@@ -213,7 +213,7 @@
       },
       {
         "id": "dev-u14",
-        "designator": "U14",
+        "designator": "U16",
         "partKind": "chip",
         "partIdentifier": "377",
         "family": "HC",
@@ -227,7 +227,7 @@
       },
       {
         "id": "dev-u15",
-        "designator": "U15",
+        "designator": "U17",
         "partKind": "chip",
         "partIdentifier": "377",
         "family": "HC",
@@ -255,7 +255,7 @@
       },
       {
         "id": "dev-c1",
-        "designator": "C1",
+        "designator": "C4",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -269,34 +269,6 @@
       },
       {
         "id": "dev-c2",
-        "designator": "C2",
-        "partKind": "passive",
-        "partIdentifier": "capacitor",
-        "family": null,
-        "value": "100nF",
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-c3",
-        "designator": "C3",
-        "partKind": "passive",
-        "partIdentifier": "capacitor",
-        "family": null,
-        "value": "100nF",
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-c5",
         "designator": "C5",
         "partKind": "passive",
         "partIdentifier": "capacitor",
@@ -310,7 +282,7 @@
         "frequencyHz2": null
       },
       {
-        "id": "dev-c6",
+        "id": "dev-c3",
         "designator": "C6",
         "partKind": "passive",
         "partIdentifier": "capacitor",
@@ -324,8 +296,36 @@
         "frequencyHz2": null
       },
       {
+        "id": "dev-c5",
+        "designator": "C1",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": "100nF",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-c6",
+        "designator": "C2",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": "100nF",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
         "id": "dev-c7",
-        "designator": "C7",
+        "designator": "C14",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -339,7 +339,7 @@
       },
       {
         "id": "dev-c8",
-        "designator": "C8",
+        "designator": "C15",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -353,7 +353,7 @@
       },
       {
         "id": "dev-c9",
-        "designator": "C9",
+        "designator": "C7",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -381,7 +381,7 @@
       },
       {
         "id": "dev-c12",
-        "designator": "C12",
+        "designator": "C8",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -395,7 +395,7 @@
       },
       {
         "id": "dev-c13",
-        "designator": "C13",
+        "designator": "C9",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -409,34 +409,6 @@
       },
       {
         "id": "dev-c14",
-        "designator": "C14",
-        "partKind": "passive",
-        "partIdentifier": "capacitor",
-        "family": null,
-        "value": "100nF",
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-c15",
-        "designator": "C15",
-        "partKind": "passive",
-        "partIdentifier": "capacitor",
-        "family": null,
-        "value": "100nF",
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-c16",
         "designator": "C16",
         "partKind": "passive",
         "partIdentifier": "capacitor",
@@ -450,8 +422,36 @@
         "frequencyHz2": null
       },
       {
-        "id": "dev-c17",
+        "id": "dev-c15",
         "designator": "C17",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": "100nF",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-c16",
+        "designator": "C12",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": "100nF",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-c17",
+        "designator": "C13",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -479,7 +479,7 @@
       },
       {
         "id": "dev-c19",
-        "designator": "C19",
+        "designator": "C11",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -493,7 +493,7 @@
       },
       {
         "id": "dev-c20",
-        "designator": "C20",
+        "designator": "C3",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -549,7 +549,7 @@
       },
       {
         "id": "dev-h4",
-        "designator": "H4",
+        "designator": "H3",
         "partKind": "header",
         "partIdentifier": "hdr-out-8",
         "family": null,
@@ -563,7 +563,7 @@
       },
       {
         "id": "dev-h10",
-        "designator": "H10",
+        "designator": "H4",
         "partKind": "header",
         "partIdentifier": "hdr-out-8",
         "family": null,
@@ -577,48 +577,6 @@
       },
       {
         "id": "dev-h8",
-        "designator": "H8",
-        "partKind": "header",
-        "partIdentifier": "hdr-out-8",
-        "family": null,
-        "value": null,
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-h12",
-        "designator": "H12",
-        "partKind": "header",
-        "partIdentifier": "hdr-out-8",
-        "family": null,
-        "value": null,
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-h13",
-        "designator": "H13",
-        "partKind": "header",
-        "partIdentifier": "hdr-out-8",
-        "family": null,
-        "value": null,
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-h6",
         "designator": "H6",
         "partKind": "header",
         "partIdentifier": "hdr-out-8",
@@ -632,8 +590,50 @@
         "frequencyHz2": null
       },
       {
+        "id": "dev-h12",
+        "designator": "H7",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-8",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-h13",
+        "designator": "H8",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-6",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-h6",
+        "designator": "H9",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-8",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
         "id": "dev-h14",
-        "designator": "H14",
+        "designator": "H10",
         "partKind": "header",
         "partIdentifier": "hdr-out-8",
         "family": null,
@@ -647,7 +647,7 @@
       },
       {
         "id": "dev-raeq",
-        "designator": "RAEQ",
+        "designator": "R1",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -675,7 +675,7 @@
       },
       {
         "id": "ec6d09c2beec4966946dd81231affc18",
-        "designator": "H11",
+        "designator": "H5",
         "partKind": "header",
         "partIdentifier": "hdr-out-4",
         "family": null,
@@ -745,7 +745,7 @@
       },
       {
         "id": "dev-rsrin",
-        "designator": "RSRIN",
+        "designator": "R2",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -758,8 +758,36 @@
         "frequencyHz2": null
       },
       {
+        "id": "dev-h11c",
+        "designator": "H11",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-6",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-h12l",
+        "designator": "H12",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-6",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
         "id": "dev-u5-h",
-        "designator": "U5H",
+        "designator": "U1H",
         "partKind": "chip",
         "partIdentifier": "574",
         "family": "HC",
@@ -773,7 +801,7 @@
       },
       {
         "id": "dev-u6-h",
-        "designator": "U6H",
+        "designator": "U2H",
         "partKind": "chip",
         "partIdentifier": "574",
         "family": "HC",
@@ -787,7 +815,7 @@
       },
       {
         "id": "dev-u20-h",
-        "designator": "U20H",
+        "designator": "U3H",
         "partKind": "chip",
         "partIdentifier": "GAL16V8",
         "family": null,
@@ -801,7 +829,7 @@
       },
       {
         "id": "dev-u1-h",
-        "designator": "U1H",
+        "designator": "U4H",
         "partKind": "chip",
         "partIdentifier": "181",
         "family": "LS",
@@ -815,7 +843,7 @@
       },
       {
         "id": "dev-u2-h",
-        "designator": "U2H",
+        "designator": "U5H",
         "partKind": "chip",
         "partIdentifier": "181",
         "family": "LS",
@@ -829,7 +857,7 @@
       },
       {
         "id": "dev-u3-h",
-        "designator": "U3H",
+        "designator": "U6H",
         "partKind": "chip",
         "partIdentifier": "182",
         "family": "LS",
@@ -843,7 +871,7 @@
       },
       {
         "id": "dev-u9-h",
-        "designator": "U9H",
+        "designator": "U7H",
         "partKind": "chip",
         "partIdentifier": "541",
         "family": "HCT",
@@ -857,7 +885,7 @@
       },
       {
         "id": "dev-u12-h",
-        "designator": "U12H",
+        "designator": "U8H",
         "partKind": "chip",
         "partIdentifier": "04",
         "family": "HCT",
@@ -871,7 +899,7 @@
       },
       {
         "id": "dev-u13-h",
-        "designator": "U13H",
+        "designator": "U9H",
         "partKind": "chip",
         "partIdentifier": "86",
         "family": "HCT",
@@ -899,7 +927,7 @@
       },
       {
         "id": "dev-u19-h",
-        "designator": "U19H",
+        "designator": "U11H",
         "partKind": "chip",
         "partIdentifier": "00",
         "family": "HC",
@@ -913,7 +941,7 @@
       },
       {
         "id": "dev-u7-h",
-        "designator": "U7H",
+        "designator": "U14H",
         "partKind": "chip",
         "partIdentifier": "541",
         "family": "HC",
@@ -927,7 +955,7 @@
       },
       {
         "id": "dev-u8-h",
-        "designator": "U8H",
+        "designator": "U15H",
         "partKind": "chip",
         "partIdentifier": "541",
         "family": "HC",
@@ -941,7 +969,7 @@
       },
       {
         "id": "dev-u16-h",
-        "designator": "U16H",
+        "designator": "U12H",
         "partKind": "chip",
         "partIdentifier": "86",
         "family": "HC",
@@ -955,7 +983,7 @@
       },
       {
         "id": "dev-u17-h",
-        "designator": "U17H",
+        "designator": "U13H",
         "partKind": "chip",
         "partIdentifier": "280",
         "family": "HC",
@@ -969,7 +997,7 @@
       },
       {
         "id": "dev-u14-h",
-        "designator": "U14H",
+        "designator": "U16H",
         "partKind": "chip",
         "partIdentifier": "377",
         "family": "HC",
@@ -983,7 +1011,7 @@
       },
       {
         "id": "dev-u15-h",
-        "designator": "U15H",
+        "designator": "U17H",
         "partKind": "chip",
         "partIdentifier": "377",
         "family": "HC",
@@ -1011,7 +1039,7 @@
       },
       {
         "id": "dev-c1-h",
-        "designator": "C1H",
+        "designator": "C4H",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -1025,34 +1053,6 @@
       },
       {
         "id": "dev-c2-h",
-        "designator": "C2H",
-        "partKind": "passive",
-        "partIdentifier": "capacitor",
-        "family": null,
-        "value": "100nF",
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-c3-h",
-        "designator": "C3H",
-        "partKind": "passive",
-        "partIdentifier": "capacitor",
-        "family": null,
-        "value": "100nF",
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-c5-h",
         "designator": "C5H",
         "partKind": "passive",
         "partIdentifier": "capacitor",
@@ -1066,7 +1066,7 @@
         "frequencyHz2": null
       },
       {
-        "id": "dev-c6-h",
+        "id": "dev-c3-h",
         "designator": "C6H",
         "partKind": "passive",
         "partIdentifier": "capacitor",
@@ -1080,8 +1080,36 @@
         "frequencyHz2": null
       },
       {
+        "id": "dev-c5-h",
+        "designator": "C1H",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": "100nF",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-c6-h",
+        "designator": "C2H",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": "100nF",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
         "id": "dev-c7-h",
-        "designator": "C7H",
+        "designator": "C14H",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -1095,7 +1123,7 @@
       },
       {
         "id": "dev-c8-h",
-        "designator": "C8H",
+        "designator": "C15H",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -1109,7 +1137,7 @@
       },
       {
         "id": "dev-c9-h",
-        "designator": "C9H",
+        "designator": "C7H",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -1137,7 +1165,7 @@
       },
       {
         "id": "dev-c12-h",
-        "designator": "C12H",
+        "designator": "C8H",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -1151,7 +1179,7 @@
       },
       {
         "id": "dev-c13-h",
-        "designator": "C13H",
+        "designator": "C9H",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -1165,34 +1193,6 @@
       },
       {
         "id": "dev-c14-h",
-        "designator": "C14H",
-        "partKind": "passive",
-        "partIdentifier": "capacitor",
-        "family": null,
-        "value": "100nF",
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-c15-h",
-        "designator": "C15H",
-        "partKind": "passive",
-        "partIdentifier": "capacitor",
-        "family": null,
-        "value": "100nF",
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-c16-h",
         "designator": "C16H",
         "partKind": "passive",
         "partIdentifier": "capacitor",
@@ -1206,8 +1206,36 @@
         "frequencyHz2": null
       },
       {
-        "id": "dev-c17-h",
+        "id": "dev-c15-h",
         "designator": "C17H",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": "100nF",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-c16-h",
+        "designator": "C12H",
+        "partKind": "passive",
+        "partIdentifier": "capacitor",
+        "family": null,
+        "value": "100nF",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-c17-h",
+        "designator": "C13H",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -1235,7 +1263,7 @@
       },
       {
         "id": "dev-c19-h",
-        "designator": "C19H",
+        "designator": "C11H",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -1249,7 +1277,7 @@
       },
       {
         "id": "dev-c20-h",
-        "designator": "C20H",
+        "designator": "C3H",
         "partKind": "passive",
         "partIdentifier": "capacitor",
         "family": null,
@@ -1305,7 +1333,7 @@
       },
       {
         "id": "dev-h4-h",
-        "designator": "H4H",
+        "designator": "H3H",
         "partKind": "header",
         "partIdentifier": "hdr-out-8",
         "family": null,
@@ -1319,7 +1347,7 @@
       },
       {
         "id": "dev-h10-h",
-        "designator": "H10H",
+        "designator": "H4H",
         "partKind": "header",
         "partIdentifier": "hdr-out-8",
         "family": null,
@@ -1333,48 +1361,6 @@
       },
       {
         "id": "dev-h8-h",
-        "designator": "H8H",
-        "partKind": "header",
-        "partIdentifier": "hdr-out-8",
-        "family": null,
-        "value": null,
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-h12-h",
-        "designator": "H12H",
-        "partKind": "header",
-        "partIdentifier": "hdr-out-8",
-        "family": null,
-        "value": null,
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-h13-h",
-        "designator": "H13H",
-        "partKind": "header",
-        "partIdentifier": "hdr-out-8",
-        "family": null,
-        "value": null,
-        "program": null,
-        "propagationDelayNs": null,
-        "function1": null,
-        "function2": null,
-        "frequencyHz1": null,
-        "frequencyHz2": null
-      },
-      {
-        "id": "dev-h6-h",
         "designator": "H6H",
         "partKind": "header",
         "partIdentifier": "hdr-out-8",
@@ -1388,8 +1374,50 @@
         "frequencyHz2": null
       },
       {
+        "id": "dev-h12-h",
+        "designator": "H7H",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-8",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-h13-h",
+        "designator": "H8H",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-6",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-h6-h",
+        "designator": "H9H",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-8",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
         "id": "dev-h14-h",
-        "designator": "H14H",
+        "designator": "H10H",
         "partKind": "header",
         "partIdentifier": "hdr-out-8",
         "family": null,
@@ -1403,7 +1431,7 @@
       },
       {
         "id": "dev-raeq-h",
-        "designator": "RAEQH",
+        "designator": "R1H",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
@@ -1431,7 +1459,7 @@
       },
       {
         "id": "ec6d09c2beec4966946dd81231affc18-h",
-        "designator": "H11H",
+        "designator": "H5H",
         "partKind": "header",
         "partIdentifier": "hdr-out-4",
         "family": null,
@@ -1501,11 +1529,39 @@
       },
       {
         "id": "dev-rsrin-h",
-        "designator": "RSRINH",
+        "designator": "R2H",
         "partKind": "passive",
         "partIdentifier": "resistor",
         "family": null,
         "value": "10k",
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-h11c-h",
+        "designator": "H11H",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-6",
+        "family": null,
+        "value": null,
+        "program": null,
+        "propagationDelayNs": null,
+        "function1": null,
+        "function2": null,
+        "frequencyHz1": null,
+        "frequencyHz2": null
+      },
+      {
+        "id": "dev-h12l-h",
+        "designator": "H12H",
+        "partKind": "header",
+        "partIdentifier": "hdr-out-6",
+        "family": null,
+        "value": null,
         "program": null,
         "propagationDelayNs": null,
         "function1": null,
@@ -1523,7 +1579,7 @@
           "x": 0,
           "y": 0
         },
-        "label": "",
+        "label": "A LATCH",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1538,7 +1594,7 @@
           "x": 0,
           "y": 44
         },
-        "label": "",
+        "label": "B LATCH",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1553,7 +1609,7 @@
           "x": 52,
           "y": 88
         },
-        "label": "ALU ADDY",
+        "label": "FN DECODE",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1568,7 +1624,7 @@
           "x": 104,
           "y": 0
         },
-        "label": "",
+        "label": "ALU 0-3",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1583,7 +1639,7 @@
           "x": 104,
           "y": 44
         },
-        "label": "",
+        "label": "ALU 4-7",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1598,7 +1654,7 @@
           "x": 104,
           "y": 88
         },
-        "label": "",
+        "label": "LOOKAHEAD",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1613,7 +1669,7 @@
           "x": 156,
           "y": 0
         },
-        "label": "",
+        "label": "LS>HC FENCE",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1628,7 +1684,7 @@
           "x": 156,
           "y": 44
         },
-        "label": "",
+        "label": "CARRY INV",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1643,7 +1699,7 @@
           "x": 156,
           "y": 72
         },
-        "label": "",
+        "label": "BORROW XOR",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1658,7 +1714,7 @@
           "x": 208,
           "y": 0
         },
-        "label": "",
+        "label": "ZERO DET",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1673,7 +1729,7 @@
           "x": 208,
           "y": 44
         },
-        "label": "",
+        "label": "GLUE",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -1688,7 +1744,7 @@
           "x": 260,
           "y": 0
         },
-        "label": "",
+        "label": "FB DRV",
         "rotation": 0,
         "layer": 1,
         "switchClosed": null,
@@ -1703,7 +1759,7 @@
           "x": 260,
           "y": 44
         },
-        "label": "",
+        "label": "SHR DRV",
         "rotation": 0,
         "layer": 1,
         "switchClosed": null,
@@ -1718,7 +1774,7 @@
           "x": 208,
           "y": 72
         },
-        "label": "",
+        "label": "V LOGIC",
         "rotation": 0,
         "layer": 2,
         "switchClosed": null,
@@ -1733,7 +1789,7 @@
           "x": 208,
           "y": 100
         },
-        "label": "",
+        "label": "PARITY",
         "rotation": 0,
         "layer": 3,
         "switchClosed": null,
@@ -1748,7 +1804,7 @@
           "x": 312,
           "y": 0
         },
-        "label": "",
+        "label": "FLAGS C",
         "rotation": 0,
         "layer": 4,
         "switchClosed": null,
@@ -1763,7 +1819,7 @@
           "x": 312,
           "y": 44
         },
-        "label": "",
+        "label": "FLAGS NZ",
         "rotation": 0,
         "layer": 4,
         "switchClosed": null,
@@ -1778,7 +1834,7 @@
           "x": 312,
           "y": 88
         },
-        "label": "",
+        "label": "AUX/DAA",
         "rotation": 0,
         "layer": 5,
         "switchClosed": null,
@@ -2078,7 +2134,7 @@
           "x": -60,
           "y": -24
         },
-        "label": "",
+        "label": "PWR",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2093,7 +2149,7 @@
           "x": -60,
           "y": 4
         },
-        "label": "",
+        "label": "A[7:0]",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2108,7 +2164,7 @@
           "x": -60,
           "y": 48
         },
-        "label": "",
+        "label": "B[7:0]",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2123,7 +2179,7 @@
           "x": -60,
           "y": 88
         },
-        "label": "",
+        "label": "FC+CTL",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2138,7 +2194,7 @@
           "x": 380,
           "y": 0
         },
-        "label": "",
+        "label": "F[7:0]",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2153,7 +2209,7 @@
           "x": 380,
           "y": 44
         },
-        "label": "",
+        "label": "COND",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2165,10 +2221,10 @@
         "deviceId": "dev-h13",
         "unitLetter": "",
         "position": {
-          "x": 380,
-          "y": 66
+          "x": 160,
+          "y": -56
         },
-        "label": "",
+        "label": "CASC UP",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2183,7 +2239,7 @@
           "x": 380,
           "y": 88
         },
-        "label": "",
+        "label": "D[7:0]",
         "rotation": 0,
         "layer": 1,
         "switchClosed": null,
@@ -2198,7 +2254,7 @@
           "x": 380,
           "y": 132
         },
-        "label": "",
+        "label": "FLAGS",
         "rotation": 0,
         "layer": 4,
         "switchClosed": null,
@@ -2213,7 +2269,7 @@
           "x": 131,
           "y": 16
         },
-        "label": "",
+        "label": "A=B PU",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2228,7 +2284,7 @@
           "x": 26,
           "y": 141
         },
-        "label": "",
+        "label": "BQ PD",
         "rotation": 180,
         "layer": 0,
         "switchClosed": null,
@@ -2243,7 +2299,7 @@
           "x": -66,
           "y": 111
         },
-        "label": "",
+        "label": "STROBES",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2258,7 +2314,7 @@
           "x": 78,
           "y": 112
         },
-        "label": "",
+        "label": "LK_CN",
         "rotation": 0,
         "layer": 0,
         "switchClosed": false,
@@ -2273,7 +2329,7 @@
           "x": 200,
           "y": -7
         },
-        "label": "",
+        "label": "LK_ZC",
         "rotation": 0,
         "layer": 0,
         "switchClosed": false,
@@ -2288,7 +2344,7 @@
           "x": 156,
           "y": 94
         },
-        "label": "",
+        "label": "LK_BORROW",
         "rotation": 0,
         "layer": 0,
         "switchClosed": false,
@@ -2303,7 +2359,7 @@
           "x": 248,
           "y": 100
         },
-        "label": "",
+        "label": "OE PU",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2318,8 +2374,38 @@
           "x": 266,
           "y": 120
         },
-        "label": "",
+        "label": "SRIN PD",
         "rotation": 90,
+        "layer": 0,
+        "switchClosed": null,
+        "switchPositions": null,
+        "mirrored": null
+      },
+      {
+        "id": "h11c",
+        "deviceId": "dev-h11c",
+        "unitLetter": "",
+        "position": {
+          "x": 160,
+          "y": 208
+        },
+        "label": "CASC DN",
+        "rotation": 0,
+        "layer": 0,
+        "switchClosed": null,
+        "switchPositions": null,
+        "mirrored": null
+      },
+      {
+        "id": "h12l",
+        "deviceId": "dev-h12l",
+        "unitLetter": "",
+        "position": {
+          "x": 380,
+          "y": 66
+        },
+        "label": "LKAHD",
+        "rotation": 0,
         "layer": 0,
         "switchClosed": null,
         "switchPositions": null,
@@ -2331,9 +2417,9 @@
         "unitLetter": "",
         "position": {
           "x": 0,
-          "y": 280
+          "y": 340
         },
-        "label": "",
+        "label": "A LATCH",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2346,9 +2432,9 @@
         "unitLetter": "",
         "position": {
           "x": 0,
-          "y": 324
+          "y": 384
         },
-        "label": "",
+        "label": "B LATCH",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2361,9 +2447,9 @@
         "unitLetter": "",
         "position": {
           "x": 52,
-          "y": 368
+          "y": 428
         },
-        "label": "ALU ADDY",
+        "label": "FN DECODE",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2376,9 +2462,9 @@
         "unitLetter": "",
         "position": {
           "x": 104,
-          "y": 280
+          "y": 340
         },
-        "label": "",
+        "label": "ALU 0-3",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2391,9 +2477,9 @@
         "unitLetter": "",
         "position": {
           "x": 104,
-          "y": 324
+          "y": 384
         },
-        "label": "",
+        "label": "ALU 4-7",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2406,9 +2492,9 @@
         "unitLetter": "",
         "position": {
           "x": 104,
-          "y": 368
+          "y": 428
         },
-        "label": "",
+        "label": "LOOKAHEAD",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2421,9 +2507,9 @@
         "unitLetter": "",
         "position": {
           "x": 156,
-          "y": 280
+          "y": 340
         },
-        "label": "",
+        "label": "LS>HC FENCE",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2436,9 +2522,9 @@
         "unitLetter": "",
         "position": {
           "x": 156,
-          "y": 324
+          "y": 384
         },
-        "label": "",
+        "label": "CARRY INV",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2451,9 +2537,9 @@
         "unitLetter": "",
         "position": {
           "x": 156,
-          "y": 352
+          "y": 412
         },
-        "label": "",
+        "label": "BORROW XOR",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2466,9 +2552,9 @@
         "unitLetter": "",
         "position": {
           "x": 208,
-          "y": 280
+          "y": 340
         },
-        "label": "",
+        "label": "ZERO DET",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2481,9 +2567,9 @@
         "unitLetter": "",
         "position": {
           "x": 208,
-          "y": 324
+          "y": 384
         },
-        "label": "",
+        "label": "GLUE",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2496,9 +2582,9 @@
         "unitLetter": "",
         "position": {
           "x": 260,
-          "y": 280
+          "y": 340
         },
-        "label": "",
+        "label": "FB DRV",
         "rotation": 0,
         "layer": 1,
         "switchClosed": null,
@@ -2511,9 +2597,9 @@
         "unitLetter": "",
         "position": {
           "x": 260,
-          "y": 324
+          "y": 384
         },
-        "label": "",
+        "label": "SHR DRV",
         "rotation": 0,
         "layer": 1,
         "switchClosed": null,
@@ -2526,9 +2612,9 @@
         "unitLetter": "",
         "position": {
           "x": 208,
-          "y": 352
+          "y": 412
         },
-        "label": "",
+        "label": "V LOGIC",
         "rotation": 0,
         "layer": 2,
         "switchClosed": null,
@@ -2541,9 +2627,9 @@
         "unitLetter": "",
         "position": {
           "x": 208,
-          "y": 380
+          "y": 440
         },
-        "label": "",
+        "label": "PARITY",
         "rotation": 0,
         "layer": 3,
         "switchClosed": null,
@@ -2556,9 +2642,9 @@
         "unitLetter": "",
         "position": {
           "x": 312,
-          "y": 280
+          "y": 340
         },
-        "label": "",
+        "label": "FLAGS C",
         "rotation": 0,
         "layer": 4,
         "switchClosed": null,
@@ -2571,9 +2657,9 @@
         "unitLetter": "",
         "position": {
           "x": 312,
-          "y": 324
+          "y": 384
         },
-        "label": "",
+        "label": "FLAGS NZ",
         "rotation": 0,
         "layer": 4,
         "switchClosed": null,
@@ -2586,9 +2672,9 @@
         "unitLetter": "",
         "position": {
           "x": 312,
-          "y": 368
+          "y": 428
         },
-        "label": "",
+        "label": "AUX/DAA",
         "rotation": 0,
         "layer": 5,
         "switchClosed": null,
@@ -2601,7 +2687,7 @@
         "unitLetter": "",
         "position": {
           "x": 9,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2616,7 +2702,7 @@
         "unitLetter": "",
         "position": {
           "x": 16,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2631,7 +2717,7 @@
         "unitLetter": "",
         "position": {
           "x": 23,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2646,7 +2732,7 @@
         "unitLetter": "",
         "position": {
           "x": 30,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2661,7 +2747,7 @@
         "unitLetter": "",
         "position": {
           "x": 37,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2676,7 +2762,7 @@
         "unitLetter": "",
         "position": {
           "x": 44,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2691,7 +2777,7 @@
         "unitLetter": "",
         "position": {
           "x": 51,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2706,7 +2792,7 @@
         "unitLetter": "",
         "position": {
           "x": 58,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2721,7 +2807,7 @@
         "unitLetter": "",
         "position": {
           "x": 65,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2736,7 +2822,7 @@
         "unitLetter": "",
         "position": {
           "x": 72,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2751,7 +2837,7 @@
         "unitLetter": "",
         "position": {
           "x": 79,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2766,7 +2852,7 @@
         "unitLetter": "",
         "position": {
           "x": 86,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2781,7 +2867,7 @@
         "unitLetter": "",
         "position": {
           "x": 93,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2796,7 +2882,7 @@
         "unitLetter": "",
         "position": {
           "x": 100,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2811,7 +2897,7 @@
         "unitLetter": "",
         "position": {
           "x": 107,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2826,7 +2912,7 @@
         "unitLetter": "",
         "position": {
           "x": 114,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2841,7 +2927,7 @@
         "unitLetter": "",
         "position": {
           "x": 121,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2856,7 +2942,7 @@
         "unitLetter": "",
         "position": {
           "x": 128,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2871,7 +2957,7 @@
         "unitLetter": "",
         "position": {
           "x": -5,
-          "y": 464
+          "y": 524
         },
         "label": "",
         "rotation": 90,
@@ -2886,9 +2972,9 @@
         "unitLetter": "",
         "position": {
           "x": -60,
-          "y": 256
+          "y": 316
         },
-        "label": "",
+        "label": "PWR",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2901,9 +2987,9 @@
         "unitLetter": "",
         "position": {
           "x": -60,
-          "y": 284
+          "y": 344
         },
-        "label": "",
+        "label": "A[7:0]",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2916,9 +3002,9 @@
         "unitLetter": "",
         "position": {
           "x": -60,
-          "y": 328
+          "y": 388
         },
-        "label": "",
+        "label": "B[7:0]",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2931,9 +3017,9 @@
         "unitLetter": "",
         "position": {
           "x": -60,
-          "y": 368
+          "y": 428
         },
-        "label": "",
+        "label": "FC+CTL",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2946,9 +3032,9 @@
         "unitLetter": "",
         "position": {
           "x": 380,
-          "y": 280
+          "y": 340
         },
-        "label": "",
+        "label": "F[7:0]",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2961,9 +3047,9 @@
         "unitLetter": "",
         "position": {
           "x": 380,
-          "y": 324
+          "y": 384
         },
-        "label": "",
+        "label": "COND",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2975,10 +3061,10 @@
         "deviceId": "dev-h13-h",
         "unitLetter": "",
         "position": {
-          "x": 380,
-          "y": 346
+          "x": 160,
+          "y": 284
         },
-        "label": "",
+        "label": "CASC UP",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -2991,9 +3077,9 @@
         "unitLetter": "",
         "position": {
           "x": 380,
-          "y": 368
+          "y": 428
         },
-        "label": "",
+        "label": "D[7:0]",
         "rotation": 0,
         "layer": 1,
         "switchClosed": null,
@@ -3006,9 +3092,9 @@
         "unitLetter": "",
         "position": {
           "x": 380,
-          "y": 412
+          "y": 472
         },
-        "label": "",
+        "label": "FLAGS",
         "rotation": 0,
         "layer": 4,
         "switchClosed": null,
@@ -3021,9 +3107,9 @@
         "unitLetter": "",
         "position": {
           "x": 131,
-          "y": 296
+          "y": 356
         },
-        "label": "",
+        "label": "A=B PU",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -3036,9 +3122,9 @@
         "unitLetter": "",
         "position": {
           "x": 26,
-          "y": 421
+          "y": 481
         },
-        "label": "",
+        "label": "BQ PD",
         "rotation": 180,
         "layer": 0,
         "switchClosed": null,
@@ -3051,9 +3137,9 @@
         "unitLetter": "",
         "position": {
           "x": -66,
-          "y": 391
+          "y": 451
         },
-        "label": "",
+        "label": "STROBES",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -3066,9 +3152,9 @@
         "unitLetter": "",
         "position": {
           "x": 78,
-          "y": 392
+          "y": 452
         },
-        "label": "",
+        "label": "LK_CN",
         "rotation": 0,
         "layer": 0,
         "switchClosed": true,
@@ -3081,9 +3167,9 @@
         "unitLetter": "",
         "position": {
           "x": 200,
-          "y": 273
+          "y": 333
         },
-        "label": "",
+        "label": "LK_ZC",
         "rotation": 0,
         "layer": 0,
         "switchClosed": true,
@@ -3096,9 +3182,9 @@
         "unitLetter": "",
         "position": {
           "x": 156,
-          "y": 374
+          "y": 434
         },
-        "label": "",
+        "label": "LK_BORROW",
         "rotation": 0,
         "layer": 0,
         "switchClosed": false,
@@ -3111,9 +3197,9 @@
         "unitLetter": "",
         "position": {
           "x": 248,
-          "y": 380
+          "y": 440
         },
-        "label": "",
+        "label": "OE PU",
         "rotation": 0,
         "layer": 0,
         "switchClosed": null,
@@ -3126,10 +3212,40 @@
         "unitLetter": "",
         "position": {
           "x": 266,
-          "y": 400
+          "y": 460
         },
-        "label": "",
+        "label": "SRIN PD",
         "rotation": 90,
+        "layer": 0,
+        "switchClosed": null,
+        "switchPositions": null,
+        "mirrored": null
+      },
+      {
+        "id": "h11c-h",
+        "deviceId": "dev-h11c-h",
+        "unitLetter": "",
+        "position": {
+          "x": 160,
+          "y": 548
+        },
+        "label": "CASC DN",
+        "rotation": 0,
+        "layer": 0,
+        "switchClosed": null,
+        "switchPositions": null,
+        "mirrored": null
+      },
+      {
+        "id": "h12l-h",
+        "deviceId": "dev-h12l-h",
+        "unitLetter": "",
+        "position": {
+          "x": 380,
+          "y": 406
+        },
+        "label": "LKAHD",
+        "rotation": 0,
         "layer": 0,
         "switchClosed": null,
         "switchPositions": null,
@@ -4166,7 +4282,7 @@
       {
         "type": "text",
         "id": "txt-title",
-        "label": "\u0027181 ALU MODULE - 16-BIT PAIR - low board (this) \u002B high board (below). SET J1H AND J2H SHUNTS TO 2-3.",
+        "label": "'181 ALU 16-BIT PAIR - joined by three ribbons (links): H8->H11H cascade, H4<->H4H, H5<->H5H. Shunts pre-set: J1H/J2H at 2-3.",
         "position": {
           "x": -60,
           "y": -46
@@ -4193,7 +4309,7 @@
       {
         "type": "text",
         "id": "txt-note",
-        "label": "Layers 1-5 = optional population. RN1 = BKILL pulldowns (SIP9 bussed), RAEQ = A=B pull-up, RN2 = /FOE //SOE //AUXOE pull-ups (elements 5-9 NC), RSRIN = SRIN pulldown (LSR-safe idle). BKILL is ACTIVE-HIGH (high = U6 /OE deasserted, pulldowns give B=0). GND on pin 1 of H10/H11/H12/H14; data headers all-signal. Jumpers (pos 1-2 = solo/Addy): J1 LK_CN, J2 LK_ZC, J3 LK_BORROW. SRIN source host-strapped at H11.",
+        "label": "Layers 1-5 = optional population. RN1 = BQ/BKILL pulldowns (SIP9 bussed), R1 = A=B pull-up, RN2 = /FOE //SOE //AUXOE pull-ups (elements 5-9 NC), R2 = SRIN pulldown (LSR-safe idle). BKILL is ACTIVE-HIGH. GND on pin 1 of H4/H5/H7/H10; data headers all-signal. Jumpers (1-2 = solo/Addy; switchClosed true = 2-3): J1 LK_CN, J2 LK_ZC, J3 LK_BORROW. Cascade: straight 6-way ribbon, board N H8 -> board N+1 H11, pin-for-pin (GND, /CN8->CNX, /ZOUT->/ZCASC, AEQB<->AEQB, SRIN<-FB0).",
         "position": {
           "x": -60,
           "y": -38
@@ -4301,7 +4417,7 @@
       {
         "type": "text",
         "id": "txt-col-156",
-        "label": "FENCE \u002B CARRY",
+        "label": "FENCE + CARRY",
         "position": {
           "x": 156,
           "y": -22
@@ -4382,7 +4498,7 @@
       {
         "type": "text",
         "id": "txt-col-312",
-        "label": "FLAGS \u002B AUX (opt)",
+        "label": "FLAGS + AUX (opt)",
         "position": {
           "x": 312,
           "y": -22
@@ -6515,7 +6631,7 @@
       {
         "type": "netlabel",
         "id": "nlSRIN-h11",
-        "label": "FB_H",
+        "label": "SRIN",
         "position": {
           "x": -48,
           "y": 116
@@ -6542,7 +6658,7 @@
       {
         "type": "netlabel",
         "id": "nlSRIN-u8",
-        "label": "FB_H",
+        "label": "SRIN",
         "position": {
           "x": 250,
           "y": 60
@@ -7622,7 +7738,7 @@
       {
         "type": "netlabel",
         "id": "nlSRIN-rn",
-        "label": "FB_H",
+        "label": "SRIN",
         "position": {
           "x": 274,
           "y": 120
@@ -7647,12 +7763,512 @@
         "pinMap": null
       },
       {
+        "type": "gnd",
+        "id": "gnd-h8c",
+        "label": "",
+        "position": {
+          "x": 150,
+          "y": -40
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlCN8-up",
+        "label": "/CN8",
+        "position": {
+          "x": 172,
+          "y": -52
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Gray",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlZOUT-up",
+        "label": "/ZOUT",
+        "position": {
+          "x": 172,
+          "y": -48
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlAEQB-up",
+        "label": "AEQB",
+        "position": {
+          "x": 172,
+          "y": -44
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlSRIN-up",
+        "label": "SRIN",
+        "position": {
+          "x": 172,
+          "y": -40
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "gnd",
+        "id": "gnd-h11c",
+        "label": "",
+        "position": {
+          "x": 150,
+          "y": 226
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlCNX-dn",
+        "label": "CNX",
+        "position": {
+          "x": 172,
+          "y": 212
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Gray",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlZC-dn",
+        "label": "/ZCASC",
+        "position": {
+          "x": 172,
+          "y": 216
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlAEQB-dn",
+        "label": "AEQB",
+        "position": {
+          "x": 172,
+          "y": 220
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlFB0-dn",
+        "label": "FB",
+        "position": {
+          "x": 172,
+          "y": 224
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Cyan",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "gnd",
+        "id": "gnd-h12l",
+        "label": "",
+        "position": {
+          "x": 370,
+          "y": 80
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlG-lk",
+        "label": "/G",
+        "position": {
+          "x": 394,
+          "y": 68
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Gray",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlP-lk",
+        "label": "/P",
+        "position": {
+          "x": 394,
+          "y": 72
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Gray",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlAUX-lk",
+        "label": "/AUXOE",
+        "position": {
+          "x": 394,
+          "y": 76
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlPAR-lk",
+        "label": "PAR",
+        "position": {
+          "x": 394,
+          "y": 80
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "rect",
+        "id": "rect-board",
+        "label": "",
+        "position": {
+          "x": -72,
+          "y": -64
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 482,
+        "height": 300,
+        "filled": false,
+        "fillColor": null,
+        "borderColor": "Gray",
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "text",
+        "id": "txt-edge-l",
+        "label": "LEFT EDGE - host in: H1 PWR  H2 A  H3 B  H4 FC+CTL  H5 STROBES",
+        "position": {
+          "x": -70,
+          "y": -70
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": 3,
+        "textColor": "Gray"
+      },
+      {
+        "type": "text",
+        "id": "txt-edge-r",
+        "label": "TOP: H8 CASC UP -> next board's H11",
+        "position": {
+          "x": 150,
+          "y": -70
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": 3,
+        "textColor": "Gray"
+      },
+      {
+        "type": "text",
+        "id": "txt-edge-b",
+        "label": "BOTTOM: H11 CASC DN <- previous board's H8",
+        "position": {
+          "x": 150,
+          "y": 242
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": 3,
+        "textColor": "Gray"
+      },
+      {
+        "type": "text",
+        "id": "txt-edge-rr",
+        "label": "RIGHT EDGE - host out: H6 F  H7 COND  H9 D  H10 FLAGS  H12 LKAHD",
+        "position": {
+          "x": 250,
+          "y": -76
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": 3,
+        "textColor": "Gray"
+      },
+      {
         "type": "vcc",
         "id": "vcc-u5-h",
         "label": "",
         "position": {
           "x": -49,
-          "y": 249
+          "y": 309
         },
         "rotation": 0,
         "layer": 0,
@@ -7679,7 +8295,7 @@
         "label": "",
         "position": {
           "x": -7,
-          "y": 304
+          "y": 364
         },
         "rotation": 0,
         "layer": 0,
@@ -7706,7 +8322,7 @@
         "label": "",
         "position": {
           "x": 11,
-          "y": 317
+          "y": 377
         },
         "rotation": 0,
         "layer": 0,
@@ -7733,7 +8349,7 @@
         "label": "",
         "position": {
           "x": -7,
-          "y": 347
+          "y": 407
         },
         "rotation": 0,
         "layer": 0,
@@ -7760,7 +8376,7 @@
         "label": "",
         "position": {
           "x": 63,
-          "y": 361
+          "y": 421
         },
         "rotation": 0,
         "layer": 0,
@@ -7787,7 +8403,7 @@
         "label": "",
         "position": {
           "x": 45,
-          "y": 391
+          "y": 451
         },
         "rotation": 0,
         "layer": 0,
@@ -7814,7 +8430,7 @@
         "label": "",
         "position": {
           "x": 117,
-          "y": 273
+          "y": 333
         },
         "rotation": 0,
         "layer": 0,
@@ -7841,7 +8457,7 @@
         "label": "",
         "position": {
           "x": 97,
-          "y": 309
+          "y": 369
         },
         "rotation": 0,
         "layer": 0,
@@ -7868,7 +8484,7 @@
         "label": "",
         "position": {
           "x": 117,
-          "y": 317
+          "y": 377
         },
         "rotation": 0,
         "layer": 0,
@@ -7895,7 +8511,7 @@
         "label": "",
         "position": {
           "x": 97,
-          "y": 352
+          "y": 412
         },
         "rotation": 0,
         "layer": 0,
@@ -7922,7 +8538,7 @@
         "label": "",
         "position": {
           "x": 117,
-          "y": 361
+          "y": 421
         },
         "rotation": 0,
         "layer": 0,
@@ -7949,7 +8565,7 @@
         "label": "",
         "position": {
           "x": 97,
-          "y": 386
+          "y": 446
         },
         "rotation": 0,
         "layer": 0,
@@ -7976,7 +8592,7 @@
         "label": "",
         "position": {
           "x": 169,
-          "y": 273
+          "y": 333
         },
         "rotation": 0,
         "layer": 0,
@@ -8003,7 +8619,7 @@
         "label": "",
         "position": {
           "x": 149,
-          "y": 304
+          "y": 364
         },
         "rotation": 0,
         "layer": 0,
@@ -8030,7 +8646,7 @@
         "label": "",
         "position": {
           "x": 169,
-          "y": 317
+          "y": 377
         },
         "rotation": 0,
         "layer": 0,
@@ -8057,7 +8673,7 @@
         "label": "",
         "position": {
           "x": 149,
-          "y": 341
+          "y": 401
         },
         "rotation": 0,
         "layer": 0,
@@ -8084,7 +8700,7 @@
         "label": "",
         "position": {
           "x": 170,
-          "y": 345
+          "y": 405
         },
         "rotation": 0,
         "layer": 0,
@@ -8111,7 +8727,7 @@
         "label": "",
         "position": {
           "x": 149,
-          "y": 368
+          "y": 428
         },
         "rotation": 0,
         "layer": 0,
@@ -8138,7 +8754,7 @@
         "label": "",
         "position": {
           "x": 221,
-          "y": 273
+          "y": 333
         },
         "rotation": 0,
         "layer": 0,
@@ -8165,7 +8781,7 @@
         "label": "",
         "position": {
           "x": 201,
-          "y": 304
+          "y": 364
         },
         "rotation": 0,
         "layer": 0,
@@ -8192,7 +8808,7 @@
         "label": "",
         "position": {
           "x": 221,
-          "y": 317
+          "y": 377
         },
         "rotation": 0,
         "layer": 0,
@@ -8219,7 +8835,7 @@
         "label": "",
         "position": {
           "x": 201,
-          "y": 340
+          "y": 400
         },
         "rotation": 0,
         "layer": 0,
@@ -8246,7 +8862,7 @@
         "label": "",
         "position": {
           "x": 272,
-          "y": 273
+          "y": 333
         },
         "rotation": 0,
         "layer": 1,
@@ -8273,7 +8889,7 @@
         "label": "",
         "position": {
           "x": 253,
-          "y": 304
+          "y": 364
         },
         "rotation": 0,
         "layer": 1,
@@ -8300,7 +8916,7 @@
         "label": "",
         "position": {
           "x": 269,
-          "y": 317
+          "y": 377
         },
         "rotation": 0,
         "layer": 1,
@@ -8327,7 +8943,7 @@
         "label": "",
         "position": {
           "x": 253,
-          "y": 347
+          "y": 407
         },
         "rotation": 0,
         "layer": 1,
@@ -8354,7 +8970,7 @@
         "label": "",
         "position": {
           "x": 222,
-          "y": 345
+          "y": 405
         },
         "rotation": 0,
         "layer": 2,
@@ -8381,7 +8997,7 @@
         "label": "",
         "position": {
           "x": 201,
-          "y": 368
+          "y": 428
         },
         "rotation": 0,
         "layer": 2,
@@ -8408,7 +9024,7 @@
         "label": "",
         "position": {
           "x": 220,
-          "y": 373
+          "y": 433
         },
         "rotation": 0,
         "layer": 3,
@@ -8435,7 +9051,7 @@
         "label": "",
         "position": {
           "x": 201,
-          "y": 396
+          "y": 456
         },
         "rotation": 0,
         "layer": 3,
@@ -8462,7 +9078,7 @@
         "label": "",
         "position": {
           "x": 336,
-          "y": 273
+          "y": 333
         },
         "rotation": 0,
         "layer": 4,
@@ -8489,7 +9105,7 @@
         "label": "",
         "position": {
           "x": 305,
-          "y": 304
+          "y": 364
         },
         "rotation": 0,
         "layer": 4,
@@ -8516,7 +9132,7 @@
         "label": "",
         "position": {
           "x": 325,
-          "y": 316
+          "y": 376
         },
         "rotation": 0,
         "layer": 4,
@@ -8543,7 +9159,7 @@
         "label": "",
         "position": {
           "x": 305,
-          "y": 347
+          "y": 407
         },
         "rotation": 0,
         "layer": 4,
@@ -8570,7 +9186,7 @@
         "label": "",
         "position": {
           "x": 325,
-          "y": 360
+          "y": 420
         },
         "rotation": 0,
         "layer": 5,
@@ -8597,7 +9213,7 @@
         "label": "",
         "position": {
           "x": 308,
-          "y": 395
+          "y": 455
         },
         "rotation": 0,
         "layer": 5,
@@ -8624,7 +9240,7 @@
         "label": "",
         "position": {
           "x": -15,
-          "y": 452
+          "y": 512
         },
         "rotation": 0,
         "layer": 0,
@@ -8651,7 +9267,7 @@
         "label": "",
         "position": {
           "x": -15,
-          "y": 487
+          "y": 547
         },
         "rotation": 0,
         "layer": 0,
@@ -8675,10 +9291,10 @@
       {
         "type": "text",
         "id": "txt-title-h",
-        "label": "HIGH BOARD - \u0027181 ALU MODULE v1 - Blinky family byte slice - solo Addy co",
+        "label": "HIGH BOARD - '181 ALU MODULE v1 - Blinky family byte slice - solo Addy co",
         "position": {
           "x": -60,
-          "y": 234
+          "y": 294
         },
         "rotation": 0,
         "layer": 0,
@@ -8702,10 +9318,10 @@
       {
         "type": "text",
         "id": "txt-note-h",
-        "label": "HIGH BOARD - Layers 1-5 = optional population. RN1 = BKILL pulldowns (SIP",
+        "label": "HIGH BOARD - Layers 1-5 = optional population. RN1 = BQ/BKILL pulldowns (",
         "position": {
           "x": -60,
-          "y": 242
+          "y": 302
         },
         "rotation": 0,
         "layer": 0,
@@ -8732,7 +9348,7 @@
         "label": "HIGH BOARD - OPERAND LATCHES",
         "position": {
           "x": 0,
-          "y": 258
+          "y": 318
         },
         "rotation": 0,
         "layer": 0,
@@ -8759,7 +9375,7 @@
         "label": "HIGH BOARD - CONTROL",
         "position": {
           "x": 52,
-          "y": 258
+          "y": 318
         },
         "rotation": 0,
         "layer": 0,
@@ -8786,7 +9402,7 @@
         "label": "HIGH BOARD - ALU CORE",
         "position": {
           "x": 104,
-          "y": 258
+          "y": 318
         },
         "rotation": 0,
         "layer": 0,
@@ -8810,10 +9426,10 @@
       {
         "type": "text",
         "id": "txt-col-156-h",
-        "label": "HIGH BOARD - FENCE \u002B CARRY",
+        "label": "HIGH BOARD - FENCE + CARRY",
         "position": {
           "x": 156,
-          "y": 258
+          "y": 318
         },
         "rotation": 0,
         "layer": 0,
@@ -8840,7 +9456,7 @@
         "label": "HIGH BOARD - CONDITIONS",
         "position": {
           "x": 208,
-          "y": 258
+          "y": 318
         },
         "rotation": 0,
         "layer": 0,
@@ -8867,7 +9483,7 @@
         "label": "HIGH BOARD - RESULT DRIVERS (opt)",
         "position": {
           "x": 260,
-          "y": 258
+          "y": 318
         },
         "rotation": 0,
         "layer": 0,
@@ -8891,10 +9507,10 @@
       {
         "type": "text",
         "id": "txt-col-312-h",
-        "label": "HIGH BOARD - FLAGS \u002B AUX (opt)",
+        "label": "HIGH BOARD - FLAGS + AUX (opt)",
         "position": {
           "x": 312,
-          "y": 258
+          "y": 318
         },
         "rotation": 0,
         "layer": 0,
@@ -8921,7 +9537,7 @@
         "label": "",
         "position": {
           "x": 33,
-          "y": 437
+          "y": 497
         },
         "rotation": 0,
         "layer": 0,
@@ -8948,7 +9564,7 @@
         "label": "",
         "position": {
           "x": 140,
-          "y": 282
+          "y": 342
         },
         "rotation": 0,
         "layer": 0,
@@ -8975,7 +9591,7 @@
         "label": "A_H",
         "position": {
           "x": 37,
-          "y": 272
+          "y": 332
         },
         "rotation": 0,
         "layer": 0,
@@ -9002,7 +9618,7 @@
         "label": "A_H",
         "position": {
           "x": -48,
-          "y": 284
+          "y": 344
         },
         "rotation": 0,
         "layer": 0,
@@ -9029,7 +9645,7 @@
         "label": "B_H",
         "position": {
           "x": 37,
-          "y": 311
+          "y": 371
         },
         "rotation": 0,
         "layer": 0,
@@ -9056,7 +9672,7 @@
         "label": "B_H",
         "position": {
           "x": -48,
-          "y": 328
+          "y": 388
         },
         "rotation": 0,
         "layer": 0,
@@ -9083,7 +9699,7 @@
         "label": "AQ_H",
         "position": {
           "x": 37,
-          "y": 287
+          "y": 347
         },
         "rotation": 0,
         "layer": 0,
@@ -9110,7 +9726,7 @@
         "label": "AQ_H",
         "position": {
           "x": 92,
-          "y": 278
+          "y": 338
         },
         "rotation": 180,
         "layer": 0,
@@ -9137,7 +9753,7 @@
         "label": "AQ_H",
         "position": {
           "x": 93,
-          "y": 320
+          "y": 380
         },
         "rotation": 180,
         "layer": 0,
@@ -9164,7 +9780,7 @@
         "label": "AQ_H",
         "position": {
           "x": 40,
-          "y": 380
+          "y": 440
         },
         "rotation": 180,
         "layer": 0,
@@ -9191,7 +9807,7 @@
         "label": "AQ_H",
         "position": {
           "x": 196,
-          "y": 358
+          "y": 418
         },
         "rotation": 180,
         "layer": 2,
@@ -9218,7 +9834,7 @@
         "label": "AQ_H",
         "position": {
           "x": 299,
-          "y": 373
+          "y": 433
         },
         "rotation": 0,
         "layer": 5,
@@ -9245,7 +9861,7 @@
         "label": "BQ_H",
         "position": {
           "x": 37,
-          "y": 330
+          "y": 390
         },
         "rotation": 0,
         "layer": 0,
@@ -9272,7 +9888,7 @@
         "label": "BQ_H",
         "position": {
           "x": 92,
-          "y": 284
+          "y": 344
         },
         "rotation": 180,
         "layer": 0,
@@ -9299,7 +9915,7 @@
         "label": "BQ_H",
         "position": {
           "x": 93,
-          "y": 326
+          "y": 386
         },
         "rotation": 180,
         "layer": 0,
@@ -9326,7 +9942,7 @@
         "label": "BQ_H",
         "position": {
           "x": 40,
-          "y": 422
+          "y": 482
         },
         "rotation": 180,
         "layer": 0,
@@ -9353,7 +9969,7 @@
         "label": "BQ_H",
         "position": {
           "x": 196,
-          "y": 354
+          "y": 414
         },
         "rotation": 180,
         "layer": 2,
@@ -9380,7 +9996,7 @@
         "label": "BQ_H",
         "position": {
           "x": 339,
-          "y": 375
+          "y": 435
         },
         "rotation": 180,
         "layer": 5,
@@ -9407,7 +10023,7 @@
         "label": "FB_H",
         "position": {
           "x": 182,
-          "y": 276
+          "y": 336
         },
         "rotation": 270,
         "layer": 0,
@@ -9434,7 +10050,7 @@
         "label": "FB_H",
         "position": {
           "x": 369,
-          "y": 280
+          "y": 340
         },
         "rotation": 0,
         "layer": 0,
@@ -9461,7 +10077,7 @@
         "label": "FB_H",
         "position": {
           "x": 196,
-          "y": 360
+          "y": 420
         },
         "rotation": 180,
         "layer": 2,
@@ -9488,7 +10104,7 @@
         "label": "FB_H",
         "position": {
           "x": 221,
-          "y": 360
+          "y": 420
         },
         "rotation": 0,
         "layer": 2,
@@ -9515,7 +10131,7 @@
         "label": "FB_H",
         "position": {
           "x": 193,
-          "y": 392
+          "y": 452
         },
         "rotation": 180,
         "layer": 3,
@@ -9542,7 +10158,7 @@
         "label": "FB_H",
         "position": {
           "x": 247,
-          "y": 285
+          "y": 345
         },
         "rotation": 0,
         "layer": 1,
@@ -9569,7 +10185,7 @@
         "label": "FB_H",
         "position": {
           "x": 248,
-          "y": 328
+          "y": 388
         },
         "rotation": 0,
         "layer": 1,
@@ -9596,7 +10212,7 @@
         "label": "FB_H",
         "position": {
           "x": 372,
-          "y": 328
+          "y": 388
         },
         "rotation": 180,
         "layer": 0,
@@ -9623,7 +10239,7 @@
         "label": "FB_H",
         "position": {
           "x": 372,
-          "y": 329
+          "y": 389
         },
         "rotation": 180,
         "layer": 0,
@@ -9650,7 +10266,7 @@
         "label": "FB_H",
         "position": {
           "x": 300,
-          "y": 332
+          "y": 392
         },
         "rotation": 180,
         "layer": 4,
@@ -9677,7 +10293,7 @@
         "label": "S_H",
         "position": {
           "x": 71,
-          "y": 372
+          "y": 432
         },
         "rotation": 180,
         "layer": 0,
@@ -9704,7 +10320,7 @@
         "label": "S_H",
         "position": {
           "x": 92,
-          "y": 292
+          "y": 352
         },
         "rotation": 180,
         "layer": 0,
@@ -9731,7 +10347,7 @@
         "label": "S_H",
         "position": {
           "x": 93,
-          "y": 332
+          "y": 392
         },
         "rotation": 180,
         "layer": 0,
@@ -9758,7 +10374,7 @@
         "label": "M_H",
         "position": {
           "x": 71,
-          "y": 378
+          "y": 438
         },
         "rotation": 0,
         "layer": 0,
@@ -9785,7 +10401,7 @@
         "label": "M_H",
         "position": {
           "x": 92,
-          "y": 296
+          "y": 356
         },
         "rotation": 180,
         "layer": 0,
@@ -9812,7 +10428,7 @@
         "label": "M_H",
         "position": {
           "x": 92,
-          "y": 338
+          "y": 398
         },
         "rotation": 180,
         "layer": 0,
@@ -9836,10 +10452,10 @@
       {
         "type": "netlabel",
         "id": "nlFC-h10-h",
-        "label": "FC",
+        "label": "FC_H",
         "position": {
           "x": -48,
-          "y": 369
+          "y": 429
         },
         "rotation": 0,
         "layer": 0,
@@ -9863,10 +10479,10 @@
       {
         "type": "netlabel",
         "id": "nlFC-u20-h",
-        "label": "FC",
+        "label": "FC_H",
         "position": {
           "x": 40,
-          "y": 370
+          "y": 430
         },
         "rotation": 0,
         "layer": 0,
@@ -9890,10 +10506,10 @@
       {
         "type": "netlabel",
         "id": "nlCFLG-0-h",
-        "label": "CFLG",
+        "label": "CFLG_H",
         "position": {
           "x": -48,
-          "y": 374
+          "y": 434
         },
         "rotation": 0,
         "layer": 0,
@@ -9917,10 +10533,10 @@
       {
         "type": "netlabel",
         "id": "nlCFLG-1-h",
-        "label": "CFLG",
+        "label": "CFLG_H",
         "position": {
           "x": 40,
-          "y": 378
+          "y": 438
         },
         "rotation": 180,
         "layer": 0,
@@ -9947,7 +10563,7 @@
         "label": "/CNGAL_H",
         "position": {
           "x": 71,
-          "y": 380
+          "y": 440
         },
         "rotation": 0,
         "layer": 0,
@@ -9974,7 +10590,7 @@
         "label": "/CN181_H",
         "position": {
           "x": 92,
-          "y": 300
+          "y": 360
         },
         "rotation": 180,
         "layer": 0,
@@ -10001,7 +10617,7 @@
         "label": "/CN181_H",
         "position": {
           "x": 92,
-          "y": 382
+          "y": 442
         },
         "rotation": 0,
         "layer": 0,
@@ -10028,7 +10644,7 @@
         "label": "BKILL_H",
         "position": {
           "x": 71,
-          "y": 384
+          "y": 444
         },
         "rotation": 0,
         "layer": 0,
@@ -10055,7 +10671,7 @@
         "label": "BKILL_H",
         "position": {
           "x": 37,
-          "y": 320
+          "y": 380
         },
         "rotation": 0,
         "layer": 0,
@@ -10082,7 +10698,7 @@
         "label": "SUB_H",
         "position": {
           "x": 71,
-          "y": 382
+          "y": 442
         },
         "rotation": 0,
         "layer": 0,
@@ -10109,7 +10725,7 @@
         "label": "SUB_H",
         "position": {
           "x": 196,
-          "y": 352
+          "y": 412
         },
         "rotation": 180,
         "layer": 2,
@@ -10133,10 +10749,10 @@
       {
         "type": "netlabel",
         "id": "nlLEA-0-h",
-        "label": "LEA",
+        "label": "LEA_H",
         "position": {
           "x": -48,
-          "y": 376
+          "y": 436
         },
         "rotation": 0,
         "layer": 0,
@@ -10160,10 +10776,10 @@
       {
         "type": "netlabel",
         "id": "nlLEA-1-h",
-        "label": "LEA",
+        "label": "LEA_H",
         "position": {
           "x": 37,
-          "y": 298
+          "y": 358
         },
         "rotation": 0,
         "layer": 0,
@@ -10187,10 +10803,10 @@
       {
         "type": "netlabel",
         "id": "nlLEB-0-h",
-        "label": "LEB",
+        "label": "LEB_H",
         "position": {
           "x": -48,
-          "y": 378
+          "y": 438
         },
         "rotation": 0,
         "layer": 0,
@@ -10214,10 +10830,10 @@
       {
         "type": "netlabel",
         "id": "nlLEB-1-h",
-        "label": "LEB",
+        "label": "LEB_H",
         "position": {
           "x": 37,
-          "y": 342
+          "y": 402
         },
         "rotation": 0,
         "layer": 0,
@@ -10244,7 +10860,7 @@
         "label": "/G_H",
         "position": {
           "x": 132,
-          "y": 372
+          "y": 432
         },
         "rotation": 0,
         "layer": 0,
@@ -10271,7 +10887,7 @@
         "label": "/G_H",
         "position": {
           "x": 372,
-          "y": 346
+          "y": 406
         },
         "rotation": 180,
         "layer": 0,
@@ -10298,7 +10914,7 @@
         "label": "/P_H",
         "position": {
           "x": 132,
-          "y": 376
+          "y": 436
         },
         "rotation": 0,
         "layer": 0,
@@ -10325,7 +10941,7 @@
         "label": "/P_H",
         "position": {
           "x": 372,
-          "y": 347
+          "y": 407
         },
         "rotation": 180,
         "layer": 0,
@@ -10352,7 +10968,7 @@
         "label": "/CN8_H",
         "position": {
           "x": 132,
-          "y": 380
+          "y": 440
         },
         "rotation": 0,
         "layer": 0,
@@ -10379,7 +10995,7 @@
         "label": "/CN8_H",
         "position": {
           "x": 372,
-          "y": 348
+          "y": 408
         },
         "rotation": 180,
         "layer": 0,
@@ -10406,7 +11022,7 @@
         "label": "/ZOUT_H",
         "position": {
           "x": 227,
-          "y": 284
+          "y": 344
         },
         "rotation": 0,
         "layer": 0,
@@ -10433,7 +11049,7 @@
         "label": "/ZOUT_H",
         "position": {
           "x": 372,
-          "y": 353
+          "y": 413
         },
         "rotation": 180,
         "layer": 0,
@@ -10460,7 +11076,7 @@
         "label": "/AUXOE_H",
         "position": {
           "x": 372,
-          "y": 351
+          "y": 411
         },
         "rotation": 180,
         "layer": 0,
@@ -10487,7 +11103,7 @@
         "label": "/AUXOE_H",
         "position": {
           "x": 339,
-          "y": 390
+          "y": 450
         },
         "rotation": 0,
         "layer": 5,
@@ -10514,7 +11130,7 @@
         "label": "COUT_H",
         "position": {
           "x": 184,
-          "y": 328
+          "y": 388
         },
         "rotation": 0,
         "layer": 0,
@@ -10541,7 +11157,7 @@
         "label": "COUT_H",
         "position": {
           "x": 372,
-          "y": 325
+          "y": 385
         },
         "rotation": 180,
         "layer": 0,
@@ -10568,7 +11184,7 @@
         "label": "COUT_H",
         "position": {
           "x": 300,
-          "y": 284
+          "y": 344
         },
         "rotation": 180,
         "layer": 4,
@@ -10595,7 +11211,7 @@
         "label": "HCOUT_H",
         "position": {
           "x": 184,
-          "y": 332
+          "y": 392
         },
         "rotation": 0,
         "layer": 0,
@@ -10622,7 +11238,7 @@
         "label": "HCOUT_H",
         "position": {
           "x": 372,
-          "y": 326
+          "y": 386
         },
         "rotation": 180,
         "layer": 0,
@@ -10649,7 +11265,7 @@
         "label": "ZERO_H",
         "position": {
           "x": 184,
-          "y": 336
+          "y": 396
         },
         "rotation": 0,
         "layer": 0,
@@ -10676,7 +11292,7 @@
         "label": "ZERO_H",
         "position": {
           "x": 372,
-          "y": 327
+          "y": 387
         },
         "rotation": 180,
         "layer": 0,
@@ -10703,7 +11319,7 @@
         "label": "ZERO_H",
         "position": {
           "x": 300,
-          "y": 328
+          "y": 388
         },
         "rotation": 180,
         "layer": 4,
@@ -10730,7 +11346,7 @@
         "label": "V_H",
         "position": {
           "x": 184,
-          "y": 340
+          "y": 400
         },
         "rotation": 0,
         "layer": 0,
@@ -10757,7 +11373,7 @@
         "label": "V_H",
         "position": {
           "x": 372,
-          "y": 331
+          "y": 391
         },
         "rotation": 180,
         "layer": 0,
@@ -10784,7 +11400,7 @@
         "label": "V_H",
         "position": {
           "x": 300,
-          "y": 288
+          "y": 348
         },
         "rotation": 180,
         "layer": 4,
@@ -10808,10 +11424,10 @@
       {
         "type": "netlabel",
         "id": "nlAEQB-0-h",
-        "label": "AEQB",
+        "label": "AEQB_H",
         "position": {
           "x": 127,
-          "y": 284
+          "y": 344
         },
         "rotation": 0,
         "layer": 0,
@@ -10835,10 +11451,10 @@
       {
         "type": "netlabel",
         "id": "nlAEQB-1-h",
-        "label": "AEQB",
+        "label": "AEQB_H",
         "position": {
           "x": 372,
-          "y": 330
+          "y": 390
         },
         "rotation": 180,
         "layer": 0,
@@ -10865,7 +11481,7 @@
         "label": "PAR_H",
         "position": {
           "x": 193,
-          "y": 388
+          "y": 448
         },
         "rotation": 180,
         "layer": 3,
@@ -10892,7 +11508,7 @@
         "label": "PAR_H",
         "position": {
           "x": 372,
-          "y": 352
+          "y": 412
         },
         "rotation": 180,
         "layer": 0,
@@ -10916,10 +11532,10 @@
       {
         "type": "netlabel",
         "id": "nlFOE-h11-h",
-        "label": "/FOE",
+        "label": "/FOE_H",
         "position": {
           "x": -48,
-          "y": 392
+          "y": 452
         },
         "rotation": 0,
         "layer": 0,
@@ -10943,10 +11559,10 @@
       {
         "type": "netlabel",
         "id": "nlFOE-u7-h",
-        "label": "/FOE",
+        "label": "/FOE_H",
         "position": {
           "x": 251,
-          "y": 280
+          "y": 340
         },
         "rotation": 180,
         "layer": 1,
@@ -10970,10 +11586,10 @@
       {
         "type": "netlabel",
         "id": "nlSOE-h11-h",
-        "label": "/SOE",
+        "label": "/SOE_H",
         "position": {
           "x": -48,
-          "y": 394
+          "y": 454
         },
         "rotation": 0,
         "layer": 0,
@@ -10997,10 +11613,10 @@
       {
         "type": "netlabel",
         "id": "nlSOE-u8-h",
-        "label": "/SOE",
+        "label": "/SOE_H",
         "position": {
           "x": 250,
-          "y": 324
+          "y": 384
         },
         "rotation": 180,
         "layer": 1,
@@ -11027,7 +11643,7 @@
         "label": "SRIN_H",
         "position": {
           "x": -48,
-          "y": 396
+          "y": 456
         },
         "rotation": 0,
         "layer": 0,
@@ -11054,7 +11670,7 @@
         "label": "SRIN_H",
         "position": {
           "x": 250,
-          "y": 340
+          "y": 400
         },
         "rotation": 180,
         "layer": 1,
@@ -11081,7 +11697,7 @@
         "label": "D_H",
         "position": {
           "x": 284,
-          "y": 287
+          "y": 347
         },
         "rotation": 0,
         "layer": 1,
@@ -11108,7 +11724,7 @@
         "label": "D_H",
         "position": {
           "x": 284,
-          "y": 331
+          "y": 391
         },
         "rotation": 0,
         "layer": 1,
@@ -11135,7 +11751,7 @@
         "label": "D_H",
         "position": {
           "x": 372,
-          "y": 368
+          "y": 428
         },
         "rotation": 0,
         "layer": 1,
@@ -11162,7 +11778,7 @@
         "label": "CLK_H",
         "position": {
           "x": 372,
-          "y": 413
+          "y": 473
         },
         "rotation": 180,
         "layer": 4,
@@ -11189,7 +11805,7 @@
         "label": "CLK_H",
         "position": {
           "x": 300,
-          "y": 292
+          "y": 352
         },
         "rotation": 180,
         "layer": 4,
@@ -11216,7 +11832,7 @@
         "label": "CLK_H",
         "position": {
           "x": 300,
-          "y": 336
+          "y": 396
         },
         "rotation": 180,
         "layer": 4,
@@ -11243,7 +11859,7 @@
         "label": "/FLGC_H",
         "position": {
           "x": 372,
-          "y": 414
+          "y": 474
         },
         "rotation": 180,
         "layer": 4,
@@ -11270,7 +11886,7 @@
         "label": "/FLGC_H",
         "position": {
           "x": 300,
-          "y": 296
+          "y": 356
         },
         "rotation": 180,
         "layer": 4,
@@ -11297,7 +11913,7 @@
         "label": "/FLGNZ_H",
         "position": {
           "x": 372,
-          "y": 415
+          "y": 475
         },
         "rotation": 180,
         "layer": 4,
@@ -11324,7 +11940,7 @@
         "label": "/FLGNZ_H",
         "position": {
           "x": 300,
-          "y": 340
+          "y": 400
         },
         "rotation": 180,
         "layer": 4,
@@ -11351,7 +11967,7 @@
         "label": "CLAT_H",
         "position": {
           "x": 344,
-          "y": 284
+          "y": 344
         },
         "rotation": 0,
         "layer": 4,
@@ -11378,7 +11994,7 @@
         "label": "CLAT_H",
         "position": {
           "x": 372,
-          "y": 416
+          "y": 476
         },
         "rotation": 180,
         "layer": 4,
@@ -11405,7 +12021,7 @@
         "label": "CLAT_H",
         "position": {
           "x": 299,
-          "y": 386
+          "y": 446
         },
         "rotation": 180,
         "layer": 5,
@@ -11432,7 +12048,7 @@
         "label": "ZLAT_H",
         "position": {
           "x": 339,
-          "y": 332
+          "y": 392
         },
         "rotation": 0,
         "layer": 4,
@@ -11459,7 +12075,7 @@
         "label": "ZLAT_H",
         "position": {
           "x": 372,
-          "y": 417
+          "y": 477
         },
         "rotation": 180,
         "layer": 4,
@@ -11486,7 +12102,7 @@
         "label": "NLAT_H",
         "position": {
           "x": 339,
-          "y": 336
+          "y": 396
         },
         "rotation": 0,
         "layer": 4,
@@ -11513,7 +12129,7 @@
         "label": "NLAT_H",
         "position": {
           "x": 372,
-          "y": 418
+          "y": 478
         },
         "rotation": 180,
         "layer": 4,
@@ -11540,7 +12156,7 @@
         "label": "VLAT_H",
         "position": {
           "x": 344,
-          "y": 288
+          "y": 348
         },
         "rotation": 0,
         "layer": 4,
@@ -11567,7 +12183,7 @@
         "label": "VLAT_H",
         "position": {
           "x": 372,
-          "y": 419
+          "y": 479
         },
         "rotation": 180,
         "layer": 4,
@@ -11594,7 +12210,7 @@
         "label": "",
         "position": {
           "x": -52,
-          "y": 266
+          "y": 326
         },
         "rotation": 0,
         "layer": 0,
@@ -11621,7 +12237,7 @@
         "label": "",
         "position": {
           "x": -51,
-          "y": 358
+          "y": 418
         },
         "rotation": 180,
         "layer": 0,
@@ -11648,7 +12264,7 @@
         "label": "",
         "position": {
           "x": 376,
-          "y": 315
+          "y": 375
         },
         "rotation": 180,
         "layer": 0,
@@ -11675,7 +12291,7 @@
         "label": "",
         "position": {
           "x": 375,
-          "y": 400
+          "y": 460
         },
         "rotation": 180,
         "layer": 4,
@@ -11702,7 +12318,7 @@
         "label": "",
         "position": {
           "x": -56,
-          "y": 385
+          "y": 445
         },
         "rotation": 180,
         "layer": 0,
@@ -11729,7 +12345,7 @@
         "label": "",
         "position": {
           "x": 9,
-          "y": 265
+          "y": 325
         },
         "rotation": 0,
         "layer": 0,
@@ -11756,7 +12372,7 @@
         "label": "/CNGAL_H",
         "position": {
           "x": 72,
-          "y": 392
+          "y": 452
         },
         "rotation": 180,
         "layer": 0,
@@ -11783,7 +12399,7 @@
         "label": "/CN181_H",
         "position": {
           "x": 82,
-          "y": 396
+          "y": 456
         },
         "rotation": 90,
         "layer": 0,
@@ -11807,10 +12423,10 @@
       {
         "type": "netlabel",
         "id": "nlCNX-j1-h",
-        "label": "/CN8",
+        "label": "CNX_H",
         "position": {
           "x": 92,
-          "y": 392
+          "y": 452
         },
         "rotation": 0,
         "layer": 0,
@@ -11834,10 +12450,10 @@
       {
         "type": "netlabel",
         "id": "nlCNX-h13-h",
-        "label": "/CN8",
+        "label": "CNX_H",
         "position": {
           "x": 372,
-          "y": 349
+          "y": 409
         },
         "rotation": 180,
         "layer": 0,
@@ -11861,10 +12477,10 @@
       {
         "type": "netlabel",
         "id": "nlZC-j2-h",
-        "label": "/ZOUT",
+        "label": "/ZCASC_H",
         "position": {
           "x": 212,
-          "y": 273
+          "y": 333
         },
         "rotation": 0,
         "layer": 0,
@@ -11888,10 +12504,10 @@
       {
         "type": "netlabel",
         "id": "nlZC-h13-h",
-        "label": "/ZOUT",
+        "label": "/ZCASC_H",
         "position": {
           "x": 372,
-          "y": 350
+          "y": 410
         },
         "rotation": 180,
         "layer": 0,
@@ -11918,7 +12534,7 @@
         "label": "SUBB_H",
         "position": {
           "x": 148,
-          "y": 348
+          "y": 408
         },
         "rotation": 0,
         "layer": 0,
@@ -11945,7 +12561,7 @@
         "label": "SUBB_H",
         "position": {
           "x": 160,
-          "y": 380
+          "y": 440
         },
         "rotation": 90,
         "layer": 0,
@@ -11972,7 +12588,7 @@
         "label": "SUB_H",
         "position": {
           "x": 169,
-          "y": 374
+          "y": 434
         },
         "rotation": 0,
         "layer": 0,
@@ -11999,7 +12615,7 @@
         "label": "",
         "position": {
           "x": 244,
-          "y": 372
+          "y": 432
         },
         "rotation": 0,
         "layer": 0,
@@ -12026,7 +12642,7 @@
         "label": "",
         "position": {
           "x": 262,
-          "y": 418
+          "y": 478
         },
         "rotation": 0,
         "layer": 0,
@@ -12050,10 +12666,10 @@
       {
         "type": "netlabel",
         "id": "nlFOE-rn2-h",
-        "label": "/FOE",
+        "label": "/FOE_H",
         "position": {
           "x": 256,
-          "y": 384
+          "y": 444
         },
         "rotation": 0,
         "layer": 0,
@@ -12077,10 +12693,10 @@
       {
         "type": "netlabel",
         "id": "nlSOE-rn2-h",
-        "label": "/SOE",
+        "label": "/SOE_H",
         "position": {
           "x": 256,
-          "y": 388
+          "y": 448
         },
         "rotation": 0,
         "layer": 0,
@@ -12107,7 +12723,7 @@
         "label": "/AUXOE_H",
         "position": {
           "x": 256,
-          "y": 392
+          "y": 452
         },
         "rotation": 0,
         "layer": 0,
@@ -12134,7 +12750,7 @@
         "label": "SRIN_H",
         "position": {
           "x": 274,
-          "y": 400
+          "y": 460
         },
         "rotation": 0,
         "layer": 0,
@@ -12156,16 +12772,16 @@
         "pinMap": null
       },
       {
-        "type": "testbench",
-        "id": "tb-pair",
-        "label": "16-bit pair self-test",
+        "type": "gnd",
+        "id": "gnd-h8c-h",
+        "label": "",
         "position": {
-          "x": -130,
-          "y": 121
+          "x": 150,
+          "y": 300
         },
         "rotation": 0,
-        "layer": 6,
-        "frequencyHz": 1,
+        "layer": 0,
+        "frequencyHz": null,
         "dutyCycle": null,
         "startHigh": null,
         "designator": null,
@@ -12178,9 +12794,509 @@
         "mirrored": null,
         "color": null,
         "fontSize": null,
-        "textColor": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlCN8-up-h",
+        "label": "/CN8_H",
+        "position": {
+          "x": 172,
+          "y": 288
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Gray",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlZOUT-up-h",
+        "label": "/ZOUT_H",
+        "position": {
+          "x": 172,
+          "y": 292
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlAEQB-up-h",
+        "label": "AEQB_H",
+        "position": {
+          "x": 172,
+          "y": 296
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlSRIN-up-h",
+        "label": "SRIN_H",
+        "position": {
+          "x": 172,
+          "y": 300
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "gnd",
+        "id": "gnd-h11c-h",
+        "label": "",
+        "position": {
+          "x": 150,
+          "y": 566
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlCNX-dn-h",
+        "label": "CNX_H",
+        "position": {
+          "x": 172,
+          "y": 552
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Gray",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlZC-dn-h",
+        "label": "/ZCASC_H",
+        "position": {
+          "x": 172,
+          "y": 556
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlAEQB-dn-h",
+        "label": "AEQB_H",
+        "position": {
+          "x": 172,
+          "y": 560
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlFB0-dn-h",
+        "label": "FB_H",
+        "position": {
+          "x": 172,
+          "y": 564
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Cyan",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "gnd",
+        "id": "gnd-h12l-h",
+        "label": "",
+        "position": {
+          "x": 370,
+          "y": 420
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlG-lk-h",
+        "label": "/G_H",
+        "position": {
+          "x": 394,
+          "y": 408
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Gray",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlP-lk-h",
+        "label": "/P_H",
+        "position": {
+          "x": 394,
+          "y": 412
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Gray",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlAUX-lk-h",
+        "label": "/AUXOE_H",
+        "position": {
+          "x": 394,
+          "y": 416
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "netlabel",
+        "id": "nlPAR-lk-h",
+        "label": "PAR_H",
+        "position": {
+          "x": 394,
+          "y": 420
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 1,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": 0,
+        "mirrored": false,
+        "color": "Yellow",
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "rect",
+        "id": "rect-board-h",
+        "label": "",
+        "position": {
+          "x": -72,
+          "y": 276
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": 482,
+        "height": 300,
+        "filled": false,
+        "fillColor": null,
+        "borderColor": "Gray",
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
+      },
+      {
+        "type": "text",
+        "id": "txt-edge-l-h",
+        "label": "HIGH BOARD - LEFT EDGE - host in: H1 PWR  H2 A  H3 B  H4 FC+CTL  H5 STROB",
+        "position": {
+          "x": -70,
+          "y": 270
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": 3,
+        "textColor": "Gray"
+      },
+      {
+        "type": "text",
+        "id": "txt-edge-r-h",
+        "label": "HIGH BOARD - TOP: H8 CASC UP -> next board's H11",
+        "position": {
+          "x": 150,
+          "y": 270
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": 3,
+        "textColor": "Gray"
+      },
+      {
+        "type": "text",
+        "id": "txt-edge-b-h",
+        "label": "HIGH BOARD - BOTTOM: H11 CASC DN <- previous board's H8",
+        "position": {
+          "x": 150,
+          "y": 582
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": 3,
+        "textColor": "Gray"
+      },
+      {
+        "type": "text",
+        "id": "txt-edge-rr-h",
+        "label": "HIGH BOARD - RIGHT EDGE - host out: H6 F  H7 COND  H9 D  H10 FLAGS  H12 L",
+        "position": {
+          "x": 250,
+          "y": 264
+        },
+        "rotation": 0,
+        "layer": 0,
+        "frequencyHz": null,
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": 3,
+        "textColor": "Gray"
+      },
+      {
+        "type": "testbench",
+        "id": "tb-pair",
+        "label": "16-bit pair self-test",
+        "position": {
+          "x": -130,
+          "y": 150
+        },
+        "rotation": 0,
+        "layer": 6,
+        "frequencyHz": 1000000.0,
         "program": "A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,B0,B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B12,B13,B14,B15,FC0,FC1,FC2,FC3,CFLG,LEA,LEB,/FOE,/SOE,SRINH\nH,H,H,H,H,H,H,H,L,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,L\nH,H,H,H,H,H,H,H,L,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,H,H,H,H,L,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,L\nH,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,H,H,H,H,L,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,L,L,H,H,L\nH,H,H,H,H,H,H,H,L,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,H,L\nH,H,H,H,H,H,H,H,L,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,H,L\nL,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,L,L,H,H,L\nL,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nL,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nL,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,L,L,H,H,L\nL,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nL,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nL,L,H,L,H,H,L,L,L,H,L,L,H,L,L,L,L,L,H,L,H,H,L,L,L,H,L,L,H,L,L,L,H,H,L,L,L,L,L,H,H,L\nL,L,H,L,H,H,L,L,L,H,L,L,H,L,L,L,L,L,H,L,H,H,L,L,L,H,L,L,H,L,L,L,H,H,L,L,L,H,H,H,H,L\nL,L,H,L,H,H,L,L,L,H,L,L,H,L,L,L,L,L,H,L,H,H,L,L,L,H,L,L,H,L,L,L,H,H,L,L,L,H,H,H,H,L\nL,H,L,L,H,L,L,L,H,H,H,H,H,H,H,H,H,H,L,L,H,L,L,L,H,H,H,H,H,H,H,H,H,H,L,L,L,L,L,H,H,L\nL,H,L,L,H,L,L,L,H,H,H,H,H,H,H,H,H,H,L,L,H,L,L,L,H,H,H,H,H,H,H,H,H,H,L,L,L,H,H,H,H,L\nL,H,L,L,H,L,L,L,H,H,H,H,H,H,H,H,H,H,L,L,H,L,L,L,H,H,H,H,H,H,H,H,H,H,L,L,L,H,H,H,H,L\nH,H,L,L,L,L,H,H,H,L,H,L,L,H,L,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,L,L,H,L,L,L,L,H,H,L\nH,H,L,L,L,L,H,H,H,L,H,L,L,H,L,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,L,L,H,L,L,H,H,H,H,L\nH,H,L,L,L,L,H,H,H,L,H,L,L,H,L,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,L,L,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,H,L,L,H,H,L,L,H,L,H,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,H,L,L,H,H,L,L,H,L,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,H,L,L,H,H,L,L,H,L,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,H,L,L,H,H,L,L,L,H,H,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,H,L,L,H,H,L,L,L,H,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,H,L,L,H,H,L,L,L,H,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,H,L,L,H,H,L,L,H,H,H,L,L,L,L,H,H,L\nH,H,H,H,L,L,L,L,H,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,H,L,L,H,H,L,L,H,H,H,L,L,H,H,H,H,L\nH,H,H,H,L,L,L,L,H,H,H,H,L,L,L,L,H,H,L,L,H,H,L,L,H,H,L,L,H,H,L,L,H,H,H,L,L,H,H,H,H,L\nH,H,H,H,H,H,H,H,H,H,H,H,H,H,H,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,L\nH,H,H,H,H,H,H,H,H,H,H,H,H,H,H,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nH,H,H,H,H,H,H,H,H,H,H,H,H,H,H,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,H,H,L\nL,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,L,L,H,H,L\nL,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nL,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,H,H,H,H,L\nH,H,L,L,L,L,L,L,H,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,L,H,H,L\nH,H,L,L,L,L,L,L,H,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,H,L,L,L,L,L,L,H,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,H,L,L,L,L,L,L,H,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,L,L\nH,H,L,L,L,L,L,L,H,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,L,H\nH,H,L,L,L,L,L,L,H,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,L,L\nH,H,L,L,L,L,L,L,H,L,L,L,L,L,L,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,H,H,H,H,L\nH,L,H,L,L,H,L,H,H,H,L,L,L,L,H,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,L,L,H,H,L\nH,L,H,L,L,H,L,H,H,H,L,L,L,L,H,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,H,H,H,H,L\nH,L,H,L,L,H,L,H,H,H,L,L,L,L,H,H,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,H,L,H,H,H,H,L\n",
-        "pinMap": "1=A0,2=A1,3=A2,4=A3,5=A4,6=A5,7=A6,8=A7,9=A8,10=A9,11=A10,12=A11,13=A12,14=A13,15=A14,16=A15,17=B0,18=B1,19=B2,20=B3,21=B4,22=B5,23=B6,24=B7,25=B8,26=B9,27=B10,28=B11,29=B12,30=B13,31=B14,32=B15,33=FC0,34=FC1,35=FC2,36=FC3,37=CFLG,38=LEA,39=LEB,40=/FOE,41=/SOE,42=SRINH"
+        "pinMap": "1=A0,2=A1,3=A2,4=A3,5=A4,6=A5,7=A6,8=A7,9=A8,10=A9,11=A10,12=A11,13=A12,14=A13,15=A14,16=A15,17=B0,18=B1,19=B2,20=B3,21=B4,22=B5,23=B6,24=B7,25=B8,26=B9,27=B10,28=B11,29=B12,30=B13,31=B14,32=B15,33=FC0,34=FC1,35=FC2,36=FC3,37=CFLG,38=LEA,39=LEB,40=/FOE,41=/SOE,42=SRINH",
+        "dutyCycle": null,
+        "startHigh": null,
+        "designator": null,
+        "width": null,
+        "height": null,
+        "filled": null,
+        "fillColor": null,
+        "borderColor": null,
+        "startBit": null,
+        "mirrored": null,
+        "color": null,
+        "fontSize": null,
+        "textColor": null
       }
     ],
     "connections": [
@@ -15839,90 +16955,6 @@
         "color": "Yellow"
       },
       {
-        "id": "w225",
-        "a": {
-          "itemId": "h13",
-          "pinNumber": 1,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlG-1",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Cyan"
-      },
-      {
-        "id": "w226",
-        "a": {
-          "itemId": "h13",
-          "pinNumber": 2,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlP-1",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Cyan"
-      },
-      {
-        "id": "w227",
-        "a": {
-          "itemId": "h13",
-          "pinNumber": 3,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlCN8-1",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Cyan"
-      },
-      {
-        "id": "w228",
-        "a": {
-          "itemId": "h13",
-          "pinNumber": 7,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlPAR-1",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
-        "id": "w229",
-        "a": {
-          "itemId": "h13",
-          "pinNumber": 8,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlZOUT-1",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
-        "id": "w230",
-        "a": {
-          "itemId": "h13",
-          "pinNumber": 6,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlAUX-0",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
         "id": "w234",
         "a": {
           "itemId": "u7",
@@ -17785,20 +18817,6 @@
         "color": "Yellow"
       },
       {
-        "id": "w531",
-        "a": {
-          "itemId": "710c2c582808407192cd27e8f1f8e56d",
-          "pinNumber": 4,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlSRIN-h11",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
         "id": "4e7398087d7b4266aef0d511e762d1ef",
         "a": {
           "itemId": "u5",
@@ -17855,20 +18873,6 @@
         "color": null
       },
       {
-        "id": "w703",
-        "a": {
-          "itemId": "h13",
-          "pinNumber": 4,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlCNX-h13",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": null
-      },
-      {
         "id": "w704",
         "a": {
           "itemId": "j2",
@@ -17905,20 +18909,6 @@
         },
         "b": {
           "itemId": "nlZC-j2",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
-        "id": "w707",
-        "a": {
-          "itemId": "h13",
-          "pinNumber": 5,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlZC-h13",
           "pinNumber": 1,
           "external": false
         },
@@ -18133,6 +19123,216 @@
           "external": false
         },
         "color": "Navy"
+      },
+      {
+        "id": "e001",
+        "a": {
+          "itemId": "h13",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd-h8c",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "e002",
+        "a": {
+          "itemId": "h13",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlCN8-up",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Gray"
+      },
+      {
+        "id": "e003",
+        "a": {
+          "itemId": "h13",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlZOUT-up",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "e004",
+        "a": {
+          "itemId": "h13",
+          "pinNumber": 4,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlAEQB-up",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "e005",
+        "a": {
+          "itemId": "h13",
+          "pinNumber": 5,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlSRIN-up",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "e006",
+        "a": {
+          "itemId": "h11c",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd-h11c",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "e007",
+        "a": {
+          "itemId": "h11c",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlCNX-dn",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Gray"
+      },
+      {
+        "id": "e008",
+        "a": {
+          "itemId": "h11c",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlZC-dn",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "e009",
+        "a": {
+          "itemId": "h11c",
+          "pinNumber": 4,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlAEQB-dn",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "e010",
+        "a": {
+          "itemId": "h11c",
+          "pinNumber": 5,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlFB0-dn",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Cyan"
+      },
+      {
+        "id": "e011",
+        "a": {
+          "itemId": "h12l",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd-h12l",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "e012",
+        "a": {
+          "itemId": "h12l",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlG-lk",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Gray"
+      },
+      {
+        "id": "e013",
+        "a": {
+          "itemId": "h12l",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlP-lk",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Gray"
+      },
+      {
+        "id": "e014",
+        "a": {
+          "itemId": "h12l",
+          "pinNumber": 4,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlAUX-lk",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "e015",
+        "a": {
+          "itemId": "h12l",
+          "pinNumber": 5,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlPAR-lk",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
       },
       {
         "id": "c-u5-gnd-h",
@@ -21789,90 +22989,6 @@
         "color": "Yellow"
       },
       {
-        "id": "w225-h",
-        "a": {
-          "itemId": "h13-h",
-          "pinNumber": 1,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlG-1-h",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Cyan"
-      },
-      {
-        "id": "w226-h",
-        "a": {
-          "itemId": "h13-h",
-          "pinNumber": 2,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlP-1-h",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Cyan"
-      },
-      {
-        "id": "w227-h",
-        "a": {
-          "itemId": "h13-h",
-          "pinNumber": 3,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlCN8-1-h",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Cyan"
-      },
-      {
-        "id": "w228-h",
-        "a": {
-          "itemId": "h13-h",
-          "pinNumber": 7,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlPAR-1-h",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
-        "id": "w229-h",
-        "a": {
-          "itemId": "h13-h",
-          "pinNumber": 8,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlZOUT-1-h",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
-        "id": "w230-h",
-        "a": {
-          "itemId": "h13-h",
-          "pinNumber": 6,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlAUX-0-h",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
         "id": "w234-h",
         "a": {
           "itemId": "u7-h",
@@ -23735,20 +24851,6 @@
         "color": "Yellow"
       },
       {
-        "id": "w531-h",
-        "a": {
-          "itemId": "710c2c582808407192cd27e8f1f8e56d-h",
-          "pinNumber": 4,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlSRIN-h11-h",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
         "id": "4e7398087d7b4266aef0d511e762d1ef-h",
         "a": {
           "itemId": "u5-h",
@@ -23805,20 +24907,6 @@
         "color": null
       },
       {
-        "id": "w703-h",
-        "a": {
-          "itemId": "h13-h",
-          "pinNumber": 4,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlCNX-h13-h",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": null
-      },
-      {
         "id": "w704-h",
         "a": {
           "itemId": "j2-h",
@@ -23855,20 +24943,6 @@
         },
         "b": {
           "itemId": "nlZC-j2-h",
-          "pinNumber": 1,
-          "external": false
-        },
-        "color": "Yellow"
-      },
-      {
-        "id": "w707-h",
-        "a": {
-          "itemId": "h13-h",
-          "pinNumber": 5,
-          "external": false
-        },
-        "b": {
-          "itemId": "nlZC-h13-h",
           "pinNumber": 1,
           "external": false
         },
@@ -24085,7 +25159,217 @@
         "color": "Navy"
       },
       {
-        "id": "p001",
+        "id": "e001-h",
+        "a": {
+          "itemId": "h13-h",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd-h8c-h",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "e002-h",
+        "a": {
+          "itemId": "h13-h",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlCN8-up-h",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Gray"
+      },
+      {
+        "id": "e003-h",
+        "a": {
+          "itemId": "h13-h",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlZOUT-up-h",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "e004-h",
+        "a": {
+          "itemId": "h13-h",
+          "pinNumber": 4,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlAEQB-up-h",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "e005-h",
+        "a": {
+          "itemId": "h13-h",
+          "pinNumber": 5,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlSRIN-up-h",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "e006-h",
+        "a": {
+          "itemId": "h11c-h",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd-h11c-h",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "e007-h",
+        "a": {
+          "itemId": "h11c-h",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlCNX-dn-h",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Gray"
+      },
+      {
+        "id": "e008-h",
+        "a": {
+          "itemId": "h11c-h",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlZC-dn-h",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "e009-h",
+        "a": {
+          "itemId": "h11c-h",
+          "pinNumber": 4,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlAEQB-dn-h",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "e010-h",
+        "a": {
+          "itemId": "h11c-h",
+          "pinNumber": 5,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlFB0-dn-h",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Cyan"
+      },
+      {
+        "id": "e011-h",
+        "a": {
+          "itemId": "h12l-h",
+          "pinNumber": 1,
+          "external": false
+        },
+        "b": {
+          "itemId": "gnd-h12l-h",
+          "pinNumber": 0,
+          "external": false
+        },
+        "color": "Navy"
+      },
+      {
+        "id": "e012-h",
+        "a": {
+          "itemId": "h12l-h",
+          "pinNumber": 2,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlG-lk-h",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Gray"
+      },
+      {
+        "id": "e013-h",
+        "a": {
+          "itemId": "h12l-h",
+          "pinNumber": 3,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlP-lk-h",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Gray"
+      },
+      {
+        "id": "e014-h",
+        "a": {
+          "itemId": "h12l-h",
+          "pinNumber": 4,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlAUX-lk-h",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "e015-h",
+        "a": {
+          "itemId": "h12l-h",
+          "pinNumber": 5,
+          "external": false
+        },
+        "b": {
+          "itemId": "nlPAR-lk-h",
+          "pinNumber": 1,
+          "external": false
+        },
+        "color": "Yellow"
+      },
+      {
+        "id": "q001",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 1,
@@ -24099,7 +25383,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p002",
+        "id": "q002",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 9,
@@ -24113,7 +25397,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p003",
+        "id": "q003",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 17,
@@ -24127,7 +25411,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p004",
+        "id": "q004",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 25,
@@ -24141,7 +25425,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p005",
+        "id": "q005",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 2,
@@ -24155,7 +25439,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p006",
+        "id": "q006",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 10,
@@ -24169,7 +25453,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p007",
+        "id": "q007",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 18,
@@ -24183,7 +25467,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p008",
+        "id": "q008",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 26,
@@ -24197,7 +25481,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p009",
+        "id": "q009",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 3,
@@ -24211,7 +25495,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p010",
+        "id": "q010",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 11,
@@ -24225,7 +25509,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p011",
+        "id": "q011",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 19,
@@ -24239,7 +25523,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p012",
+        "id": "q012",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 27,
@@ -24253,7 +25537,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p013",
+        "id": "q013",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 4,
@@ -24267,7 +25551,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p014",
+        "id": "q014",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 12,
@@ -24281,7 +25565,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p015",
+        "id": "q015",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 20,
@@ -24295,7 +25579,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p016",
+        "id": "q016",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 28,
@@ -24309,7 +25593,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p017",
+        "id": "q017",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 5,
@@ -24323,7 +25607,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p018",
+        "id": "q018",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 13,
@@ -24337,7 +25621,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p019",
+        "id": "q019",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 21,
@@ -24351,7 +25635,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p020",
+        "id": "q020",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 29,
@@ -24365,7 +25649,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p021",
+        "id": "q021",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 6,
@@ -24379,7 +25663,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p022",
+        "id": "q022",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 14,
@@ -24393,7 +25677,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p023",
+        "id": "q023",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 22,
@@ -24407,7 +25691,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p024",
+        "id": "q024",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 30,
@@ -24421,7 +25705,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p025",
+        "id": "q025",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 7,
@@ -24435,7 +25719,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p026",
+        "id": "q026",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 15,
@@ -24449,7 +25733,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p027",
+        "id": "q027",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 23,
@@ -24463,7 +25747,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p028",
+        "id": "q028",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 31,
@@ -24477,7 +25761,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p029",
+        "id": "q029",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 8,
@@ -24491,7 +25775,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p030",
+        "id": "q030",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 16,
@@ -24505,7 +25789,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p031",
+        "id": "q031",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 24,
@@ -24519,7 +25803,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p032",
+        "id": "q032",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 32,
@@ -24533,7 +25817,7 @@
         "color": "Cyan"
       },
       {
-        "id": "p033",
+        "id": "q033",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 33,
@@ -24547,7 +25831,7 @@
         "color": "Green"
       },
       {
-        "id": "p034",
+        "id": "q034",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 34,
@@ -24561,7 +25845,7 @@
         "color": "Green"
       },
       {
-        "id": "p035",
+        "id": "q035",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 35,
@@ -24575,7 +25859,7 @@
         "color": "Green"
       },
       {
-        "id": "p036",
+        "id": "q036",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 36,
@@ -24589,7 +25873,7 @@
         "color": "Green"
       },
       {
-        "id": "p037",
+        "id": "q037",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 37,
@@ -24603,7 +25887,7 @@
         "color": "Yellow"
       },
       {
-        "id": "p038",
+        "id": "q038",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 38,
@@ -24617,7 +25901,7 @@
         "color": "Orange"
       },
       {
-        "id": "p039",
+        "id": "q039",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 39,
@@ -24631,7 +25915,7 @@
         "color": "Orange"
       },
       {
-        "id": "p040",
+        "id": "q040",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 40,
@@ -24645,7 +25929,7 @@
         "color": "Yellow"
       },
       {
-        "id": "p041",
+        "id": "q041",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 41,
@@ -24659,40 +25943,59 @@
         "color": "Yellow"
       },
       {
-        "id": "p042",
+        "id": "q042",
         "a": {
           "itemId": "tb-pair",
           "pinNumber": 42,
           "external": false
         },
         "b": {
-          "itemId": "710c2c582808407192cd27e8f1f8e56d-h",
-          "pinNumber": 4,
+          "itemId": "h13-h",
+          "pinNumber": 5,
           "external": false
         },
         "color": "Yellow"
       }
     ],
-    "links": [],
+    "links": [
+      {
+        "id": "lnk-casc",
+        "aId": "h13",
+        "bId": "h11c-h",
+        "reversed": false
+      },
+      {
+        "id": "lnk-ctl",
+        "aId": "h10",
+        "bId": "h10-h",
+        "reversed": false
+      },
+      {
+        "id": "lnk-strobe",
+        "aId": "710c2c582808407192cd27e8f1f8e56d",
+        "bId": "710c2c582808407192cd27e8f1f8e56d-h",
+        "reversed": false
+      }
+    ],
     "layers": [
       {
         "name": "Default",
         "visible": true
       },
       {
-        "name": "Opt: Bus drivers (U7 U8)",
+        "name": "Opt: Bus drivers (U14 U15)",
         "visible": true
       },
       {
-        "name": "Opt: V logic (U16)",
+        "name": "Opt: V logic (U12)",
         "visible": true
       },
       {
-        "name": "Opt: Parity (U17)",
+        "name": "Opt: Parity (U13)",
         "visible": true
       },
       {
-        "name": "Opt: Flag latch (U14 U15)",
+        "name": "Opt: Flag latch (U16 U17)",
         "visible": true
       },
       {
@@ -24707,10 +26010,10 @@
     "wires": []
   },
   "view": {
-    "zoom": 0.38410848,
+    "zoom": 0.77257925,
     "pan": {
-      "x": 261,
-      "y": 151
+      "x": 855,
+      "y": 287
     }
   }
 }
